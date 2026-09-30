@@ -1,10 +1,30 @@
 // ═══════════════════════════════════════════════════════════════════════
-// pages/AdminCurriculum.tsx — College Admin: Curriculum Mapping & Scheduling
-// MUI v5 — matches AdminClassSchedule.tsx patterns
+// pages/AdminCurriculum.tsx — Curriculum → Timetable → Reschedule
+//
+// One screen, one flow. Before this page the same job was spread over three
+// tabs of the same page and two other pages: faculty were assigned on the
+// Curriculum tab, the assignment was *read* on the Mappings tab, the timetable
+// was built by navigating to Class Schedule, and moving a class was something
+// only the faculty app could do. An admin working through a programme walked
+// semester by semester with no view of what was still missing, and a timetable
+// change never reached the dated classes that had already been created.
+//
+// The flow now reads top to bottom:
+//
+//   1. Branch + batch              → whose programme are we setting up?
+//   2. Semester ladder 1 … 6       → what is still unassigned / unscheduled?
+//   3. The semester's subjects     → assign faculty, add timetable slots,
+//                                    create dated classes, reschedule, cancel
+//
+// Everything that writes goes through the same server paths the rest of the
+// app uses (createWeeklySchedule for the plan, generateClassSessions /
+// cancelWeeklySchedule / rescheduleClass for the actual), so a class scheduled
+// here is identical to one scheduled from the Class Schedule page, and the
+// timetable query lives under the same cache key (`['weeklySchedules', 'admin',
+// collegeId]`) so both pages update together.
 // ═══════════════════════════════════════════════════════════════════════
 
 import React, { useState, useMemo, useCallback, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
 import {
   Box,
   Typography,
@@ -25,8 +45,6 @@ import {
   TableRow,
   IconButton,
   Chip,
-  Tabs,
-  Tab,
   Tooltip,
   Alert,
   Snackbar,
@@ -37,49 +55,49 @@ import {
   Accordion,
   AccordionSummary,
   AccordionDetails,
+  LinearProgress,
 } from '@mui/material'
 import {
   Add as AddIcon,
   Edit as EditIcon,
   Delete as DeleteIcon,
   Schedule as ScheduleIcon,
-  Book as BookIcon,
   School as SchoolIcon,
   ExpandMore as ExpandMoreIcon,
   CheckCircle as CheckIcon,
   Refresh as RefreshIcon,
   AutoAwesome as AIIcon,
   Sync as SyncIcon,
+  EventRepeat as SessionsIcon,
+  SwapHoriz as RescheduleIcon,
+  Cancel as CancelIcon,
+  PersonAdd as PersonAddIcon,
 } from '@mui/icons-material'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '../../auth/context/AuthContext'
 import { useCurriculumMapping } from '../hooks/useCurriculumMapping'
 import { fetchWeeklySchedules } from '../api/scheduleApi'
-import type { WeeklyClassSchedule } from '../types/schedule'
+import {
+  cancelWeeklySchedule,
+  generateClassSessions,
+  defaultTermWindow,
+  type RescheduleClassResult,
+} from '../api/classSessionApi'
 import AutoMapDialog from '../components/AutoMapDialog'
+import ScheduleSlotDialog, { type SlotPrefill } from '../components/ScheduleSlotDialog'
+import RescheduleClassDialog from '../components/RescheduleClassDialog'
+import {
+  buildSemesterFlow,
+  flowProgress,
+  formatSlot,
+  semesterStatusColor,
+  semesterStatusLabel,
+  sortSlots,
+  type CourseFlowRow,
+  type SemesterFlowRow,
+} from '../utils/curriculumFlow'
 import type { CurriculumDoc, ParsedCourse } from '../../../shared/types/curriculum'
-
-/**
- * Identity of a scheduled class across the curriculum and timetable
- * collections. The timetable stores no courseId, so subject code + branch +
- * batch + semester is the closest thing to a join key — and it is exactly
- * what `handleScheduleClass` prefills when it opens the timetable page.
- */
-function scheduledClassKey(
-  subjectCode: string | null | undefined,
-  branch: string | null | undefined,
-  batch: string | null | undefined,
-  semester: number | null | undefined,
-): string {
-  return [
-    (subjectCode ?? '').trim().toUpperCase(),
-    (branch ?? '').trim().toUpperCase(),
-    (batch ?? '').trim(),
-    semester ?? '',
-  ].join('|')
-}
-
-// ─── Tabs ──────────────────────────────────────────────────────────────
-type AdminTab = 'curriculum' | 'mappings' | 'schedule'
+import type { WeeklyClassSchedule } from '../types/schedule'
 
 // ─── Empty Form State ──────────────────────────────────────────────────
 interface MappingFormData {
@@ -104,22 +122,17 @@ const EMPTY_FORM: MappingFormData = {
 
 const AdminCurriculum: React.FC = () => {
   const { user } = useAuth()
-  const navigate = useNavigate()
+  const queryClient = useQueryClient()
   const collegeId = user?.collegeId || ''
 
   const {
     curriculumList,
     mappings,
     facultyList,
-    stats,
     loading,
     error,
-    selectedCurriculum,
-    setSelectedCurriculum,
     selectedBranch,
     setSelectedBranch,
-    selectedSemester,
-    setSelectedSemester,
     selectedBatch,
     setSelectedBatch,
     assignFaculty,
@@ -127,87 +140,83 @@ const AdminCurriculum: React.FC = () => {
     removeMapping,
     refresh,
     refreshCurriculum,
-    getUnmappedCourses,
-    getCurriculumMappings,
     getFacultySubjects,
     branches,
-    semesters,
     batches,
   } = useCurriculumMapping(collegeId)
 
-  const [activeTab, setActiveTab] = useState<AdminTab>('curriculum')
+  // ─── The timetable, under the key the Class Schedule page uses ───────
+  // Same key, same query: a slot created or cancelled on either page is
+  // immediately visible on the other, and a reschedule made here invalidates
+  // for both.
+  const { data: weeklySchedules = [], isLoading: schedulesLoading } = useQuery({
+    queryKey: ['weeklySchedules', 'admin', collegeId],
+    queryFn: () => fetchWeeklySchedules(collegeId),
+    enabled: !!collegeId,
+  })
+
+  const [selectedSemester, setSelectedSemester] = useState<number>(1)
   const [openMappingDialog, setOpenMappingDialog] = useState(false)
   const [editingMapping, setEditingMapping] = useState<string | null>(null)
   const [formData, setFormData] = useState<MappingFormData>({ ...EMPTY_FORM })
-  // Curriculum whose courses are being auto-mapped (preview → approve flow).
   const [autoMapFor, setAutoMapFor] = useState<CurriculumDoc | null>(null)
-  // True while the "Sync Semesters" bulk rewrite is running.
   const [syncing, setSyncing] = useState(false)
-  // The college's weekly timetable, used only to tell "already scheduled"
-  // apart from "not scheduled yet" — the Schedule button on a course or a
-  // mapping leads straight to this timetable, so it is the thing a user
-  // means when they say a class exists.
-  const [weeklySchedules, setWeeklySchedules] = useState<WeeklyClassSchedule[]>([])
+  const [schedulePrefill, setSchedulePrefill] = useState<SlotPrefill | null>(null)
+  const [rescheduleSlot, setRescheduleSlot] = useState<WeeklyClassSchedule | null>(null)
+  const [busySlotId, setBusySlotId] = useState<string | null>(null)
   const [expandedCurriculum, setExpandedCurriculum] = useState<string | null>(null)
-  const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'success' | 'error' | 'info' | 'warning' }>({
-    open: false, message: '', severity: 'success',
-  })
+  const [snackbar, setSnackbar] = useState<{
+    open: boolean
+    message: string
+    severity: 'success' | 'error' | 'info' | 'warning'
+  }>({ open: false, message: '', severity: 'success' })
 
-  // ─── Derived Data ────────────────────────────────────────────────────
-  const selectedCurriculumData = useMemo(() =>
-    curriculumList.find(c => c.id === selectedCurriculum),
-  [curriculumList, selectedCurriculum])
+  const notify = useCallback(
+    (message: string, severity: 'success' | 'error' | 'info' | 'warning' = 'success') =>
+      setSnackbar({ open: true, message, severity }),
+    [],
+  )
 
-  const unmappedCourses = useMemo(() =>
-    selectedCurriculumData ? getUnmappedCourses(selectedCurriculumData) : [],
-  [selectedCurriculumData, getUnmappedCourses])
+  const invalidateTimetable = useCallback(
+    (slotId?: string) => {
+      queryClient.invalidateQueries({ queryKey: ['weeklySchedules'] })
+      if (slotId) queryClient.invalidateQueries({ queryKey: ['slotSessions', slotId] })
+    },
+    [queryClient],
+  )
 
-  const editingMappingData = useMemo(() =>
-    editingMapping ? mappings.find(m => m.id === editingMapping) : undefined,
-  [editingMapping, mappings])
+  // ─── The semester ladder ─────────────────────────────────────────────
+  const flow = useMemo<SemesterFlowRow[]>(
+    () =>
+      buildSemesterFlow({
+        curricula: curriculumList,
+        mappings,
+        slots: weeklySchedules,
+        branch: selectedBranch,
+        batch: selectedBatch,
+      }),
+    [curriculumList, mappings, weeklySchedules, selectedBranch, selectedBatch],
+  )
 
-  const curriculumMappings = useMemo(() =>
-    selectedCurriculumData ? getCurriculumMappings(selectedCurriculumData.id) : [],
-  [selectedCurriculumData, getCurriculumMappings])
+  const progress = useMemo(() => flowProgress(flow), [flow])
+  const activeSemester = flow.find(row => row.semester === selectedSemester) || flow[0]
 
-  // ─── Load the weekly timetable ───────────────────────────────────────
+  // Land on the first semester that still has work to do, once, on first load.
+  const [landed, setLanded] = useState(false)
   useEffect(() => {
-    if (!collegeId) return
-    let cancelled = false
-    fetchWeeklySchedules(collegeId)
-      .then(rows => { if (!cancelled) setWeeklySchedules(rows) })
-      .catch(() => { if (!cancelled) setWeeklySchedules([]) })
-    return () => { cancelled = true }
-  }, [collegeId])
-
-  /**
-   * Active timetable rows grouped by subject code + branch + semester.
-   *
-   * Timetable rows carry no courseId, so subject code + branch + semester
-   * is the closest thing to a join key back to a curriculum course. Batch
-   * is deliberately left out of the key: a course card is not tied to one
-   * batch, so it should report every slot for that subject, and callers
-   * that do know the batch filter the group down themselves.
-   *
-   * Inactive rows are dropped — a retired slot must not read as
-   * "already scheduled".
-   */
-  const scheduledRows = useMemo(() => {
-    const groups = new Map<string, WeeklyClassSchedule[]>()
-    for (const row of weeklySchedules) {
-      if (row.isActive === false) continue
-      const key = scheduledClassKey(row.subjectCode, row.branch, null, row.semester)
-      const bucket = groups.get(key)
-      if (bucket) bucket.push(row)
-      else groups.set(key, [row])
+    if (landed || flow.length === 0 || !activeSemester) return
+    if (activeSemester.status !== 'empty') {
+      setLanded(true)
+      return
     }
-    return groups
-  }, [weeklySchedules])
+    const firstWithCourses = flow.find(row => row.courseCount > 0)
+    if (firstWithCourses) {
+      setSelectedSemester(firstWithCourses.semester)
+      setLanded(true)
+    }
+  }, [landed, flow, activeSemester])
 
-  // ─── Subject-guided faculty options ──────────────────────────────────
-  // Faculty are NOT pinned to a branch/batch — one person may teach across
-  // years and branches. So we don't filter by branch; we sort/suggest by the
-  // subjects each faculty listed, matching the schedule form's behaviour.
+  // ─── Faculty options, subject-matched like the schedule form ─────────
   const selectedCourseName = useMemo(() => {
     if (!formData.courseId) return ''
     const curriculum = curriculumList.find(c => c.id === formData.curriculumId)
@@ -229,29 +238,17 @@ const AdminCurriculum: React.FC = () => {
       })
   }, [facultyList, getFacultySubjects, selectedCourseName])
 
-  // ─── Handlers ────────────────────────────────────────────────────────
-  const handleOpenMapping = (curriculum: CurriculumDoc, course?: ParsedCourse) => {
-    setEditingMapping(null)
+  // ─── Handlers: faculty assignment ────────────────────────────────────
+  const handleOpenMapping = (curriculum: CurriculumDoc, course?: ParsedCourse, existing?: CourseFlowRow['mapping']) => {
+    setEditingMapping(existing?.id || null)
     setFormData({
       ...EMPTY_FORM,
       curriculumId: curriculum.id,
       courseId: course?.id || '',
-      batch: selectedBatch !== 'all' ? selectedBatch : '',
-      division: '',
-      section: '',
-    })
-    setOpenMappingDialog(true)
-  }
-
-  const handleEditMapping = (mapping: typeof mappings[0]) => {
-    setEditingMapping(mapping.id)
-    setFormData({
-      curriculumId: mapping.curriculumId,
-      courseId: mapping.courseId,
-      facultyId: mapping.facultyId,
-      batch: mapping.batch,
-      division: mapping.division || '',
-      section: mapping.section || '',
+      facultyId: existing?.facultyId || '',
+      batch: existing?.batch || (selectedBatch !== 'all' ? selectedBatch : ''),
+      division: existing?.division || '',
+      section: existing?.section || '',
     })
     setOpenMappingDialog(true)
   }
@@ -264,23 +261,20 @@ const AdminCurriculum: React.FC = () => {
 
   const handleSubmitMapping = async () => {
     if (!formData.curriculumId || !formData.courseId || !formData.facultyId || !formData.batch) {
-      setSnackbar({ open: true, message: 'Please fill all required fields', severity: 'error' })
+      notify('Please fill all required fields', 'error')
       return
     }
 
     const curriculum = curriculumList.find(c => c.id === formData.curriculumId)
     const course = curriculum?.courses.find(c => c.id === formData.courseId)
-    const faculty = facultyList.find(f => f.id === formData.facultyId)
+    const faculty = facultyList.find(f => f.id === formData.facultyId || f.uid === formData.facultyId)
 
     if (!faculty) {
-      setSnackbar({ open: true, message: 'Please select a faculty member', severity: 'error' })
+      notify('Please select a faculty member', 'error')
       return
     }
 
     if (editingMapping) {
-      // An edit keeps the mapping's curriculum/course and only changes who
-      // teaches it (and batch/division/section), so it must not depend on the
-      // curriculum list having loaded.
       const result = await updateFacultyAssignment(editingMapping, {
         // Same rule as create: the Auth uid is the canonical faculty key, so
         // an edit cannot silently re-key the mapping back to the profile doc
@@ -293,14 +287,14 @@ const AdminCurriculum: React.FC = () => {
         section: formData.section || null,
       })
       if (result) {
-        setSnackbar({ open: true, message: 'Assignment updated successfully', severity: 'success' })
+        notify('Assignment updated successfully')
         handleCloseMapping()
       } else {
-        setSnackbar({ open: true, message: error || 'Failed to update', severity: 'error' })
+        notify(error || 'Failed to update', 'error')
       }
     } else {
       if (!curriculum || !course) {
-        setSnackbar({ open: true, message: 'Please select a curriculum and course', severity: 'error' })
+        notify('Please select a curriculum and course', 'error')
         return
       }
       const result = await assignFaculty(
@@ -310,58 +304,41 @@ const AdminCurriculum: React.FC = () => {
         formData.batch,
         formData.division || undefined,
         formData.section || undefined,
-        user?.name || user?.email || 'Admin'
+        user?.name || user?.email || 'Admin',
       )
       if (result) {
-        setSnackbar({ open: true, message: 'Faculty assigned successfully', severity: 'success' })
+        notify('Faculty assigned successfully')
         handleCloseMapping()
       } else {
-        setSnackbar({ open: true, message: error || 'Failed to assign', severity: 'error' })
+        notify(error || 'Failed to assign', 'error')
       }
     }
   }
 
   const handleDeleteMapping = async (mappingId: string) => {
-    if (window.confirm('Are you sure you want to remove this faculty assignment?')) {
-      const success = await removeMapping(mappingId)
-      if (success) {
-        setSnackbar({ open: true, message: 'Assignment removed', severity: 'success' })
-      } else {
-        setSnackbar({ open: true, message: error || 'Failed to remove', severity: 'error' })
-      }
-    }
+    if (!window.confirm('Remove this faculty assignment? The timetable slots stay where they are.')) return
+    const success = await removeMapping(mappingId)
+    notify(success ? 'Assignment removed' : error || 'Failed to remove', success ? 'success' : 'error')
   }
 
   /**
    * Rewrite every mapping on the selected curriculum so it carries the
    * semester of the course it points at, rather than the curriculum's own
-   * (primary) semester.
-   *
-   * A parsed curriculum can bundle courses from more than one semester — the
-   * doc's `semester` is only the one the syllabus header named — but mappings
-   * were historically written with that header value. Downstream surfaces
-   * (student "my curriculum", faculty filtering, timetable prefill) read
-   * `mapping.semester`, so they file a 5th-semester elective under semester 6
-   * and it never shows up for the students who actually take it.
+   * (primary) semester. A parsed curriculum can bundle courses from more than
+   * one semester under one header, and mappings were historically written with
+   * that header value — so a 5th-semester elective was filed under semester 6
+   * and never showed up for the students who take it.
    */
-  const handleSyncSemesters = async () => {
-    if (!selectedCurriculumData) return
-
-    const semesterByCourse = new Map(
-      selectedCurriculumData.courses.map(c => [c.id, c.semester])
-    )
-
-    const stale = curriculumMappings.filter(m => {
+  const handleSyncSemesters = async (curriculum: CurriculumDoc) => {
+    const semesterByCourse = new Map(curriculum.courses.map(c => [c.id, c.semester]))
+    const stale = mappings.filter(m => {
+      if (m.curriculumId !== curriculum.id || m.status !== 'active') return false
       const courseSemester = semesterByCourse.get(m.courseId)
       return courseSemester !== undefined && courseSemester !== m.semester
     })
 
     if (stale.length === 0) {
-      setSnackbar({
-        open: true,
-        message: 'Semesters are already in sync with each course.',
-        severity: 'info',
-      })
+      notify('Semesters are already in sync with each course.', 'info')
       return
     }
 
@@ -371,16 +348,17 @@ const AdminCurriculum: React.FC = () => {
       .join('\n')
     const overflow = stale.length > 5 ? `\n…and ${stale.length - 5} more` : ''
 
-    if (!window.confirm(
-      `${stale.length} mapping${stale.length === 1 ? '' : 's'} will be moved to their course's own semester:\n\n${preview}${overflow}\n\nContinue?`
-    )) return
+    if (
+      !window.confirm(
+        `${stale.length} mapping${stale.length === 1 ? '' : 's'} will be moved to their course's own semester:\n\n${preview}${overflow}\n\nContinue?`,
+      )
+    )
+      return
 
     setSyncing(true)
     let updated = 0
     try {
       for (const mapping of stale) {
-        // `stale` is a snapshot taken before the loop, so the re-renders that
-        // each update triggers cannot make us skip or re-visit an entry.
         const result = await updateFacultyAssignment(mapping.id, {
           semester: semesterByCourse.get(mapping.courseId)!,
         })
@@ -391,200 +369,480 @@ const AdminCurriculum: React.FC = () => {
     }
 
     if (updated === stale.length) {
-      setSnackbar({
-        open: true,
-        message: `${updated} mapping${updated === 1 ? '' : 's'} synced to their course semester.`,
-        severity: 'success',
-      })
+      notify(`${updated} mapping${updated === 1 ? '' : 's'} synced to their course semester.`)
     } else if (updated > 0) {
-      setSnackbar({
-        open: true,
-        message: `Synced ${updated} of ${stale.length} — ${stale.length - updated} failed. ${error || ''}`.trim(),
-        severity: 'warning',
-      })
+      notify(`Synced ${updated} of ${stale.length} — ${stale.length - updated} failed. ${error || ''}`.trim(), 'warning')
     } else {
-      setSnackbar({ open: true, message: error || 'Failed to sync semesters', severity: 'error' })
+      notify(error || 'Failed to sync semesters', 'error')
     }
   }
 
-  const handleScheduleClass = (mapping: typeof mappings[0]) => {
-    navigate('/admin/class-schedule', {
-      state: {
-        prefill: {
-          subject: mapping.courseName,
-          subjectCode: mapping.courseCode,
-          facultyId: mapping.facultyId,
-          branch: mapping.branch,
-          batch: mapping.batch,
-          semester: mapping.semester,
-          division: mapping.division || '',
-          section: mapping.section || '',
-        }
-      }
+  // ─── Handlers: timetable ─────────────────────────────────────────────
+  const handleOpenSchedule = (row: CourseFlowRow) => {
+    setSchedulePrefill({
+      subject: row.course.name,
+      subjectCode: row.course.code,
+      facultyId: row.mapping?.facultyId || '',
+      facultyName: row.mapping?.facultyName || '',
+      branch: row.course.branch || row.curriculum.branch || '',
+      batch: row.mapping?.batch || (selectedBatch !== 'all' ? selectedBatch : ''),
+      semester: row.course.semester ?? row.curriculum.semester,
+      division: row.mapping?.division || '',
+      section: row.mapping?.section || '',
     })
   }
 
-  // ─── Loading State ───────────────────────────────────────────────────
+  const handleSlotSaved = (payload: { slot: WeeklyClassSchedule; generated: number; sessionsError?: string }) => {
+    invalidateTimetable(payload.slot.id)
+    const parts = [`Class added to the timetable (${formatSlot(payload.slot)})`]
+    if (payload.generated > 0) {
+      parts.push(`${payload.generated} dated class${payload.generated === 1 ? '' : 'es'} created`)
+    }
+    if (payload.sessionsError) parts.push(payload.sessionsError)
+    notify(parts.join(' · '), payload.sessionsError ? 'warning' : 'success')
+  }
+
+  /** Materialise (or top up) the dated classes for one slot. Idempotent. */
+  const handleCreateSessions = async (slot: WeeklyClassSchedule) => {
+    setBusySlotId(slot.id)
+    try {
+      const window = defaultTermWindow()
+      const result = await generateClassSessions({
+        from: window.from,
+        to: window.to,
+        weeklyScheduleId: slot.id,
+      })
+      invalidateTimetable(slot.id)
+      notify(
+        result.created === 0
+          ? `Already up to date — ${result.skippedExisting} dated class(es) exist for this slot.`
+          : `Created ${result.created} dated class(es) for “${slot.subject}”.`,
+        result.skippedConflicts > 0 ? 'warning' : 'success',
+      )
+    } catch (err) {
+      notify(err instanceof Error ? err.message : 'The dated classes could not be created.', 'error')
+    } finally {
+      setBusySlotId(null)
+    }
+  }
+
+  const handleCancelSlot = async (slot: WeeklyClassSchedule) => {
+    if (
+      !window.confirm(
+        `Switch off “${slot.subject}” ${formatSlot(slot)}?\n\n` +
+          'Every unmarked class it generated from today onwards is cancelled, and the slot stops producing ' +
+          'new ones. Classes already delivered or marked are left untouched.',
+      )
+    )
+      return
+    setBusySlotId(slot.id)
+    try {
+      const result = await cancelWeeklySchedule({
+        weeklyScheduleId: slot.id,
+        reason: 'Cancelled from the curriculum flow',
+      })
+      invalidateTimetable(slot.id)
+      notify(
+        result.cancelled === 0
+          ? 'Slot switched off — no future class needed cancelling.'
+          : `Slot switched off and ${result.cancelled} future class(es) cancelled.`,
+      )
+    } catch (err) {
+      notify(err instanceof Error ? err.message : 'The slot could not be cancelled.', 'error')
+    } finally {
+      setBusySlotId(null)
+    }
+  }
+
+  const handleRescheduled = (result: RescheduleClassResult) => {
+    invalidateTimetable(result.weeklyScheduleId)
+    queryClient.invalidateQueries({ queryKey: ['slotSessions'] })
+    notify(
+      [
+        result.message,
+        result.unchanged > 0 && result.scope === 'slot' ? `${result.unchanged} already on the new day` : '',
+        result.skippedMarked > 0 ? `${result.skippedMarked} already delivered — left in place` : '',
+      ]
+        .filter(Boolean)
+        .join(' · '),
+      'success',
+    )
+  }
+
+  // ─── Loading / error states ──────────────────────────────────────────
+  if (!collegeId) {
+    return (
+      <Box sx={{ p: 3 }}>
+        <Alert severity="warning">Your account is not linked to a college. Log out and back in, or ask an administrator.</Alert>
+      </Box>
+    )
+  }
+
   if (loading && curriculumList.length === 0) {
     return (
       <Box sx={{ p: 3, display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
         <Box sx={{ textAlign: 'center' }}>
-          <Typography variant="h6" sx={{ color: 'text.secondary' }}>Loading curriculum centre…</Typography>
-          <Typography variant="body2" sx={{ color: 'text.disabled', mt: 1 }}>Fetching curriculum list, mappings & faculty.</Typography>
+          <Typography variant="h6" sx={{ color: 'text.secondary' }}>
+            Loading curriculum centre…
+          </Typography>
+          <Typography variant="body2" sx={{ color: 'text.disabled', mt: 1 }}>
+            Fetching curriculum list, mappings & faculty.
+          </Typography>
         </Box>
       </Box>
     )
   }
 
-  // ─── Error State ─────────────────────────────────────────────────────
   if (error && curriculumList.length === 0) {
     return (
       <Box sx={{ p: 3 }}>
         <Alert severity="error" sx={{ mb: 2 }}>
-          <Typography variant="h6" sx={{ mb: 1 }}>Could not load curriculum data</Typography>
+          <Typography variant="h6" sx={{ mb: 1 }}>
+            Could not load curriculum data
+          </Typography>
           <Typography variant="body2">{error}</Typography>
-          <Button variant="contained" onClick={() => window.location.reload()} sx={{ mt: 2 }}>Reload page</Button>
+          <Button variant="contained" onClick={() => window.location.reload()} sx={{ mt: 2 }}>
+            Reload page
+          </Button>
         </Alert>
       </Box>
     )
   }
 
   return (
-    <Box sx={{ p: 3 }}>
-      {/* Header */}
-      <Box sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', mb: 3, gap: 2 }}>
+    <Box sx={{ p: { xs: 2, md: 3 } }}>
+      {/* ────────────────────── Header ────────────────────── */}
+      <Box
+        sx={{
+          display: 'flex',
+          flexWrap: 'wrap',
+          alignItems: 'flex-start',
+          justifyContent: 'space-between',
+          mb: 3,
+          gap: 2,
+        }}
+      >
         <Box>
           <Typography variant="h4" sx={{ fontWeight: 700, display: 'flex', alignItems: 'center', gap: 1 }}>
-            <SchoolIcon sx={{ color: 'primary.main' }} /> Curriculum & Mappings
+            <SchoolIcon sx={{ color: 'primary.main' }} /> Curriculum → Timetable
           </Typography>
-          <Typography variant="body2" sx={{ color: 'text.secondary', mt: 0.5 }}>
-            Map faculty to syllabus, auto-suggest, then schedule classes.
+          <Typography variant="body2" sx={{ color: 'text.secondary', mt: 0.5, maxWidth: 720 }}>
+            Work down the semesters: assign a faculty member to each subject, put it on the timetable, and
+            reschedule it here when plans change — the dated classes, attendance and the student timetable follow.
           </Typography>
         </Box>
-        <Box sx={{ display: 'flex', gap: 1 }}>
-          <Button variant="outlined" startIcon={<RefreshIcon />} onClick={refreshCurriculum}>Refresh</Button>
-          <Button variant="contained" startIcon={<AIIcon />} onClick={() => setAutoMapFor(selectedCurriculumData!)} disabled={!selectedCurriculumData}>Auto-Map</Button>
+        <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+          <Button variant="outlined" startIcon={<RefreshIcon />} onClick={() => { refreshCurriculum(); refresh() }}>
+            Refresh
+          </Button>
+          <Button
+            variant="contained"
+            startIcon={<AIIcon />}
+            onClick={() => {
+              const first = activeSemester?.courses[0]?.curriculum || curriculumList[0]
+              if (first) setAutoMapFor(first)
+            }}
+            disabled={curriculumList.length === 0}
+          >
+            Auto-Map
+          </Button>
         </Box>
       </Box>
 
-      {/* Tabs */}
-      <Tabs value={activeTab} onChange={(_, v) => setActiveTab(v)} sx={{ mb: 3, borderBottom: 1, borderColor: 'divider' }}>
-        <Tab label="Curriculum" icon={<SchoolIcon />} />
-        <Tab label="Mappings" icon={<BookIcon />} />
-        <Tab label="Class Schedule" icon={<ScheduleIcon />} />
-      </Tabs>
-
-      {/* ────────────────────── Curriculum Tab ────────────────────── */}
-      {activeTab === 'curriculum' && (
-        <Box>
-          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, mb: 3 }}>
-            <FormControl size="small" sx={{ minWidth: 220 }}>
-              <InputLabel id="branch-label">Branch</InputLabel>
-              <Select
-                labelId="branch-label"
-                value={selectedBranch}
-                label="Branch"
-                onChange={e => setSelectedBranch(e.target.value)}
-              >
-                <MenuItem value="all">All branches</MenuItem>
-                {branches.map(b => <MenuItem key={b} value={b}>{b}</MenuItem>)}
-              </Select>
-            </FormControl>
-            <FormControl size="small" sx={{ minWidth: 160 }}>
-              <InputLabel id="semester-label">Semester</InputLabel>
-              <Select
-                labelId="semester-label"
-                value={selectedSemester}
-                label="Semester"
-                onChange={e => setSelectedSemester(e.target.value)}
-              >
-                <MenuItem value="all">All semesters</MenuItem>
-                {semesters.map(s => <MenuItem key={s} value={s}>Semester {s}</MenuItem>)}
-              </Select>
-            </FormControl>
-            <FormControl size="small" sx={{ minWidth: 160 }}>
-              <InputLabel id="batch-label">Batch</InputLabel>
-              <Select
-                labelId="batch-label"
-                value={selectedBatch}
-                label="Batch"
-                onChange={e => setSelectedBatch(e.target.value)}
-              >
-                <MenuItem value="all">All batches</MenuItem>
-                {batches.map(b => <MenuItem key={b} value={b}>{b}</MenuItem>)}
-              </Select>
-            </FormControl>
-          </Box>
-
-          <Accordion sx={{ mb: 2 }}>
-            <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-              <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-                {selectedCurriculumData ? `${selectedCurriculumData.branch} · Semester ${selectedCurriculumData.semester} · ${selectedCurriculumData.scheme}` : 'Select a curriculum'}
+      {/* ────────────────────── Step 1 + progress ────────────────────── */}
+      <Paper elevation={0} variant="outlined" sx={{ p: 2, mb: 2 }}>
+        <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} sx={{ alignItems: { md: 'center' } }}>
+          <FormControl size="small" sx={{ minWidth: 200 }}>
+            <InputLabel id="branch-label">Branch</InputLabel>
+            <Select
+              labelId="branch-label"
+              value={selectedBranch}
+              label="Branch"
+              onChange={e => setSelectedBranch(e.target.value)}
+            >
+              <MenuItem value="all">All branches</MenuItem>
+              {branches.map(b => (
+                <MenuItem key={b} value={b}>
+                  {b}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+          <FormControl size="small" sx={{ minWidth: 180 }}>
+            <InputLabel id="batch-label">Batch</InputLabel>
+            <Select
+              labelId="batch-label"
+              value={selectedBatch}
+              label="Batch"
+              onChange={e => setSelectedBatch(e.target.value)}
+            >
+              <MenuItem value="all">All batches</MenuItem>
+              {batches.map(b => (
+                <MenuItem key={b} value={b}>
+                  {b}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+          <Box sx={{ flex: 1, minWidth: 220 }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
+              <Typography variant="caption" color="text.secondary">
+                {progress.scheduled} of {progress.courses} subjects on the timetable
               </Typography>
-            </AccordionSummary>
-            <AccordionDetails>
-              <Grid container spacing={2}>
-                {selectedCurriculumData?.courses.map(course => {
-                  const mapping = curriculumMappings.find(m => m.courseId === course.id)
-                  const scheduled = scheduledRows.get(
-                    scheduledClassKey(course.code, selectedCurriculumData.branch, null, course.semester)
-                  ) ?? []
-                  return (
-                  <Grid size={{ xs: 12, sm: 6, md: 4 }} key={course.id}>
-                    <Paper elevation={1} sx={{ p: 2, display: 'flex', flexDirection: 'column', height: '100%' }}>
-                      <Box sx={{ mb: 1 }}>
-                        <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>{course.name}</Typography>
-                        <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-                          {course.code} · Sem {course.semester} · {course.credits} credits
-                        </Typography>
-                      </Box>
-                      {mapping && (
-                        <Typography variant="caption" sx={{ color: 'success.main', display: 'block', mb: 0.5 }}>
-                          {mapping.facultyName}{mapping.batch ? ` · ${mapping.batch}` : ''}
-                        </Typography>
-                      )}
-                      {scheduled.length > 0 && (
+              <Typography variant="caption" sx={{ fontWeight: 600 }}>
+                {progress.pct}%
+              </Typography>
+            </Box>
+            <LinearProgress
+              variant="determinate"
+              value={progress.pct}
+              color={progress.pct === 100 ? 'success' : progress.pct >= 50 ? 'primary' : 'warning'}
+              sx={{ height: 8, borderRadius: 4 }}
+            />
+            <Typography variant="caption" color="text.secondary">
+              {progress.unassigned} without faculty · {progress.unscheduled} not scheduled
+            </Typography>
+          </Box>
+        </Stack>
+      </Paper>
+
+      {/* ────────────────────── Step 2: the semester ladder ────────────────────── */}
+      <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 1 }}>
+        1. Pick a semester
+      </Typography>
+      <Grid container spacing={1.5} sx={{ mb: 3 }}>
+        {flow.map(row => {
+          const selected = row.semester === activeSemester?.semester
+          return (
+            <Grid size={{ xs: 6, sm: 4, md: 2 }} key={row.semester}>
+              <Paper
+                elevation={0}
+                variant="outlined"
+                onClick={() => setSelectedSemester(row.semester)}
+                sx={{
+                  p: 1.5,
+                  cursor: 'pointer',
+                  height: '100%',
+                  borderColor: selected ? 'primary.main' : 'divider',
+                  borderWidth: selected ? 2 : 1,
+                  bgcolor: selected ? 'action.selected' : 'background.paper',
+                  '&:hover': { borderColor: 'primary.main' },
+                }}
+              >
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
+                    Semester {row.semester}
+                  </Typography>
+                  <Chip
+                    size="small"
+                    color={semesterStatusColor(row)}
+                    variant={row.status === 'empty' ? 'outlined' : 'filled'}
+                    label={row.status === 'ready' ? 'ready' : row.status === 'empty' ? '—' : 'to do'}
+                    sx={{ height: 18, fontSize: 11 }}
+                  />
+                </Box>
+                <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
+                  {semesterStatusLabel(row)}
+                </Typography>
+                {row.weeklyClasses > 0 && (
+                  <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
+                    {row.weeklyClasses} class{row.weeklyClasses === 1 ? '' : 'es'}/week
+                  </Typography>
+                )}
+              </Paper>
+            </Grid>
+          )
+        })}
+      </Grid>
+
+      {/* ────────────────────── Step 3: the semester's subjects ────────────────────── */}
+      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 1, mb: 1 }}>
+        <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+          2. Assign faculty, schedule the class, reschedule when it moves
+        </Typography>
+        {activeSemester?.courses[0]?.curriculum && (
+          <Tooltip title="Rewrite each assignment's semester to match the course it points at">
+            <span>
+              <Button
+                variant="outlined"
+                size="small"
+                startIcon={<SyncIcon />}
+                onClick={() => handleSyncSemesters(activeSemester.courses[0].curriculum)}
+                disabled={syncing}
+              >
+                {syncing ? 'Syncing…' : 'Sync semesters'}
+              </Button>
+            </span>
+          </Tooltip>
+        )}
+      </Box>
+
+      {facultyList.length === 0 && (
+        <Alert severity="warning" sx={{ mb: 2 }}>
+          No active faculty found for this college — add faculty members before assigning subjects.
+        </Alert>
+      )}
+
+      <Paper elevation={0} variant="outlined" sx={{ mb: 3, overflowX: 'auto' }}>
+        {!activeSemester || activeSemester.courses.length === 0 ? (
+          <Box sx={{ p: 4, textAlign: 'center' }}>
+            <Typography variant="body1" color="text.secondary">
+              No subjects for semester {activeSemester?.semester ?? selectedSemester}{' '}
+              {selectedBranch !== 'all' ? `in ${selectedBranch}` : ''}.
+            </Typography>
+            <Typography variant="body2" color="text.disabled" sx={{ mt: 1 }}>
+              Import the syllabus for this semester from Curriculum in the super-admin workspace, or pick another
+              branch or semester above.
+            </Typography>
+          </Box>
+        ) : (
+          <Table size="small">
+            <TableHead>
+              <TableRow sx={{ '& th': { fontWeight: 600, bgcolor: 'action.hover' } }}>
+                <TableCell>Subject</TableCell>
+                <TableCell>Faculty</TableCell>
+                <TableCell>Timetable</TableCell>
+                <TableCell align="right">Actions</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {activeSemester.courses.map(row => {
+                const slots = sortSlots(row.slots)
+                return (
+                  <TableRow key={row.course.id} hover sx={{ '&:last-child td': { border: 0 } }}>
+                    <TableCell sx={{ verticalAlign: 'top', minWidth: 220 }}>
+                      <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                        {row.course.name}
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        {row.course.code} · {row.course.credits} credits
+                        {row.course.totalHours ? ` · ${row.course.totalHours} hrs` : ''} ·{' '}
+                        {row.curriculum.branch} · Sem {row.course.semester}
+                      </Typography>
+                      {slots.length > 0 && (
                         <Chip
                           size="small"
                           color="success"
                           icon={<CheckIcon />}
-                          label={`${scheduled.length} class${scheduled.length === 1 ? '' : 'es'} scheduled`}
-                          sx={{ alignSelf: 'flex-start', mb: 1 }}
+                          label={`${slots.length} class${slots.length === 1 ? '' : 'es'}/week`}
+                          sx={{ mt: 0.5, height: 20, fontSize: 11 }}
                         />
                       )}
-                      <Box sx={{ display: 'flex', gap: 1, mt: 'auto' }}>
-                        <Button size="small" variant="outlined" startIcon={<EditIcon />}
-                          onClick={() => handleOpenMapping(selectedCurriculumData!, course)}
-                          disabled={!selectedCurriculumData}
-                        >{mapping ? 'Reassign' : 'Assign Faculty'}</Button>
-                        <Button size="small" variant="outlined" startIcon={<ScheduleIcon />}
-                          onClick={() => handleScheduleClass({ ...course, curriculumId: selectedCurriculumData!.id } as any)}
-                          disabled={!selectedCurriculumData}
-                        >{scheduled.length > 0 ? 'Manage schedule' : 'Schedule Class'}</Button>
-                      </Box>
-                    </Paper>
-                  </Grid>
-                  )
-                })}
-                {selectedCurriculumData?.courses.length === 0 && (
-                  <Grid size={{ xs: 12 }}>
-                    <Typography variant="body2" sx={{ color: 'text.secondary' }}>No courses in this curriculum.</Typography>
-                  </Grid>
-                )}
-              </Grid>
-            </AccordionDetails>
-          </Accordion>
+                    </TableCell>
 
-          <Divider sx={{ my: 3 }} />
+                    <TableCell sx={{ verticalAlign: 'top', minWidth: 180 }}>
+                      {row.mapping ? (
+                        <>
+                          <Typography variant="body2">{row.mapping.facultyName}</Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            {row.mapping.batch}
+                            {row.mapping.division ? ` · Div ${row.mapping.division}` : ''}
+                            {row.mapping.section ? ` · Sec ${row.mapping.section}` : ''}
+                          </Typography>
+                        </>
+                      ) : (
+                        <Chip size="small" color="error" variant="outlined" label="No faculty assigned" />
+                      )}
+                    </TableCell>
 
-          <Typography variant="h6" sx={{ mb: 2 }}>All Curricula</Typography>
+                    <TableCell sx={{ verticalAlign: 'top', minWidth: 260 }}>
+                      {slots.length === 0 ? (
+                        <Typography variant="caption" color="text.secondary">
+                          Not on the timetable yet.
+                        </Typography>
+                      ) : (
+                        <Stack spacing={0.5}>
+                          {slots.map(slot => (
+                            <Box key={slot.id} sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                              <Chip size="small" variant="outlined" label={formatSlot(slot)} />
+                              <Tooltip title="Create the dated classes for the next term (needed for attendance). Safe to run twice.">
+                                <span>
+                                  <IconButton
+                                    size="small"
+                                    onClick={() => handleCreateSessions(slot)}
+                                    disabled={busySlotId === slot.id}
+                                  >
+                                    <SessionsIcon fontSize="inherit" />
+                                  </IconButton>
+                                </span>
+                              </Tooltip>
+                              <Tooltip title="Reschedule — move this slot, or just one class">
+                                <IconButton size="small" onClick={() => setRescheduleSlot(slot)}>
+                                  <RescheduleIcon fontSize="inherit" />
+                                </IconButton>
+                              </Tooltip>
+                              <Tooltip title="Switch the slot off and cancel its future classes">
+                                <span>
+                                  <IconButton
+                                    size="small"
+                                    color="error"
+                                    onClick={() => handleCancelSlot(slot)}
+                                    disabled={busySlotId === slot.id}
+                                  >
+                                    <CancelIcon fontSize="inherit" />
+                                  </IconButton>
+                                </span>
+                              </Tooltip>
+                            </Box>
+                          ))}
+                        </Stack>
+                      )}
+                    </TableCell>
+
+                    <TableCell align="right" sx={{ verticalAlign: 'top', whiteSpace: 'nowrap' }}>
+                      <Tooltip title={row.mapping ? 'Change the faculty member' : 'Assign a faculty member'}>
+                        <Button
+                          size="small"
+                          variant={row.mapping ? 'text' : 'contained'}
+                          startIcon={row.mapping ? <EditIcon /> : <PersonAddIcon />}
+                          onClick={() => handleOpenMapping(row.curriculum, row.course, row.mapping)}
+                        >
+                          {row.mapping ? 'Reassign' : 'Assign'}
+                        </Button>
+                      </Tooltip>
+                      <Tooltip title={slots.length > 0 ? 'Add another weekly slot' : 'Put this subject on the timetable'}>
+                        <Button size="small" variant="outlined" startIcon={<AddIcon />} onClick={() => handleOpenSchedule(row)} sx={{ ml: 1 }}>
+                          {slots.length > 0 ? 'Add slot' : 'Schedule'}
+                        </Button>
+                      </Tooltip>
+                      {row.mapping && (
+                        <Tooltip title="Remove this faculty assignment">
+                          <IconButton size="small" color="error" onClick={() => handleDeleteMapping(row.mapping!.id)} sx={{ ml: 0.5 }}>
+                            <DeleteIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                )
+              })}
+            </TableBody>
+          </Table>
+        )}
+      </Paper>
+
+      {schedulesLoading && (
+        <Typography variant="caption" color="text.disabled" sx={{ display: 'block', mb: 2 }}>
+          Loading the timetable…
+        </Typography>
+      )}
+
+      {/* ────────────────────── Every curriculum on file ────────────────────── */}
+      <Divider sx={{ my: 3 }} />
+      <Accordion expanded={expandedCurriculum === 'all'} onChange={(_, open) => setExpandedCurriculum(open ? 'all' : null)}>
+        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+          <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+            All curricula on file ({curriculumList.length})
+          </Typography>
+        </AccordionSummary>
+        <AccordionDetails>
           <Table size="small">
             <TableHead>
               <TableRow>
                 <TableCell>Branch</TableCell>
                 <TableCell>Semester</TableCell>
                 <TableCell>Scheme</TableCell>
-                <TableCell>Courses</TableCell>
+                <TableCell>Subjects</TableCell>
                 <TableCell align="right">Actions</TableCell>
               </TableRow>
             </TableHead>
@@ -596,189 +854,82 @@ const AdminCurriculum: React.FC = () => {
                   <TableCell>{c.scheme}</TableCell>
                   <TableCell>{c.courses.length}</TableCell>
                   <TableCell align="right">
-                    <Button size="small" variant="text" onClick={() => setSelectedCurriculum(c.id)}>
-                      <EditIcon fontSize="small" /> Select
+                    <Button
+                      size="small"
+                      variant="text"
+                      onClick={() => {
+                        setSelectedBranch(c.branch)
+                        setSelectedSemester(c.semester)
+                      }}
+                    >
+                      <EditIcon fontSize="small" /> Work on this
                     </Button>
                   </TableCell>
                 </TableRow>
               ))}
+              {curriculumList.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={5} align="center" sx={{ py: 4 }}>
+                    <Typography variant="body2" color="text.secondary">
+                      No curriculum has been imported for this college yet.
+                    </Typography>
+                  </TableCell>
+                </TableRow>
+              )}
             </TableBody>
           </Table>
-        </Box>
-      )}
+        </AccordionDetails>
+      </Accordion>
 
-      {/* ────────────────────── Mappings Tab ────────────────────── */}
-      {activeTab === 'mappings' && (
-        <Box>
-          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 2, mb: 2, flexWrap: 'wrap' }}>
-            <Typography variant="h6">
-              Faculty Assignments {selectedCurriculumData && ` — ${selectedCurriculumData.branch} · Sem ${selectedCurriculumData.semester}`}
-            </Typography>
-            <Tooltip title="Rewrite each mapping's semester to match the course it points at, instead of the curriculum's semester">
-              <span>
-                <Button
-                  variant="outlined"
-                  size="small"
-                  startIcon={<SyncIcon />}
-                  onClick={handleSyncSemesters}
-                  disabled={!selectedCurriculumData || syncing}
-                >
-                  {syncing ? 'Syncing…' : 'Sync Semesters'}
-                </Button>
-              </span>
-            </Tooltip>
-          </Box>
-
-          {curriculumMappings.length === 0 ? (
-            <Paper elevation={1} sx={{ p: 4, textAlign: 'center' }}>
-              <Typography variant="body1" sx={{ color: 'text.secondary' }}>No faculty assigned to this curriculum yet.</Typography>
-              <Button variant="contained" startIcon={<AddIcon />} onClick={() => handleOpenMapping(selectedCurriculumData!)} sx={{ mt: 2 }} disabled={!selectedCurriculumData}>
-                Add First Mapping
-              </Button>
-            </Paper>
-          ) : (
-            <Table size="small">
-              <TableHead>
-                <TableRow>
-                  <TableCell>Subject</TableCell>
-                  <TableCell>Faculty</TableCell>
-                  <TableCell>Semester</TableCell>
-                  <TableCell>Batch</TableCell>
-                  <TableCell>Division</TableCell>
-                  <TableCell>Section</TableCell>
-                  <TableCell align="right">Actions</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {curriculumMappings.map(m => (
-                  <TableRow key={m.id} sx={{ '&:last-child td': { border: 0 } }}>
-                    <TableCell>
-                      <Typography variant="body2" sx={{ fontWeight: 500 }}>{m.courseName}</Typography>
-                      <Typography variant="caption" sx={{ color: 'text.secondary' }}>{m.courseCode}</Typography>
-                    </TableCell>
-                    <TableCell>
-                      <Typography variant="body2">{m.facultyName}</Typography>
-                    </TableCell>
-                    <TableCell>
-                      <Tooltip title={
-                        m.semester === selectedCurriculumData?.semester
-                          ? "Matches the curriculum's semester"
-                          : `Course is taught in semester ${m.semester}`
-                      }>
-                        <Chip
-                          size="small"
-                          label={`Sem ${m.semester}`}
-                          color={m.semester === selectedCurriculumData?.semester ? 'default' : 'warning'}
-                          variant={m.semester === selectedCurriculumData?.semester ? 'outlined' : 'filled'}
-                        />
-                      </Tooltip>
-                    </TableCell>
-                    <TableCell>{m.batch}</TableCell>
-                    <TableCell>{m.division || '-'}</TableCell>
-                    <TableCell>{m.section || '-'}</TableCell>
-                    <TableCell align="right">
-                      <Tooltip title="Edit">
-                        <IconButton size="small" onClick={() => handleEditMapping(m)}>
-                          <EditIcon fontSize="small" />
-                        </IconButton>
-                      </Tooltip>
-                      <Tooltip title={
-                        scheduledRows.get(scheduledClassKey(m.courseCode, m.branch, null, m.semester))
-                          ?.filter(r => r.batch === m.batch).length
-                          ? 'Open the existing timetable entry'
-                          : 'Schedule class'
-                      }>
-                        <IconButton size="small" onClick={() => handleScheduleClass(m)}>
-                          <ScheduleIcon fontSize="small" color={
-                            scheduledRows.get(scheduledClassKey(m.courseCode, m.branch, null, m.semester))
-                              ?.some(r => r.batch === m.batch)
-                              ? 'success' : 'inherit'
-                          } />
-                        </IconButton>
-                      </Tooltip>
-                      <Tooltip title="Delete">
-                        <IconButton size="small" color="error" onClick={() => handleDeleteMapping(m.id)}>
-                          <DeleteIcon fontSize="small" />
-                        </IconButton>
-                      </Tooltip>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          )}
-
-          <Box sx={{ mt: 3 }}>
-            <Button variant="outlined" startIcon={<AddIcon />} onClick={() => handleOpenMapping(selectedCurriculumData!)} disabled={!selectedCurriculumData}>
-              Add New Mapping
-            </Button>
-          </Box>
-        </Box>
-      )}
-
-      {/* ────────────────────── Class Schedule Tab ────────────────────── */}
-      {activeTab === 'schedule' && (
-        <Box>
-          <Typography variant="h6" sx={{ mb: 2 }}>
-            Schedule a Class {selectedCurriculumData && ` — ${selectedCurriculumData.branch} · Sem ${selectedCurriculumData.semester}`}
-          </Typography>
-          <Paper elevation={1} sx={{ p: 3 }}>
-            <Typography variant="body2" sx={{ color: 'text.secondary', mb: 2 }}>
-              Select a mapping from the <strong>Mappings</strong> tab, then click the <ScheduleIcon fontSize="small" color="action" /> icon to prefill and jump to the Class Schedule page.
-            </Typography>
-            {curriculumMappings.map(m => {
-              const forBatch = scheduledRows.get(
-                scheduledClassKey(m.courseCode, m.branch, null, m.semester)
-              )?.filter(r => r.batch === m.batch) ?? []
-              return (
-              <Button
-                key={m.id}
-                variant="outlined"
-                color={forBatch.length > 0 ? 'success' : 'primary'}
-                startIcon={forBatch.length > 0 ? <CheckIcon /> : <ScheduleIcon />}
-                onClick={() => handleScheduleClass(m)}
-                sx={{ mr: 1, mb: 1 }}
-              >
-                {m.courseName} ({m.batch} · Div {m.division || '–'})
-                {forBatch.length > 0 && ` · ${forBatch.length} scheduled`}
-              </Button>
-              )
-            })}
-            {curriculumMappings.length === 0 && (
-              <Typography variant="body2" sx={{ color: 'text.secondary' }}>No mappings yet. Go to the Mappings tab to assign faculty first.</Typography>
-            )}
-          </Paper>
-        </Box>
-      )}
-
-      {/* ────────────────────── Mapping Dialog ────────────────────── */}
+      {/* ────────────────────── Mapping dialog ────────────────────── */}
       <Dialog open={openMappingDialog} onClose={handleCloseMapping} maxWidth="sm" fullWidth>
         <DialogTitle>{editingMapping ? 'Edit Faculty Assignment' : 'Assign Faculty'}</DialogTitle>
         <DialogContent>
           <Stack spacing={2} sx={{ mt: 1, minWidth: 320 }}>
             <FormControl fullWidth>
               <InputLabel id="curriculum-label">Curriculum</InputLabel>
-              <Select labelId="curriculum-label" value={formData.curriculumId} label="Curriculum" onChange={e => setFormData(prev => ({ ...prev, curriculumId: e.target.value }))} disabled={!!editingMapping}>
+              <Select
+                labelId="curriculum-label"
+                value={formData.curriculumId}
+                label="Curriculum"
+                onChange={e => setFormData(prev => ({ ...prev, curriculumId: e.target.value }))}
+                disabled={!!editingMapping}
+              >
                 {curriculumList.map(c => (
-                  <MenuItem key={c.id} value={c.id}>{c.branch} · Sem {c.semester}</MenuItem>
+                  <MenuItem key={c.id} value={c.id}>
+                    {c.branch} · Sem {c.semester}
+                  </MenuItem>
                 ))}
               </Select>
             </FormControl>
 
             <FormControl fullWidth>
               <InputLabel id="course-label">Course</InputLabel>
-              <Select labelId="course-label" value={formData.courseId} label="Course" onChange={e => setFormData(prev => ({ ...prev, courseId: e.target.value }))} disabled={!!editingMapping}>
-                {selectedCurriculumData?.courses.map(c => (
-                  <MenuItem key={c.id} value={c.id}>{c.name} ({c.code})</MenuItem>
+              <Select
+                labelId="course-label"
+                value={formData.courseId}
+                label="Course"
+                onChange={e => setFormData(prev => ({ ...prev, courseId: e.target.value }))}
+                disabled={!!editingMapping}
+              >
+                {(curriculumList.find(c => c.id === formData.curriculumId)?.courses || []).map(c => (
+                  <MenuItem key={c.id} value={c.id}>
+                    {c.name} ({c.code})
+                  </MenuItem>
                 ))}
               </Select>
             </FormControl>
 
             <FormControl fullWidth>
               <InputLabel id="faculty-label">Faculty</InputLabel>
-              <Select labelId="faculty-label" value={formData.facultyId} label="Faculty" onChange={e => setFormData(prev => ({ ...prev, facultyId: e.target.value }))}>
+              <Select
+                labelId="faculty-label"
+                value={formData.facultyId}
+                label="Faculty"
+                onChange={e => setFormData(prev => ({ ...prev, facultyId: e.target.value }))}
+              >
                 {facultyOptions.map(f => (
-                  <MenuItem key={f.id} value={f.id}>
+                  <MenuItem key={f.uid || f.id} value={f.uid || f.id}>
                     {f.name} {f.matches && <Chip label="match" size="small" variant="outlined" sx={{ ml: 1 }} />}
                   </MenuItem>
                 ))}
@@ -786,40 +937,84 @@ const AdminCurriculum: React.FC = () => {
             </FormControl>
 
             <Box sx={{ display: 'flex', gap: 2 }}>
-              <TextField size="small" fullWidth label="Batch" value={formData.batch} onChange={e => setFormData(prev => ({ ...prev, batch: e.target.value }))} />
-              <TextField size="small" fullWidth label="Division" value={formData.division} onChange={e => setFormData(prev => ({ ...prev, division: e.target.value }))} />
-              <TextField size="small" fullWidth label="Section" value={formData.section} onChange={e => setFormData(prev => ({ ...prev, section: e.target.value }))} />
+              <TextField
+                size="small"
+                fullWidth
+                label="Batch"
+                value={formData.batch}
+                onChange={e => setFormData(prev => ({ ...prev, batch: e.target.value }))}
+              />
+              <TextField
+                size="small"
+                fullWidth
+                label="Division"
+                value={formData.division}
+                onChange={e => setFormData(prev => ({ ...prev, division: e.target.value }))}
+              />
+              <TextField
+                size="small"
+                fullWidth
+                label="Section"
+                value={formData.section}
+                onChange={e => setFormData(prev => ({ ...prev, section: e.target.value }))}
+              />
             </Box>
           </Stack>
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseMapping}>Cancel</Button>
-          <Button variant="contained" onClick={handleSubmitMapping}>{editingMapping ? 'Update' : 'Assign'}</Button>
+          <Button variant="contained" onClick={handleSubmitMapping}>
+            {editingMapping ? 'Update' : 'Assign'}
+          </Button>
         </DialogActions>
       </Dialog>
 
-      {/* ────────────────────── Auto-Map Dialog ────────────────────── */}
+      {/* ────────────────────── Schedule / reschedule dialogs ────────────────────── */}
+      <ScheduleSlotDialog
+        open={Boolean(schedulePrefill)}
+        collegeId={collegeId}
+        prefill={schedulePrefill}
+        facultyOptions={facultyList}
+        onClose={() => setSchedulePrefill(null)}
+        onSaved={handleSlotSaved}
+      />
+
+      <RescheduleClassDialog
+        open={Boolean(rescheduleSlot)}
+        slot={rescheduleSlot}
+        facultyOptions={facultyList}
+        onClose={() => setRescheduleSlot(null)}
+        onDone={handleRescheduled}
+      />
+
       {autoMapFor && (
         <AutoMapDialog
           curriculum={autoMapFor}
           knownBatches={batches}
           onClose={() => setAutoMapFor(null)}
-          onApplied={(created) => {
+          onApplied={created => {
             refresh()
-            setSnackbar({
-              open: true,
-              message: created > 0
-                ? `${created} course${created === 1 ? '' : 's'} auto-mapped — review them in Faculty Mappings`
+            notify(
+              created > 0
+                ? `${created} subject${created === 1 ? '' : 's'} auto-mapped — review them below`
                 : 'No new mappings were applied',
-              severity: created > 0 ? 'success' : 'info',
-            })
+              created > 0 ? 'success' : 'info',
+            )
           }}
         />
       )}
 
       {/* ────────────────────── Snackbar ────────────────────── */}
-      <Snackbar open={snackbar.open} autoHideDuration={6000} onClose={() => setSnackbar(s => ({ ...s, open: false }))}>
-        <Alert onClose={() => setSnackbar(s => ({ ...s, open: false }))} severity={snackbar.severity} sx={{ width: '100%' }}>
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={7000}
+        onClose={() => setSnackbar(s => ({ ...s, open: false }))}
+      >
+        <Alert
+          onClose={() => setSnackbar(s => ({ ...s, open: false }))}
+          severity={snackbar.severity}
+          sx={{ width: '100%' }}
+        >
           {snackbar.message}
         </Alert>
       </Snackbar>

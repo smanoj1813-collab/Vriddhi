@@ -106,6 +106,37 @@ function docToSchedule(d: any, id: string): ClassSchedule {
   }
 }
 
+/**
+ * Every dated class a recurring slot has produced, earliest first.
+ *
+ * Equality on `weeklyScheduleId` alone (no composite index needed) and the
+ * date/status filtering happens in code: a slot has one document a week, so
+ * the result set is small even for a whole term. Used by the reschedule
+ * dialog to show exactly which classes a move will touch.
+ */
+export async function fetchSlotSessions(weeklyScheduleId: string): Promise<ClassSchedule[]> {
+  const slotId = String(weeklyScheduleId || '').trim()
+  if (!slotId) return []
+  try {
+    const snap = await getDocs(
+      query(
+        collection(db, 'classSessions'),
+        where('weeklyScheduleId', '==', slotId),
+        limit(400)
+      )
+    )
+    trackRead(snap.size)
+    return snap.docs
+      .map(d => docToSchedule(d.data(), d.id))
+      .sort((a, b) => a.date.localeCompare(b.date))
+  } catch (err) {
+    console.error('[ScheduleApi] Slot session fetch failed:', err)
+    // A missing read must not break the timetable the admin can still edit —
+    // an empty list degrades the dialog to "no dated classes yet".
+    return []
+  }
+}
+
 // ─── Helper: Convert Firestore doc to WeeklyClassSchedule ─
 
 function docToWeeklySchedule(d: any, id: string): WeeklyClassSchedule {
