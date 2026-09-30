@@ -266,6 +266,56 @@ describe('runAutoMapping — dedupe & unassignable', () => {
     assert.equal(p.faculty?.uid, 'b')
   })
 
+  it('treats an academic-year range as the same batch when skipping the already-mapped', () => {
+    // The mapping row says "2026-2027", the run is for "2027". Both are the
+    // class of 2027, so `a` IS already mapped to this course — comparing the
+    // raw strings dropped the row and applyAutoMapping wrote a DUPLICATE
+    // mapping for the same class.
+    // `a` would WIN this course if they were a candidate: full subject fit and
+    // 20 years to `b`'s 5, with the existing row carrying no hours so load
+    // cannot tip the balance. The only reason the run can propose `b` is that
+    // `a` is already mapped to this course for this class — under the old
+    // string comparison `a` was proposed again and applyAutoMapping wrote a
+    // second, duplicate row for them.
+    const a = fac({ uid: 'a', name: 'Dr. A', subjectsUG: ['Cost Accounting'], experienceYears: 20 })
+    const b = fac({ uid: 'b', name: 'Dr. B', subjectsUG: ['Cost Accounting'] })
+    const result = runAutoMapping(
+      opts({
+        batch: '2027',
+        courses: [course({ code: 'CA01', name: 'Cost Accounting' })],
+        faculty: [a, b],
+        existing: [
+          mapping({
+            facultyId: 'a',
+            courseCode: 'CA01',
+            courseName: 'Cost Accounting',
+            batch: '2026-27',
+            totalHours: 0,
+          }),
+        ],
+      }),
+    )
+    const p = result.proposals[0]
+    assert.equal(p.status, 'proposed')
+    assert.notEqual(p.faculty?.uid, 'a', 'an already-mapped faculty must not be re-proposed')
+    assert.equal(p.faculty?.uid, 'b', 'a is already mapped to this course for the class of 2027')
+  })
+
+  it('does not treat a different batch as already mapped', () => {
+    // Same course, same faculty, but batch 2026 is a DIFFERENT cohort — the
+    // run is free to propose them here (the row blocks only its own class).
+    const a = fac({ uid: 'a', subjectsUG: ['Financial Accounting'] })
+    const result = runAutoMapping(
+      opts({
+        batch: '2027',
+        courses: [course({ code: 'CA01', name: 'Cost Accounting' })],
+        faculty: [a],
+        existing: [mapping({ facultyId: 'a', courseCode: 'CA01', batch: '2026' })],
+      }),
+    )
+    assert.equal(result.proposals[0].faculty?.uid, 'a')
+  })
+
   it('leaves a course unassigned when every faculty is already mapped to it', () => {
     const a = fac({ uid: 'a', subjectsUG: ['Financial Accounting'] })
     const b = fac({ uid: 'b', subjectsUG: ['Financial Accounting'] })

@@ -34,8 +34,11 @@
 //   branch     schedule empty → no constraint; otherwise normalised program
 //                names must be equal (case, whitespace, dots and punctuation
 //                ignored: "BBA" = "bba" = "B.B.A" = " bba ");
-//   batch      schedule empty → no constraint; otherwise trimmed,
-//                case-folded tokens must be equal ("2027" = 2027 = " 2027 ");
+//   batch      schedule empty → no constraint; otherwise the batch KEYS must
+//                be equal ("2027" = 2027 = " 2027 "), and an academic-year
+//                RANGE names the class of its END year ("2026-2027" =
+//                "2026-27" = "2027") while a bare start year stays a
+//                different cohort ("2026" ≠ "2027"). See normalizeBatchKey;
 //   semester   both unknown    → no constraint (neither side says which
 //                cohort — a legacy gap, not a mismatch);
 //              schedule unknown → no constraint, BUT if the matched students
@@ -94,6 +97,66 @@ export function normalizeCohortToken(value: unknown): string {
 
 const DIVISION_PREFIXES = /^(?:division|div)\s+/
 const SECTION_PREFIXES = /^(?:section|sect|sec)\s+/
+
+/**
+ * A two-part year range: "2026-2027", "2026-27", "2026 – 2027", "2026/2027".
+ * The dash may be a hyphen, en/em dash or a slash; spaces around it are noise
+ * (both already collapse to one space by the time this runs).
+ */
+const ACADEMIC_YEAR_RANGE = /^(\d{2,4})\s*[-–—/]\s*(\d{2,4})$/
+
+/**
+ * End year of a two-part year range, or null when the pair is not a
+ * CONSECUTIVE academic year.
+ *
+ * A four-digit start anchors the century: "2026-27" ends in 2027, and
+ * "1999-00" wraps to 2000. A two-digit start ("26-27") is read as the 2000s —
+ * the only century this app stores batches in.
+ */
+function academicYearEnd(startPart: string, endPart: string): number | null {
+  const start = startPart.length === 4 ? Number(startPart) : 2000 + Number(startPart)
+  const rawEnd =
+    endPart.length === 4 ? Number(endPart) : Math.floor(start / 100) * 100 + Number(endPart)
+  const end = endPart.length === 2 && rawEnd <= start ? rawEnd + 100 : rawEnd
+  // "2026-2028" is a span of years, not one academic year — leave it literal
+  // so it cannot match a class by accident.
+  return end === start + 1 ? end : null
+}
+
+/**
+ * Batch / academic-year canonical key.
+ *
+ * The same class is recorded two ways in this codebase: by its graduating
+ * year ("2027") and by the academic-year range that ends in it ("2026-2027",
+ * "2026-27"). Both name the same cohort, so a range canonicalises to its END
+ * year — the range 2026-2027 IS the class of 2027.
+ *
+ * A bare start year is NOT that class: "2026" keeps its own key, so "2026" is
+ * neither "2027" nor "2026-2027". Everything that is not a consecutive year
+ * range is untouched: "2027" = 2027 = " 2027 ", "A" = "a".
+ *
+ * KEEP IN SYNC with functions/src/cohortBatch.ts — the server-side matchers
+ * (student curriculum, auto faculty mapping) use the same rule, and the two
+ * sides must not disagree about who is in a class.
+ */
+export function normalizeBatchKey(value: unknown): string {
+  const token = normalizeCohortToken(value)
+  const range = ACADEMIC_YEAR_RANGE.exec(token)
+  if (!range) return token
+  const endYear = academicYearEnd(range[1], range[2])
+  return endYear === null ? token : String(endYear)
+}
+
+/**
+ * Do two batch values name the same class? Pure key comparison: a blank batch
+ * is an empty key (two blanks compare equal, a blank against a known batch
+ * does not). Wildcard/"unknown" semantics belong to the matcher — the schedule
+ * treats a blank batch as "no constraint" and a blank student batch as
+ * "unknown" BEFORE this is called.
+ */
+export function batchKeysMatch(left: unknown, right: unknown): boolean {
+  return normalizeBatchKey(left) === normalizeBatchKey(right)
+}
 
 /** "Div A" / "division a" / "div. a" / "A" → "a". */
 export function normalizeDivision(value: unknown): string {
@@ -263,9 +326,11 @@ export function matchStudentToCohort(fields: StudentCohortFields, criteria: Coho
     mismatches.push('branch')
   }
 
-  // Batch.
-  const criterionBatch = normalizeCohortToken(criteria.batch)
-  if (criterionBatch && normalizeCohortToken(fields.batch) !== criterionBatch) {
+  // Batch — keyed so an academic-year range agrees with its end year: a class
+  // scheduled for "2026-2027" is the class of "2027", while a student whose
+  // batch is the bare start year "2026" belongs to a different cohort.
+  const criterionBatch = normalizeBatchKey(criteria.batch)
+  if (criterionBatch && !batchKeysMatch(criteria.batch, fields.batch)) {
     mismatches.push('batch')
   }
 

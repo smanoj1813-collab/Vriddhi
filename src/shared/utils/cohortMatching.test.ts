@@ -10,9 +10,11 @@ import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
 
 import {
+  batchKeysMatch,
   extractStudentCohortFields,
   matchCohortRows,
   matchStudentToCohort,
+  normalizeBatchKey,
   normalizeCohortToken,
   normalizeDivision,
   normalizeProgramName,
@@ -82,6 +84,54 @@ describe('normalisation helpers', () => {
     assert.notEqual(normalizeCohortToken(2027), normalizeCohortToken(2026))
   })
 
+  it('canonicalises an academic-year range to its END year', () => {
+    // The same class, recorded two ways: the academic-year range the mapping
+    // dialogs write, and the graduating year bulk import writes.
+    assert.equal(normalizeBatchKey('2026-2027'), '2027')
+    assert.equal(normalizeBatchKey('2026-27'), '2027')
+    assert.equal(normalizeBatchKey(' 2026 - 2027 '), '2027')
+    assert.equal(normalizeBatchKey('2026/2027'), '2027')
+    assert.equal(normalizeBatchKey('2026–2027'), '2027', 'en dash')
+    assert.equal(normalizeBatchKey('26-27'), '2027')
+    // The two-digit tail carries the start's century, wrapping when it must.
+    assert.equal(normalizeBatchKey('1999-00'), '2000')
+  })
+
+  it('leaves anything that is not a consecutive year range alone', () => {
+    assert.equal(normalizeBatchKey('2027'), '2027')
+    assert.equal(normalizeBatchKey(2027), '2027')
+    assert.equal(normalizeBatchKey(' 2027 '), '2027')
+    assert.equal(normalizeBatchKey('A'), 'a')
+    assert.equal(normalizeBatchKey(''), '')
+    assert.equal(normalizeBatchKey(null), '')
+    // A bare START year is a different cohort, never the range's class…
+    assert.equal(normalizeBatchKey('2026'), '2026')
+    // …a multi-year span is not one academic year…
+    assert.equal(normalizeBatchKey('2026-2028'), '2026-2028')
+    assert.equal(normalizeBatchKey('2027-2026'), '2027-2026')
+    // …and a letter-year pair was never a range.
+    assert.equal(normalizeBatchKey('A-2027'), 'a-2027')
+  })
+
+  it('agrees with the plain batch token for every non-range value', () => {
+    for (const value of ['2027', 2027, ' 2027 ', 'A', 'a', '', undefined]) {
+      assert.equal(normalizeBatchKey(value), normalizeCohortToken(value), String(value))
+    }
+  })
+
+  it('batchKeysMatch names the same class across spellings, and nothing else', () => {
+    assert.equal(batchKeysMatch('2026-2027', '2027'), true)
+    assert.equal(batchKeysMatch('2026-27', 2027), true)
+    assert.equal(batchKeysMatch('2027', '2027–2028'), false, 'a range ending elsewhere')
+    assert.equal(batchKeysMatch('2026', '2026-2027'), false, 'the start year is a different class')
+    assert.equal(batchKeysMatch('2026', '2027'), false)
+    // Pure key comparison: blank is an empty key, not a wildcard. The matchers
+    // apply the wildcard rules themselves before calling this.
+    assert.equal(batchKeysMatch('', '2027'), false)
+    assert.equal(batchKeysMatch('2027', ''), false)
+    assert.equal(batchKeysMatch('', ''), true)
+  })
+
   it('normalises divisions and sections independently, with prefixes', () => {
     assert.equal(normalizeDivision('Div A'), normalizeDivision('a'))
     assert.equal(normalizeDivision('division a.'), normalizeDivision('A'))
@@ -144,6 +194,27 @@ describe('cohort matching — branch/batch formatting', () => {
     assert.equal(matches(student({ batch: 2027 })), true)
     assert.equal(matches(student({ batch: ' 2027 ' })), true)
     assert.equal(matches(student({ batch: '2026' })), false)
+  })
+
+  it('matches an academic-year range against the student graduating year', () => {
+    // The student page reported "mapped — but to a different class than yours"
+    // because the mappings said 2026-2027 while the student record said 2027.
+    assert.equal(matches(student({ batch: '2027' }), criteria({ batch: '2026-2027' })), true)
+    assert.equal(matches(student({ batch: '2027' }), criteria({ batch: '2026-27' })), true)
+    assert.equal(matches(student({ batch: '2026-27' }), criteria({ batch: '2027' })), true)
+    assert.equal(matches(student({ batch: 2027 }), criteria({ batch: '2026-2027' })), true)
+    assert.equal(matches(student({ batch: '2026-2027' }), criteria({ batch: ' 2026-2027 ' })), true)
+  })
+
+  it('still excludes the start year and every other academic year', () => {
+    // "2026" alone is the batch that STARTED in 2026, not the one that
+    // graduates in 2027 — the fix must not collapse those two cohorts.
+    assert.equal(matches(student({ batch: '2026' }), criteria({ batch: '2026-2027' })), false)
+    assert.equal(matches(student({ batch: '2026' }), criteria({ batch: '2027' })), false)
+    assert.equal(matches(student({ batch: '2028' }), criteria({ batch: '2026-2027' })), false)
+    assert.equal(matches(student({ batch: '2026-2028' }), criteria({ batch: '2027' })), false)
+    // The trap in both directions: the range never collapses to its start.
+    assert.equal(matches(student({ batch: '2026-2027' }), criteria({ batch: '2026' })), false)
   })
 
   it('applies no branch/batch constraint when the schedule leaves them blank', () => {
@@ -351,6 +422,14 @@ describe('matchCohortRows — diagnostics', () => {
     // The cross-college row fails the tenant guard.
     assert.equal(diagnostics.mismatches.collegeId?.count, 1)
     assert.deepEqual(diagnostics.mismatches.collegeId?.values, ['college-b'])
+  })
+
+  it('never counts an academic-year range as a batch mismatch', () => {
+    const rows = [student({ batch: '2026-27' }), student({ batch: 2027 })]
+    const { matched, diagnostics } = matchCohortRows(rows, criteria({ batch: '2026-2027' }), 450)
+    assert.equal(matched.length, 2)
+    assert.equal(diagnostics.mismatches.batch, undefined)
+    assert.equal(diagnostics.nearMissTotal, 0)
   })
 
   it('reports zero diagnostics when the cohort is healthy', () => {

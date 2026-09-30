@@ -27,6 +27,7 @@ import * as admin from 'firebase-admin'
 import * as logger from 'firebase-functions/logger'
 import { HttpsError, onCall } from 'firebase-functions/v2/https'
 import { addDays, isTopicCovered, normalizeSessionDate, normalizeTopicKey, todayKey } from './classSchedule'
+import { batchKeysMatch, normalizeBatchKey } from './cohortBatch'
 
 // ─── Types returned to the client ───────────────────────────────────────────
 
@@ -251,10 +252,15 @@ async function resolveStudent(uid: string, token: Record<string, unknown>): Prom
 }
 
 // ─── Cohort matching (same rules as the roster/announcement matchers) ──────
+//
+// Batch follows ./cohortBatch: an academic-year range is the class of its END
+// year, so a mapping written "2026-2027" (or "2026-27") addresses the student
+// whose batch is "2027" instead of being reported as "a different class".
 
 const NOISE_PUNCT = /[.,;:'’"·]+/g
 const fold = (v: unknown) => String(v ?? '').trim().toLowerCase().replace(/\s+/g, ' ')
 const normProgram = (v: unknown) => fold(v).replace(NOISE_PUNCT, '').replace(/\s+/g, ' ').trim()
+/** Course/subject codes — NOT for batches: those use ./cohortBatch keys. */
 const normToken = (v: unknown) => fold(v).replace(NOISE_PUNCT, '')
 const normLetter = (v: unknown) =>
   fold(v).replace(/^div(ision)?[.\s]*/, '').replace(/^sec(tion)?[.\s]*/, '').trim()
@@ -268,6 +274,18 @@ export interface CohortLike {
 }
 
 /**
+ * Does a facultyTopics ledger row carry this student's batch?
+ *
+ * The same rule as `sessionMatchesCohort` (see ./cohortBatch): a row recorded
+ * for the academic year "2026-2027" is the batch "2027". A blank side is a
+ * wildcard, so an unlabelled ledger row is never dropped.
+ */
+export function ledgerRowBatchMatches(rowBatch: unknown, studentBatch: unknown): boolean {
+  if (!rowBatch || !studentBatch) return true
+  return batchKeysMatch(rowBatch, studentBatch)
+}
+
+/**
  * Does a schedule/mapping row address this student's cohort?
  * Empty fields on the row are wildcards; empty fields on the student are
  * treated as unknown (no constraint) so a freshly-imported profile is not
@@ -277,8 +295,12 @@ export function sessionMatchesCohort(row: CohortLike, student: CohortLike): bool
   const rb = normProgram(row.branch)
   if (rb && normProgram(student.branch) && rb !== normProgram(student.branch)) return false
 
-  const rBatch = normToken(row.batch)
-  if (rBatch && normToken(student.batch) && rBatch !== normToken(student.batch)) return false
+  // Batch — keyed, so an academic-year range agrees with its end year: a
+  // mapping for "2026-2027" is the class of "2027". A bare start year ("2026")
+  // stays a different cohort, and a blank side stays a wildcard.
+  const rBatch = normalizeBatchKey(row.batch)
+  const sBatch = normalizeBatchKey(student.batch)
+  if (rBatch && sBatch && !batchKeysMatch(rBatch, sBatch)) return false
 
   const rSem = Number(row.semester) || 0
   const sSem = Number(student.semester) || 0
@@ -554,7 +576,7 @@ export const getMyCurriculum = onCall(
           (rowSubject && normProgram(rowSubject) === normProgram(subjectMeta.courseName)) ||
           (!rowSubject && !rowCode)
         if (!belongs) continue
-        if (row.batch && student.batch && normToken(row.batch) !== normToken(student.batch)) continue
+        if (!ledgerRowBatchMatches(row.batch, student.batch)) continue
         const k = normalizeTopicKey(row.title || row.name)
         if (!k || covered.has(k)) continue
         covered.set(k, String(row.dateCovered || normalizeSessionDate(row.coveredAt) || ''))
