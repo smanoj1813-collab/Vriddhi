@@ -449,3 +449,91 @@ export function isValidDateKey(value: string): boolean {
     parsed.getUTCDate() === day
   )
 }
+
+// ─── S2.6: rescheduling — the client's side of the move callable ───────────
+
+export interface RescheduleClassInput {
+  weeklyScheduleId: string
+  /** 'slot' moves the recurring class and every future session with it. */
+  scope: 'slot' | 'session'
+  /** Required for scope 'session' — the one dated class being moved. */
+  sessionId?: string
+  dayOfWeek?: string
+  startTime?: string
+  endTime?: string
+  room?: string
+  facultyId?: string
+  facultyName?: string
+  /** scope 'session' only: the new date (yyyy-mm-dd). */
+  date?: string
+  reason?: string
+  /** Only this date and later are moved. Defaults to today server-side. */
+  from?: string
+  /** Move even if the new time double-books a faculty member or a room. */
+  allowConflicts?: boolean
+}
+
+export interface RescheduleClassResult {
+  collegeId: string
+  weeklyScheduleId: string
+  scope: 'slot' | 'session'
+  /** Classes physically moved to a new document/date. */
+  moved: number
+  /** Classes whose destination already held one — the source was retired. */
+  merged: number
+  /** Classes already on the new day with nothing to change. */
+  unchanged: number
+  /** Delivered or marked classes: never touched. */
+  skippedMarked: number
+  skippedPast: number
+  conflicts: SessionConflict[]
+  slotUpdated: boolean
+  from?: string
+  toDates?: string[]
+  message: string
+}
+
+/**
+ * Move a class: the recurring slot (and everything it has already
+ * materialised) or a single dated session.
+ *
+ * The server decides what is movable — delivered, marked and past sessions are
+ * never touched — and refuses a move that would double-book a faculty member
+ * or a room. Attached conflict details come back as `SessionConflictError`,
+ * exactly like generation, so the dialog can list the clashes.
+ */
+export async function rescheduleClass(
+  input: RescheduleClassInput
+): Promise<RescheduleClassResult> {
+  const call = httpsCallable<Record<string, unknown>, RescheduleClassResult>(
+    functions,
+    'rescheduleClass'
+  )
+  try {
+    const response = await call({
+      weeklyScheduleId: input.weeklyScheduleId,
+      scope: input.scope,
+      ...(input.sessionId ? { sessionId: input.sessionId } : {}),
+      ...(input.dayOfWeek ? { dayOfWeek: input.dayOfWeek } : {}),
+      ...(input.startTime ? { startTime: input.startTime } : {}),
+      ...(input.endTime ? { endTime: input.endTime } : {}),
+      ...(input.room !== undefined ? { room: input.room } : {}),
+      ...(input.facultyId ? { facultyId: input.facultyId } : {}),
+      ...(input.facultyName ? { facultyName: input.facultyName } : {}),
+      ...(input.date ? { date: input.date } : {}),
+      ...(input.reason ? { reason: input.reason } : {}),
+      ...(input.from ? { from: input.from } : {}),
+      ...(input.allowConflicts ? { allowConflicts: true } : {}),
+    })
+    return response.data
+  } catch (error) {
+    const conflicts = extractConflicts(error)
+    if (conflicts.length > 0) {
+      throw new SessionConflictError(
+        conflicts[0]?.message || 'That move would double-book a faculty member or a room.',
+        conflicts
+      )
+    }
+    throw new Error(describeSessionError(error, 'The class could not be rescheduled.'))
+  }
+}

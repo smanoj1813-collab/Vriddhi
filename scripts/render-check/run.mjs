@@ -1759,6 +1759,159 @@ await section('schedule dialog (prefilled)', '/src/modules/admin/pages/AdminClas
     /Schedule created successfully/.test(view.bodyText()), view.bodyText().slice(-220));
 });
 
+// ── Curriculum → timetable flow: one screen, semesters 1–6 ──────────────────
+// The page this replaced spread the job over three tabs and two other pages,
+// and nothing on it said what was still missing. The fixture is a college with
+// semester 2 half-done: one subject, assigned, on the timetable — so the ladder
+// has exactly one semester with work in it, and every cross-collection join
+// (curriculum ↔ mapping ↔ slot) has to actually resolve for the row to render
+// as ready.
+//
+// The firestore stub hands the same seeded list to every query, so each fixture
+// document also has to be harmless in the other mappers' eyes: the mapping, the
+// slot and the faculty row all carry `courses: []`, and only the curriculum
+// document carries a course.
+const flowDocs = [
+  {
+    id: 'cur-1', data: () => ({
+      collegeId: 'college-a', collegeName: 'Test College', branch: 'BCA', semester: 2, scheme: 'NEP',
+      status: 'active', title: 'BCA 2026', syllabusExtractId: 'x', createdBy: 'u', assignedBy: 'u',
+      createdAt: '2026-09-01T00:00:00.000Z', assignedAt: '2026-09-01T00:00:00.000Z',
+      totalCourses: 1, totalModules: 0, totalHours: 0, totalMarks: 0,
+      courses: [{
+        id: 'c-1', code: 'BC201', name: 'Cost Accounting', credits: 4, totalHours: 60, totalMarks: 100,
+        semester: 2, branch: 'BCA', modules: [], confidence: 'high',
+      }],
+    }),
+  },
+  {
+    id: 'map-1', data: () => ({
+      collegeId: 'college-a', curriculumId: 'cur-1', courseId: 'c-1', courseCode: 'BC201',
+      courseName: 'Cost Accounting', facultyId: 'uid-fac-1', facultyName: 'Ravi Kumar', branch: 'BCA',
+      semester: 2, batch: '2026', status: 'active', courses: [],
+    }),
+  },
+  {
+    id: 'slot-1', data: () => ({
+      collegeId: 'college-a', subject: 'Cost Accounting', subjectCode: 'BC201', facultyId: 'fac-1',
+      facultyName: 'Ravi Kumar', branch: 'BCA', semester: 2, batch: '2026', division: '', section: '',
+      room: 'R12', dayOfWeek: 'monday', startTime: '09:00', endTime: '10:00', type: 'lecture',
+      isActive: true, courses: [],
+    }),
+  },
+  {
+    id: 'fac-1', data: () => ({
+      collegeId: 'college-a', uid: 'uid-fac-1', name: 'Ravi Kumar', firstName: 'Ravi',
+      lastName: 'Kumar', status: 'active', department: 'Commerce', courses: [],
+    }),
+  },
+];
+
+const flowDocsWithoutSessions = [...flowDocs];
+
+// One dated class for the slot, on a weekday other than the slot's Monday, so
+// the reschedule dialog has a real move to preview. Seed dates are computed
+// from today: a hardcoded one would silently fall into the past and the dialog
+// would (correctly) report nothing to move.
+{
+  const future = new Date();
+  future.setDate(future.getDate() + 10);
+  while (future.getUTCDay() === 1) future.setDate(future.getDate() + 1);
+  const dateKey = future.toISOString().slice(0, 10);
+  flowDocs.push({
+    id: 'slot-1_2026-10-05', data: () => ({
+      collegeId: 'college-a', weeklyScheduleId: 'slot-1', subject: 'Cost Accounting', subjectCode: '',
+      facultyId: 'fac-1', facultyName: 'Ravi Kumar', branch: '', semester: 2, batch: '2026',
+      date: dateKey, startTime: '09:00', endTime: '10:00', timeSlot: '09:00-10:00', status: 'scheduled',
+      attendanceMarked: false, courses: [],
+    }),
+  });
+}
+
+globalThis.__RC_ROLE = 'principal';
+globalThis.__RC_FIRESTORE_DOCS = flowDocs;
+globalThis.__RC_FIRESTORE_DOC = null;
+globalThis.__RC_LOCATION_STATE = null;
+localStorage.setItem('vriddhi_college_id', 'college-a');
+
+await section('curriculum flow', '/src/modules/admin/pages/AdminCurriculum.tsx', {}, async (t, view) => {
+  check('curriculum flow: mounts without throwing', true);
+  check('curriculum flow: walks semesters 1 to 6', [1, 2, 3, 4, 5, 6]
+    .every((n) => t.includes(`Semester ${n}`)), t.slice(0, 320));
+  check('curriculum flow: lands on the first semester that has work in it, not on an empty one',
+    view.openText().includes('Cost Accounting'), view.openText().slice(0, 320));
+  check('curriculum flow: joins the curriculum course to its faculty assignment',
+    t.includes('Ravi Kumar'), t.slice(0, 400));
+  check('curriculum flow: joins the course to its timetable slot',
+    /Mon 09:00–10:00 · R12/.test(t), t.slice(0, 400));
+  check('curriculum flow: reports the programme-level progress',
+    /1 of 1 subjects on the timetable/.test(t) && t.includes('100%'), t.slice(0, 320));
+  check('curriculum flow: a semester with no curriculum says so instead of showing blank tiles',
+    t.includes('No curriculum'), t.slice(0, 320));
+
+  const schedule = view.byText('Add slot') ?? view.byText('Schedule');
+  check('curriculum flow: the row offers the schedule action', !!schedule, t.slice(0, 240));
+  if (schedule) {
+    await view.click(schedule);
+    const dialog = view.dialogText();
+    // The subject lives in an <input>, so it is checked off the element rather
+    // than out of textContent.
+    const dialogInputs = [...(document.querySelector('.MuiDialog-root')?.querySelectorAll('input') ?? [])];
+    check('curriculum flow: scheduling happens on this page, prefilled from the row',
+      /Schedule this class/.test(dialog) && dialogInputs.some((i) => i.value === 'Cost Accounting'),
+      `${dialog.slice(0, 200)} | inputs=${dialogInputs.map((i) => i.value).join(',')}`);
+    check('curriculum flow: the dated classes are materialised by default',
+      /dated classes for the next four weeks/.test(dialog), dialog.slice(0, 300));
+  }
+
+  // Close the schedule dialog first: MUI keeps it mounted, and a second modal
+  // would make `view.dialogText()` read the wrong one.
+  const cancel = view.dialogButtons().find((b) => (b.textContent ?? '').trim() === 'Cancel');
+  if (cancel) await view.click(cancel);
+
+  const reschedule = view.all('button').find((b) => /reschedul/i.test(b.getAttribute('aria-label') ?? ''));
+  check('curriculum flow: a scheduled slot can be rescheduled from the row', !!reschedule, t.slice(0, 240));
+  if (reschedule) {
+    // Re-open from the row: the dialog must offer both scopes, and it must say
+    // what it knows about the classes this slot has already produced.
+    await view.click(reschedule);
+    // A closed MUI dialog lingers in the DOM for its exit transition, so read
+    // the last root — the one that was just opened.
+    const roots = [...document.querySelectorAll('.MuiDialog-root')];
+    const moveDialog = (roots[roots.length - 1]?.textContent ?? '').replace(/\s+/g, ' ').trim();
+    check('curriculum flow: the reschedule dialog actually opens',
+      /Reschedule/.test(moveDialog), `${roots.length} dialog(s): ${moveDialog.slice(0, 160)}`);
+    check('curriculum flow: the reschedule dialog offers a permanent and a one-off move',
+      /From this day on/.test(moveDialog) && /Just one class/.test(moveDialog), moveDialog.slice(0, 320));
+    check('curriculum flow: it previews the classes the move will touch before anything is written',
+      /1 class will move/.test(moveDialog), moveDialog.slice(0, 420));
+    check('curriculum flow: the preview names the dates the class moves between',
+      /→.*moves/.test(moveDialog), moveDialog.slice(0, 420));
+    check('curriculum flow: it promises delivered classes are never changed',
+      /already delivered, marked or covered are never changed/.test(moveDialog), moveDialog.slice(0, 360));
+  }
+});
+
+// The same screen before any dated class exists: the dialog must say so rather
+// than offering a move of nothing.
+globalThis.__RC_FIRESTORE_DOCS = flowDocsWithoutSessions;
+await section('curriculum flow (nothing materialised yet)', '/src/modules/admin/pages/AdminCurriculum.tsx', {}, async (t, view) => {
+  check('curriculum flow (empty): mounts without throwing', true);
+  const reschedule = view.all('button').find((b) => /reschedul/i.test(b.getAttribute('aria-label') ?? ''));
+  if (!reschedule) {
+    check('curriculum flow (empty): the slot can still be rescheduled', false, t.slice(0, 200));
+    return;
+  }
+  await view.click(reschedule);
+  const roots = [...document.querySelectorAll('.MuiDialog-root')];
+  const moveDialog = (roots[roots.length - 1]?.textContent ?? '').replace(/\s+/g, ' ').trim();
+  check('curriculum flow (empty): it reports that no dated class exists yet instead of inventing one',
+    /No dated class exists for this slot yet/.test(moveDialog), moveDialog.slice(0, 320));
+});
+
+globalThis.__RC_FIRESTORE_DOCS = [];
+globalThis.__RC_FIRESTORE_DOC = null;
+
 // ── Superadmin question-bank seeder ──────────────────────────────────────────
 // The universal pool page is read-only, so this dialog is the only way the
 // curated CSV seed (data/question-bank) reaches it. Three things have to hold:

@@ -101,6 +101,7 @@ import { parsePaperFile, confirmPaperStructure } from './paperParsing'
 import {
   generateClassSessions,
   cancelWeeklySchedule,
+  rescheduleClass,
   ensureClassSession,
   completeClassSession,
   getCurriculumProgress,
@@ -316,6 +317,7 @@ export {
   confirmPaperStructure,
   generateClassSessions,
   cancelWeeklySchedule,
+  rescheduleClass,
   ensureClassSession,
   completeClassSession,
   getCurriculumProgress,

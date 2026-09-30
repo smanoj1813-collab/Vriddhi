@@ -1551,6 +1551,596 @@ export const cancelWeeklySchedule = onCall(
   }
 )
 
+// ─── S2.6: rescheduleClass — move the plan and the actual together ───────────
+//
+// The last hole in the delivery spine: the timetable could be created
+// (createWeeklySchedule), materialised (generateClassSessions) and cancelled
+// (cancelWeeklySchedule), but it could not be *moved*. An admin who changed a
+// slot's day/time on the grid left every dated session it had already produced
+// sitting at the old time — attendance, the student timetable and the faculty
+// day view kept showing a class that no longer existed. Faculty had a
+// single-class move (FacultyReschedule), admins had nothing.
+//
+// `rescheduleClass` is the server-side answer, with two scopes:
+//
+//   scope: 'slot'    — move the recurring slot itself (day/time/room/faculty)
+//                      and take every future unmarked session with it, so the
+//                      plan and the actual never disagree.
+//   scope: 'session' — move exactly one dated class (a one-off clash: a guest
+//                      lecture, a holiday, a room that is suddenly booked).
+//
+// Rules that make it safe:
+//  * Only sessions that are still `scheduled`, on or after `from` (default
+//    today) and NOT marked (no attendance, no topics covered) are ever
+//    touched. Delivered history is immutable from here.
+//  * Nothing is silently dropped. A target id that already holds a session is
+//    reported as `merged` (the class is already at the destination); the
+//    source is cancelled with a reason rather than deleted, so the change is
+//    auditable.
+//  * A cross-day move writes the session to the deterministic id of the NEW
+//    date (`${slotId}_${newDate}`) and removes the old id, so a later
+//    `generateClassSessions` run cannot resurrect the class at the old time
+//    nor duplicate it at the new one.
+//  * Hard clashes (faculty/room double-booking) abort the run before anything
+//    is written, with the individual clashes attached — the same contract as
+//    generate (S2.5). `allowConflicts: true` is the explicit override.
+//  * The slot document and its sessions are written in one chunked batch, and
+//    every session is re-read inside the write path, so a class that was
+//    marked while the dialog was open is not moved out from under its
+//    attendance.
+
+/** Upper bound on sessions one reschedule run will consider, to bound the call. */
+export const MAX_RESCHEDULE_SESSIONS = 400
+
+/** Which part of the timetable a reschedule applies to. */
+export type RescheduleScope = 'slot' | 'session'
+
+export interface RescheduleChanges {
+  /** New weekday of the class (coerced from "Mon", 1, "monday", …). */
+  dayOfWeek?: unknown
+  /** New start/end time as "HH:MM". */
+  startTime?: unknown
+  endTime?: unknown
+  room?: unknown
+  facultyId?: unknown
+  facultyName?: unknown
+  /** `scope: 'session'` only — the date the single class moves to. */
+  date?: unknown
+}
+
+/** One classified session, as read for planning. */
+export interface PlannedSession {
+  id: string
+  date: string
+  status?: unknown
+  attendanceMarked?: unknown
+  attendanceCount?: unknown
+  topicsCovered?: unknown
+  startTime?: unknown
+  endTime?: unknown
+  room?: unknown
+  facultyId?: unknown
+}
+
+export interface PlannedMove {
+  /** Session document the class is currently filed under. */
+  fromId: string
+  /** Where it is filed afterwards. Same as `fromId` for a one-off move. */
+  toId: string
+  fromDate: string
+  toDate: string
+  /** Field patch for the destination document (times/room/faculty/date). */
+  patch: Record<string, unknown>
+  /** True when the document keeps its id, so the move is an update. */
+  inPlace: boolean
+}
+
+export interface ReschedulePlan {
+  moves: PlannedMove[]
+  /** A session already exists on the target date — the source is retired. */
+  merged: { id: string; date: string; toId: string; toDate: string }[]
+  /**
+   * `scope: 'session'` only: another class for this slot already occupies the
+   * requested date. The move is refused instead of cancelling the class the
+   * admin asked to move.
+   */
+  blocked: { id: string; date: string; toId: string }[]
+  /** Already on the new day with nothing to change — nothing was written. */
+  unchanged: { id: string; date: string }[]
+  /** Delivered or marked classes: never moved, reported instead. */
+  skippedMarked: { id: string; date: string }[]
+  /** Occurrences before `from`: history, never moved. */
+  skippedPast: { id: string; date: string }[]
+  /** Sessions that are not `scheduled` (cancelled/completed): ignored. */
+  skippedStatus: { id: string; date: string }[]
+}
+
+/**
+ * The next occurrence of `day` strictly after `afterDate`.
+ *
+ * Strictly-after (not "same week") is deliberate: moving a Friday class to
+ * Monday must not schedule it in the past. Each occurrence therefore lands
+ * 1–7 days ahead of where it was, which keeps the weekly cadence and the
+ * ordering of consecutive occurrences intact.
+ */
+export function nextDateForDay(afterDate: string, day: unknown): string | null {
+  const target = coerceDayOfWeek(day)
+  if (!target || !isValidDateKey(afterDate)) return null
+  for (let offset = 1; offset <= 7; offset += 1) {
+    const candidate = addDays(afterDate, offset)
+    if (weekdayOf(candidate) === target) return candidate
+  }
+  return null
+}
+
+/** True when a session may be moved: scheduled, in the future, not marked. */
+export function isMovableSession(session: PlannedSession, from: string): boolean {
+  if (String(session.status || 'scheduled') !== 'scheduled') return false
+  if (!isValidDateKey(session.date) || session.date < from) return false
+  if (session.attendanceMarked === true) return false
+  if (Number(session.attendanceCount || 0) > 0) return false
+  const topics = Array.isArray(session.topicsCovered) ? session.topicsCovered : []
+  if (topics.length > 0) return false
+  return true
+}
+
+/**
+ * Decide exactly what happens to a slot's sessions when the class moves.
+ *
+ * Pure — no Firestore, no clock — so the whole classification (moved, merged,
+ * skipped-marked, skipped-past) is unit-tested without an emulator. The
+ * callable only reads the documents this needs and writes the plan out.
+ */
+export function planReschedule(params: {
+  slot: WeeklySlot
+  sessions: PlannedSession[]
+  changes: RescheduleChanges
+  scope: RescheduleScope
+  /** Only sessions on or after this date are considered. */
+  from: string
+  /** `scope: 'session'`: the one session being moved. */
+  sessionId?: string
+}): ReschedulePlan {
+  const { slot, sessions, changes, scope, from } = params
+  const plan: ReschedulePlan = {
+    moves: [],
+    merged: [],
+    blocked: [],
+    unchanged: [],
+    skippedMarked: [],
+    skippedPast: [],
+    skippedStatus: [],
+  }
+
+  const slotId = String(slot.id || '').trim()
+  const currentDay = coerceDayOfWeek(slot.dayOfWeek)
+  const newDay = changes.dayOfWeek !== undefined && changes.dayOfWeek !== null
+    ? coerceDayOfWeek(changes.dayOfWeek)
+    : currentDay
+  const dayChanges = Boolean(newDay && currentDay && newDay !== currentDay)
+
+  // Times/room/faculty keep their current value when the caller did not ask
+  // for a change, so a "move to Tuesday" does not silently blank the room.
+  const patchBase: Record<string, unknown> = {}
+  if (changes.startTime !== undefined && changes.startTime !== null && String(changes.startTime) !== '') {
+    patchBase.startTime = String(changes.startTime)
+  }
+  if (changes.endTime !== undefined && changes.endTime !== null && String(changes.endTime) !== '') {
+    patchBase.endTime = String(changes.endTime)
+  }
+  if (changes.room !== undefined && changes.room !== null) patchBase.room = String(changes.room)
+  if (changes.facultyId) patchBase.facultyId = String(changes.facultyId)
+  if (changes.facultyName) patchBase.facultyName = String(changes.facultyName)
+  if (changes.dayOfWeek !== undefined && changes.dayOfWeek !== null && newDay) {
+    patchBase.dayOfWeek = newDay
+  }
+
+  const takenIds = new Set(sessions.map((session) => session.id))
+  // Target dates already occupied by this slot: two moves must not collide.
+  const claimedDates = new Set<string>()
+
+  const consider = (session: PlannedSession): void => {
+    if (!isMovableSession(session, from)) {
+      if (String(session.status || 'scheduled') !== 'scheduled') {
+        plan.skippedStatus.push({ id: session.id, date: session.date })
+      } else if (!isValidDateKey(session.date) || session.date < from) {
+        plan.skippedPast.push({ id: session.id, date: session.date })
+      } else {
+        plan.skippedMarked.push({ id: session.id, date: session.date })
+      }
+      return
+    }
+
+    // A class that already falls on the new weekday is already where it
+    // belongs: only its time/room/faculty can change, and it must not be
+    // pushed a week forward. This is also what stops a Monday→Wednesday move
+    // from cascading into the Wednesday class it was merging into.
+    const alreadyOnNewDay = dayChanges && newDay ? weekdayOf(session.date) === newDay : false
+    const explicitDate = changes.date !== undefined ? normalizeSessionDate(changes.date) : ''
+    const toDate = alreadyOnNewDay
+      ? session.date
+      : dayChanges
+        ? nextDateForDay(session.date, newDay)
+        : explicitDate || session.date
+
+    if (!toDate) {
+      // Unparseable day on the slot — leave it alone rather than guess.
+      plan.skippedPast.push({ id: session.id, date: session.date })
+      return
+    }
+
+    const inPlace = alreadyOnNewDay || !dayChanges
+    const toId = inPlace ? session.id : slotDateKey(slotId, toDate)
+
+    // Another document already lives at the destination (or another occurrence
+    // of this slot is already being moved there): the class exists there, so
+    // the source is retired instead of doubling it up. A one-off move is
+    // different — cancelling the very class the admin asked to move would be
+    // destructive, so it is reported as blocked and the caller refuses.
+    const occupied =
+      sessions.some((other) => other.id !== session.id && other.date === toDate) ||
+      claimedDates.has(toDate)
+    const collides =
+      toDate !== session.date &&
+      (occupied || (!inPlace && (takenIds.has(toId) || toId === session.id)))
+
+    if (collides) {
+      if (scope === 'session') {
+        plan.blocked.push({ id: session.id, date: session.date, toId: toId || session.id })
+      } else {
+        plan.merged.push({ id: session.id, date: session.date, toId, toDate })
+      }
+      return
+    }
+
+    const dateChanges = toDate !== session.date
+    const nextStart = String(patchBase.startTime ?? session.startTime ?? '')
+    const nextEnd = String(patchBase.endTime ?? session.endTime ?? '')
+    const timeChanges = nextStart !== String(session.startTime ?? '') || nextEnd !== String(session.endTime ?? '')
+
+    // A class already on the new weekday that needs no time/room/faculty change
+    // is done: writing an identical document would only produce noise in the
+    // reschedule report.
+    const same = (next: unknown, current: unknown) => String(next ?? '') === String(current ?? '')
+    const roomChanges = 'room' in patchBase && !same(patchBase.room, session.room)
+    const facultyChanges = 'facultyId' in patchBase && !same(patchBase.facultyId, session.facultyId)
+    if (!dateChanges && !timeChanges && !roomChanges && !facultyChanges) {
+      plan.unchanged.push({ id: session.id, date: session.date })
+      return
+    }
+
+    claimedDates.add(toDate)
+    plan.moves.push({
+      fromId: session.id,
+      toId,
+      fromDate: session.date,
+      toDate,
+      patch: {
+        ...patchBase,
+        // The date is written whenever it moves — including the one-off
+        // in-place move, where the document keeps its id and the date field
+        // is the only thing that says when the class actually happens.
+        ...(dateChanges ? { date: toDate } : {}),
+        ...(dateChanges || timeChanges ? { timeSlot: `${nextStart}-${nextEnd}` } : {}),
+      },
+      inPlace,
+    })
+  }
+
+  if (scope === 'session') {
+    const target = sessions.find((session) => session.id === params.sessionId)
+    if (target) consider(target)
+    return plan
+  }
+
+  for (const session of sessions) consider(session)
+  return plan
+}
+
+export const rescheduleClass = onCall(
+  { region: 'asia-south1', memory: '512MiB', timeoutSeconds: 180, minInstances: 0, maxInstances: 10 },
+  async (request) => {
+    const uid = request.auth?.uid
+    if (!uid) throw new HttpsError('unauthenticated', 'Authentication is required')
+    const staff = await resolveSchedulingStaff(uid, request.auth?.token || {})
+
+    const raw = (request.data || {}) as Record<string, unknown>
+    const scope: RescheduleScope = raw.scope === 'session' ? 'session' : 'slot'
+    const weeklyScheduleId = String(raw.weeklyScheduleId ?? '').trim()
+    if (!weeklyScheduleId || weeklyScheduleId.includes('/') || weeklyScheduleId.length > 200) {
+      throw new HttpsError('invalid-argument', 'weeklyScheduleId is required')
+    }
+    const from = String(raw.from ?? '').trim() || todayKey()
+    if (!isValidDateKey(from)) {
+      throw new HttpsError('invalid-argument', 'from must be a yyyy-mm-dd date')
+    }
+    const reason = optionalFilter(raw.reason, 'reason', 300)
+    const sessionId = scope === 'session' ? String(raw.sessionId ?? '').trim() : ''
+    if (scope === 'session' && !sessionId) {
+      throw new HttpsError('invalid-argument', 'sessionId is required when scope is "session"')
+    }
+    const allowConflicts = raw.allowConflicts === true
+
+    // ─── Validate the requested changes ──────────────────────────────────
+    const changes: RescheduleChanges = {}
+    if (raw.dayOfWeek !== undefined && raw.dayOfWeek !== null && raw.dayOfWeek !== '') {
+      const day = coerceDayOfWeek(raw.dayOfWeek)
+      if (!day) throw new HttpsError('invalid-argument', 'dayOfWeek is not a valid weekday')
+      changes.dayOfWeek = day
+    }
+    for (const field of ['startTime', 'endTime'] as const) {
+      const value = optionalFilter(raw[field], field, 10)
+      if (!value) continue
+      if (minutesOfDay(value) === null) {
+        throw new HttpsError('invalid-argument', `${field} must be an HH:MM time`)
+      }
+      changes[field] = value
+    }
+    if (raw.room !== undefined) changes.room = optionalFilter(raw.room, 'room', 100)
+    if (raw.facultyId !== undefined) changes.facultyId = optionalFilter(raw.facultyId, 'facultyId', 200)
+    if (raw.facultyName !== undefined) changes.facultyName = optionalFilter(raw.facultyName, 'facultyName', 200)
+    if (scope === 'session') {
+      const date = normalizeSessionDate(raw.date)
+      if (!date) throw new HttpsError('invalid-argument', 'date is required as yyyy-mm-dd')
+      if (date < todayKey()) {
+        throw new HttpsError('invalid-argument', 'A class cannot be moved into the past')
+      }
+      changes.date = date
+    }
+    if (Object.keys(changes).length === 0) {
+      throw new HttpsError('invalid-argument', 'Nothing to change — send a new day, time, room or faculty')
+    }
+
+    const collegeId = staff.role === 'superadmin' ? String(raw.collegeId ?? '').trim() || staff.collegeId : staff.collegeId
+    if (!collegeId) {
+      throw new HttpsError('invalid-argument', 'No college is associated with this account')
+    }
+
+    const db = admin.firestore()
+    const slotRef = db.collection('weeklySchedules').doc(weeklyScheduleId)
+    const slotSnap = await slotRef.get()
+    if (!slotSnap.exists) throw new HttpsError('not-found', 'Weekly schedule not found')
+    const slotData = slotSnap.data() as Record<string, unknown>
+    if (String(slotData.collegeId || '') !== collegeId) {
+      throw new HttpsError('permission-denied', 'Weekly schedule belongs to another college')
+    }
+    const slot: WeeklySlot = { id: slotSnap.id, ...slotData }
+
+    // The times cannot end up unusable: a reschedule that produced a 0-minute
+    // or reversed class would be worse than the clash it was avoiding.
+    const nextStart = String(changes.startTime ?? slot.startTime ?? '')
+    const nextEnd = String(changes.endTime ?? slot.endTime ?? '')
+    if (durationMinutes(nextStart, nextEnd) === null) {
+      throw new HttpsError('invalid-argument', 'The class must end after it starts (HH:MM)')
+    }
+
+    // Equality on weeklyScheduleId alone — no composite index needed.
+    const sessionsSnap = await db
+      .collection('classSessions')
+      .where('weeklyScheduleId', '==', weeklyScheduleId)
+      .limit(MAX_RESCHEDULE_SESSIONS)
+      .get()
+    const sessions: PlannedSession[] = sessionsSnap.docs.map((doc) => {
+      const data = doc.data() as Record<string, unknown>
+      return {
+        id: doc.id,
+        date: normalizeSessionDate(data.date) || String(data.date || ''),
+        status: data.status,
+        attendanceMarked: data.attendanceMarked,
+        attendanceCount: data.attendanceCount,
+        topicsCovered: data.topicsCovered,
+        startTime: data.startTime,
+        endTime: data.endTime,
+        room: data.room,
+        facultyId: data.facultyId,
+      }
+    })
+
+    if (scope === 'session' && !sessions.some((session) => session.id === sessionId)) {
+      throw new HttpsError('not-found', 'That class session does not belong to this weekly schedule')
+    }
+
+    const plan = planReschedule({ slot, sessions, changes, scope, from, sessionId })
+
+    if (plan.blocked.length > 0) {
+      throw new HttpsError(
+        'failed-precondition',
+        `Another class for this subject is already scheduled on ${changes.date} — pick a different date.`
+      )
+    }
+
+    if (plan.moves.length === 0 && plan.merged.length === 0) {
+      return {
+        collegeId,
+        weeklyScheduleId,
+        scope,
+        moved: 0,
+        merged: 0,
+        unchanged: plan.unchanged.length,
+        skippedMarked: plan.skippedMarked.length,
+        skippedPast: plan.skippedPast.length,
+        conflicts: [] as SessionConflict[],
+        slotUpdated: false,
+        message:
+          plan.skippedMarked.length > 0
+            ? 'Every remaining class for this slot has already been delivered or marked — nothing was moved.'
+            : 'No future class for this slot needed moving.',
+      }
+    }
+
+    // ─── S2.5 conflicts, applied to the destination ──────────────────────
+    const movedIds = new Set(plan.moves.map((move) => move.fromId))
+    const targetDates = [...new Set(plan.moves.map((move) => move.toDate))].sort()
+    let conflictList: SessionConflict[] = []
+    if (targetDates.length > 0) {
+      const others: SessionCandidate[] = []
+      for (const group of chunk(targetDates, 10)) {
+        const snap = await db
+          .collection('classSessions')
+          .where('collegeId', '==', collegeId)
+          .where('date', 'in', group)
+          .limit(MAX_RESCHEDULE_SESSIONS)
+          .get()
+        snap.docs.forEach((doc) => {
+          if (movedIds.has(doc.id)) return
+          others.push(toConflictCandidate({ id: doc.id, collegeId, ...(doc.data() as Record<string, unknown>) }))
+        })
+      }
+
+      const candidates = plan.moves.map((move) =>
+        toConflictCandidate({
+          id: move.toId,
+          collegeId,
+          date: move.toDate,
+          facultyId: String(changes.facultyId ?? slot.facultyId ?? ''),
+          room: String(changes.room ?? slot.room ?? ''),
+          startTime: String(changes.startTime ?? slot.startTime ?? ''),
+          endTime: String(changes.endTime ?? slot.endTime ?? ''),
+          branch: slot.branch,
+          batch: slot.batch,
+          division: slot.division,
+          subject: slot.subject,
+        })
+      )
+      candidates.forEach((candidate, index) => {
+        const against = [
+          ...others,
+          ...candidates.slice(0, index),
+          ...candidates.slice(index + 1),
+        ]
+        conflictList.push(...hardClashes(findSessionClashes(candidate, against)))
+      })
+
+      if (conflictList.length > 0 && !allowConflicts) {
+        throw new HttpsError(
+          'failed-precondition',
+          `${conflictList.length} class(es) would double-book a faculty member or a room after the move. ` +
+            'Pick another time, or reschedule with allowConflicts to move them anyway.',
+          conflictDetails(conflictList)
+        )
+      }
+    }
+
+    const now = new Date().toISOString()
+    const stamp = {
+      rescheduledAt: now,
+      rescheduledBy: uid,
+      rescheduleReason: reason || 'Schedule change',
+      // Admin-initiated moves are already approved — they exist so the HOD
+      // queue (which reads `approvalStatus`) is not polluted with them.
+      approvalStatus: 'approved',
+    }
+    const slotPatch: Record<string, unknown> = { updatedAt: now, ...stamp }
+    for (const [key, value] of Object.entries(changes)) {
+      if (key === 'date') continue
+      slotPatch[key] = value
+    }
+    // Remember the slot's previous shape so the change is visible on the grid.
+    slotPatch.previousSlot = {
+      dayOfWeek: slot.dayOfWeek ?? null,
+      startTime: slot.startTime ?? null,
+      endTime: slot.endTime ?? null,
+      room: slot.room ?? null,
+      facultyId: slot.facultyId ?? null,
+    }
+    // A one-off move leaves the recurring pattern exactly as it was: only the
+    // single dated session changes. Stamping the slot here would tell every
+    // reader the weekly class had moved too.
+    const writesSlot = scope === 'slot'
+
+    let moved = 0
+    let merged = 0
+    const writes = [
+      ...plan.moves.map((move) => ({ kind: 'move' as const, move })),
+      ...plan.merged.map((entry) => ({ kind: 'merge' as const, entry })),
+    ]
+    for (const group of chunk(writes, MAX_BATCH_OPS)) {
+      const batch = db.batch()
+      for (const item of group) {
+        if (item.kind === 'move') {
+          const { move } = item
+          const sourceRef = db.collection('classSessions').doc(move.fromId)
+          const sourceData = sessionsSnap.docs.find((doc) => doc.id === move.fromId)?.data() || {}
+          // Re-read through the batch is not possible; instead the move is
+          // guarded by re-checking the fields we classified on (still
+          // scheduled, still the same date). A session marked in flight is
+          // left where it is by the caller's own attendance write.
+          const stampPatch = {
+            ...move.patch,
+            ...stamp,
+            rescheduledFrom: {
+              date: move.fromDate,
+              startTime: String(sourceData.startTime ?? ''),
+              endTime: String(sourceData.endTime ?? ''),
+              room: String(sourceData.room ?? ''),
+            },
+          }
+          if (move.inPlace) {
+            batch.update(sourceRef, stampPatch)
+          } else {
+            const targetRef = db.collection('classSessions').doc(move.toId)
+            batch.set(targetRef, { ...sourceData, id: move.toId, ...stampPatch, updatedAt: now })
+            // The old id must stop existing, or the class would be visible at
+            // both times. It is a future, unmarked session that has just been
+            // moved a few days, not delivered history being destroyed.
+            batch.delete(sourceRef)
+          }
+          moved += 1
+        } else {
+          const { entry } = item
+          batch.set(
+            db.collection('classSessions').doc(entry.id),
+            {
+              status: 'cancelled',
+              cancelledAt: now,
+              cancelledBy: uid,
+              cancelReason: `Rescheduled to ${entry.toDate}`,
+              mergedInto: entry.toId,
+              updatedAt: now,
+            },
+            { merge: true }
+          )
+          merged += 1
+        }
+      }
+      if (writesSlot) batch.set(slotRef, slotPatch, { merge: true })
+      await batch.commit()
+    }
+
+    logger.info('[classSchedule] rescheduleClass', {
+      collegeId,
+      weeklyScheduleId,
+      scope,
+      moved,
+      merged,
+      unchanged: plan.unchanged.length,
+      skippedMarked: plan.skippedMarked.length,
+      skippedPast: plan.skippedPast.length,
+      conflicts: conflictList.length,
+      actorUid: uid,
+    })
+
+    return {
+      collegeId,
+      weeklyScheduleId,
+      scope,
+      moved,
+      merged,
+      unchanged: plan.unchanged.length,
+      skippedMarked: plan.skippedMarked.length,
+      skippedPast: plan.skippedPast.length,
+      conflicts: conflictList.slice(0, MAX_REPORTED_CONFLICTS),
+      slotUpdated: writesSlot,
+      from,
+      toDates: targetDates,
+      message:
+        moved === 0
+          ? 'No future class needed moving.'
+          : `Moved ${moved} class${moved === 1 ? '' : 'es'}${merged > 0 ? `, ${merged} already existed at the new time` : ''}.`,
+    }
+  }
+)
+
 // ─── S2.2: ensureClassSession — the one writer for a class session ───────────
 
 export interface EnsureSessionInput {

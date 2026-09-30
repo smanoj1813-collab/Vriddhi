@@ -1181,6 +1181,76 @@
           "order": "ASCENDING"
         }
       ]
+    },
+    {
+      "collectionGroup": "classSessions",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "collegeId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "branch",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "date",
+          "order": "DESCENDING"
+        },
+        {
+          "fieldPath": "startTime",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "classSessions",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "collegeId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "batch",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "date",
+          "order": "DESCENDING"
+        },
+        {
+          "fieldPath": "startTime",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "classSessions",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "collegeId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "branch",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "batch",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "date",
+          "order": "DESCENDING"
+        },
+        {
+          "fieldPath": "startTime",
+          "order": "DESCENDING"
+        }
+      ]
     }
   ],
   "fieldOverrides": []

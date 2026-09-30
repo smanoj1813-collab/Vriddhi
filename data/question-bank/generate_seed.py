@@ -290,7 +290,11 @@ def write_csv(path, rows):
     lines = [",".join(HEADERS)]
     for row in rows:
         lines.append(",".join(row[h] for h in HEADERS))
-    with open(path, "w", encoding="utf-8") as f:
+    # newline="\n" disables the platform translation Python applies by default:
+    # without it, regenerating the seed on Windows writes CRLF and the files
+    # stop matching the LF blobs the repo pins (.gitattributes), which shows up
+    # as stray `\r` in parsed cells and in the per-programme derivations.
+    with open(path, "w", encoding="utf-8", newline="\n") as f:
         f.write("\n".join(lines) + "\n")
 
 

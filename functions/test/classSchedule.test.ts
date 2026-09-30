@@ -1467,3 +1467,260 @@ describe('ledger faculty ids (one topic, one row)', () => {
     assert.equal(resolveLedgerFacultyIds({ facultyId: 'alias0' }, many).length <= MAX_LEDGER_FACULTY_IDS, true)
   })
 })
+
+// ─── S2.6: rescheduling keeps the plan and the actual in step ───────────────
+//
+// The planner is pure: it classifies each session as moved / merged /
+// blocked / skipped without Firestore or a clock, which is what lets the
+// admin's "reschedule" dialog preview the same outcome the callable writes.
+
+import {
+  isMovableSession,
+  nextDateForDay,
+  planReschedule,
+  MAX_RESCHEDULE_SESSIONS,
+  type PlannedSession,
+  type WeeklySlot,
+} from '../src/classSchedule'
+
+function slot(overrides: Partial<WeeklySlot> = {}): WeeklySlot {
+  return {
+    id: 'slot1',
+    collegeId: 'c1',
+    subject: 'Financial Accounting',
+    subjectCode: 'BCOM101',
+    facultyId: 'f1',
+    branch: 'B.Com',
+    batch: '2026-2029',
+    semester: 1,
+    dayOfWeek: 'monday',
+    startTime: '09:00',
+    endTime: '10:00',
+    room: 'R1',
+    ...overrides,
+  }
+}
+
+function session(overrides: Partial<PlannedSession> = {}): PlannedSession {
+  return { id: 'slot1_2026-10-05', date: '2026-10-05', status: 'scheduled', ...overrides }
+}
+
+describe('nextDateForDay', () => {
+  it('lands on the next occurrence strictly after the given date', () => {
+    // 2026-10-05 is a Monday.
+    assert.equal(nextDateForDay('2026-10-05', 'wednesday'), '2026-10-07')
+    assert.equal(nextDateForDay('2026-10-05', 'monday'), '2026-10-12')
+  })
+
+  it('never moves a class into the past', () => {
+    // Friday 2026-10-09 → Monday must be the following Monday, not the one
+    // that already passed in the same calendar week.
+    assert.equal(nextDateForDay('2026-10-09', 'monday'), '2026-10-12')
+    assert.equal(nextDateForDay('2026-10-09', 'friday'), '2026-10-16')
+  })
+
+  it('accepts the day spellings the rest of the module accepts', () => {
+    assert.equal(nextDateForDay('2026-10-05', 'Wed'), '2026-10-07')
+    assert.equal(nextDateForDay('2026-10-05', 3), '2026-10-07')
+    assert.equal(nextDateForDay('2026-10-05', 'notaday'), null)
+    assert.equal(nextDateForDay('junk', 'tuesday'), null)
+  })
+})
+
+describe('isMovableSession', () => {
+  const from = '2026-10-01'
+
+  it('moves only future, unmarked, still-scheduled classes', () => {
+    assert.equal(isMovableSession(session(), from), true)
+  })
+
+  it('refuses delivered history', () => {
+    assert.equal(isMovableSession(session({ attendanceMarked: true }), from), false)
+    assert.equal(isMovableSession(session({ attendanceCount: 12 }), from), false)
+    assert.equal(isMovableSession(session({ topicsCovered: ['Depreciation'] }), from), false)
+    assert.equal(isMovableSession(session({ status: 'completed' }), from), false)
+    assert.equal(isMovableSession(session({ status: 'cancelled' }), from), false)
+    assert.equal(isMovableSession(session({ date: '2026-09-28' }), from), false)
+  })
+})
+
+describe('planReschedule — the whole slot', () => {
+  it('moves every future class to the new weekday, 1–7 days ahead', () => {
+    const plan = planReschedule({
+      slot: slot(),
+      sessions: [session(), session({ id: 'slot1_2026-10-12', date: '2026-10-12' })],
+      changes: { dayOfWeek: 'wednesday' },
+      scope: 'slot',
+      from: '2026-09-30',
+    })
+    assert.deepEqual(
+      plan.moves.map((move) => [move.fromDate, move.toDate, move.toId]),
+      [
+        ['2026-10-05', '2026-10-07', 'slot1_2026-10-07'],
+        ['2026-10-12', '2026-10-14', 'slot1_2026-10-14'],
+      ]
+    )
+    assert.equal(plan.moves.every((move) => move.inPlace === false), true)
+    assert.equal(plan.moves[0].patch.dayOfWeek, 'wednesday')
+    assert.equal(plan.moves[0].patch.date, '2026-10-07')
+  })
+
+  it('patches time and room in place when the day does not change', () => {
+    const plan = planReschedule({
+      slot: slot(),
+      sessions: [session()],
+      changes: { startTime: '11:00', endTime: '12:00', room: 'Lab 2' },
+      scope: 'slot',
+      from: '2026-09-30',
+    })
+    assert.equal(plan.moves.length, 1)
+    assert.equal(plan.moves[0].inPlace, true)
+    assert.equal(plan.moves[0].toId, 'slot1_2026-10-05')
+    assert.deepEqual(plan.moves[0].patch, {
+      startTime: '11:00',
+      endTime: '12:00',
+      room: 'Lab 2',
+      // The combined slot string every reader falls back to is kept in step.
+      timeSlot: '11:00-12:00',
+    })
+  })
+
+  it('leaves marked and past classes exactly where they are', () => {
+    const plan = planReschedule({
+      slot: slot(),
+      sessions: [
+        session({ id: 'slot1_2026-09-28', date: '2026-09-28' }),
+        session({ id: 'slot1_2026-10-05', date: '2026-10-05', attendanceMarked: true }),
+        session({ id: 'slot1_2026-09-21', date: '2026-09-21', status: 'completed' }),
+      ],
+      changes: { dayOfWeek: 'friday' },
+      scope: 'slot',
+      from: '2026-10-01',
+    })
+    assert.equal(plan.moves.length, 0)
+    assert.deepEqual(plan.skippedPast.map((row) => row.id), ['slot1_2026-09-28'])
+    assert.deepEqual(plan.skippedMarked.map((row) => row.id), ['slot1_2026-10-05'])
+    assert.deepEqual(plan.skippedStatus.map((row) => row.id), ['slot1_2026-09-21'])
+  })
+
+  it('merges instead of doubling a class that already sits at the destination', () => {
+    const plan = planReschedule({
+      slot: slot(),
+      sessions: [
+        session(),
+        // Already generated for the new Wednesday by an earlier run.
+        session({ id: 'slot1_2026-10-07', date: '2026-10-07' }),
+      ],
+      changes: { dayOfWeek: 'wednesday' },
+      scope: 'slot',
+      from: '2026-09-30',
+    })
+    assert.equal(plan.moves.length, 0)
+    assert.deepEqual(plan.merged.map((row) => row.toDate), ['2026-10-07'])
+    // The Wednesday occurrence is already on the new day — it must not be
+    // pushed a week forward to make room for the class merging into it.
+    assert.deepEqual(plan.unchanged.map((row) => row.id), ['slot1_2026-10-07'])
+  })
+
+  it('claims each destination once when two occurrences would collide', () => {
+    const plan = planReschedule({
+      slot: slot(),
+      // Defensive: a slot should not have two sessions inside one week, but a
+      // legacy duplicate must not make one move overwrite the other.
+      sessions: [
+        session({ id: 'slot1_2026-10-05', date: '2026-10-05' }),
+        session({ id: 'slot1_2026-10-06', date: '2026-10-06' }),
+      ],
+      changes: { dayOfWeek: 'wednesday' },
+      scope: 'slot',
+      from: '2026-09-30',
+    })
+    assert.equal(plan.moves.length, 1)
+    assert.equal(plan.merged.length, 1)
+    assert.equal(new Set(plan.moves.map((move) => move.toDate)).size, plan.moves.length)
+  })
+
+  it('does nothing when the slot has no sessions yet', () => {
+    const plan = planReschedule({
+      slot: slot(),
+      sessions: [],
+      changes: { dayOfWeek: 'tuesday' },
+      scope: 'slot',
+      from: '2026-09-30',
+    })
+    assert.deepEqual(plan, {
+      moves: [],
+      merged: [],
+      blocked: [],
+      unchanged: [],
+      skippedMarked: [],
+      skippedPast: [],
+      skippedStatus: [],
+    })
+  })
+})
+
+describe('planReschedule — one class', () => {
+  it('keeps the document id and rewrites the date, so generate cannot resurrect it', () => {
+    const plan = planReschedule({
+      slot: slot(),
+      sessions: [session(), session({ id: 'slot1_2026-10-12', date: '2026-10-12' })],
+      changes: { date: '2026-10-08', startTime: '14:00', endTime: '15:00' },
+      scope: 'session',
+      sessionId: 'slot1_2026-10-05',
+      from: '2026-09-30',
+    })
+    assert.equal(plan.moves.length, 1)
+    assert.equal(plan.moves[0].inPlace, true)
+    assert.equal(plan.moves[0].toId, 'slot1_2026-10-05')
+    assert.equal(plan.moves[0].toDate, '2026-10-08')
+    assert.equal(plan.moves[0].patch.date, '2026-10-08')
+    assert.equal(plan.moves[0].patch.timeSlot, '14:00-15:00')
+  })
+
+  it('blocks a date another class for the same slot already occupies', () => {
+    const plan = planReschedule({
+      slot: slot(),
+      sessions: [session(), session({ id: 'slot1_2026-10-12', date: '2026-10-12' })],
+      changes: { date: '2026-10-12' },
+      scope: 'session',
+      sessionId: 'slot1_2026-10-05',
+      from: '2026-09-30',
+    })
+    assert.equal(plan.moves.length, 0)
+    assert.deepEqual(plan.blocked.map((row) => row.id), ['slot1_2026-10-05'])
+  })
+
+  it('ignores every other session of the slot', () => {
+    const plan = planReschedule({
+      slot: slot(),
+      sessions: [session(), session({ id: 'slot1_2026-10-12', date: '2026-10-12' })],
+      changes: { date: '2026-10-08' },
+      scope: 'session',
+      sessionId: 'slot1_2026-10-12',
+      from: '2026-09-30',
+    })
+    assert.deepEqual(plan.moves.map((move) => move.fromId), ['slot1_2026-10-12'])
+  })
+
+  it('reports a missing session rather than inventing one', () => {
+    const plan = planReschedule({
+      slot: slot(),
+      sessions: [session()],
+      changes: { date: '2026-10-08' },
+      scope: 'session',
+      sessionId: 'slot1_2099-01-01',
+      from: '2026-09-30',
+    })
+    assert.equal(plan.moves.length, 0)
+    assert.equal(plan.blocked.length, 0)
+  })
+})
+
+describe('reschedule bounds', () => {
+  it('keeps the per-run session ceiling', () => {
+    // One document a week for a term is ~13; the ceiling exists for a
+    // pathological slot that somehow accumulated thousands of rows.
+    assert.equal(MAX_RESCHEDULE_SESSIONS > 0 && MAX_RESCHEDULE_SESSIONS <= 2000, true)
+  })
+})
