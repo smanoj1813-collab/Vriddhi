@@ -24,6 +24,7 @@ import {
 } from '@/shared/utils/timetableConflicts'
 import { ensureClassSession } from './classSessionApi'
 import { normalizeSessionDate } from '@/shared/utils/sessionDate'
+import { divisionValuesFromStudentRecords } from '@/shared/utils/divisionGroups'
 
 export type { ScheduleFilters }
 
@@ -851,27 +852,16 @@ export async function fetchBranchesFromStudents(collegeId: string): Promise<stri
 export async function fetchDivisionsFromStudents(collegeId: string): Promise<string[]> {
   if (!collegeId) return []
   try {
-    let q = query(
+    // Never fall back to an unscoped students query: division options are
+    // tenant-specific and may be shown in admin mapping/schedule forms.
+    const snap = await getDocs(query(
       collection(db, 'students'),
       where('collegeId', '==', collegeId),
       limit(500)
-    )
-    let snap = await getDocs(q)
-
-    if (snap.empty) {
-      q = query(collection(db, 'students'), limit(500))
-      snap = await getDocs(q)
-    }
+    ))
 
     trackRead(snap.size)
-    const divisions = new Set<string>()
-    snap.docs.forEach(d => {
-      const data = d.data()
-      const division = data.division || data.section || ''
-      if (division) divisions.add(String(division))
-    })
-
-    return Array.from(divisions).sort()
+    return divisionValuesFromStudentRecords(snap.docs.map((document) => document.data()))
   } catch (err) {
     console.warn('[ScheduleApi] Divisions fetch failed:', err)
     return []

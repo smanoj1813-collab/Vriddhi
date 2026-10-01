@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { collection, query, where, getDocs, limit } from 'firebase/firestore';
 import { db } from '@/Firebase/config';
 import type { ClassSchedule, WeeklySchedule } from '../../../types/schedule';
+import { scheduleMatchesStudentDocument } from '../utils/studentScheduleMatching';
 
 export interface StudentScheduleProfile {
   collegeId: string;
@@ -38,27 +39,27 @@ export function useStudentSchedule(profile: StudentScheduleProfile | null) {
 
     (async () => {
       try {
-        // Tenant scope is mandatory; remaining cohort fields are filtered from
-        // this already-isolated result until the canonical schedule schema is
-        // migrated in the next milestone.
+        // Tenant scope is mandatory. Apply branch, batch, semester and merged
+        // division/section matching through the shared canonical matcher below.
         const q = query(
           collection(db, 'weeklySchedules'),
           where('collegeId', '==', profile.collegeId),
-          where('branch', '==', profile.branch),
-          limit(500)
+          limit(1000)
         );
         const snap = await getDocs(q);
         if (cancelled) return;
 
+        const student = {
+          collegeId: profile.collegeId,
+          branch: profile.branch,
+          batch: profile.batch,
+          semester: profile.semester,
+          division: profile.division,
+          section: profile.section,
+        };
         const matched = snap.docs
           .map((d) => ({ id: d.id, ...d.data() } as Record<string, any>))
-          .filter((row) => {
-            if (String(row.batch || '') !== String(profile.batch)) return false;
-            if (Number(row.semester || 0) !== Number(profile.semester)) return false;
-            const div = row.division || row.section || '';
-            if (div && div !== profile.division && div !== profile.section) return false;
-            return true;
-          });
+          .filter((row) => scheduleMatchesStudentDocument(row, student, profile));
 
         setRows(matched);
       } catch (err) {
@@ -87,6 +88,7 @@ export function useStudentSchedule(profile: StudentScheduleProfile | null) {
         id: row.id,
         subject: row.subject || '',
         subjectCode: row.subjectCode || '',
+        facultyId: row.facultyId || '',
         faculty: row.facultyName || row.faculty || '',
         facultyName: row.facultyName || row.faculty || '',
         facultyInitials: row.facultyInitials || initials(row.facultyName || row.faculty),
@@ -97,6 +99,11 @@ export function useStudentSchedule(profile: StudentScheduleProfile | null) {
         type: row.type || 'lecture',
         status: row.status || 'scheduled',
         className: row.className || row.subject || '',
+        branch: row.branch || '',
+        batch: row.batch || '',
+        semester: Number(row.semester) || 0,
+        division: row.division || '',
+        section: row.section || '',
         timeSlot: row.timeSlot || { startTime, endTime },
       } as ClassSchedule;
     });

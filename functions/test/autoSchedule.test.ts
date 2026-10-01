@@ -5,11 +5,16 @@ import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
 import {
   buildSlots,
+  buildFacultyIdentityMap,
+  canonicalFacultyId,
+  assertTimetableOccupancyComplete,
   planAutoSchedule,
   validateAutoSchedulePayload,
   batchListMatches,
   batchTokens,
   mappingServesCohort,
+  resolveMappingTeachingGroups,
+  teachingGroupsFromStudents,
   seededRandom,
   shuffleWith,
   DEFAULT_GRID,
@@ -189,14 +194,15 @@ describe('planAutoSchedule', () => {
     assert.equal(plan.unplaced.length, 1)
     assert.equal(plan.unplaced[0].subject, 'Financial Accounting')
     assert.equal(plan.unplaced[0].periodsRequested, 4)
+    assert.equal(plan.unplaced[0].section, 'A', 'unplaced demand retains its teaching-group scope')
     assert.match(plan.unplaced[0].reason, /No free slot/)
   })
 
-  it('flags faculty above the 24-period UGC ceiling (existing + placed)', () => {
+  it('enforces the 24-period weekly cap and reports demand arithmetic instead of overbooking', () => {
     const occupied = emptyOccupancy()
-    occupied.facultyWeekly.set('uid-f1', 22) // already near the cap
+    occupied.facultyWeekly.set('uid-f1', 22) // only two periods of capacity remain
     const plan = planAutoSchedule({
-      courses: [mappedCourse({ totalHours: 60 })], // 4 more → 26
+      courses: [mappedCourse({ totalHours: 60 })], // requests four more → projected 26
       grid: GRID_5P,
       rooms: ['R1'],
       occupancy: occupied,
@@ -204,10 +210,16 @@ describe('planAutoSchedule', () => {
       maxPeriodsPerDayPerFaculty: 4,
     })
     const row = plan.facultyLoad.find((f) => f.facultyId === 'uid-f1')
-    assert.equal(row?.totalWeekly, 26)
-    assert.equal(row?.overloaded, true)
+    assert.equal(row?.totalWeekly, 24)
+    assert.equal(row?.placedWeekly, 2)
+    assert.equal(row?.existingWeekly, 22)
+    assert.equal(row?.requestedWeekly, 4)
+    assert.equal(row?.projectedWeekly, 26)
+    assert.equal(row?.overloaded, false)
+    assert.equal(row?.demandExceeded, true)
     assert.equal(plan.summary.overloadedFaculty, 1)
-    assert.ok(plan.placements.some((p) => p.flags.includes('faculty-overloaded')))
+    assert.equal(plan.placements.some((p) => p.flags.includes('faculty-overloaded')), false)
+    assert.match(plan.unplaced[0].reason, /weekly capacity reached/)
   })
 
   it('falls back to the next room when the first is busy', () => {
@@ -248,6 +260,134 @@ describe('planAutoSchedule', () => {
   })
 })
 
+describe('group-aware placement, hard capacity and daily density', () => {
+  it('allows disjoint divisions to share the same period but keeps merged scopes conflict-safe', () => {
+    const disjoint = planAutoSchedule({
+      courses: [
+        mappedCourse({ mappingId: 'a', courseId: 'same', facultyId: 'fa', facultyName: 'Faculty A', division: 'A', section: '' }),
+        mappedCourse({ mappingId: 'b', courseId: 'same', facultyId: 'fb', facultyName: 'Faculty B', division: 'B', section: '' }),
+      ],
+      grid: { ...GRID_5P, days: ['monday'] },
+      rooms: ['R1', 'R2'],
+      occupancy: emptyOccupancy(),
+      semesterWeeks: 15,
+      maxPeriodsPerDayPerFaculty: 4,
+    })
+    assert.equal(disjoint.placements.length, 8)
+    assert.ok(disjoint.placements.some((a) => disjoint.placements.some((b) => a.facultyId !== b.facultyId && a.startTime === b.startTime)))
+    const mondayCoverage = disjoint.dailyCoverage.find((row) => row.day === 'monday')
+    assert.equal(mondayCoverage?.periods, 4, 'parallel groups occupy four timetable slots, not eight placements')
+    assert.equal(mondayCoverage?.utilization, 0.8)
+
+    const merged = planAutoSchedule({
+      courses: [
+        mappedCourse({ mappingId: 'ab', courseId: 'same', facultyId: 'fab', facultyName: 'Faculty AB', totalHours: 30, division: 'A,B', section: '' }),
+        mappedCourse({ mappingId: 'a', courseId: 'same', facultyId: 'fa', facultyName: 'Faculty A', totalHours: 30, division: 'A', section: '' }),
+      ],
+      grid: { ...GRID_5P, days: ['monday', 'tuesday'] },
+      rooms: ['R1', 'R2'],
+      occupancy: emptyOccupancy(),
+      semesterWeeks: 15,
+      maxPeriodsPerDayPerFaculty: 4,
+    })
+    assert.equal(merged.placements.length, 4)
+    for (const mergedClass of merged.placements.filter((p) => p.division === 'A,B')) {
+      const slot = `${mergedClass.dayOfWeek}|${mergedClass.startTime}`
+      assert.ok(!merged.placements.some((other) => other.division === 'A' && `${other.dayOfWeek}|${other.startTime}` === slot))
+    }
+  })
+
+  it('keeps weekly placements at or below capacity and suggests exact merge savings', () => {
+    const occupied = emptyOccupancy()
+    occupied.facultyWeekly.set('shared', 18)
+    const courses = [
+      mappedCourse({ mappingId: 'm-a', courseId: 'language', courseCode: 'L1', courseName: 'Language I', facultyId: 'shared', facultyName: 'Shared Faculty', totalHours: 90, division: 'A', section: '' }),
+      mappedCourse({ mappingId: 'm-b', courseId: 'language', courseCode: 'L1', courseName: 'Language I', facultyId: 'shared', facultyName: 'Shared Faculty', totalHours: 90, division: 'B', section: '' }),
+    ]
+    const plan = planAutoSchedule({
+      courses,
+      grid: GRID_5P,
+      rooms: ['R1'],
+      occupancy: occupied,
+      semesterWeeks: 15,
+      maxPeriodsPerDayPerFaculty: 4,
+    })
+    const load = plan.facultyLoad.find((row) => row.facultyId === 'shared')
+    assert.equal(load?.requestedWeekly, 12)
+    assert.equal(load?.projectedWeekly, 30)
+    assert.equal(load?.totalWeekly, 24)
+    assert.equal(load?.demandExceeded, true)
+    assert.match(load?.mergeSuggestions.join(' ') ?? '', /Merge A \+ B.*saves 6 periods\/week/)
+    assert.ok(plan.unplaced.some((row) => /weekly capacity reached/.test(row.reason)))
+  })
+
+  it('counts a two-period lab span as one class in per-division daily density', () => {
+    const plan = planAutoSchedule({
+      courses: [mappedCourse({
+        courseName: 'Computer Lab',
+        totalHours: 60,
+        division: 'A',
+        section: '',
+      })],
+      grid: GRID_5P,
+      rooms: ['LAB-1'],
+      occupancy: emptyOccupancy(),
+      semesterWeeks: 15,
+      maxPeriodsPerDayPerFaculty: 4,
+    })
+    assert.equal(plan.placements.length, 4)
+    assert.equal(plan.cohortDailyCoverage.reduce((sum, row) => sum + row.classes, 0), 2)
+    assert.equal(plan.cohortDailyCoverage.filter((row) => row.classes === 1).length, 2)
+  })
+
+  it('balances a 20-period cohort into four classes per day across five days', () => {
+    const courses = Array.from({ length: 5 }, (_, index) => mappedCourse({
+      mappingId: `m${index}`,
+      courseId: `c${index}`,
+      courseCode: `C${index}`,
+      courseName: `Subject ${index}`,
+      facultyId: `f${index}`,
+      facultyName: `Faculty ${index}`,
+      totalHours: 60,
+      division: 'A',
+      section: '',
+    }))
+    const plan = planAutoSchedule({
+      courses,
+      grid: GRID_5P,
+      rooms: ['R1', 'R2'],
+      occupancy: emptyOccupancy(),
+      semesterWeeks: 15,
+      maxPeriodsPerDayPerFaculty: 4,
+    })
+    assert.equal(plan.placements.length, 20)
+    assert.ok(plan.cohortDailyCoverage.every((row) => row.classes === 4 && row.onTarget))
+    assert.equal(plan.summary.divisionsInTarget, 1)
+  })
+})
+
+describe('faculty identity reconciliation', () => {
+  it('canonicalizes profile IDs, auth UIDs, and email aliases to one faculty key', () => {
+    const aliases = buildFacultyIdentityMap([
+      { id: 'faculty-profile-1', uid: 'auth-user-1', email: 'teacher@example.test' },
+    ])
+    assert.equal(canonicalFacultyId('faculty-profile-1', aliases), 'auth-user-1')
+    assert.equal(canonicalFacultyId('AUTH-USER-1', aliases), 'auth-user-1')
+    assert.equal(canonicalFacultyId('TEACHER@example.test', aliases), 'auth-user-1')
+    assert.equal(canonicalFacultyId('legacy-unmatched', aliases), 'legacy-unmatched')
+  })
+})
+
+describe('timetable occupancy safety cap', () => {
+  it('rejects a capped partial read rather than planning with unchecked clashes', () => {
+    assert.doesNotThrow(() => assertTimetableOccupancyComplete(1999, 2000))
+    assert.throws(
+      () => assertTimetableOccupancyComplete(2000, 2000),
+      (error: any) => error.code === 'failed-precondition' && /cannot guarantee clash-free placement/.test(error.message),
+    )
+  })
+})
+
 // ─── Payload validation ──────────────────────────────────────────────────────
 
 describe('validateAutoSchedulePayload', () => {
@@ -258,6 +398,7 @@ describe('validateAutoSchedulePayload', () => {
     assert.equal(p.grid.periodsPerDay, DEFAULT_GRID.periodsPerDay)
     assert.equal(p.grid.startTime, '08:00')
     assert.deepEqual(p.grid.days.length, 6)
+    assert.equal(p.maxWeeklyPeriodsPerFaculty, 24)
   })
 
   it('rejects bad grids and missing identity', () => {
@@ -380,6 +521,47 @@ describe('mappingServesCohort', () => {
   })
 })
 
+describe('teaching-group expansion', () => {
+  const rosterGroups = ['A', 'B', 'C', 'D', 'E'].map((division) => ({ division, section: '' }))
+
+  it('keeps explicit comma-separated divisions as one merged teaching group', () => {
+    assert.deepEqual(
+      resolveMappingTeachingGroups({ division: 'A,B', section: '' }, rosterGroups),
+      [{ division: 'A,B', section: '' }],
+    )
+  })
+
+  it('expands a legacy unscoped mapping to distinct enrolled groups, respecting a filter', () => {
+    assert.deepEqual(
+      resolveMappingTeachingGroups({ division: '', section: '' }, rosterGroups, { division: 'A,C', section: '' }),
+      [{ division: 'A', section: '' }, { division: 'C', section: '' }],
+    )
+    assert.equal(resolveMappingTeachingGroups({ division: '', section: '' }, rosterGroups).length, 5)
+  })
+
+  it('retains one merged mapping when the run filters to any covered division', () => {
+    assert.deepEqual(
+      resolveMappingTeachingGroups({ division: 'A,B', section: '' }, rosterGroups, { division: 'B', section: '' }),
+      [{ division: 'A,B', section: '' }],
+    )
+    assert.deepEqual(resolveMappingTeachingGroups({ division: 'A,B' }, rosterGroups, { division: 'C' }), [])
+  })
+
+  it('discovers groups only in the requested branch, batch and semester', () => {
+    const rows = [
+      { branch: 'BBA', batch: '2026-2027', semester: 4, division: 'A' },
+      { department: 'b.b.a', batch: '2027', semester: '4', section: 'B' },
+      { branch: 'BBA', batch: '2027', semester: 2, division: 'C' },
+      { branch: 'BBA', batch: '2028', semester: 4, division: 'D' },
+      { branch: 'B.Com', batch: '2027', semester: 4, division: 'E' },
+    ]
+    assert.deepEqual(
+      teachingGroupsFromStudents(rows, { branch: 'BBA', batch: '2027', semester: 4 }),
+      [{ division: 'A', section: '' }, { division: '', section: 'B' }],
+    )
+  })
+})
+
 // ─── Deterministic RNG helper ────────────────────────────────────────────────
 
 describe('seededRandom / shuffleWith', () => {
@@ -465,9 +647,10 @@ function assertHardConstraints(plan: AutoSchedulePlan) {
       assert.equal(rows.length, 1, `course ${cd} has ${rows.length} spans in one day`)
     }
   }
-  // 24-period UGC ceiling: flagged honestly whenever exceeded
+  // Weekly faculty capacity is a hard placement constraint.
   for (const f of plan.facultyLoad) {
     assert.equal(f.overloaded, f.totalWeekly > f.capacity)
+    assert.ok(f.totalWeekly <= f.capacity)
   }
 }
 
@@ -597,6 +780,7 @@ describe('validateAutoSchedulePayload v2 fields', () => {
     assert.equal(p.strategy, 'uniform')
     assert.equal(p.roomStrategy, 'leastLoaded')
     assert.deepEqual(p.courseOverrides, [])
+    assert.equal(p.maxWeeklyPeriodsPerFaculty, 24)
     assert.deepEqual(p.warnings, [])
   })
 
@@ -639,6 +823,18 @@ describe('validateAutoSchedulePayload v2 fields', () => {
     assert.equal(p.strategy, 'spread')
     assert.equal(p.roomStrategy, 'random')
     assert.equal(p.randomSeed, 'abc')
+  })
+
+  it('validates a positive weekly capacity no greater than 60', () => {
+    assert.equal(validateAutoSchedulePayload({ ...base, maxWeeklyPeriodsPerFaculty: 18 }, 'hod', 'col-1').maxWeeklyPeriodsPerFaculty, 18)
+    assert.throws(
+      () => validateAutoSchedulePayload({ ...base, maxWeeklyPeriodsPerFaculty: 0 }, 'hod', 'col-1'),
+      (e: any) => e.code === 'invalid-argument',
+    )
+    assert.throws(
+      () => validateAutoSchedulePayload({ ...base, maxWeeklyPeriodsPerFaculty: 61 }, 'hod', 'col-1'),
+      (e: any) => e.code === 'invalid-argument',
+    )
   })
 
   it('validates courseOverrides rows', () => {

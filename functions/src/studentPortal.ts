@@ -1163,7 +1163,9 @@ async function createAssignmentPublishedNotification(
         return true
       }).length
     }
-  } catch {}
+  } catch {
+    // Recipient counts are best-effort; notification creation must still proceed.
+  }
 
   const ref = db.collection('notifications').doc()
   await ref.create({

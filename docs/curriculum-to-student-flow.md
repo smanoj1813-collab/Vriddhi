@@ -5,7 +5,9 @@ Date: 2026-10-01 · Scope: `curriculum/*` → `curriculumFacultyMappings` →
 
 This is the shortest description of how a syllabus becomes "the subjects I am
 studying" on a student's phone, and the places where the pieces were wired to
-each other with the *same comparison* after the 2026-10-01 fix.
+each other with the *same comparison* after the 2026-10-01 fix. For the teaching-
+group, merged-class, load-planning and quoted CSV contract, see
+[teaching-groups-and-load-planning.md](./teaching-groups-and-load-planning.md).
 
 ---
 

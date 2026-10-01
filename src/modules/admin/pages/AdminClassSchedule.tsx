@@ -4,6 +4,7 @@ import { useLocation } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
 import AutoScheduleDialog from './AutoScheduleDialog'
 import HolidayBanner from '@/shared/components/HolidayBanner'
+import MergedDivisionChip from '@/shared/components/MergedDivisionChip'
 
 import {
   Box,
@@ -17,7 +18,9 @@ import {
   MenuItem,
   Select,
   FormControl,
+  FormHelperText,
   InputLabel,
+  ListItemText,
   Table,
   TableBody,
   TableCell,
@@ -64,6 +67,7 @@ import {
   type SessionConflict,
 } from '../api/classSessionApi'
 import { downloadTimetablePDF, downloadTimetableJPG, cohortLabel } from '@/shared/utils/timetableExport'
+import { divisionOptions as buildDivisionOptions, divisionSelection, divisionSelectionValue } from '@/shared/utils/divisionGroups'
 import type { WeeklyScheduleFormData, DayOfWeek, ClassType } from '../types/schedule'
 import type { SubjectInfo } from '../api/scheduleApi'
 import {
@@ -133,7 +137,7 @@ function dateKeyForNextOccurrence(dayOfWeek: DayOfWeek): string {
 
 // ─── CSV Template ─────────────────────────────────────
 const CSV_TEMPLATE = `subject,subjectCode,facultyId,facultyName,branch,batch,semester,division,section,room,dayOfWeek,startTime,endTime,type
-Business Statistics,BST101,faculty_id_here,Dr. Smith,B.Com,2026,4,A,A,301,monday,09:00,10:00,lecture
+Business Statistics,BST101,faculty_id_here,Dr. Smith,B.Com,2026,4,"A,B",,301,monday,09:00,10:00,lecture
 Financial Accounting,FAC101,faculty_id_here,Dr. Jones,B.Com,2026,4,A,A,302,monday,10:00,11:00,lecture
 Computer Applications,CAP101,faculty_id_here,Dr. Lee,BCA,2026,4,B,B,303,tuesday,09:00,10:00,lab`
 
@@ -172,6 +176,10 @@ const AdminClassSchedule: React.FC = () => {
   const allSlots = useMemo(
     () => DAYS.flatMap((d) => (weeklySchedule[d] || []).filter((s: any) => s.isActive !== false)),
     [weeklySchedule]
+  )
+  const divisionOptions = useMemo(
+    () => buildDivisionOptions([...divisions, ...allSlots.map((slot: any) => slot.division)]),
+    [divisions, allSlots],
   )
   const cohortOptions = useMemo(
     () => [...new Set(allSlots.map((s: any) => cohortLabel(s)).filter(Boolean))].sort(),
@@ -672,6 +680,7 @@ const AdminClassSchedule: React.FC = () => {
         open={autoScheduleOpen}
         onClose={() => setAutoScheduleOpen(false)}
         onApplied={() => queryClient.invalidateQueries({ queryKey: ['weeklySchedules'] })}
+        divisionOptions={divisionOptions}
       />
 
       {/* Empty-data banners */}
@@ -810,9 +819,12 @@ const AdminClassSchedule: React.FC = () => {
                   </Typography>
                   <Typography variant="caption" color="text.secondary">
                     Sem {schedule.semester}
-                    {schedule.division && ` · ${schedule.division}`}
-                    {schedule.section && ` · ${schedule.section}`}
+                    {schedule.division && ` · Div ${schedule.division.replace(/,/g, '+')}`}
+                    {schedule.section && ` · Sec ${schedule.section.replace(/,/g, '+')}`}
                   </Typography>
+                  <Box sx={{ mt: 0.5 }}>
+                    <MergedDivisionChip division={[schedule.division, schedule.section].filter(Boolean).join(',')} />
+                  </Box>
                 </TableCell>
                 <TableCell>
                   <Chip label={schedule.room} size="small" variant="outlined" />
@@ -1032,20 +1044,30 @@ const AdminClassSchedule: React.FC = () => {
               />
             </Box>
 
-            {/* Division */}
-            <Box sx={{ flex: '1 1 120px' }}>
+            {/* A comma-separated division letter list is the existing stored group shape. */}
+            <Box sx={{ flex: '1 1 220px' }}>
               <FormControl fullWidth size="small">
-                <InputLabel>Division</InputLabel>
+                <InputLabel id="schedule-divisions-label">Divisions taught together</InputLabel>
                 <Select
-                  value={formData.division}
-                  onChange={e => setFormData(prev => ({ ...prev, division: e.target.value }))}
-                  label="Division"
+                  labelId="schedule-divisions-label"
+                  multiple
+                  value={divisionSelection(formData.division)}
+                  onChange={event => {
+                    const value = event.target.value
+                    const selected = divisionSelection(Array.isArray(value) ? value : String(value).split(','))
+                    setFormData(prev => ({ ...prev, division: divisionSelectionValue(selected) }))
+                  }}
+                  label="Divisions taught together"
+                  renderValue={selected => Array.isArray(selected) && selected.length > 0 ? selected.join(' + ') : 'Whole batch'}
                 >
-                  <MenuItem value=""><em>None</em></MenuItem>
-                  {divisions.map(d => (
-                    <MenuItem key={d} value={d}>{d}</MenuItem>
+                  {divisionOptions.map(item => (
+                    <MenuItem key={item} value={item}>
+                      <Checkbox size="small" checked={divisionSelection(formData.division).includes(item)} />
+                      <ListItemText primary={`Division ${item}`} />
+                    </MenuItem>
                   ))}
                 </Select>
+                <FormHelperText>Select divisions sharing one lecture; leave blank for a whole-batch class.</FormHelperText>
               </FormControl>
             </Box>
 
@@ -1113,7 +1135,7 @@ const AdminClassSchedule: React.FC = () => {
                 label="Room *"
                 value={formData.room}
                 onChange={e => setFormData(prev => ({ ...prev, room: e.target.value }))}
-                placeholder="e.g. 301-A"
+                placeholder="e.g. 301-A (use the largest hall for merged classes)"
               />
             </Box>
 
@@ -1215,7 +1237,7 @@ const AdminClassSchedule: React.FC = () => {
         <DialogContent>
           <Stack spacing={2} sx={{ mt: 1 }}>
             <Alert severity="info">
-              Columns: subject, subjectCode, facultyId, facultyName, branch, batch, semester, division, section, room, dayOfWeek, startTime, endTime, type.
+              Columns: subject, subjectCode, facultyId, facultyName, branch, batch, semester, division, section, room, dayOfWeek, startTime, endTime, type. For one merged class, quote the CSV division field as "A,B" and leave section blank; it is stored as A,B.
               Every row is validated, de-duplicated and clash-checked before anything is written — review the report, then apply.
             </Alert>
             <Button

@@ -16,6 +16,8 @@ import { ExportButton } from '../../../components/shared/ExportButton'
 import type { AttendanceStatus, FacultyExportRow, FacultyStudent, FacultyClassSession } from '../types/attendance'
 import type { RosterDiagnostics } from '../../../shared/utils/cohortMatching'
 import type { DateRangeType } from '../hooks/useAttendanceExport'
+import MergedDivisionChip from '@/shared/components/MergedDivisionChip'
+import { teachingGroupScopeLabel } from '@/shared/utils/divisionGroups'
 
 const statusConfig: Record<AttendanceStatus, { label: string; color: string; bg: string; border: string; icon: React.ElementType }> = {
   Present: {
@@ -81,8 +83,8 @@ function describeCohortTarget(target: RosterDiagnostics['target']): string {
   if (target.branch) parts.push(target.branch)
   if (target.batch) parts.push(target.batch)
   if (target.semester) parts.push(`Semester ${target.semester}`)
-  const letters = [target.division, target.section].filter(Boolean).join(' ')
-  if (letters) parts.push(letters)
+  const teachingGroup = teachingGroupScopeLabel(target.division, target.section)
+  if (teachingGroup) parts.push(teachingGroup)
   if (target.subject) parts.push(target.subject)
   return parts.join(' • ') || 'this class'
 }
@@ -125,7 +127,7 @@ function RosterDiagnosticPanel({ diagnostics }: { diagnostics: RosterDiagnostics
       )}
 
       <p className="text-xs text-amber-900/80 dark:text-amber-200/80">
-        Ask an admin to align this class's schedule (program, batch, semester, section) with
+        Ask an admin to align this class's schedule (program, batch, semester, teaching group) with
         how the students were imported, then mark attendance again.
       </p>
 
@@ -434,9 +436,20 @@ export default function FacultyAttendance() {
           <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Mark Attendance</h1>
           <p className="text-slate-500 dark:text-slate-400">
             {selectedClass
-              ? `${selectedClass.subject} (${selectedClass.subjectCode}) • ${selectedClass.branch} • ${selectedClass.batch} • ${selectedClass.division} ${selectedClass.section} • ${selectedClass.timeSlot}`
+              ? `${selectedClass.subject} (${selectedClass.subjectCode}) • ${selectedClass.branch} • ${selectedClass.batch} • ${[selectedClass.division, selectedClass.section].filter(Boolean).join(' / ').replace(/,/g, '+')} • ${selectedClass.timeSlot}`
               : "Select a class session"}
           </p>
+          {selectedClass && (
+            <div className="mt-2 flex flex-wrap items-center gap-2">
+              <MergedDivisionChip
+                division={[selectedClass.division, selectedClass.section].filter(Boolean).join(',')}
+                studentCount={students.length}
+              />
+              {students.length > 0 && ([selectedClass.division, selectedClass.section].join(',').match(/[,/;|&+]/)) && (
+                <span className="text-xs text-slate-500 dark:text-slate-400">Attendance is saved separately for each student.</span>
+              )}
+            </div>
+          )}
         </div>
         {isAttendanceAlreadySaved && (
           <span className="ml-auto px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-xs font-medium border border-emerald-500/20">
@@ -469,7 +482,7 @@ export default function FacultyAttendance() {
             >
               {classSessions.map((c: FacultyClassSession) => (
                 <option key={c.id} value={c.id}>
-                  {c.subject} ({c.subjectCode}) • {c.branch} {c.batch} • {c.division} {c.section} • {c.timeSlot} {c.attendanceMarked ? '✓' : ''}
+                  {c.subject} ({c.subjectCode}) • {c.branch} {c.batch} • {[c.division, c.section].filter(Boolean).join(' / ').replace(/,/g, '+')} • {c.timeSlot} {c.attendanceMarked ? '✓' : ''}
                 </option>
               ))}
             </select>
@@ -623,7 +636,7 @@ export default function FacultyAttendance() {
             onClick={() => setAllStatus('Present')}
             className="px-3 py-1.5 rounded-lg text-sm bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/20 hover:bg-emerald-100 dark:hover:bg-emerald-500/20 transition-all"
           >
-            All Present
+            Mark all present
           </button>
           <button
             onClick={() => setAllStatus('Absent')}

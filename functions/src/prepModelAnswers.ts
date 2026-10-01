@@ -45,9 +45,11 @@ export function answerDocId(paperId: string, qid: string): string {
 
 /** Firestore-legal, stable id fragment: no '/', no control characters, ≤ 100 chars. */
 export function safeIdPart(value: unknown): string {
-  return String(value ?? '')
-    .normalize('NFKC')
-    .replace(/[/\u0000-\u001f\u007f]/g, '-')
+  const safe = Array.from(String(value ?? '').normalize('NFKC'), (char) => {
+    const code = char.charCodeAt(0)
+    return char === '/' || code < 0x20 || code === 0x7f ? '-' : char
+  }).join('')
+  return safe
     .trim()
     .replace(/\s+/g, '_')
     .slice(0, 100)

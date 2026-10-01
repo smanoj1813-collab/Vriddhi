@@ -24,6 +24,7 @@ import {
 import { httpsCallable } from 'firebase/functions';
 import { db, functions } from '@/Firebase/config';
 import { resolveStudentRecord } from '../services/studentRecordResolver';
+import { scheduleMatchesStudentDocument } from '../utils/studentScheduleMatching';
 import {
   attendanceFromSummary,
   type AttendanceSummaryDocLike,
@@ -126,6 +127,8 @@ export interface StudentClassSession {
   date?: string;
   topic?: string;
   status?: string;
+  division?: string;
+  section?: string;
 }
 
 export interface StudentNotificationData {
@@ -524,25 +527,19 @@ export async function fetchTodaySchedule(
 
   const dayOfWeek = new Date(`${dateStr}T12:00:00`).toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
 
-  // Weekly recurring schedule is always scoped to the student's tenant before
-  // the remaining cohort fields are matched.
+  // Tenant scope is mandatory; the shared matcher applies normalised branch,
+  // batch, semester and merged division/section rules client-side.
   const weekly = await safeQuery<any>(
     query(
       collection(db, 'weeklySchedules'),
       where('collegeId', '==', student.collegeId),
-      where('branch', '==', student.branch),
-      limit(500)
+      limit(1000)
     ),
     (d) => ({ id: d.id, ...(d.data() as Record<string, unknown>) })
   );
 
-  const matchesCohort = (row: any) => {
-    if (String(row.batch || '') !== String(student.batch)) return false;
-    if (Number(row.semester || 0) !== Number(student.semester)) return false;
-    const div = row.division || row.section || '';
-    if (div && div !== student.division && div !== student.section) return false;
-    return true;
-  };
+  const matchesCohort = (row: Record<string, unknown>) =>
+    scheduleMatchesStudentDocument(row, student, student);
 
   const recurring: StudentClassSession[] = weekly
     .filter((row) => matchesCohort(row) && String(row.dayOfWeek || '').toLowerCase() === dayOfWeek)
@@ -558,6 +555,8 @@ export async function fetchTodaySchedule(
       date: dateStr,
       topic: row.topic,
       status: row.status || 'scheduled',
+      division: String(row.division ?? ''),
+      section: String(row.section ?? ''),
     }));
 
   // Daily overrides
@@ -600,6 +599,8 @@ export async function fetchTodaySchedule(
           .filter(Boolean)
           .join(', ') || row.topic,
       status: row.status || 'scheduled',
+      division: String(row.division ?? ''),
+      section: String(row.section ?? ''),
     }));
 
   // Daily rows supersede the recurring slot even when the daily row is a

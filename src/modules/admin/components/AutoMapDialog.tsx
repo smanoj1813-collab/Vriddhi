@@ -13,13 +13,16 @@ import {
   Button,
   Chip,
   Collapse,
+  Checkbox,
   Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
   FormControl,
+  FormHelperText,
   InputLabel,
   LinearProgress,
+  ListItemText,
   MenuItem,
   Select,
   Stack,
@@ -40,6 +43,7 @@ import {
 } from '@mui/icons-material'
 
 import type { CurriculumDoc } from '@/shared/types/curriculum'
+import { divisionSelection, divisionSelectionValue } from '@/shared/utils/divisionGroups'
 import {
   autoMapCurriculum,
   applyAutoMapping,
@@ -50,6 +54,7 @@ interface AutoMapDialogProps {
   curriculum: CurriculumDoc
   /** Batches the college already uses (from mappings) — quick-pick candidates. */
   knownBatches: string[]
+  divisionOptions?: string[]
   onClose: () => void
   /** Called with the number of mappings written; the page shows the snackbar. */
   onApplied: (created: number) => void
@@ -61,9 +66,9 @@ function scoreColor(score: number): 'success' | 'warning' | 'error' {
   return 'error'
 }
 
-const AutoMapDialog: React.FC<AutoMapDialogProps> = ({ curriculum, knownBatches, onClose, onApplied }) => {
+const AutoMapDialog: React.FC<AutoMapDialogProps> = ({ curriculum, knownBatches, divisionOptions = [], onClose, onApplied }) => {
   const [batch, setBatch] = useState<string>(() => knownBatches[0] || '')
-  const [division, setDivision] = useState('')
+  const [division, setDivision] = useState<string[]>([])
   const [section, setSection] = useState('')
   const [capacity, setCapacity] = useState('24')
   const [loading, setLoading] = useState(false)
@@ -75,6 +80,7 @@ const AutoMapDialog: React.FC<AutoMapDialogProps> = ({ curriculum, knownBatches,
 
   /** "__type__" is the Select placeholder for a custom batch, not a value. */
   const effectiveBatch = batch === '__type__' ? '' : batch.trim()
+  const divisionValue = useMemo(() => divisionSelectionValue(division), [division])
 
   const selectedIds = useMemo(() => {
     if (!result) return []
@@ -102,7 +108,7 @@ const AutoMapDialog: React.FC<AutoMapDialogProps> = ({ curriculum, knownBatches,
       const res = await autoMapCurriculum({
         curriculumId: curriculum.id,
         batch: effectiveBatch,
-        division: division.trim() || undefined,
+        division: divisionValue || undefined,
         section: section.trim() || undefined,
         capacity: capacity ? Number(capacity) : undefined,
       })
@@ -124,7 +130,7 @@ const AutoMapDialog: React.FC<AutoMapDialogProps> = ({ curriculum, knownBatches,
       const res = await applyAutoMapping({
         curriculumId: curriculum.id,
         batch: effectiveBatch,
-        division: division.trim() || undefined,
+        division: divisionValue || undefined,
         section: section.trim() || undefined,
         capacity: capacity ? Number(capacity) : undefined,
         courseIds: selectedIds,
@@ -173,7 +179,28 @@ const AutoMapDialog: React.FC<AutoMapDialogProps> = ({ curriculum, knownBatches,
               sx={{ minWidth: 160 }}
             />
           ) : null}
-          <TextField size="small" label="Division (optional)" value={division} onChange={(e) => setDivision(e.target.value)} sx={{ minWidth: 150 }} />
+          <FormControl size="small" sx={{ minWidth: 220 }}>
+            <InputLabel id="auto-map-divisions-label">Divisions taught together</InputLabel>
+            <Select
+              labelId="auto-map-divisions-label"
+              multiple
+              label="Divisions taught together"
+              value={division}
+              renderValue={(selected) => selected.length > 0 ? selected.join(' + ') : 'All division groups'}
+              onChange={(event) => {
+                const value = event.target.value
+                setDivision(divisionSelection(Array.isArray(value) ? value : String(value).split(',')))
+              }}
+            >
+              {divisionOptions.map((item) => (
+                <MenuItem key={item} value={item}>
+                  <Checkbox size="small" checked={division.includes(item)} />
+                  <ListItemText primary={`Division ${item}`} />
+                </MenuItem>
+              ))}
+            </Select>
+            <FormHelperText>Select divisions that share one lecture. Leave blank to map every division group separately.</FormHelperText>
+          </FormControl>
           <TextField size="small" label="Section (optional)" value={section} onChange={(e) => setSection(e.target.value)} sx={{ minWidth: 150 }} />
           <TextField
             size="small"
@@ -187,7 +214,7 @@ const AutoMapDialog: React.FC<AutoMapDialogProps> = ({ curriculum, knownBatches,
           />
         </Box>
         <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 2 }}>
-          Already-mapped courses in this batch are skipped. Scoring: subject fit 50 · branch fit 15 · experience 10 · load balance 25.
+          Already-mapped overlapping groups in this batch are skipped. An explicit A+B group counts as one class; a blank division maps the course to each separate division group. Scoring: subject fit 50 · branch fit 15 · experience 10 · load balance 25.
         </Typography>
 
         <Button
@@ -293,7 +320,7 @@ const AutoMapDialog: React.FC<AutoMapDialogProps> = ({ curriculum, knownBatches,
                     <TableCell>
                       <Typography sx={{ fontWeight: 500, fontSize: 14 }}>{p.courseName}</Typography>
                       <Typography variant="caption" color="text.secondary">
-                        {p.courseCode} · {p.credits} cr · {p.hoursPerWeek} hrs/wk
+                        {p.courseCode} · {p.credits} cr · {p.hoursPerWeek} periods/group × {p.groupsServed} group{p.groupsServed === 1 ? '' : 's'}
                       </Typography>
                     </TableCell>
                     <TableCell>

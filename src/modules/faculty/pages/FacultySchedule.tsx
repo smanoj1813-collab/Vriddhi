@@ -20,6 +20,7 @@ import {
 import { useFacultySchedule } from '../hooks/useFacultySchedule';
 import type { DayOfWeek } from '../../../types/schedule';
 import HolidayBanner from '@/shared/components/HolidayBanner';
+import MergedDivisionChip from '@/shared/components/MergedDivisionChip';
 
 const DAYS: DayOfWeek[] = [
   'Monday',
@@ -137,6 +138,9 @@ export default function FacultySchedule() {
                           {cls.subjectCode}
                         </Typography>
                       )}
+                      <Box sx={{ mt: 0.5 }}>
+                        <MergedDivisionChip division={[cls.division, cls.section].filter(Boolean).join(',')} />
+                      </Box>
                       <Box
                         sx={{
                           display: 'flex',

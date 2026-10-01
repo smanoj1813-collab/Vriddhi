@@ -47,7 +47,7 @@ import * as admin from 'firebase-admin'
 import { Timestamp } from 'firebase-admin/firestore'
 import { HttpsError, onCall } from 'firebase-functions/v2/https'
 import { resolveSchedulingStaff } from './classSchedule'
-import { batchKeysMatch } from './cohortBatch'
+import { batchFieldsIntersect, batchKeysMatch, cohortLetters, divisionScopesOverlap } from './cohortBatch'
 
 // ═════════════════════════════════════════════════════════════════════════════
 // Pure core
@@ -121,6 +121,14 @@ export interface AutoMapExistingMapping {
   totalHours: number
 }
 
+export interface AutoMapTeachingGroup {
+  branch: string
+  batch: string
+  semester?: number
+  division: string
+  section: string
+}
+
 export interface AutoMapOptions {
   curriculumId: string
   branch: string
@@ -137,6 +145,8 @@ export interface AutoMapOptions {
   faculty: AutoMapFaculty[]
   /** Every active mapping in the college (drives load + dedupe). */
   existing: AutoMapExistingMapping[]
+  /** Distinct enrolled division/section cohorts, used for legacy all-division mappings. */
+  teachingGroups?: AutoMapTeachingGroup[]
 }
 
 export type AutoMapFlag = 'overload-risk' | 'no-subject-match' | 'guest-assigned'
@@ -155,6 +165,8 @@ export interface AutoMapProposal {
   credits: number
   totalHours: number
   hoursPerWeek: number
+  /** Number of separately taught groups represented by this mapping (merged A,B = one). */
+  groupsServed: number
   faculty: { uid: string; profileId: string; name: string; email: string } | null
   score: number
   breakdown: AutoMapScoreBreakdown
@@ -283,6 +295,85 @@ export function hoursPerWeek(
   return Math.max(1, Math.round((course.credits || 0) * 4))
 }
 
+const branchKey = (value: unknown): string => String(value ?? '').toLowerCase().replace(/[^a-z0-9]+/g, '')
+
+function teachingGroupKey(group: Pick<AutoMapTeachingGroup, 'division' | 'section'>): string {
+  const letters = [...new Set([...cohortLetters(group.division), ...cohortLetters(group.section)])].sort()
+  return letters.join('+') || '__whole_batch__'
+}
+
+/**
+ * Distinct student division/section cohorts for one branch + batch. Unscoped
+ * legacy mappings serve each of these groups separately; an explicit
+ * "A,B" mapping is one merged teaching group and is therefore not multiplied.
+ */
+export function groupsForCohort(
+  teachingGroups: AutoMapTeachingGroup[] | undefined,
+  branch: string,
+  batch: string,
+  semester?: number,
+): AutoMapTeachingGroup[] {
+  const branchId = branchKey(branch)
+  const groups = new Map<string, AutoMapTeachingGroup>()
+  for (const group of teachingGroups ?? []) {
+    if (!batchFieldsIntersect(batch, group.batch)) continue
+    if (semester && group.semester && Number(group.semester) !== Number(semester)) continue
+    const groupBranch = branchKey(group.branch)
+    if (branchId && groupBranch && branchId !== groupBranch) continue
+    const key = teachingGroupKey(group)
+    if (!groups.has(key)) groups.set(key, group)
+  }
+  return [...groups.values()].sort((a, b) =>
+    teachingGroupKey(a).localeCompare(teachingGroupKey(b), undefined, { numeric: true }),
+  )
+}
+
+function groupsServedForScope(
+  options: AutoMapOptions,
+  scope: { branch?: unknown; batch?: unknown; semester?: unknown; division?: unknown; section?: unknown },
+): { count: number; labels: string[] } {
+  const explicitlyGrouped = cohortLetters(scope.division).length + cohortLetters(scope.section).length > 0
+  if (explicitlyGrouped) {
+    const labels = [...new Set([...cohortLetters(scope.division), ...cohortLetters(scope.section)])]
+      .map((letter) => letter.toUpperCase())
+    return { count: 1, labels }
+  }
+  const groups = groupsForCohort(
+    options.teachingGroups,
+    String(scope.branch ?? options.branch),
+    String(scope.batch ?? options.batch),
+    Number(scope.semester ?? 0) || undefined,
+  )
+  if (groups.length === 0) return { count: 1, labels: [] }
+  return { count: groups.length, labels: groups.map((group) => teachingGroupKey(group).replace(/\+/g, '+').toUpperCase()) }
+}
+
+function mergeToFitReason(input: {
+  hoursPerGroup: number
+  groupsServed: number
+  loadBefore: number
+  capacity: number
+  labels: string[]
+}): string {
+  const { hoursPerGroup, groupsServed, loadBefore, capacity, labels } = input
+  const demand = hoursPerGroup * groupsServed
+  const excess = loadBefore + demand - capacity
+  if (excess <= 0) return ''
+  if (groupsServed <= 1 || hoursPerGroup <= 0) {
+    return `Even one class leaves the load at ${round1(loadBefore + demand)}/${capacity}; reassign periods or increase capacity.`
+  }
+  const extraGroupsToMerge = Math.min(groupsServed - 1, Math.ceil(excess / hoursPerGroup))
+  const groupsToCombine = extraGroupsToMerge + 1
+  const saved = extraGroupsToMerge * hoursPerGroup
+  const finalLoad = round1(loadBefore + demand - saved)
+  const namedGroups = labels.slice(0, groupsToCombine)
+  const scope = namedGroups.length > 0 ? namedGroups.join('+') : `${groupsToCombine} division groups`
+  const prefix = `Merge ${scope} for this subject into one class (saves ${saved} periods/week; projected ${finalLoad}/${capacity})`
+  return finalLoad <= capacity
+    ? prefix + '.'
+    : prefix + `; even this leaves ${finalLoad}/${capacity}, so also reassign another course.`
+}
+
 function branchFitPoints(branch: string, faculty: AutoMapFaculty): number {
   const bTokens = significantTokens(branch)
   if (bTokens.length === 0) return 0
@@ -387,9 +478,6 @@ export function runAutoMapping(options: AutoMapOptions): AutoMapResult {
   const semesterWeeks =
     options.semesterWeeks && options.semesterWeeks > 0 ? options.semesterWeeks : DEFAULT_SEMESTER_WEEKS
   const batch = (options.batch || '').trim().toLowerCase()
-  const division = (options.division ?? '').trim().toLowerCase()
-  const section = (options.section ?? '').trim().toLowerCase()
-
   // uid lookup across every identity a mapping may carry (uid, profile id, email).
   const identity = new Map<string, string>()
   for (const f of options.faculty) {
@@ -406,39 +494,43 @@ export function runAutoMapping(options: AutoMapOptions): AutoMapResult {
     return email ? identity.get(email) : undefined
   }
 
-  // Current weekly load from every active mapping in the college.
+  // Current weekly load from every active mapping in the college. A plain
+  // unscoped legacy mapping is one row per subject but serves the separately
+  // enrolled division groups; an explicit letter list ("A,B") is one merged
+  // class and counts once.
   const load = new Map<string, number>()
   for (const m of options.existing) {
     const uid = resolveUid(m)
     if (!uid) continue
-    load.set(
-      uid,
-      (load.get(uid) ?? 0) + hoursPerWeek({ totalHours: m.totalHours, credits: 0 }, semesterWeeks),
-    )
+    const served = groupsServedForScope(options, m)
+    const weekly = hoursPerWeek({ totalHours: m.totalHours, credits: 0 }, semesterWeeks) * served.count
+    load.set(uid, (load.get(uid) ?? 0) + weekly)
   }
   const initialLoad = new Map(load)
 
-  // Who already teaches which course in this exact batch/division/section.
-  // "This exact batch" is the academic-year rule (./cohortBatch), not string
-  // equality: a row stored as "2026-2027" IS this batch when the run is for
-  // "2027". Comparing the raw strings dropped that row from `taken`, so
-  // applyAutoMapping re-proposed the faculty who is already mapped and wrote a
-  // duplicate mapping for the same class.
-  const taken = new Map<string, Set<string>>()
+  // Who already teaches an overlapping group of the same course in this
+  // batch. "2026-2027" remains equivalent to "2027"; division lists overlap
+  // by their letter sets, so an existing A mapping also protects a proposed
+  // A,B merge from a duplicate assignment.
+  const taken = new Map<string, { uid: string; division?: string | null; section?: string | null }[]>()
   for (const m of options.existing) {
     const uid = resolveUid(m)
-    if (!uid) continue
-    if (!batchKeysMatch(m.batch, batch)) continue
-    if (String(m.division ?? '').trim().toLowerCase() !== division) continue
-    if (String(m.section ?? '').trim().toLowerCase() !== section) continue
-    const key = mappingKey(m.courseCode, m.branch, m.semester, batch, division, section)
-    const set = taken.get(key) ?? new Set<string>()
-    set.add(uid)
-    taken.set(key, set)
+    if (!uid || !batchKeysMatch(m.batch, batch)) continue
+    const key = mappingKey(m.courseCode, m.branch, m.semester, batch, '', '')
+    const rows = taken.get(key) ?? []
+    rows.push({ uid, division: m.division, section: m.section })
+    taken.set(key, rows)
   }
 
   const courseKey = (c: AutoMapCourse): string =>
-    mappingKey(c.code, c.branch || options.branch, c.semester, batch, division, section)
+    mappingKey(c.code, c.branch || options.branch, c.semester, batch, '', '')
+
+  const blockedFor = (c: AutoMapCourse): Set<string> =>
+    new Set(
+      (taken.get(courseKey(c)) ?? [])
+        .filter((row) => divisionScopesOverlap(row, { division: options.division, section: options.section }))
+        .map((row) => row.uid),
+    )
 
   // G5: a guest whose contract has already ended is not offered for new
   // proposals. Their existing mappings still count as load — they may be
@@ -454,7 +546,7 @@ export function runAutoMapping(options: AutoMapOptions): AutoMapResult {
   const contractExpiredGuests = options.faculty.length - contractActiveFaculty.length
 
   const candidatesFor = (c: AutoMapCourse): AutoMapFaculty[] => {
-    const blocked = taken.get(courseKey(c)) ?? new Set<string>()
+    const blocked = blockedFor(c)
     return contractActiveFaculty.filter((f) => !blocked.has(f.uid))
   }
 
@@ -475,6 +567,14 @@ export function runAutoMapping(options: AutoMapOptions): AutoMapResult {
   const byCourse = new Map<string, AutoMapProposal>()
   for (const course of ordered) {
     const hpp = hoursPerWeek(course, semesterWeeks)
+    const served = groupsServedForScope(options, {
+      branch: course.branch || options.branch,
+      batch: options.batch,
+      semester: course.semester,
+      division: options.division,
+      section: options.section,
+    })
+    const proposedWeekly = hpp * served.count
     const base = {
       courseId: course.id,
       courseCode: course.code,
@@ -482,6 +582,7 @@ export function runAutoMapping(options: AutoMapOptions): AutoMapResult {
       credits: course.credits,
       totalHours: course.totalHours ?? 0,
       hoursPerWeek: hpp,
+      groupsServed: served.count,
     }
 
     const candidates = candidatesFor(course)
@@ -507,7 +608,7 @@ export function runAutoMapping(options: AutoMapOptions): AutoMapResult {
       scoreFacultyForCourse(f, course, options.branch, load.get(f.uid) ?? 0, capacityOf(f)),
     )
     const fits = scored.filter(
-      (s) => (load.get(s.faculty.uid) ?? 0) + hpp <= capacityOf(s.faculty),
+      (s) => (load.get(s.faculty.uid) ?? 0) + proposedWeekly <= capacityOf(s.faculty),
     )
     let pool = fits.length > 0 ? fits : scored
     // G5: full-time preference tier. A full-time teacher with a credible
@@ -524,10 +625,23 @@ export function runAutoMapping(options: AutoMapOptions): AutoMapResult {
     )
     const best = pool[0]
     const flags: AutoMapFlag[] = []
-    if ((load.get(best.faculty.uid) ?? 0) + hpp > capacityOf(best.faculty)) flags.push('overload-risk')
+    const loadBefore = load.get(best.faculty.uid) ?? 0
+    const capacityForBest = capacityOf(best.faculty)
+    const loadAfter = loadBefore + proposedWeekly
+    if (loadAfter > capacityForBest) flags.push('overload-risk')
     if (best.breakdown.subject < 15) flags.push('no-subject-match')
     if (isGuestFaculty(best.faculty)) flags.push('guest-assigned')
-    load.set(best.faculty.uid, (load.get(best.faculty.uid) ?? 0) + hpp)
+    load.set(best.faculty.uid, loadAfter)
+    const demandReason = `Demand: ${hpp} periods × ${served.count} group${served.count === 1 ? '' : 's'} = ${proposedWeekly} periods/week (${round1(loadBefore)} + ${proposedWeekly} = ${round1(loadAfter)}/${capacityForBest})`
+    const mergeHint = flags.includes('overload-risk')
+      ? mergeToFitReason({
+          hoursPerGroup: hpp,
+          groupsServed: served.count,
+          loadBefore,
+          capacity: capacityForBest,
+          labels: served.labels,
+        })
+      : ''
 
     byCourse.set(course.id, {
       ...base,
@@ -539,7 +653,7 @@ export function runAutoMapping(options: AutoMapOptions): AutoMapResult {
       },
       score: best.score,
       breakdown: best.breakdown,
-      reasons: best.reasons,
+      reasons: [...best.reasons, demandReason, ...(mergeHint ? [mergeHint] : [])],
       flags,
       status: 'proposed',
     })
@@ -676,6 +790,7 @@ export function validateAutoMapPayload(
 
 const MAX_FACULTY_READ = 500
 const MAX_MAPPINGS_READ = 1000
+const MAX_STUDENT_GROUP_READ = 5000
 
 function normalizeSubjectList(value: unknown): string[] {
   if (!Array.isArray(value)) return []
@@ -782,6 +897,7 @@ async function loadCollegeContext(
   curriculum: Record<string, unknown>
   faculty: AutoMapFaculty[]
   existing: AutoMapExistingMapping[]
+  teachingGroups: AutoMapTeachingGroup[]
 }> {
   const curSnap = await db.collection('curriculum').doc(payload.curriculumId).get()
   if (!curSnap.exists) {
@@ -795,14 +911,25 @@ async function loadCollegeContext(
     throw new HttpsError('failed-precondition', 'This curriculum is archived')
   }
 
-  const [facultySnap, mappingsSnap] = await Promise.all([
+  const [facultySnap, mappingsSnap, studentsSnap] = await Promise.all([
     db.collection('faculty').where('collegeId', '==', payload.collegeId).limit(MAX_FACULTY_READ).get(),
     db
       .collection('curriculumFacultyMappings')
       .where('collegeId', '==', payload.collegeId)
       .limit(MAX_MAPPINGS_READ)
       .get(),
+    db.collection('students').where('collegeId', '==', payload.collegeId).limit(MAX_STUDENT_GROUP_READ).get(),
   ])
+
+  if (facultySnap.size === MAX_FACULTY_READ) {
+    throw new HttpsError('failed-precondition', `Faculty discovery reached its ${MAX_FACULTY_READ}-record safety cap; narrow the college roster before auto-mapping`)
+  }
+  if (mappingsSnap.size === MAX_MAPPINGS_READ) {
+    throw new HttpsError('failed-precondition', `Load discovery reached its ${MAX_MAPPINGS_READ}-mapping safety cap; auto-mapping cannot safely estimate current load`)
+  }
+  if (studentsSnap.size === MAX_STUDENT_GROUP_READ) {
+    throw new HttpsError('failed-precondition', `Teaching-group discovery reached its ${MAX_STUDENT_GROUP_READ}-student safety cap; auto-mapping cannot safely estimate group load`)
+  }
 
   const faculty = facultySnap.docs
     .map(toAutoMapFaculty)
@@ -817,7 +944,18 @@ async function loadCollegeContext(
     })
     .map(toExistingMapping)
 
-  return { curriculum, faculty, existing }
+  const teachingGroups: AutoMapTeachingGroup[] = studentsSnap.docs.map((doc) => {
+    const row = doc.data() as Record<string, unknown>
+    return {
+      branch: String(row.branch ?? row.department ?? ''),
+      batch: String(row.batch ?? ''),
+      semester: Number(row.semester ?? 0) || 0,
+      division: String(row.division ?? ''),
+      section: String(row.section ?? ''),
+    }
+  })
+
+  return { curriculum, faculty, existing, teachingGroups }
 }
 
 // ═════════════════════════════════════════════════════════════════════════════
@@ -837,7 +975,7 @@ export const autoMapCurriculum = onCall(AUTO_MAP_REGION, async (request) => {
   const payload = validateAutoMapPayload(request.data, staff.role, staff.collegeId)
 
   const db = admin.firestore()
-  const { curriculum, faculty, existing } = await loadCollegeContext(db, payload)
+  const { curriculum, faculty, existing, teachingGroups } = await loadCollegeContext(db, payload)
   const { branch, courses } = toAutoMapCourses(curriculum)
 
   return runAutoMapping({
@@ -852,6 +990,7 @@ export const autoMapCurriculum = onCall(AUTO_MAP_REGION, async (request) => {
     courses,
     faculty,
     existing,
+    teachingGroups,
   })
 })
 
@@ -869,7 +1008,7 @@ export const applyAutoMapping = onCall(
     const payload = validateAutoMapPayload(request.data, staff.role, staff.collegeId)
 
     const db = admin.firestore()
-    const { curriculum, faculty, existing } = await loadCollegeContext(db, payload)
+    const { curriculum, faculty, existing, teachingGroups } = await loadCollegeContext(db, payload)
     const { branch, courses } = toAutoMapCourses(curriculum)
 
     const result = runAutoMapping({
@@ -884,6 +1023,7 @@ export const applyAutoMapping = onCall(
       courses,
       faculty,
       existing,
+      teachingGroups,
     })
 
     const wanted = new Set(payload.courseIds)

@@ -41,6 +41,7 @@ export interface AutoScheduleRequest {
   rooms: string[];
   semesterWeeks?: number;
   maxPeriodsPerDayPerFaculty?: number;
+  maxWeeklyPeriodsPerFaculty?: number;
   dryRun?: boolean;
   /** P1 — one applicability window per apply run (written to every doc). */
   dateRange?: { from: string; to?: string };
@@ -78,10 +79,13 @@ export interface AutoSchedulePlacement {
 
 export interface AutoScheduleDemandRow {
   mappingId: string;
+  demandKey: string;
   courseId: string;
   courseCode: string;
   courseName: string;
   facultyName: string;
+  division: string;
+  section: string;
   periodsRequested: number;
   included: boolean;
   source: 'derived' | 'override' | 'excluded' | 'zero-hours';
@@ -122,8 +126,11 @@ export interface AutoSchedulePlan {
   rooms: string[];
   placements: AutoSchedulePlacement[];
   unplaced: {
+    mappingId: string;
     courseId: string;
     subject: string;
+    division: string;
+    section: string;
     periodsRequested: number;
     periodsPlaced: number;
     reason: string;
@@ -132,10 +139,22 @@ export interface AutoSchedulePlan {
     facultyId: string;
     facultyName: string;
     existingWeekly: number;
+    requestedWeekly: number;
+    projectedWeekly: number;
     placedWeekly: number;
     totalWeekly: number;
     capacity: number;
     overloaded: boolean;
+    demandExceeded: boolean;
+    demandBreakdown: {
+      courseId: string;
+      subject: string;
+      groups: string[];
+      groupsServed: number;
+      periodsPerGroup: number;
+      periodsRequested: number;
+    }[];
+    mergeSuggestions: string[];
   }[];
   dailyCoverage: {
     day: DayOfWeek;
@@ -143,6 +162,14 @@ export interface AutoSchedulePlan {
     hours: number;
     utilization: number;
     subjects: string[];
+  }[];
+  cohortDailyCoverage: {
+    division: string;
+    day: DayOfWeek;
+    classes: number;
+    targetMin: number;
+    targetMax: number;
+    onTarget: boolean;
   }[];
   /** P2 — the preview's demand list (drives the override table). */
   demand: AutoScheduleDemandRow[];
@@ -157,6 +184,7 @@ export interface AutoSchedulePlan {
     periodsPlaced: number;
     unplacedCourses: number;
     overloadedFaculty: number;
+    divisionsInTarget?: number;
     coursesIncluded?: number;
     teachingDays?: number;
     blockedDays?: number;

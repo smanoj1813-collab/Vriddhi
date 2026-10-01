@@ -9,25 +9,23 @@
 // actually get?").
 //
 // THE ALGORITHM (deterministic, preview-before-write)
-//   1. DEMAND   — every ACTIVE course mapping of the target cohort (curriculum
-//                 + batch + division + section) needs `hoursPerWeek` periods
-//                 (same conversion as the auto-mapper: totalHours/semesterWeeks,
-//                 min 1). Lab/practical-looking courses are packed in spans
-//                 (default 2 consecutive periods).
+//   1. DEMAND   — every ACTIVE course mapping is planned by teaching group.
+//                 An explicit comma-separated division list ("A,B") is one
+//                 merged class; a legacy unscoped row expands from enrolled
+//                 roster groups. Demand is hoursPerWeek per group.
 //   2. GRID     — days × periodsPerDay slots materialised from startTime &
 //                 periodMinutes with one configurable break. Slot times are
 //                 computed here and echoed back so the preview and the written
 //                 docs can never disagree.
 //   3. PLACE    — courses in demand order (heaviest first, then code for a
-//                 stable tiebreak). Each period/span goes to the least-used
-//                 day for that course (spread), earliest free period, subject
-//                 to: cohort not busy, faculty not busy (ANY college class),
-//                 faculty daily cap, room not double-booked. Room choice:
-//                 least-loaded free room (spreads utilisation).
-//   4. TRUST    — the result carries per-day coverage (periods + hours/day
-//                 vs the grid) and per-faculty load (existing + placed vs the
-//                 24-period UGC ceiling) — the two questions every principal
-//                 asks of a machine-made timetable.
+//                 stable tiebreak). Cohort-day density is balanced first;
+//                 disjoint groups may share a period, while overlapping scopes
+//                 cannot. Faculty daily/weekly caps, room availability and
+//                 contiguous lab spans remain hard constraints.
+//   4. TRUST    — the result carries college-wide slot utilization, per-division
+//                 daily density (target 4–5 classes/day), and explicit faculty
+//                 demand arithmetic with merge suggestions when projected load
+//                 exceeds capacity.
 //   5. WRITE    — dryRun (default) only returns the plan. dryRun:false writes
 //                 each placement as an ordinary weeklySchedules doc (same
 //                 shape as bulk import), stamped autoScheduled for audit.
@@ -40,7 +38,7 @@ import { resolveSchedulingStaff, isValidDateKey, daysBetween, MAX_GENERATE_RANGE
 import { hoursPerWeek, DEFAULT_SEMESTER_WEEKS, DEFAULT_CAPACITY_WEEKLY_HOURS } from './autoCurriculumMapping'
 import { normalizeDay, isValidTime } from './scheduleImport'
 import { buildCalendarView, toCalendarEventLite, MAX_CALENDAR_READ, type CalendarView, type CalendarEventLite } from './calendar'
-import { batchFieldsIntersect, cohortLetters, divisionScopesOverlap, cohortScopesOverlap } from './cohortBatch'
+import { batchFieldsIntersect, batchKeyTokens, cohortLetters, divisionScopesOverlap, cohortScopesOverlap } from './cohortBatch'
 import type { DayOfWeek } from './classSchedule'
 
 // ═════════════════════════════════════════════════════════════════════════════
@@ -98,11 +96,55 @@ export interface AutoScheduleCourse {
 }
 
 /** Already-committed occupancy from the college's live weeklySchedules. */
+export interface CohortBusyScope {
+  branch?: unknown
+  batch?: unknown
+  division?: unknown
+  section?: unknown
+  /** `${day}|${hh:mm}` values already occupied by this scope. */
+  busy: Set<string>
+}
+
+export interface FacultyIdentityRecord {
+  id?: unknown
+  uid?: unknown
+  authUid?: unknown
+  facultyId?: unknown
+  userId?: unknown
+  email?: unknown
+}
+
+/** Build a case-insensitive alias map that canonicalizes timetable faculty IDs to Auth UIDs. */
+export function buildFacultyIdentityMap(records: readonly FacultyIdentityRecord[]): Map<string, string> {
+  const aliases = new Map<string, string>()
+  for (const record of records) {
+    const canonical = [record.uid, record.authUid, record.id, record.facultyId]
+      .map((value) => String(value ?? '').trim())
+      .find(Boolean) ?? ''
+    if (!canonical) continue
+    const values = [record.id, record.uid, record.authUid, record.facultyId, record.userId, record.email]
+    for (const value of values) {
+      const key = String(value ?? '').trim().toLowerCase()
+      if (key) aliases.set(key, canonical)
+    }
+  }
+  return aliases
+}
+
+export function canonicalFacultyId(value: unknown, aliases: ReadonlyMap<string, string>): string {
+  const raw = String(value ?? '').trim()
+  return aliases.get(raw.toLowerCase()) ?? raw
+}
+
 export interface Occupancy {
-  /** `${day}|${hh:mm}` the faculty already teaches (any cohort). */
+  /** `${facultyId}|${day}|${hh:mm}`; legacy unscoped `${day}|${hh:mm}` keys block everyone. */
   facultyBusy: Set<string>
-  /** `${day}|${hh:mm}` the cohort already has a class. */
+  /** Legacy global cohort blocks; new callers should use cohortBusyScopes. */
   cohortBusy: Set<string>
+  /** Scoped busy keys let disjoint teaching groups use the same room-time grid. */
+  cohortBusyScopes?: CohortBusyScope[]
+  /** `${facultyId}|${day}` → already occupied teaching periods. */
+  facultyDaily?: Map<string, number>
   /** `${day}|${hh:mm}|${room}` already booked. */
   roomBusy: Set<string>
   /** facultyId → weekly periods already committed. */
@@ -116,6 +158,8 @@ export interface AutoScheduleInput {
   occupancy: Occupancy
   semesterWeeks: number
   maxPeriodsPerDayPerFaculty: number
+  /** Hard weekly cap; defaults to the regular-faculty 24-period norm. */
+  maxWeeklyPeriodsPerFaculty?: number
   /** P3 — default 'uniform' = today's behaviour, zero surprise. */
   strategy?: PlacementStrategy
   /** P3 — deterministic RNG seed ('random' mode + roomStrategy:'random'). */
@@ -151,8 +195,11 @@ export interface SchedulePlacement {
 }
 
 export interface UnplacedCourse {
+  mappingId: string
   courseId: string
   subject: string
+  division: string
+  section: string
   periodsRequested: number
   periodsPlaced: number
   reason: string
@@ -165,10 +212,14 @@ export interface UnplacedCourse {
  */
 export interface DemandRow {
   mappingId: string
+  /** Stable display key when a legacy whole-batch mapping expands into groups. */
+  demandKey: string
   courseId: string
   courseCode: string
   courseName: string
   facultyName: string
+  division: string
+  section: string
   /** Effective weekly demand after overrides (0 when excluded/zero-hours). */
   periodsRequested: number
   included: boolean
@@ -177,15 +228,41 @@ export interface DemandRow {
   reason?: string
 }
 
+export interface ScheduleFacultyDemand {
+  courseId: string
+  subject: string
+  groups: string[]
+  groupsServed: number
+  periodsPerGroup: number
+  periodsRequested: number
+}
+
 export interface ScheduleFacultyLoad {
   facultyId: string
   facultyName: string
   existingWeekly: number
+  requestedWeekly: number
+  projectedWeekly: number
   placedWeekly: number
   totalWeekly: number
   capacity: number
   overloaded: boolean
+  demandExceeded: boolean
+  demandBreakdown: ScheduleFacultyDemand[]
+  mergeSuggestions: string[]
 }
+
+export interface CohortDailyCoverage {
+  division: string
+  day: DayOfWeek
+  classes: number
+  targetMin: number
+  targetMax: number
+  onTarget: boolean
+}
+
+export const TARGET_CLASSES_PER_DAY_MIN = 4
+export const TARGET_CLASSES_PER_DAY_MAX = 5
 
 export interface DailyCoverage {
   day: DayOfWeek
@@ -203,6 +280,8 @@ export interface AutoSchedulePlan {
   unplaced: UnplacedCourse[]
   facultyLoad: ScheduleFacultyLoad[]
   dailyCoverage: DailyCoverage[]
+  /** Per-division periods/classes per day; merged placements count for every member division. */
+  cohortDailyCoverage: CohortDailyCoverage[]
   /** P2 — every candidate course with its effective demand + include state. */
   demand: DemandRow[]
   /** P4 — calendar view for the preview (blocked weekdays + day counts). */
@@ -216,6 +295,8 @@ export interface AutoSchedulePlan {
     periodsPlaced: number
     unplacedCourses: number
     overloadedFaculty: number
+    /** Divisions for which all scheduled days are at the 4–5 period target. */
+    divisionsInTarget?: number
     /** P2 — courses the run actually asked to place (after overrides). */
     coursesIncluded?: number
     /** P4 — grid-day occurrences in dateRange, minus suspended ones. */
@@ -295,6 +376,9 @@ export function buildSlots(grid: ScheduleGrid): PlannedSlot[] {
 const LAB_NAME_RE = /\b(lab|laboratory|practical|practicum)\b/i
 
 const busyKey = (day: DayOfWeek, startTime: string) => `${day}|${startTime}`
+const facultyBusyKey = (facultyId: string, slotKey: string) => `${facultyId}|${slotKey}`
+const facultySlotIsBusy = (busy: Set<string>, facultyId: string, slotKey: string) =>
+  busy.has(facultyBusyKey(facultyId, slotKey)) || busy.has(slotKey)
 
 // ─── Multi-batch matching (in-flight fix, commit 8bfdac0) ───────────────────
 // Mappings store batch as a comma-joined multi-intake string ("2027, 2028");
@@ -355,10 +439,158 @@ export function mappingServesCohort(
   return divisionScopesOverlap(mapping, target)
 }
 
+export interface TeachingGroupScope {
+  division: string
+  section: string
+}
+
+function hasGroupLetters(scope: { division?: unknown; section?: unknown }): boolean {
+  return cohortLetters(scope.division).length + cohortLetters(scope.section).length > 0
+}
+
+function teachingGroupKey(scope: { division?: unknown; section?: unknown }): string {
+  return [...new Set([...cohortLetters(scope.division), ...cohortLetters(scope.section)])].sort().join('+')
+}
+
+/**
+ * Resolve the actual teaching group(s) represented by one mapping row.
+ * Explicit A,B is one merged class. A legacy unscoped mapping is expanded
+ * into the enrolled division groups so an all-groups run books one meeting
+ * per group instead of silently treating every student as a single cohort.
+ */
+export function resolveMappingTeachingGroups(
+  mapping: { division?: unknown; section?: unknown },
+  rosterGroups: readonly TeachingGroupScope[],
+  filter: { division?: unknown; section?: unknown } = {},
+): TeachingGroupScope[] {
+  const hasFilter = hasGroupLetters(filter)
+  if (hasGroupLetters(mapping)) {
+    if (hasFilter && !divisionScopesOverlap(mapping, filter)) return []
+    return [{ division: String(mapping.division ?? ''), section: String(mapping.section ?? '') }]
+  }
+
+  const matchingGroups = rosterGroups.filter((group) => !hasFilter || divisionScopesOverlap(group, filter))
+  const unique = new Map<string, TeachingGroupScope>()
+  for (const group of matchingGroups) {
+    const key = teachingGroupKey(group) || '__whole_batch__'
+    if (!unique.has(key)) unique.set(key, { division: String(group.division ?? ''), section: String(group.section ?? '') })
+  }
+  if (unique.size > 0) return [...unique.values()]
+
+  if (hasFilter) {
+    const selected = [...new Set([...cohortLetters(filter.division), ...cohortLetters(filter.section)])]
+    return selected.length > 0
+      ? selected.map((letter) => ({ division: letter.toUpperCase(), section: '' }))
+      : [{ division: String(filter.division ?? ''), section: String(filter.section ?? '') }]
+  }
+  return [{ division: '', section: '' }]
+}
+
 /**
  * Place one course's periods into the grid. Mutates the local occupancy so
  * subsequent courses see this course's footprint (intra-run clash safety,
  * exactly like the import planner).
+ */
+function branchIdentity(value: unknown): string {
+  return String(value ?? '').trim().toLowerCase().replace(/[.,;:'’"·]+/g, '').replace(/\s+/g, ' ').trim()
+}
+
+function scopeIdentity(scope: { branch?: unknown; batch?: unknown; division?: unknown; section?: unknown }): string {
+  const branch = branchIdentity(scope.branch)
+  const batch = batchKeyTokens(scope.batch).sort().join(',')
+  const group = teachingGroupKey(scope) || '__whole_batch__'
+  return `${branch}|${batch}|${group}`
+}
+
+function cohortDayKeys(scope: { branch?: unknown; batch?: unknown; division?: unknown; section?: unknown }): string[] {
+  const branch = branchIdentity(scope.branch)
+  const batch = batchKeyTokens(scope.batch).sort().join(',')
+  const prefix = `${branch}|${batch}`
+  const letters = [...new Set([...cohortLetters(scope.division), ...cohortLetters(scope.section)])]
+  return letters.length > 0 ? letters.map((letter) => `${prefix}|${letter}`) : [`${prefix}|__all__`]
+}
+
+function cohortLabels(scope: { division?: unknown; section?: unknown }): string[] {
+  const letters = [...new Set([...cohortLetters(scope.division), ...cohortLetters(scope.section)])]
+  return letters.length > 0 ? letters.map((letter) => letter.toUpperCase()) : ['All']
+}
+
+function roomHallRank(room: string): number {
+  return /auditorium|multipurpose|convention|main hall|lecture hall|large hall|\bhall\b/i.test(room) ? 0 : 1
+}
+
+function buildFacultyDemandBreakdown(
+  demand: Array<{ course: AutoScheduleCourse; periods: number }>,
+): Map<string, ScheduleFacultyDemand[]> {
+  const aggregate = new Map<string, Map<string, { courseId: string; subject: string; periods: number; groups: Map<string, string> }>>()
+  for (const entry of demand) {
+    const { course, periods } = entry
+    const facultyRows = aggregate.get(course.facultyId) ?? new Map()
+    const lineKey = `${course.courseId}|${course.courseName}|${periods}`
+    const line = facultyRows.get(lineKey) ?? {
+      courseId: course.courseId,
+      subject: course.courseName,
+      periods,
+      groups: new Map<string, string>(),
+    }
+    line.groups.set(scopeIdentity(course), cohortLabels(course).join('+'))
+    facultyRows.set(lineKey, line)
+    aggregate.set(course.facultyId, facultyRows)
+  }
+  const result = new Map<string, ScheduleFacultyDemand[]>()
+  for (const [facultyId, rows] of aggregate) {
+    result.set(
+      facultyId,
+      [...rows.values()].map((line) => {
+        const groups = [...line.groups.values()].sort((a, b) => a.localeCompare(b, undefined, { numeric: true }))
+        return {
+          courseId: line.courseId,
+          subject: line.subject,
+          groups,
+          groupsServed: groups.length,
+          periodsPerGroup: line.periods,
+          periodsRequested: line.periods * groups.length,
+        }
+      }),
+    )
+  }
+  return result
+}
+
+function mergeSuggestionsForDemand(
+  rows: ScheduleFacultyDemand[],
+  existing: number,
+  capacity: number,
+): string[] {
+  let excess = Math.max(0, existing + rows.reduce((sum, row) => sum + row.periodsRequested, 0) - capacity)
+  if (excess <= 0) return []
+  const suggestions: string[] = []
+  const candidates = [...rows]
+    .filter((row) => row.groupsServed > 1 && row.periodsPerGroup > 0)
+    .sort((a, b) => b.periodsPerGroup - a.periodsPerGroup || a.subject.localeCompare(b.subject))
+  for (const row of candidates) {
+    if (excess <= 0) break
+    const groupsToMerge = Math.min(row.groupsServed, Math.ceil(excess / row.periodsPerGroup) + 1)
+    const saved = (groupsToMerge - 1) * row.periodsPerGroup
+    if (saved <= 0) continue
+    const groupNames = row.groups.slice(0, groupsToMerge)
+    suggestions.push(
+      `Merge ${groupNames.join(' + ')} for ${row.subject} into one class (saves ${saved} periods/week)`,
+    )
+    excess -= saved
+  }
+  if (excess > 0) {
+    suggestions.push(`Reassign at least ${excess} more weekly period${excess === 1 ? '' : 's'}; merging the same-subject groups is not enough to fit capacity.`)
+  }
+  return suggestions
+}
+
+/**
+ * Place each subject × teaching-group demand into the grid. Disjoint groups
+ * may share a time, while a merged A,B placement occupies both divisions.
+ * The cohort-day score is always the first preference: place each student
+ * group's meetings on the day with the fewest classes, then use period load as
+ * a tie-break so merged lab spans still count as one class in the 4–5/day report.
  */
 export function planAutoSchedule(input: AutoScheduleInput): AutoSchedulePlan {
   const rooms = input.rooms.length > 0 ? input.rooms : ['Room 1']
@@ -367,14 +599,18 @@ export function planAutoSchedule(input: AutoScheduleInput): AutoSchedulePlan {
     throw new HttpsError('invalid-argument', 'Grid produced no slots — check startTime and periodsPerDay')
   }
 
-  // Local mutable view: seeds from the college's existing timetable.
   const facultyBusy = new Set(input.occupancy.facultyBusy)
   const cohortBusy = new Set(input.occupancy.cohortBusy)
+  const cohortBusyScopes = (input.occupancy.cohortBusyScopes ?? []).map((scope) => ({
+    ...scope,
+    busy: new Set(scope.busy),
+  }))
   const roomBusy = new Set(input.occupancy.roomBusy)
   const facultyWeekly = new Map(input.occupancy.facultyWeekly)
-  const facultyDaily = new Map<string, number>()
+  const facultyDaily = new Map(input.occupancy.facultyDaily ?? [])
+  const weeklyCapacity = Math.max(1, Math.floor(input.maxWeeklyPeriodsPerFaculty ?? DEFAULT_CAPACITY_WEEKLY_HOURS))
+  const dailyCapacity = Math.max(1, input.maxPeriodsPerDayPerFaculty)
 
-  // P3 — preference order changes with the strategy; hard constraints never do.
   const strategy: PlacementStrategy = input.strategy ?? 'uniform'
   const roomStrategy: RoomStrategy = input.roomStrategy ?? 'leastLoaded'
   const usesRng = strategy === 'random' || roomStrategy === 'random'
@@ -383,36 +619,36 @@ export function planAutoSchedule(input: AutoScheduleInput): AutoSchedulePlan {
 
   const placements: SchedulePlacement[] = []
   const unplaced: UnplacedCourse[] = []
-
-  // Per-course spread bookkeeping: how many periods each course already has per day.
   const courseDayCount = new Map<string, number>()
+  const cohortPeriodCount = new Map<string, number>()
+  const cohortMeetingCount = new Map<string, number>()
 
-  // ── P2: course inclusion & weekly-load overrides ──────────────────────────
-  // `courseOverrides` steer one run: include:false (or weeklyPeriods:0)
-  // excludes a course; weeklyPeriods replaces the hoursPerWeek() derivation.
-  // A zero-hour mapping with NO override no longer demands credits×4 periods
-  // ("0h language courses got 12 periods demanded") — it lands in unplaced
-  // with an explicit reason instead.
   const overridesByMapping = new Map<string, CourseOverride>()
-  for (const o of input.courseOverrides ?? []) {
-    if (o && typeof o.mappingId === 'string' && o.mappingId) overridesByMapping.set(o.mappingId, o)
+  for (const override of input.courseOverrides ?? []) {
+    if (override && typeof override.mappingId === 'string' && override.mappingId) {
+      overridesByMapping.set(override.mappingId, override)
+    }
   }
 
   const demandRows: DemandRow[] = []
   const placeable: { course: AutoScheduleCourse; periods: number }[] = []
-  for (const c of input.courses) {
-    const override = overridesByMapping.get(c.mappingId)
+  for (const course of input.courses) {
+    const override = overridesByMapping.get(course.mappingId)
     const overridePeriods =
       override && typeof override.weeklyPeriods === 'number' && Number.isFinite(override.weeklyPeriods)
         ? Math.max(0, Math.floor(override.weeklyPeriods))
         : null
     const include = override?.include !== false && overridePeriods !== 0
+    const demandKey = `${course.mappingId}|${scopeIdentity(course)}`
     const rowBase = {
-      mappingId: c.mappingId,
-      courseId: c.courseId,
-      courseCode: c.courseCode,
-      courseName: c.courseName,
-      facultyName: c.facultyName,
+      mappingId: course.mappingId,
+      demandKey,
+      courseId: course.courseId,
+      courseCode: course.courseCode,
+      courseName: course.courseName,
+      facultyName: course.facultyName,
+      division: course.division,
+      section: course.section,
     }
     if (!include) {
       demandRows.push({
@@ -426,10 +662,10 @@ export function planAutoSchedule(input: AutoScheduleInput): AutoSchedulePlan {
     }
     if (overridePeriods !== null) {
       demandRows.push({ ...rowBase, periodsRequested: overridePeriods, included: true, source: 'override' })
-      if (overridePeriods > 0) placeable.push({ course: c, periods: overridePeriods })
+      if (overridePeriods > 0) placeable.push({ course, periods: overridePeriods })
       continue
     }
-    if (!(c.totalHours > 0)) {
+    if (!(course.totalHours > 0)) {
       demandRows.push({
         ...rowBase,
         periodsRequested: 0,
@@ -438,127 +674,176 @@ export function planAutoSchedule(input: AutoScheduleInput): AutoSchedulePlan {
         reason: ZERO_HOURS_REASON,
       })
       unplaced.push({
-        courseId: c.courseId,
-        subject: c.courseName,
+        mappingId: course.mappingId,
+        courseId: course.courseId,
+        subject: course.courseName,
+        division: course.division,
+        section: course.section,
         periodsRequested: 0,
         periodsPlaced: 0,
         reason: ZERO_HOURS_REASON,
       })
       continue
     }
-    const periods = hoursPerWeek({ totalHours: c.totalHours, credits: c.credits }, input.semesterWeeks)
+    const periods = hoursPerWeek({ totalHours: course.totalHours, credits: course.credits }, input.semesterWeeks)
     demandRows.push({ ...rowBase, periodsRequested: periods, included: true, source: 'derived' })
-    placeable.push({ course: c, periods })
+    placeable.push({ course, periods })
   }
 
-  // Demand order: heaviest first, then code for a stable tiebreak.
   const demand = [...placeable].sort(
-    (a, b) => b.periods - a.periods || a.course.courseCode.localeCompare(b.course.courseCode),
+    (a, b) => b.periods - a.periods || a.course.courseCode.localeCompare(b.course.courseCode) || scopeIdentity(a.course).localeCompare(scopeIdentity(b.course)),
   )
+  const facultyDemand = buildFacultyDemandBreakdown(demand)
+
+  const ensureBusyScope = (scope: { branch?: unknown; batch?: unknown; division?: unknown; section?: unknown }): CohortBusyScope => {
+    const key = scopeIdentity(scope)
+    const existing = cohortBusyScopes.find((row) => scopeIdentity(row) === key)
+    if (existing) return existing
+    const created: CohortBusyScope = { ...scope, busy: new Set<string>() }
+    cohortBusyScopes.push(created)
+    return created
+  }
 
   for (let courseRank = 0; courseRank < demand.length; courseRank++) {
     const { course, periods } = demand[courseRank]
+    const courseScope = {
+      branch: course.branch,
+      batch: course.batch,
+      division: course.division,
+      section: course.section,
+    }
+    const groupKey = `${course.courseId}|${scopeIdentity(courseScope)}`
+    const courseDayKey = (day: DayOfWeek) => `${groupKey}|${day}`
+    const cohortKeys = cohortDayKeys(courseScope)
+    const cohortDayLoad = (day: DayOfWeek) => Math.max(0, ...cohortKeys.map((key) => cohortMeetingCount.get(`${key}|${day}`) ?? 0))
+    const cohortPeriodLoad = (day: DayOfWeek) => Math.max(0, ...cohortKeys.map((key) => cohortPeriodCount.get(`${key}|${day}`) ?? 0))
+
     const isLab = LAB_NAME_RE.test(course.courseName)
     const span = isLab ? Math.max(1, Math.min(input.grid.labSpan, periods)) : 1
     const spansNeeded = isLab ? Math.ceil(periods / span) : periods
     let placed = 0
 
-    spanLoop: for (let s = 0; s < spansNeeded; s++) {
-      const thisSpan = isLab && periods - placed < span ? Math.max(1, periods - placed) : span
-      const dayKey = `${course.courseId}`
+    const byDay = new Map<DayOfWeek, PlannedSlot[]>()
+    for (const slot of slots) {
+      const rows = byDay.get(slot.day) ?? []
+      rows.push(slot)
+      byDay.set(slot.day, rows)
+    }
 
-      // Candidate (day, period) pairs: this course's least-used days first
-      // (spread the week), then earliest period. Labs must fit a full span.
-      // P3: 'uniform' keeps this exact order (regression pin); 'spread'
-      // rotates the day-tiebreak by course rank and pends early/late periods;
-      // 'random' shuffles days and same-span candidates with the seeded RNG.
-      let candidates: PlannedSlot[][] = []
-      const byDay = new Map<DayOfWeek, PlannedSlot[]>()
-      for (const slot of slots) {
-        const arr = byDay.get(slot.day) ?? []
-        arr.push(slot)
-        byDay.set(slot.day, arr)
-      }
-      const countFor = (day: DayOfWeek) => courseDayCount.get(`${dayKey}|${day}`) ?? 0
+    spanLoop: for (let spanRank = 0; spanRank < spansNeeded; spanRank++) {
+      const thisSpan = isLab && periods - placed < span ? Math.max(1, periods - placed) : span
+      const currentCourseDayCount = (day: DayOfWeek) => courseDayCount.get(courseDayKey(day)) ?? 0
       let daysOrdered = [...byDay.keys()].sort(
-        (a, b) => countFor(a) - countFor(b) || input.grid.days.indexOf(a) - input.grid.days.indexOf(b),
+        (a, b) => cohortDayLoad(a) - cohortDayLoad(b) || cohortPeriodLoad(a) - cohortPeriodLoad(b) || currentCourseDayCount(a) - currentCourseDayCount(b) || input.grid.days.indexOf(a) - input.grid.days.indexOf(b),
       )
+
       if (strategy === 'spread') {
-        // Course #n starts its day pick at days[n % days.length] — ties rotate
-        // instead of always favouring Monday.
         const n = Math.max(1, input.grid.days.length)
         const rankOffset = courseRank % n
-        const rotatedIndex = (d: DayOfWeek) => (((input.grid.days.indexOf(d) - rankOffset) % n) + n) % n
-        daysOrdered = [...byDay.keys()].sort((a, b) => countFor(a) - countFor(b) || rotatedIndex(a) - rotatedIndex(b))
+        const rotatedIndex = (day: DayOfWeek) => (((input.grid.days.indexOf(day) - rankOffset) % n) + n) % n
+        daysOrdered = [...byDay.keys()].sort(
+          (a, b) => cohortDayLoad(a) - cohortDayLoad(b) || cohortPeriodLoad(a) - cohortPeriodLoad(b) || currentCourseDayCount(a) - currentCourseDayCount(b) || rotatedIndex(a) - rotatedIndex(b),
+        )
       } else if (strategy === 'random') {
-        daysOrdered = shuffleWith(daysOrdered, rng)
+        const score = (day: DayOfWeek) => cohortDayLoad(day) * 10_000 + cohortPeriodLoad(day) * 100 + currentCourseDayCount(day)
+        const buckets = new Map<number, DayOfWeek[]>()
+        for (const day of daysOrdered) {
+          const bucket = buckets.get(score(day)) ?? []
+          bucket.push(day)
+          buckets.set(score(day), bucket)
+        }
+        daysOrdered = [...buckets.keys()].sort((a, b) => a - b).flatMap((value) => shuffleWith(buckets.get(value) ?? [], rng))
       }
+
+      const candidates: PlannedSlot[][] = []
       for (const day of daysOrdered) {
-        const daySlots = (byDay.get(day) ?? []).sort((x, y) => x.periodIndex - y.periodIndex)
+        const daySlots = [...(byDay.get(day) ?? [])].sort((a, b) => a.periodIndex - b.periodIndex)
         let starts: number[] = []
-        for (let i = 0; i + thisSpan <= daySlots.length; i++) starts.push(i)
+        for (let index = 0; index + thisSpan <= daySlots.length; index++) starts.push(index)
         if (strategy === 'spread' && starts.length > 1) {
-          // Period dispersion: alternate early/late window starts (a pendulum
-          // over the day), course-rank parity picks which end goes first.
           const pendulum: number[] = []
-          let lo = 0
-          let hi = starts.length - 1
+          let low = 0
+          let high = starts.length - 1
           let takeEarly = courseRank % 2 === 0
-          while (lo <= hi) {
-            if (takeEarly) pendulum.push(lo++)
-            else pendulum.push(hi--)
+          while (low <= high) {
+            if (takeEarly) pendulum.push(low++)
+            else pendulum.push(high--)
             takeEarly = !takeEarly
           }
           starts = pendulum
         }
-        for (const i of starts) {
-          candidates.push(daySlots.slice(i, i + thisSpan))
-        }
+        for (const index of starts) candidates.push(daySlots.slice(index, index + thisSpan))
       }
-      if (strategy === 'random') candidates = shuffleWith(candidates, rng)
+      if (strategy === 'random') {
+        // Keep the cohort-day balancing score sacred; randomise only candidates
+        // within a score tier so a seed cannot pile every group onto Monday.
+        const score = (candidate: PlannedSlot[]) => cohortDayLoad(candidate[0].day) * 10_000 + cohortPeriodLoad(candidate[0].day) * 100 + currentCourseDayCount(candidate[0].day)
+        const buckets = new Map<number, PlannedSlot[][]>()
+        for (const candidate of candidates) {
+          const bucket = buckets.get(score(candidate)) ?? []
+          bucket.push(candidate)
+          buckets.set(score(candidate), bucket)
+        }
+        candidates.splice(0, candidates.length, ...[...buckets.keys()].sort((a, b) => a - b).flatMap((value) => shuffleWith(buckets.get(value) ?? [], rng)))
+      }
 
       let chose: PlannedSlot[] | null = null
       let choseRoom = ''
-      for (const cand of candidates) {
-        const day = cand[0].day
-        // one (span) per day per course for lectures — labs also spread days
-        if ((courseDayCount.get(`${course.courseId}|${day}`) ?? 0) > 0 && input.grid.days.length > 1) continue
-        const keys = cand.map((slot) => busyKey(day, slot.startTime))
-        if (keys.some((k) => cohortBusy.has(k))) continue
-        if (keys.some((k) => facultyBusy.has(k))) continue
+      let blockedByWeeklyCapacity = false
+      for (const candidate of candidates) {
+        const day = candidate[0].day
+        if (currentCourseDayCount(day) > 0 && input.grid.days.length > 1) continue
+        const keys = candidate.map((slot) => busyKey(day, slot.startTime))
+        const cohortBlocked = keys.some((key) =>
+          cohortBusy.has(key) || cohortBusyScopes.some((scope) => cohortScopesOverlap(scope, courseScope) && scope.busy.has(key)),
+        )
+        if (cohortBlocked || keys.some((key) => facultySlotIsBusy(facultyBusy, course.facultyId, key))) continue
         const dailyKey = `${course.facultyId}|${day}`
-        if ((facultyDaily.get(dailyKey) ?? 0) + thisSpan > Math.max(1, input.maxPeriodsPerDayPerFaculty)) continue
-        // room: least-loaded room free for the whole span (P3: or seeded pick)
+        if ((facultyDaily.get(dailyKey) ?? 0) + thisSpan > dailyCapacity) continue
+        if ((facultyWeekly.get(course.facultyId) ?? 0) + thisSpan > weeklyCapacity) {
+          blockedByWeeklyCapacity = true
+          continue
+        }
+
+        const freeRooms = rooms.filter((room) => !keys.some((key) => roomBusy.has(`${key}|${room}`)))
+        if (freeRooms.length === 0) continue
+        const isMerged = cohortLabels(courseScope).length > 1
         let pick = ''
         if (roomStrategy === 'random') {
-          const freeRooms = rooms.filter((room) => !keys.some((k) => roomBusy.has(`${k}|${room}`)))
-          if (freeRooms.length > 0) pick = freeRooms[Math.floor(rng() * freeRooms.length)]
+          const bestRank = isMerged ? Math.min(...freeRooms.map(roomHallRank)) : undefined
+          const options = isMerged ? freeRooms.filter((room) => roomHallRank(room) === bestRank) : freeRooms
+          pick = options[Math.floor(rng() * options.length)]
         } else {
-          let pickLoad = Number.MAX_SAFE_INTEGER
-          for (const room of rooms) {
-            if (keys.some((k) => roomBusy.has(`${k}|${room}`))) continue
-          const load = [...roomBusy.keys()].filter((bk) => bk.endsWith(`|${room}`)).length
-          if (load < pickLoad) {
-            pick = room
-            pickLoad = load
-          }
+          const preferredRooms = isMerged
+            ? freeRooms.filter((room) => roomHallRank(room) === Math.min(...freeRooms.map(roomHallRank)))
+            : freeRooms
+          let leastLoad = Number.MAX_SAFE_INTEGER
+          for (const room of preferredRooms) {
+            const currentLoad = [...roomBusy].filter((key) => key.endsWith(`|${room}`)).length
+            if (currentLoad < leastLoad) {
+              pick = room
+              leastLoad = currentLoad
+            }
           }
         }
-        if (!pick) continue // all rooms busy in this span
-        chose = cand
+        if (!pick) continue
+        chose = candidate
         choseRoom = pick
         break
       }
 
       if (!chose) {
-        // Could not place this span — the rest of the course counts as unplaced.
         unplaced.push({
+          mappingId: course.mappingId,
           courseId: course.courseId,
           subject: course.courseName,
+          division: course.division,
+          section: course.section,
           periodsRequested: periods,
           periodsPlaced: placed,
-          reason:
-            'No free slot satisfies cohort + faculty availability, faculty daily cap and room availability',
+          reason: blockedByWeeklyCapacity
+            ? `Faculty weekly capacity reached (${facultyWeekly.get(course.facultyId) ?? 0}/${weeklyCapacity}); merge matching division groups or reassign this course`
+            : 'No free slot satisfies cohort + faculty availability, faculty daily cap and room availability',
         })
         break spanLoop
       }
@@ -566,12 +851,12 @@ export function planAutoSchedule(input: AutoScheduleInput): AutoSchedulePlan {
       const day = chose[0].day
       const weeklyAfter = (facultyWeekly.get(course.facultyId) ?? 0) + thisSpan
       const flags: string[] = []
-      if (weeklyAfter > DEFAULT_CAPACITY_WEEKLY_HOURS) flags.push('faculty-overloaded')
+      if (weeklyAfter > weeklyCapacity) flags.push('faculty-overloaded')
       if (isLab && thisSpan < span) flags.push('lab-span-clipped')
       if (input.rooms.length === 0) flags.push('room-auto')
+      const busyScope = ensureBusyScope(courseScope)
 
-      for (let i = 0; i < chose.length; i++) {
-        const slot = chose[i]
+      for (const slot of chose) {
         placements.push({
           mappingId: course.mappingId,
           courseId: course.courseId,
@@ -594,50 +879,102 @@ export function planAutoSchedule(input: AutoScheduleInput): AutoSchedulePlan {
           flags,
         })
         const key = busyKey(day, slot.startTime)
-        cohortBusy.add(key)
-        facultyBusy.add(key)
+        busyScope.busy.add(key)
+        facultyBusy.add(facultyBusyKey(course.facultyId, key))
         roomBusy.add(`${key}|${choseRoom}`)
       }
       facultyDaily.set(`${course.facultyId}|${day}`, (facultyDaily.get(`${course.facultyId}|${day}`) ?? 0) + chose.length)
       facultyWeekly.set(course.facultyId, (facultyWeekly.get(course.facultyId) ?? 0) + chose.length)
-      courseDayCount.set(`${course.courseId}|${day}`, (courseDayCount.get(`${course.courseId}|${day}`) ?? 0) + chose.length)
+      courseDayCount.set(courseDayKey(day), (courseDayCount.get(courseDayKey(day)) ?? 0) + chose.length)
+      for (const key of cohortKeys) {
+        const cohortDayKey = `${key}|${day}`
+        cohortPeriodCount.set(cohortDayKey, (cohortPeriodCount.get(cohortDayKey) ?? 0) + chose.length)
+        cohortMeetingCount.set(cohortDayKey, (cohortMeetingCount.get(cohortDayKey) ?? 0) + 1)
+      }
       placed += chose.length
     }
   }
 
-  // ── Trust surfaces ─────────────────────────────────────────────────────────
-  const facultyLoad: ScheduleFacultyLoad[] = [...facultyWeekly.entries()]
-    .map(([facultyId, total]) => {
-      const courseSpots = input.courses.filter((c) => c.facultyId === facultyId)
-      const placedByRun = courseSpots.reduce(
-        (sum, c) => sum + placements.filter((p) => p.courseId === c.courseId && p.facultyId === facultyId).length,
-        0,
-      )
-      const existing = Math.max(0, (input.occupancy.facultyWeekly.get(facultyId) ?? 0))
+  const demandRowsByFaculty = facultyDemand
+  const facultyIds = new Set<string>([
+    ...facultyWeekly.keys(),
+    ...input.courses.map((course) => course.facultyId).filter(Boolean),
+  ])
+  const facultyLoad: ScheduleFacultyLoad[] = [...facultyIds]
+    .map((facultyId) => {
+      const courseSpots = input.courses.filter((course) => course.facultyId === facultyId)
+      const existing = Math.max(0, input.occupancy.facultyWeekly.get(facultyId) ?? 0)
+      const total = Math.max(0, facultyWeekly.get(facultyId) ?? existing)
+      const placedByRun = placements.filter((placement) => placement.facultyId === facultyId).length
+      const demandBreakdown = demandRowsByFaculty.get(facultyId) ?? []
+      const requested = demandBreakdown.reduce((sum, row) => sum + row.periodsRequested, 0)
+      const projected = existing + requested
       return {
         facultyId,
         facultyName: courseSpots[0]?.facultyName || facultyId,
         existingWeekly: existing,
+        requestedWeekly: requested,
+        projectedWeekly: projected,
         placedWeekly: placedByRun,
         totalWeekly: total,
-        capacity: DEFAULT_CAPACITY_WEEKLY_HOURS,
-        overloaded: total > DEFAULT_CAPACITY_WEEKLY_HOURS,
+        capacity: weeklyCapacity,
+        overloaded: total > weeklyCapacity,
+        demandExceeded: projected > weeklyCapacity,
+        demandBreakdown,
+        mergeSuggestions: mergeSuggestionsForDemand(demandBreakdown, existing, weeklyCapacity),
       }
     })
-    .sort((a, b) => b.totalWeekly - a.totalWeekly || a.facultyName.localeCompare(b.facultyName))
+    .sort((a, b) => b.projectedWeekly - a.projectedWeekly || a.facultyName.localeCompare(b.facultyName))
 
   const dailyCoverage: DailyCoverage[] = input.grid.days.map((day) => {
-    const dayPlacements = placements.filter((p) => p.dayOfWeek === day)
+    const dayPlacements = placements.filter((placement) => placement.dayOfWeek === day)
+    const occupiedPeriods = new Set(dayPlacements.map((placement) => placement.periodIndex)).size
     return {
       day,
-      periods: dayPlacements.length,
-      hours: Math.round(((dayPlacements.length * input.grid.periodMinutes) / 60) * 10) / 10,
-      utilization: Math.round((dayPlacements.length / Math.max(1, input.grid.periodsPerDay)) * 100) / 100,
-      subjects: dayPlacements.map((p) => p.subjectCode || p.subject),
+      // Parallel groups share a timetable period; count occupied grid slots,
+      // not every placement row, so utilization remains within 0–100%.
+      periods: occupiedPeriods,
+      hours: Math.round(((occupiedPeriods * input.grid.periodMinutes) / 60) * 10) / 10,
+      utilization: Math.round((occupiedPeriods / Math.max(1, input.grid.periodsPerDay)) * 100) / 100,
+      subjects: dayPlacements.map((placement) => placement.subjectCode || placement.subject),
     }
   })
 
-  const periodsRequested = demand.reduce((s, d) => s + d.periods, 0)
+  const cohortLabelsByKey = new Map<string, string>()
+  const cohortScopesForReport = demand.map(({ course }) => ({
+    branch: course.branch,
+    batch: course.batch,
+    division: course.division,
+    section: course.section,
+  }))
+  for (const scope of cohortScopesForReport) {
+    const prefix = `${branchIdentity(scope.branch)}|${batchKeyTokens(scope.batch).sort().join(',')}`
+    for (const label of cohortLabels(scope)) cohortLabelsByKey.set(`${prefix}|${label.toLowerCase()}`, label)
+  }
+  const cohortDailyCoverage: CohortDailyCoverage[] = []
+  for (const [cohortKey, division] of cohortLabelsByKey) {
+    const [prefix] = cohortKey.split(`|${division.toLowerCase()}`)
+    const cohortCounterKey = division === 'All' ? `${prefix}|__all__` : `${prefix}|${division.toLowerCase()}`
+    for (const day of input.grid.days) {
+      const classes = cohortMeetingCount.get(`${cohortCounterKey}|${day}`) ?? 0
+      cohortDailyCoverage.push({
+        division,
+        day,
+        classes,
+        targetMin: TARGET_CLASSES_PER_DAY_MIN,
+        targetMax: TARGET_CLASSES_PER_DAY_MAX,
+        onTarget: classes >= TARGET_CLASSES_PER_DAY_MIN && classes <= TARGET_CLASSES_PER_DAY_MAX,
+      })
+    }
+  }
+  cohortDailyCoverage.sort((a, b) => a.division.localeCompare(b.division, undefined, { numeric: true }) || input.grid.days.indexOf(a.day) - input.grid.days.indexOf(b.day))
+  const divisionsInTarget = new Set(cohortDailyCoverage.map((coverage) => coverage.division)).size === 0
+    ? 0
+    : [...new Set(cohortDailyCoverage.map((coverage) => coverage.division))].filter((division) =>
+        cohortDailyCoverage.filter((coverage) => coverage.division === division).every((coverage) => coverage.onTarget),
+      ).length
+
+  const periodsRequested = demand.reduce((sum, entry) => sum + entry.periods, 0)
   return {
     grid: input.grid,
     rooms,
@@ -645,6 +982,7 @@ export function planAutoSchedule(input: AutoScheduleInput): AutoSchedulePlan {
     unplaced,
     facultyLoad,
     dailyCoverage,
+    cohortDailyCoverage,
     demand: demandRows,
     summary: {
       courses: input.courses.length,
@@ -652,7 +990,8 @@ export function planAutoSchedule(input: AutoScheduleInput): AutoSchedulePlan {
       periodsRequested,
       periodsPlaced: placements.length,
       unplacedCourses: unplaced.length,
-      overloadedFaculty: facultyLoad.filter((f) => f.overloaded).length,
+      overloadedFaculty: facultyLoad.filter((faculty) => faculty.demandExceeded || faculty.overloaded).length,
+      divisionsInTarget,
       coursesIncluded: placeable.length,
     },
     ...(usesRng ? { randomSeed: effectiveSeed } : {}),
@@ -672,6 +1011,7 @@ export interface AutoSchedulePayload {
   rooms: string[]
   semesterWeeks: number
   maxPeriodsPerDayPerFaculty: number
+  maxWeeklyPeriodsPerFaculty: number
   dryRun: boolean
   collegeId: string
   /** P1 — one applicability window per apply run, written through to docs. */
@@ -826,6 +1166,7 @@ export function validateAutoSchedulePayload(
       : [],
     semesterWeeks: boundedInt(raw.semesterWeeks, 'semesterWeeks', DEFAULT_SEMESTER_WEEKS, 4, 30),
     maxPeriodsPerDayPerFaculty: boundedInt(raw.maxPeriodsPerDayPerFaculty, 'maxPeriodsPerDayPerFaculty', 4, 1, 10),
+    maxWeeklyPeriodsPerFaculty: boundedInt(raw.maxWeeklyPeriodsPerFaculty, 'maxWeeklyPeriodsPerFaculty', DEFAULT_CAPACITY_WEEKLY_HOURS, 1, 60),
     dryRun: raw.dryRun !== false, // default TRUE — nothing writes without intent
     collegeId,
     ...(dateRange ? { dateRange } : {}),
@@ -837,12 +1178,78 @@ export function validateAutoSchedulePayload(
   }
 }
 
+/** Student division scopes for expanding legacy all-division mappings. */
+export function teachingGroupsFromStudents(
+  rows: Array<Record<string, unknown>>,
+  target: { branch: string; batch: string; semester: number },
+): TeachingGroupScope[] {
+  const groups = new Map<string, TeachingGroupScope>()
+  for (const row of rows) {
+    const batch = String(row.batch ?? '')
+    if (!batchListMatches(target.batch, batch)) continue
+    const studentSemester = Number(row.semester ?? 0) || 0
+    if (studentSemester > 0 && target.semester > 0 && studentSemester !== target.semester) continue
+    const branch = String(row.branch ?? row.department ?? '')
+    if (!cohortScopesOverlap({ branch: target.branch, batch: target.batch }, { branch, batch })) continue
+    const group = {
+      division: String(row.division ?? ''),
+      section: String(row.section ?? ''),
+    }
+    const key = teachingGroupKey(group) || '__whole_batch__'
+    if (!groups.has(key)) groups.set(key, group)
+  }
+  return [...groups.values()]
+}
+
+function minutesOfScheduleTime(value: unknown): number | null {
+  const time = String(value ?? '').trim()
+  if (!isValidTime(time)) return null
+  const [hour, minute] = time.split(':').map(Number)
+  return hour * 60 + minute
+}
+
+function scheduleBusyPeriodKeys(
+  schedule: Record<string, unknown>,
+  day: DayOfWeek,
+  gridSlots: PlannedSlot[],
+  periodMinutes: number,
+): { keys: string[]; periodCount: number } {
+  const start = minutesOfScheduleTime(schedule.startTime)
+  const end = minutesOfScheduleTime(schedule.endTime)
+  if (start === null || end === null || end <= start) {
+    const exact = String(schedule.startTime ?? '').trim()
+    return { keys: isValidTime(exact) ? [busyKey(day, exact)] : [], periodCount: 1 }
+  }
+  const overlapping = gridSlots.filter((slot) => {
+    if (slot.day !== day) return false
+    const slotStart = minutesOfScheduleTime(slot.startTime)
+    const slotEnd = minutesOfScheduleTime(slot.endTime)
+    return slotStart !== null && slotEnd !== null && slotStart < end && start < slotEnd
+  })
+  const keys = overlapping.map((slot) => busyKey(day, slot.startTime))
+  const periodCount = Math.max(1, Math.ceil((end - start) / Math.max(1, periodMinutes)))
+  return { keys, periodCount }
+}
+
 // ═════════════════════════════════════════════════════════════════════════════
 // Callable
 // ═════════════════════════════════════════════════════════════════════════════
 
 const MAX_COURSES = 60
+const MAX_COURSE_GROUPS = 300
+const MAX_FACULTY_READ = 500
+const MAX_MAPPING_READ = 400
+const MAX_STUDENT_GROUP_READ = 5000
 const MAX_SCHEDULES_READ = 2000
+
+export function assertTimetableOccupancyComplete(count: number, limit = MAX_SCHEDULES_READ): void {
+  if (count >= limit) {
+    throw new HttpsError(
+      'failed-precondition',
+      `Timetable occupancy discovery reached its ${limit}-schedule safety cap; auto-scheduling cannot guarantee clash-free placement`,
+    )
+  }
+}
 
 export const autoGenerateWeeklySchedule = onCall(
   { region: 'asia-south1', memory: '512MiB', timeoutSeconds: 90 },
@@ -864,40 +1271,86 @@ export const autoGenerateWeeklySchedule = onCall(
     const branch = String(curriculum.branch ?? '').trim()
     const semester = Number(curriculum.semester ?? 0) || 0
 
-    // 2. Active course ↔ faculty mappings for this cohort = the demand
+    // 2. Active course ↔ faculty mappings for this cohort. The stored
+    // division letter list is the teaching group: explicit A,B stays one
+    // placement. Legacy mappings with no division are expanded to the distinct
+    // enrolled division groups for an all-groups run.
     const mappingsSnap = await db
       .collection('curriculumFacultyMappings')
       .where('collegeId', '==', payload.collegeId)
       .where('curriculumId', '==', payload.curriculumId)
-      .limit(400)
+      .limit(MAX_MAPPING_READ)
       .get()
-    type MappingRow = Record<string, unknown> & { id: string }
-    const courses: AutoScheduleCourse[] = mappingsSnap.docs
-      .map((d): MappingRow => ({ id: d.id, ...(d.data() as Record<string, unknown>) }))
-      .filter((m) => {
-        if (String(m.status ?? 'active') === 'removed' || String(m.status) === 'inactive') return false
-        // Cohort match (batch keyed — range ≡ end year; division/section as
-        // letter sets, so a mapping for "A,B,C,D" is demand for a run of A).
-        if (!mappingServesCohort(m, payload)) return false
-        if (!String(m.facultyId ?? '').trim()) return false
-        return true
+    if (mappingsSnap.size === MAX_MAPPING_READ) {
+      throw new HttpsError('failed-precondition', `Mapping discovery reached its ${MAX_MAPPING_READ}-record safety cap; narrow the curriculum scope`)
+    }
+    const facultySnap = await db
+      .collection('faculty')
+      .where('collegeId', '==', payload.collegeId)
+      .limit(MAX_FACULTY_READ)
+      .get()
+    if (facultySnap.size === MAX_FACULTY_READ) {
+      throw new HttpsError('failed-precondition', `Faculty identity discovery reached its ${MAX_FACULTY_READ}-record safety cap; auto-scheduling cannot safely reconcile faculty IDs`)
+    }
+    const facultyAliases = buildFacultyIdentityMap(
+      facultySnap.docs.map((doc) => ({ id: doc.id, ...(doc.data() as Record<string, unknown>) })),
+    )
+    type MappingRow = Record<string, unknown> & { id: string; division?: unknown; section?: unknown }
+    const requestedScope = { division: payload.division, section: payload.section }
+    const mappings = mappingsSnap.docs
+      .map((doc): MappingRow => ({ id: doc.id, ...(doc.data() as Record<string, unknown>) }))
+      .filter((mapping) => {
+        if (String(mapping.status ?? 'active') === 'removed' || String(mapping.status) === 'inactive') return false
+        if (!batchListMatches(payload.batch, mapping.batch)) return false
+        if (hasGroupLetters(requestedScope) && !divisionScopesOverlap(mapping, requestedScope)) return false
+        return Boolean(String(mapping.facultyId ?? '').trim())
       })
-      .slice(0, MAX_COURSES)
-      .map((m) => ({
-        mappingId: String(m.id),
-        courseId: String(m.courseId ?? ''),
-        courseCode: String(m.courseCode ?? ''),
-        courseName: String(m.courseName ?? ''),
-        facultyId: String(m.facultyId ?? ''),
-        facultyName: String(m.facultyName ?? m.facultyId ?? ''),
-        totalHours: Number(m.totalHours ?? 0) || 0,
-        credits: Number(m.credits ?? 0) || 0,
-        branch: String(m.branch ?? branch),
-        semester: Number(m.semester ?? semester) || semester,
-        batch: payload.batch,
-        division: payload.division,
-        section: payload.section,
-      }))
+    if (mappings.length > MAX_COURSES) {
+      throw new HttpsError('failed-precondition', `This run has ${mappings.length} active mappings; narrow it to at most ${MAX_COURSES} courses`)
+    }
+
+    let rosterGroups: TeachingGroupScope[] = []
+    const needsRosterExpansion = mappings.some((mapping) => !hasGroupLetters(mapping))
+    if (needsRosterExpansion) {
+      const studentsSnap = await db.collection('students').where('collegeId', '==', payload.collegeId).limit(MAX_STUDENT_GROUP_READ).get()
+      if (studentsSnap.size === MAX_STUDENT_GROUP_READ) {
+        throw new HttpsError('failed-precondition', `Teaching-group discovery reached its ${MAX_STUDENT_GROUP_READ}-student safety cap; auto-scheduling cannot safely expand legacy mappings`)
+      }
+      const studentRows = studentsSnap.docs.map((doc) => doc.data() as Record<string, unknown>)
+      rosterGroups = teachingGroupsFromStudents(studentRows, { branch, batch: payload.batch, semester })
+      if (rosterGroups.length === 0 && !hasGroupLetters(requestedScope)) {
+        throw new HttpsError('failed-precondition', 'Legacy all-division mappings need student division/section data to expand into teaching groups; add the roster scopes or explicitly choose a division')
+      }
+    }
+
+    const courses: AutoScheduleCourse[] = []
+    for (const mapping of mappings) {
+      const groups = resolveMappingTeachingGroups(
+        { division: mapping.division, section: mapping.section },
+        rosterGroups,
+        requestedScope,
+      )
+      for (const group of groups) {
+        courses.push({
+          mappingId: String(mapping.id),
+          courseId: String(mapping.courseId ?? ''),
+          courseCode: String(mapping.courseCode ?? ''),
+          courseName: String(mapping.courseName ?? ''),
+          facultyId: canonicalFacultyId(mapping.facultyId, facultyAliases),
+          facultyName: String(mapping.facultyName ?? mapping.facultyId ?? ''),
+          totalHours: Number(mapping.totalHours ?? 0) || 0,
+          credits: Number(mapping.credits ?? 0) || 0,
+          branch: String(mapping.branch ?? branch),
+          semester: Number(mapping.semester ?? semester) || semester,
+          batch: payload.batch,
+          division: group.division,
+          section: group.section,
+        })
+        if (courses.length > MAX_COURSE_GROUPS) {
+          throw new HttpsError('failed-precondition', `This run expands to more than ${MAX_COURSE_GROUPS} teaching groups; reduce the cohort scope`)
+        }
+      }
+    }
     if (courses.length === 0) {
       throw new HttpsError(
         'failed-precondition',
@@ -911,51 +1364,40 @@ export const autoGenerateWeeklySchedule = onCall(
       .where('collegeId', '==', payload.collegeId)
       .limit(MAX_SCHEDULES_READ)
       .get()
+    assertTimetableOccupancyComplete(schedulesSnap.size)
+    const gridSlots = buildSlots(payload.grid)
     const occupancy: Occupancy = {
       facultyBusy: new Set(),
       cohortBusy: new Set(),
+      cohortBusyScopes: [],
+      facultyDaily: new Map(),
       roomBusy: new Set(),
       facultyWeekly: new Map(),
     }
-    const cohortFacultyIds = new Set(courses.map((c) => c.facultyId.toLowerCase()))
-    // The cohorts this run schedules — one per course, because a mapping may
-    // name its own division ("A") or a list ("A,B,C,D") even when the run's
-    // fields are filled in. An existing slot blocks the period when it
-    // overlaps ANY of them (./cohortBatch cohortScopesOverlap: batch ranges
-    // and division lists compared the same way everywhere).
-    const runCohorts = courses.map((c) => ({ branch: c.branch || branch, batch: c.batch, division: c.division, section: c.section }))
 
-    for (const d of schedulesSnap.docs) {
-      const s = d.data() as Record<string, unknown>
-      if (s.isActive === false) continue
-      const day = normalizeDay(s.dayOfWeek)
-      const start = String(s.startTime ?? '').trim()
-      if (!day || !isValidTime(start)) continue
-      const key = busyKey(day, start)
-      const fid = String(s.facultyId ?? '').trim()
-      if (fid) {
-        occupancy.facultyBusy.add(key)
-        // Weekly counts matter only for the cohort's faculty (load display)
-        if (cohortFacultyIds.has(fid.toLowerCase())) {
-          occupancy.facultyWeekly.set(fid, (occupancy.facultyWeekly.get(fid) ?? 0) + 1)
-        }
+    for (const document of schedulesSnap.docs) {
+      const schedule = document.data() as Record<string, unknown>
+      if (schedule.isActive === false) continue
+      const day = normalizeDay(schedule.dayOfWeek)
+      if (!day) continue
+      const { keys, periodCount } = scheduleBusyPeriodKeys(schedule, day, gridSlots, payload.grid.periodMinutes)
+      const facultyId = canonicalFacultyId(schedule.facultyId, facultyAliases)
+      if (facultyId) {
+        for (const key of keys) occupancy.facultyBusy.add(facultyBusyKey(facultyId, key))
+        occupancy.facultyWeekly.set(facultyId, (occupancy.facultyWeekly.get(facultyId) ?? 0) + periodCount)
+        const dailyKey = `${facultyId}|${day}`
+        occupancy.facultyDaily!.set(dailyKey, (occupancy.facultyDaily!.get(dailyKey) ?? 0) + periodCount)
       }
-      const room = String(s.room ?? '').trim()
-      if (room) occupancy.roomBusy.add(`${key}|${room}`)
-      // Cohort busy: match on the schedule's own cohort identity — a schedule
-      // for B.Com 2026 A blocks this cohort even if it came from another
-      // curriculum, and a slot recorded "2026-2027 / A,B,C,D" blocks a run of
-      // "2027 / A" (they share students).
-      if (runCohorts.some((target) => cohortScopesOverlap(
-        { branch: s.branch, batch: s.batch, division: s.division, section: s.section },
-        target,
-      ))) {
-        occupancy.cohortBusy.add(key)
-      }
+      const room = String(schedule.room ?? '').trim()
+      if (room) for (const key of keys) occupancy.roomBusy.add(`${key}|${room}`)
+      occupancy.cohortBusyScopes!.push({
+        branch: schedule.branch,
+        batch: schedule.batch,
+        division: schedule.division,
+        section: schedule.section,
+        busy: new Set(keys),
+      })
     }
-    // faculty busy keys are uid-agnostic, but weekly per faculty was keyed by
-    // whatever id the schedule carries — map uids so loads line up.
-    // (schedules store the auth uid, same as the mapper's facultyId.)
 
     const plan = planAutoSchedule({
       courses,
@@ -964,6 +1406,7 @@ export const autoGenerateWeeklySchedule = onCall(
       occupancy,
       semesterWeeks: payload.semesterWeeks,
       maxPeriodsPerDayPerFaculty: payload.maxPeriodsPerDayPerFaculty,
+      maxWeeklyPeriodsPerFaculty: payload.maxWeeklyPeriodsPerFaculty,
       strategy: payload.strategy,
       ...(payload.randomSeed ? { randomSeed: payload.randomSeed } : {}),
       roomStrategy: payload.roomStrategy,

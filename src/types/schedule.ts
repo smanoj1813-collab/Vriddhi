@@ -29,6 +29,12 @@ export interface ClassSchedule {
   facultyId?: string;
   facultyName?: string;
   facultyInitials?: string;
+  /** Cohort scope carried by recurring timetable rows (lists are comma-separated). */
+  branch?: string;
+  batch?: string;
+  semester?: number;
+  division?: string;
+  section?: string;
   type?: 'lecture' | 'lab' | 'tutorial' | 'seminar' | 'workshop';
   status?: 'scheduled' | 'completed' | 'cancelled' | 'ongoing' | 'upcoming';
   /** Flat time fields — populated by student schedule APIs */

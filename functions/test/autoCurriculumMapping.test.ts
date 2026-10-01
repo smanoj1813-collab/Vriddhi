@@ -85,6 +85,7 @@ function opts(over: Partial<AutoMapOptions> = {}): AutoMapOptions {
     courses: over.courses ?? [course()],
     faculty: over.faculty ?? [],
     existing: over.existing ?? [],
+    teachingGroups: over.teachingGroups,
   }
 }
 
@@ -207,6 +208,59 @@ describe('runAutoMapping — load balancing', () => {
     assert.ok(p.flags.includes('overload-risk'))
     assert.equal(result.facultyLoad.find((f) => f.uid === 'solo')?.totalWeeklyHours, 26)
     assert.equal(result.summary.overloadFlags, 1)
+  })
+})
+
+describe('runAutoMapping — teaching-group load arithmetic', () => {
+  const fiveDivisions = ['A', 'B', 'C', 'D', 'E'].map((division) => ({
+    branch: 'B.Com', batch: '2026', semester: 4, division, section: '',
+  }))
+
+  it('multiplies an unscoped mapping by each enrolled group served', () => {
+    const teacher = fac({ uid: 'teacher', subjectsUG: ['Financial Accounting'] })
+    const result = runAutoMapping(opts({
+      courses: [course({ code: 'FA01', name: 'Financial Accounting', totalHours: 60 })],
+      faculty: [teacher],
+      teachingGroups: fiveDivisions,
+    }))
+    const proposal = result.proposals[0]
+    assert.equal(proposal.groupsServed, 5)
+    assert.ok(proposal.reasons.some((reason) => /4 periods × 5 groups = 20 periods\/week/.test(reason)))
+    assert.equal(result.facultyLoad[0].proposedWeeklyHours, 20)
+  })
+
+  it('counts an explicit A,B merged mapping once, not once per member division', () => {
+    const teacher = fac({ uid: 'teacher', subjectsUG: ['Financial Accounting'] })
+    const current = mapping({
+      facultyId: 'teacher', courseCode: 'FA00', totalHours: 60, division: 'A,B', section: null,
+    })
+    const result = runAutoMapping(opts({
+      courses: [course({ code: 'FA01', name: 'Financial Accounting', totalHours: 60 })],
+      faculty: [teacher],
+      existing: [current],
+      teachingGroups: fiveDivisions,
+      division: 'A,B',
+    }))
+    assert.equal(result.facultyLoad[0].currentWeeklyHours, 4)
+    assert.equal(result.proposals[0].groupsServed, 1)
+    assert.ok(result.proposals[0].reasons.some((reason) => /4 periods × 1 group = 4 periods\/week/.test(reason)))
+  })
+
+  it('explains overload arithmetic and how merging groups can restore capacity', () => {
+    const teacher = fac({ uid: 'teacher', subjectsUG: ['Financial Accounting'] })
+    const result = runAutoMapping(opts({
+      courses: [course({ code: 'FA01', name: 'Financial Accounting', totalHours: 60 })],
+      faculty: [teacher],
+      existing: [mapping({
+        facultyId: 'teacher', courseCode: 'FA00', totalHours: 60, division: '', section: '',
+      })],
+      teachingGroups: fiveDivisions,
+      capacity: 24,
+    }))
+    const proposal = result.proposals[0]
+    assert.ok(proposal.flags.includes('overload-risk'))
+    assert.ok(proposal.reasons.some((reason) => /4 periods × 5 groups = 20 periods\/week \(20 \+ 20 = 40\/24\)/.test(reason)))
+    assert.ok(proposal.reasons.some((reason) => /Merge A\+B\+C\+D\+E.*saves 16 periods\/week; projected 24\/24/.test(reason)))
   })
 })
 

@@ -37,7 +37,10 @@ import {
   MenuItem,
   Select,
   FormControl,
+  FormHelperText,
   InputLabel,
+  Checkbox,
+  ListItemText,
   Table,
   TableBody,
   TableCell,
@@ -76,7 +79,8 @@ import {
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '../../auth/context/AuthContext'
 import { useCurriculumMapping } from '../hooks/useCurriculumMapping'
-import { fetchWeeklySchedules } from '../api/scheduleApi'
+import { fetchDivisionsFromStudents, fetchWeeklySchedules } from '../api/scheduleApi'
+import { divisionOptions as buildDivisionOptions, divisionSelection, divisionSelectionValue } from '@/shared/utils/divisionGroups'
 import {
   cancelWeeklySchedule,
   generateClassSessions,
@@ -98,6 +102,7 @@ import {
 } from '../utils/curriculumFlow'
 import type { CurriculumDoc, ParsedCourse } from '../../../shared/types/curriculum'
 import type { WeeklyClassSchedule } from '../types/schedule'
+import MergedDivisionChip from '@/shared/components/MergedDivisionChip'
 
 // ─── Empty Form State ──────────────────────────────────────────────────
 interface MappingFormData {
@@ -154,6 +159,19 @@ const AdminCurriculum: React.FC = () => {
     queryFn: () => fetchWeeklySchedules(collegeId),
     enabled: !!collegeId,
   })
+  const { data: studentDivisionValues = [] } = useQuery({
+    queryKey: ['divisionOptions', collegeId],
+    queryFn: () => fetchDivisionsFromStudents(collegeId),
+    enabled: !!collegeId,
+  })
+  const divisionOptions = useMemo(
+    () => buildDivisionOptions([
+      ...studentDivisionValues,
+      ...weeklySchedules.map((slot) => slot.division),
+      ...mappings.map((mapping) => mapping.division),
+    ]),
+    [studentDivisionValues, weeklySchedules, mappings],
+  )
 
   const [selectedSemester, setSelectedSemester] = useState<number>(1)
   const [openMappingDialog, setOpenMappingDialog] = useState(false)
@@ -736,9 +754,12 @@ const AdminCurriculum: React.FC = () => {
                           <Typography variant="body2">{row.mapping.facultyName}</Typography>
                           <Typography variant="caption" color="text.secondary">
                             {row.mapping.batch}
-                            {row.mapping.division ? ` · Div ${row.mapping.division}` : ''}
-                            {row.mapping.section ? ` · Sec ${row.mapping.section}` : ''}
+                            {row.mapping.division ? ` · Div ${row.mapping.division.replace(/,/g, '+')}` : ''}
+                            {row.mapping.section ? ` · Sec ${row.mapping.section.replace(/,/g, '+')}` : ''}
                           </Typography>
+                          <Box sx={{ mt: 0.5 }}>
+                            <MergedDivisionChip division={[row.mapping.division, row.mapping.section].filter(Boolean).join(',')} />
+                          </Box>
                         </>
                       ) : (
                         <Chip size="small" color="error" variant="outlined" label="No faculty assigned" />
@@ -944,13 +965,29 @@ const AdminCurriculum: React.FC = () => {
                 value={formData.batch}
                 onChange={e => setFormData(prev => ({ ...prev, batch: e.target.value }))}
               />
-              <TextField
-                size="small"
-                fullWidth
-                label="Division"
-                value={formData.division}
-                onChange={e => setFormData(prev => ({ ...prev, division: e.target.value }))}
-              />
+              <FormControl fullWidth size="small">
+                <InputLabel id="mapping-divisions-label">Divisions taught together</InputLabel>
+                <Select
+                  labelId="mapping-divisions-label"
+                  multiple
+                  label="Divisions taught together"
+                  value={divisionSelection(formData.division)}
+                  renderValue={(selected) => Array.isArray(selected) && selected.length > 0 ? selected.join(' + ') : 'All division groups'}
+                  onChange={event => {
+                    const value = event.target.value
+                    const selected = divisionSelection(Array.isArray(value) ? value : String(value).split(','))
+                    setFormData(prev => ({ ...prev, division: divisionSelectionValue(selected) }))
+                  }}
+                >
+                  {divisionOptions.map(item => (
+                    <MenuItem key={item} value={item}>
+                      <Checkbox size="small" checked={divisionSelection(formData.division).includes(item)} />
+                      <ListItemText primary={`Division ${item}`} />
+                    </MenuItem>
+                  ))}
+                </Select>
+                <FormHelperText>Select divisions sharing this lecture. Leave blank for separate division groups.</FormHelperText>
+              </FormControl>
               <TextField
                 size="small"
                 fullWidth
@@ -975,6 +1012,7 @@ const AdminCurriculum: React.FC = () => {
         collegeId={collegeId}
         prefill={schedulePrefill}
         facultyOptions={facultyList}
+        divisionOptions={divisionOptions}
         onClose={() => setSchedulePrefill(null)}
         onSaved={handleSlotSaved}
       />
@@ -991,6 +1029,7 @@ const AdminCurriculum: React.FC = () => {
         <AutoMapDialog
           curriculum={autoMapFor}
           knownBatches={batches}
+          divisionOptions={divisionOptions}
           onClose={() => setAutoMapFor(null)}
           onApplied={created => {
             refresh()
