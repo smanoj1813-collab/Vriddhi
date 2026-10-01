@@ -2129,6 +2129,21 @@ describe('course assignments and course progress', () => {
     })
   })
 
+  it('students can read only their college Coding Lab assignment and only superadmin can change it', async () => {
+    const studentDb = studentContext().firestore()
+    const adminDb = adminContext().firestore()
+    const superadminDb = superadminContext().firestore()
+    const assignmentPath = (db: any, college: string) =>
+      doc(db, 'colleges', college, 'config', 'codingLab')
+
+    await assertSucceeds(getDoc(assignmentPath(studentDb, COLLEGE_A)))
+    await assertFails(getDoc(assignmentPath(studentDb, COLLEGE_B)))
+    await assertFails(getDoc(assignmentPath(facultyContext().firestore(), COLLEGE_A)))
+    await assertFails(setDoc(assignmentPath(studentDb, COLLEGE_A), { enabled: true }))
+    await assertFails(setDoc(assignmentPath(adminDb, COLLEGE_A), { enabled: true }))
+    await assertSucceeds(setDoc(assignmentPath(superadminDb, COLLEGE_A), { enabled: true }))
+  })
+
   it('students and college course managers can access only their college assignment settings', async () => {
     const studentDb = studentContext().firestore()
     const adminDb = adminContext().firestore()

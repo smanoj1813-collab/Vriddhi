@@ -11,6 +11,7 @@ import { Link } from 'react-router-dom'
 import { ChevronRight } from 'lucide-react'
 import { useTranslation } from '../../../shared/contexts/LanguageProvider'
 import type { TranslationKey } from '../../../shared/i18n'
+import { useStudentData } from '../hooks/useStudentData'
 import { STUDENT_NAV_GROUPS, navItemsInGroup, type StudentNavGroup } from '../studentNav'
 
 interface StudentHubPageProps {
@@ -19,13 +20,14 @@ interface StudentHubPageProps {
 
 const GROUP_BLURB: Partial<Record<StudentNavGroup, string>> = {
   academics: 'Attendance, assignments, grades, timetable and curriculum — everything your programme is measured on.',
-  practice: 'Study material, the library, your learning journey and faculty support.',
+  practice: 'Study materials, sample programs, the coding lab, the library, your learning journey and faculty support.',
 }
 
 export default function StudentHubPage({ group }: StudentHubPageProps) {
   const { t } = useTranslation()
+  const { profile, codingLabEnabled } = useStudentData()
   const definition = STUDENT_NAV_GROUPS.find((entry) => entry.id === group)
-  const items = navItemsInGroup(group)
+  const items = navItemsInGroup(group, profile, codingLabEnabled)
 
   return (
     <div className="mx-auto max-w-3xl space-y-5 pb-4">

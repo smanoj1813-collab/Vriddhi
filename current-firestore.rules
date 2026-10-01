@@ -485,10 +485,13 @@ service cloud.firestore {
         // config/branding is the college letterhead (name, address, receipt
         // footer) that students and faculty need to render their own fee
         // receipts / payslips; every other config doc stays staff-only.
-        // config/library (loan rules) is likewise shown to borrowers.
+        // config/library (loan rules) is likewise shown to borrowers; the
+        // codingLab assignment flag is readable only by students of its college
+        // so the BCA navigation can fail closed without a public settings API.
         allow get: if isSignedIn() && (isSuperadmin()
           || (docId == 'courses' && role() in ['admin', 'hod', 'principal', 'student'] && collegeId() == collegeId)
-          || (docId != 'courses' && isStaff() && collegeId() == collegeId)
+          || (docId == 'codingLab' && role() == 'student' && collegeId() == collegeId)
+          || (docId != 'courses' && docId != 'codingLab' && isStaff() && collegeId() == collegeId)
           || (isOffice() && collegeId() == collegeId)
           || (docId in ['branding', 'library', 'nodues'] && collegeId() == collegeId));
         allow list: if isSignedIn() && (isSuperadmin()
@@ -499,11 +502,10 @@ service cloud.firestore {
         // calculation map from the UI or a direct client write.
         allow write: if docId == 'access'
           ? (isSuperadmin() || (role() == 'principal' && collegeId() == collegeId))
-          : docId == 'courses'
-            // Course assignments are PLATFORM curriculum control — which course
-            // packs a college's learners see. Superadmin-only: college staff can
-            // read the doc (students must, to resolve their assigned courses),
-            // but only the platform decides what is switched on.
+          : docId in ['courses', 'codingLab']
+            // Course and Coding Lab assignments are PLATFORM access controls.
+            // Students can read their own college's setting, but only the
+            // platform superadmin may change it.
             ? isSuperadmin()
           : docId in ['branding', 'tally']
             ? isFinance(collegeId)

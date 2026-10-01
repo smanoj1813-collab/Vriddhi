@@ -9,12 +9,13 @@ import {
   mobileTabItems,
   moreSheetItems,
   navItemsInGroup,
+  studentNavItemsForProfile,
 } from './studentNav'
 
 const DASHBOARD_TILES = [
   '/student/hall-tickets', '/student/attendance', '/student/assessments', '/student/assignments',
-  '/student/grades', '/student/materials', '/student/timetable', '/student/curriculum',
-  '/student/fees', '/student/challans', '/student/library', '/student/events', '/student/notifications',
+  '/student/grades', '/student/materials', '/student/coding-lab', '/student/timetable', '/student/curriculum',
+  '/student/fees', '/student/challans', '/student/no-dues', '/student/library', '/student/events', '/student/notifications',
 ].map((to) => ({ to }))
 
 test('grouping: every dashboard tile lands under a heading, none dropped', () => {
@@ -29,7 +30,9 @@ test('grouping: money pages sit together, study pages with learning', () => {
   assert.equal(of('/student/challans'), 'Fees & exams')
   assert.equal(of('/student/fees'), 'Fees & exams')
   assert.equal(of('/student/hall-tickets'), 'Fees & exams')
+  assert.equal(of('/student/no-dues'), 'Fees & exams')
   assert.equal(of('/student/materials'), 'Learning')
+  assert.equal(of('/student/coding-lab'), 'Learning')
   assert.equal(of('/student/attendance'), 'Academics')
   assert.equal(of('/student/notifications'), 'Account')
 })
@@ -54,6 +57,29 @@ test('grouping: alias routes resolve to the group of the page they duplicate', (
   // must not end up orphaned under "More".
   assert.equal(findNavItem('/student/fee-portal')?.group, 'money')
   assert.equal(groupTilesByNavSection([{ to: '/student/fee-portal' }])[0].label, 'Fees & exams')
+})
+
+test('coding lab: the student route is reachable from the Learning group', () => {
+  const item = findNavItem('/student/coding-lab')
+  assert.equal(item?.id, 'coding-lab')
+  assert.equal(item?.group, 'practice')
+  assert.equal(item?.path, '/student/coding-lab')
+  assert.ok(item?.hint)
+  assert.ok(navItemsInGroup('practice').some((entry) => entry.id === 'coding-lab'))
+  assert.equal(groupTilesByNavSection([{ to: '/student/coding-lab' }])[0].label, 'Learning')
+})
+
+test('programme visibility: Coding Lab appears only in BCA student navigation', () => {
+  const bcaItems = studentNavItemsForProfile({ course: 'BCA' }, true)
+  const unassignedBcaItems = studentNavItemsForProfile({ course: 'BCA' }, false)
+  const baItems = studentNavItemsForProfile({ course: 'BA' }, true)
+  const unknownItems = studentNavItemsForProfile(null, true)
+  assert.ok(bcaItems.some((item) => item.id === 'coding-lab'))
+  assert.ok(!unassignedBcaItems.some((item) => item.id === 'coding-lab'))
+  assert.ok(!baItems.some((item) => item.id === 'coding-lab'))
+  assert.ok(!unknownItems.some((item) => item.id === 'coding-lab'))
+  assert.ok(moreSheetItems({ profile: { branch: 'BCA' }, codingLabEnabled: true }).some((item) => item.id === 'coding-lab'))
+  assert.ok(!navItemsInGroup('practice', { course: 'B.Com' }, true).some((item) => item.id === 'coding-lab'))
 })
 
 test('nav model: every item belongs to a declared group', () => {

@@ -90,6 +90,7 @@ describe('formatStreamLabel', () => {
     // 'aptitude' is the shared placement track (QA + LR + Verbal), not a stats elective.
     assert.equal(formatStreamLabel('aptitude'), 'Quantitative Aptitude & Reasoning')
     assert.equal(formatStreamLabel('communication'), 'Verbal Ability & Communication')
+    assert.equal(formatStreamLabel('learning'), 'Learning & Problem Solving')
     assert.equal(formatStreamLabel('finance'), 'Financial Management')
     assert.equal(formatStreamLabel('law'), 'Business & Company Law')
     assert.equal(formatStreamLabel('strategy'), 'Strategic Management')

@@ -1,4 +1,4 @@
-# Vriddhi Question Bank — Seed Data (B.Com / BA / B.Sc)
+# Vriddhi Question Bank — Seed Data (B.Com / BA / B.Sc / BCA)
 
 Curated, import-ready question data organised as **subject → topic → sub-topic**.
 It ships **inside the app bundle** as well as on disk, so a superadmin can load it
@@ -11,17 +11,20 @@ with one click — no terminal, no copy-pasting CSV.
 | `BCom_QuestionBank.csv` | B.Com | 262 | 16 | 48 |
 | `BA_QuestionBank.csv` | BA | 238 | 16 | 48 |
 | `BSc_QuestionBank.csv` | B.Sc | 259 | 16 | 48 |
-| `All_QuestionBank.csv` | all three | **759** | 48 | 144 |
+| `BCA_QuestionBank.csv` | BCA | 192 | 16 | 48 |
+| `All_QuestionBank.csv` | all four | **951** | 64 | 192 |
 
 | Source module | Role |
 |---|---|
 | `structure.py` | **the hierarchy** — every subject, topic and sub-topic, plus the keywords used to backfill sub-topics onto older questions |
-| `bcom_questions.py` / `ba_questions.py` / `bsc_questions.py` | the original topic-level questions (5 per topic) |
-| `subtopic_questions.py` | the sub-topic questions (4 per sub-topic = 12 per topic) |
+| `bcom_questions.py` / `ba_questions.py` / `bsc_questions.py` | original topic-level questions (5 per topic) for the first three programmes |
+| `subtopic_questions.py` | sub-topic questions for B.Com / BA / B.Sc (4 per sub-topic = 12 per topic) |
+| `bca_subtopic_questions.py` | 192 original BCA questions across C, data structures, DBMS and Java |
 | `generate_seed.py` | validator + CSV generator |
 
-Batch is `2026-27`. Across the bank: 435 MCQ, 167 true/false, 141 short answer,
-16 numerical; 443 easy / 292 medium / 24 hard.
+Batch is `2026-27`. Across the bank: 531 MCQ, 215 true/false, 189 short answer,
+16 numerical; 566 easy / 360 medium / 25 hard. BCA rows are a cross-semester
+computing-foundations starter set, not a substitute for a university-specific syllabus.
 
 ### The three tiers
 
@@ -57,6 +60,12 @@ drill-down.
 - *Chemistry* — Chemical Bonding · Chemical Thermodynamics · Electrochemistry · Coordination Compounds
 - *Computer Science* — Programming Fundamentals · Data Structures · Databases and SQL · Operating Systems
 
+**BCA** (foundational coverage; validate against the selected university and scheme)
+- *Programming in C* — C Fundamentals and Expressions · Control Flow and Arrays · Functions and Pointers · Structures and File Handling
+- *Data Structures* — Algorithm Analysis and Arrays · Linked Lists Stacks and Queues · Trees and Graphs · Sorting and Hashing
+- *Database Management Systems* — Relational Model and Keys · SQL Fundamentals · Normalization and Transactions · Indexing and Database Design
+- *Object-Oriented Programming with Java* — Java Basics and Objects · Inheritance and Polymorphism · Exceptions Collections I O · Multithreading and JDBC
+
 Each topic holds exactly **3 sub-topics** and **12 questions**; each sub-topic
 holds **4 questions**. Run `python3 data/question-bank/generate_seed.py` to print
 the full tree with counts.
@@ -69,12 +78,11 @@ the full tree with counts.
 
 Only `All_QuestionBank.csv` is bundled into the superadmin chunk at build time
 (`src/modules/superadmin/data/questionBankSeed.ts` imports it with Vite's `?raw`
-suffix); the three per-programme datasets are filtered out of it by
-`filterSeedCsvByBranch`, because each is an exact subset and inlining all four
-would ship ~450 KB of duplicated text. Either way the seeder needs no upload and
-no server round-trip:
+suffix); the four per-programme datasets are filtered out of it by
+`filterSeedCsvByBranch`, because each is an exact subset and inlining all five
+would ship duplicated text. The seeder needs no upload and no content round-trip:
 
-1. Pick a dataset — *All programmes* (759) or a single branch (238–262). The
+1. Pick a dataset — *All programmes* (951) or a single branch (192–262). The
    programme chips narrow the combined dataset further. The step reports how many
    subjects, topics and sub-topics the selection covers before you commit.
 2. Choose how the rows land:
@@ -82,7 +90,7 @@ no server round-trip:
      pool); `college_only` keeps them platform-internal.
    - **Approved immediately** — uncheck to leave them `pending` in the review queue.
    - **Shuffle MCQ options** — the generator already spreads the authored answer
-     keys across A–D (102 / 100 / 119 / 114), and this shuffle randomises the
+     keys across A–D (134 / 116 / 142 / 139), and this shuffle randomises the
      option order per seed. It is seeded from each question's fingerprint, so it
      is **deterministic**: re-seeding produces identical documents rather than
      churning the pool.
@@ -95,14 +103,14 @@ Seeding is **idempotent**. A row is skipped when a question with the same
 `text + subject + topic + programme` already exists in `questionBank_meta`, so
 re-running after a partial failure, or after extending the CSVs, only writes what
 is missing. Note the fingerprint deliberately **excludes** the sub-topic: adding
-or renaming a sub-topic must not re-seed 759 questions as "new". Rows tagged
+or renaming a sub-topic must not re-seed 951 questions as "new". Rows tagged
 `seed-import` / `vriddhi-curated` identify the seeded content afterwards.
 
-> **Free-tier quota.** The full bank is ~2 277 Firestore writes
-> (759 questions × 3 documents), well over the Spark plan's **500 writes/day**.
+> **Free-tier quota.** The full bank is ~2 853 Firestore writes
+> (951 questions × 3 documents), well over the Spark plan's **500 writes/day**.
 > On a free-tier project seed **one programme at a time on separate days**
-> (B.Com ≈ 786 writes, BA ≈ 714, B.Sc ≈ 777 — still above 500, so split further
-> by subject chips if needed), or move the project to Blaze first. The dialog
+> (B.Com ≈ 786 writes, BA ≈ 714, B.Sc ≈ 777 and BCA ≈ 576 — split further
+> by subject if needed), or move the project to Blaze first. The dialog
 > warns about this when the selection exceeds the quota. Because seeding is
 > idempotent, a run that stops part-way can simply be resumed.
 

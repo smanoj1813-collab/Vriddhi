@@ -89,6 +89,10 @@ import { APTITUDE_SUBJECTS, SEEDED_APTITUDE_TOPICS, SEEDED_APTITUDE_QUESTIONS } 
 import { SEEDED_COMPANIES } from '../data/companySeedData'
 import { SEEDED_PREP_PAPERS } from '../data/prepPapers'
 import {
+  UNIVERSAL_ACADEMIC_BUNDLE,
+  universalAcademicSupplementFor,
+} from '../data/universalAcademicSupplement'
+import {
   PREP_PAPER_SEED_CODE,
   PREP_PAPER_UNIVERSITIES,
   filterPrepPapers,
@@ -131,16 +135,47 @@ const PREP_SEED_BUNDLES: Array<{
   subjects: PrepSubject[]
   topics: Record<string, PrepTopic[]>
   questions: UniversalQuestion[]
-}> = [
-  { code: 'bba', label: 'BBA', subjects: BBA_SUBJECTS, topics: SEEDED_BBA_TOPICS, questions: SEEDED_UNIVERSAL_QUESTIONS },
-  { code: 'bcom', label: 'B.Com', subjects: BCOM_SUBJECTS, topics: SEEDED_BCOM_TOPICS, questions: SEEDED_BCOM_QUESTIONS },
-  { code: 'bsc', label: 'B.Sc', subjects: BSC_SUBJECTS, topics: SEEDED_BSC_TOPICS, questions: SEEDED_BSC_QUESTIONS },
-  { code: 'ba', label: 'BA', subjects: BA_SUBJECTS, topics: SEEDED_BA_TOPICS, questions: SEEDED_BA_QUESTIONS },
-  { code: 'mcom', label: 'M.Com', subjects: MCOM_SUBJECTS, topics: SEEDED_MCOM_TOPICS, questions: SEEDED_MCOM_QUESTIONS },
+}> = []
+
+/**
+ * Supplement each chosen academic program with the same universal toolkit plus
+ * applied examples relevant to that program. Subject/topic ids are stable, so
+ * seeding B.Com and BBA in either order writes identical shared documents.
+ */
+function withUniversalSupplement(
+  code: string,
+  label: string,
+  subjects: PrepSubject[],
+  topics: Record<string, PrepTopic[]>,
+  questions: UniversalQuestion[],
+) {
+  const supplement = universalAcademicSupplementFor(code)
+  return {
+    code,
+    label,
+    subjects: [...subjects, ...supplement.subjects],
+    topics: { ...topics, ...supplement.topics },
+    questions: [...questions, ...supplement.questions],
+  }
+}
+
+PREP_SEED_BUNDLES.push(
+  withUniversalSupplement('bba', 'BBA', BBA_SUBJECTS, SEEDED_BBA_TOPICS, SEEDED_UNIVERSAL_QUESTIONS),
+  withUniversalSupplement('bcom', 'B.Com', BCOM_SUBJECTS, SEEDED_BCOM_TOPICS, SEEDED_BCOM_QUESTIONS),
+  withUniversalSupplement('bsc', 'B.Sc', BSC_SUBJECTS, SEEDED_BSC_TOPICS, SEEDED_BSC_QUESTIONS),
+  withUniversalSupplement('ba', 'BA', BA_SUBJECTS, SEEDED_BA_TOPICS, SEEDED_BA_QUESTIONS),
+  withUniversalSupplement('mcom', 'M.Com', MCOM_SUBJECTS, SEEDED_MCOM_TOPICS, SEEDED_MCOM_QUESTIONS),
+  {
+    code: 'universal',
+    label: 'Universal Student Learning',
+    subjects: UNIVERSAL_ACADEMIC_BUNDLE.subjects,
+    topics: UNIVERSAL_ACADEMIC_BUNDLE.topics,
+    questions: UNIVERSAL_ACADEMIC_BUNDLE.questions,
+  },
   // Shared placement-aptitude track (QA / LR / Verbal). Not a program: the
   // subjects list every UG & PG program, so seeding once serves them all.
   { code: 'aptitude', label: 'Placement Aptitude', subjects: APTITUDE_SUBJECTS, topics: SEEDED_APTITUDE_TOPICS, questions: SEEDED_APTITUDE_QUESTIONS },
-]
+)
 
 /** Seed code for the company-prep catalogue (prep_companies). */
 const COMPANY_SEED_CODE = 'companies'

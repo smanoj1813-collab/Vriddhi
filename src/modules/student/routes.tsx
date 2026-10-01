@@ -11,6 +11,7 @@ const StudentDashboard = lazy(() => import('./pages/StudentDashboard'));
 const StudentGrades = lazy(() => import('./pages/StudentGrades'));
 const StudentSettings = lazy(() => import('./pages/StudentSettings'));
 const StudentMaterials = lazy(() => import('./pages/StudentMaterials'));
+const StudentCodingLab = lazy(() => import('./pages/StudentCodingLab'));
 const StudentResumePage = lazy(() => import('./pages/StudentResumePage'));
 const StudentTimetable = lazy(() => import('./pages/StudentTimetable'));
 const StudentIdCard = lazy(() => import('./pages/StudentIdCard'));
@@ -81,6 +82,7 @@ export const studentRoutes: RouteObject[] = [
 
       // Secondary pages
       { path: 'materials', element: <StudentMaterials /> },
+      { path: 'coding-lab', element: <StudentCodingLab /> },
       { path: 'resume', element: <StudentResumePage /> },
       { path: 'timetable', element: <StudentTimetable /> },
       { path: 'id-card', element: <StudentIdCard /> },

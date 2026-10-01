@@ -58,6 +58,8 @@ const SEEDABLE_PROGRAMS: Array<{ code: string; label: string }> = [
   { code: 'ba', label: 'BA' },
   { code: 'bsc', label: 'B.Sc' },
   { code: 'mcom', label: 'M.Com' },
+  // Supplementary, cross-university concept mastery for all programs.
+  { code: 'universal', label: 'Universal Student Learning (all programs)' },
   // Shared placement-aptitude track (Quant / Reasoning / Verbal) — not a
   // program; one seed serves every UG & PG program.
   { code: 'aptitude', label: 'Aptitude (QA · LR · Verbal)' },
@@ -753,10 +755,10 @@ export default function PrepContentStudioTab() {
         <div>
           <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
             <BookOpen className="w-5 h-5 text-teal-600" />
-            Prep Content Studio (BBA / Commerce & Management)
+            Prep Content Studio (Academic Study & Concept Mastery)
           </h2>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-            Centrally authored, curriculum-aligned study packs. Authored once: AI draft → Curator review → Publish.
+            Concept-first explanations and worked problem-solving that supplement—not replace—any college or university curriculum. Authored once: AI draft → Curator review → Publish.
           </p>
         </div>
 
@@ -865,7 +867,7 @@ export default function PrepContentStudioTab() {
             {loadingSubjects ? (
               <div className="p-4 text-center text-xs text-slate-500 dark:text-slate-400">Loading subjects…</div>
             ) : filteredSubjects.length === 0 ? (
-              <div className="p-4 text-center text-xs text-slate-500 dark:text-slate-400">No subjects found. Tick a program (BBA, B.Com, BA, B.Sc, M.Com) or the Aptitude track above and press "Seed".</div>
+              <div className="p-4 text-center text-xs text-slate-500 dark:text-slate-400">No subjects found. Tick a program, the Universal Student Learning pack or the Aptitude track above and press "Seed".</div>
             ) : (
               filteredSubjects.map((s) => (
                 <button
