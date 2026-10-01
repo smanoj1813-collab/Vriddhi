@@ -44,6 +44,7 @@ export interface AutoMapProposal {
   credits: number
   totalHours: number
   hoursPerWeek: number
+  groupsServed: number
   faculty: AutoMapProposalFaculty | null
   score: number
   breakdown: { subject: number; branch: number; experience: number; balance: number }

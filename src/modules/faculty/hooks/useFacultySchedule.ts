@@ -31,7 +31,11 @@ function toFacultySchedule(item: WeeklyClassSchedule): ClassSchedule {
         ? 'completed'
         : 'ongoing';
 
-  const cohort = [item.branch, item.batch, item.division || item.section]
+  const teachingGroup = [item.division, item.section]
+    .filter(Boolean)
+    .map((value) => value.replace(/,/g, '+'))
+    .join(' / ');
+  const cohort = [item.branch, item.batch, teachingGroup ? `Div ${teachingGroup}` : '']
     .filter(Boolean)
     .join(' · ');
 
@@ -44,6 +48,11 @@ function toFacultySchedule(item: WeeklyClassSchedule): ClassSchedule {
     subject: item.subject,
     subjectCode: item.subjectCode,
     className: cohort,
+    branch: item.branch,
+    batch: item.batch,
+    semester: item.semester,
+    division: item.division,
+    section: item.section,
     room: item.room,
     facultyId: item.facultyId,
     facultyName: item.facultyName,

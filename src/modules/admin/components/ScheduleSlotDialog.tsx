@@ -26,6 +26,8 @@ import {
   FormControl,
   FormControlLabel,
   InputLabel,
+  FormHelperText,
+  ListItemText,
   MenuItem,
   Select,
   Stack,
@@ -44,6 +46,7 @@ import {
 } from '../api/classSessionApi'
 import { DAY_LABELS, DAY_ORDER } from '../utils/curriculumFlow'
 import type { ClassType, DayOfWeek, WeeklyClassSchedule, WeeklyScheduleFormData } from '../types/schedule'
+import { divisionSelection, divisionSelectionValue } from '@/shared/utils/divisionGroups'
 
 export interface SlotPrefill {
   subject: string
@@ -62,6 +65,7 @@ interface Props {
   collegeId: string
   prefill: SlotPrefill | null
   facultyOptions: { id: string; uid?: string; name: string }[]
+  divisionOptions?: string[]
   onClose: () => void
   onSaved: (payload: { slot: WeeklyClassSchedule; generated: number; sessionsError?: string }) => void
 }
@@ -89,6 +93,7 @@ const ScheduleSlotDialog: React.FC<Props> = ({
   collegeId,
   prefill,
   facultyOptions,
+  divisionOptions = [],
   onClose,
   onSaved,
 }) => {
@@ -272,6 +277,30 @@ const ScheduleSlotDialog: React.FC<Props> = ({
                 </MenuItem>
               ))}
             </Select>
+          </FormControl>
+
+          <FormControl fullWidth size="small">
+            <InputLabel id="slot-division-label">Divisions taught together</InputLabel>
+            <Select
+              labelId="slot-division-label"
+              multiple
+              label="Divisions taught together"
+              value={divisionSelection(form.division)}
+              renderValue={(selected) => Array.isArray(selected) && selected.length > 0 ? selected.join(' + ') : 'Whole batch'}
+              onChange={event => {
+                const value = event.target.value
+                const selected = divisionSelection(Array.isArray(value) ? value : String(value).split(','))
+                setForm(prev => ({ ...prev, division: divisionSelectionValue(selected) }))
+              }}
+            >
+              {divisionOptions.map(item => (
+                <MenuItem key={item} value={item}>
+                  <Checkbox size="small" checked={divisionSelection(form.division).includes(item)} />
+                  <ListItemText primary={`Division ${item}`} />
+                </MenuItem>
+              ))}
+            </Select>
+            <FormHelperText>Select divisions sharing this lecture. Leave blank to make it a whole-batch class.</FormHelperText>
           </FormControl>
 
           <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>

@@ -132,9 +132,13 @@ export default function FacultyCalendar() {
               const testDate = new Date(currentYear, currentMonth, d)
               if (testDate.getMonth() === currentMonth && testDate.getDay() === dayIndex) {
                 const dateStr = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`
+                const teachingGroup = [s.division, s.section]
+                  .filter(Boolean)
+                  .map((value: unknown) => String(value).replace(/,/g, '+'))
+                  .join(' / ')
                 loadedEvents.push({
                   id: `sched_${docSnap.id}_${d}`,
-                  title: `${s.subject || 'Class'} (${s.branch || ''})`,
+                  title: `${s.subject || 'Class'} (${s.branch || ''})${teachingGroup ? ` · Div ${teachingGroup}` : ''}`,
                   type: 'class',
                   date: dateStr,
                   startTime: s.startTime || '10:00',

@@ -226,7 +226,7 @@ export function expandPrepPaperSeed(seed: PrepPaperSeed): PrepPaper {
       })
       running = stem + 1
     } else {
-      ;(s.questions || []).forEach((q) => {
+      (s.questions || []).forEach((q) => {
         const obj = typeof q === 'string' ? { text: q } : q
         questions.push({
           label: obj.label || String(running),

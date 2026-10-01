@@ -28,6 +28,7 @@ import { useAuth } from '../../auth/context/AuthContext'
 import { fetchTodaySchedule, type StudentClassSession } from '../api/studentDataApi'
 import { useMyCurriculum, type StudentSessionSummary } from '../hooks/useMyCurriculum'
 import HolidayBanner from '@/shared/components/HolidayBanner'
+import MergedDivisionChip from '@/shared/components/MergedDivisionChip'
 
 function localDateKey(d: Date = new Date()): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
@@ -147,6 +148,8 @@ const StudentTimetable: React.FC = () => {
       startTime: s.startTime,
       endTime: s.endTime,
       room: s.room,
+      division: s.division || '',
+      section: s.section || '',
       type: (s.type as ClassSchedule['type']) || 'lecture',
       status: (s.status as ClassSchedule['status']) || 'scheduled',
       day: new Date().toLocaleDateString('en-US', { weekday: 'long' }) as DayOfWeek,
@@ -283,6 +286,9 @@ const StudentTimetable: React.FC = () => {
                         <Typography variant="body2" color="text.secondary">
                           {cls.subjectCode || '—'} &middot; {(cls.type || 'lecture').charAt(0).toUpperCase() + (cls.type || 'lecture').slice(1)}
                         </Typography>
+                        <Box sx={{ mt: 0.5 }}>
+                          <MergedDivisionChip division={[cls.division, cls.section].filter(Boolean).join(',')} />
+                        </Box>
                       </Box>
                     </Box>
 
@@ -413,6 +419,9 @@ const StudentTimetable: React.FC = () => {
                         <Typography variant="body2" sx={{ mt: 0.5 }}>
                           {cls.subject}
                         </Typography>
+                        <Box sx={{ mt: 0.5 }}>
+                          <MergedDivisionChip division={[cls.division, cls.section].filter(Boolean).join(',')} />
+                        </Box>
                         <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 0.5 }}>
                           <Typography variant="caption" color="text.secondary">
                             Room {cls.room || 'TBD'}

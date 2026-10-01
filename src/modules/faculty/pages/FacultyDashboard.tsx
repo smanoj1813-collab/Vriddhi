@@ -7,6 +7,7 @@ import {
 } from 'firebase/firestore';
 import { fetchFacultyWeeklySchedule } from '../../admin/api/scheduleApi';
 import FacultyAcademicPlanner from '../components/FacultyAcademicPlanner';
+import MergedDivisionChip from '@/shared/components/MergedDivisionChip';
 import {
   Box,
   Typography,
@@ -43,6 +44,7 @@ interface ScheduleItem {
   course: string;
   batch: string;
   division: string;
+  section: string;
   time: string;
   room: string;
   status: 'upcoming' | 'ongoing' | 'completed';
@@ -113,7 +115,8 @@ function useFacultyData(collegeId: string | undefined, facultyId: string | undef
               subject: String(w.subject || 'Unknown'),
               course: String(w.branch || w.subjectCode || ''),
               batch: String(w.batch || ''),
-              division: String(w.division || w.section || ''),
+              division: String(w.division || ''),
+              section: String(w.section || ''),
               time: `${String(w.startTime || '--:--')} - ${String(w.endTime || '--:--')}`,
               room: String(w.room || 'TBD'),
               status,
@@ -332,14 +335,17 @@ export default function FacultyDashboard() {
                         </Typography>
                       }
                       secondary={
-                        <Typography variant="body2" color="text.secondary" component="span" sx={{ display: 'block' }}>
-                          <Box component="span" sx={{ fontWeight: 600, color: 'text.primary' }}>{item.time}</Box>
-                          {' · '}Room {item.room}
-                          <Box component="span" sx={{ display: { xs: 'block', sm: 'inline' } }}>
-                            <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>{' · '}</Box>
-                            {item.course} {item.batch} · Div {item.division}
-                          </Box>
-                        </Typography>
+                        <Box component="span" sx={{ display: 'block' }}>
+                          <Typography variant="body2" color="text.secondary" component="span" sx={{ display: 'block' }}>
+                            <Box component="span" sx={{ fontWeight: 600, color: 'text.primary' }}>{item.time}</Box>
+                            {' · '}Room {item.room}
+                            <Box component="span" sx={{ display: { xs: 'block', sm: 'inline' } }}>
+                              <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>{' · '}</Box>
+                              {item.course} {item.batch} · Div {[item.division, item.section].filter(Boolean).join(' / ').replace(/,/g, '+')}
+                            </Box>
+                          </Typography>
+                          <MergedDivisionChip division={[item.division, item.section].filter(Boolean).join(',')} />
+                        </Box>
                       }
                     />
                     <Chip

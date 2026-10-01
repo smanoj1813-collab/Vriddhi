@@ -1260,7 +1260,7 @@ export const generateClassSessions = onCall(
     // the whole term, so the run stops before writing anything.
     let existingSessionsSnap: admin.firestore.QuerySnapshot | null = null
     if (payload.detectConflicts) {
-      let sessionQuery: admin.firestore.Query = db
+      const sessionQuery: admin.firestore.Query = db
         .collection('classSessions')
         .where('collegeId', '==', payload.collegeId)
         .where('date', '>=', payload.from)
@@ -1971,7 +1971,7 @@ export const rescheduleClass = onCall(
     // ─── S2.5 conflicts, applied to the destination ──────────────────────
     const movedIds = new Set(plan.moves.map((move) => move.fromId))
     const targetDates = [...new Set(plan.moves.map((move) => move.toDate))].sort()
-    let conflictList: SessionConflict[] = []
+    const conflictList: SessionConflict[] = []
     if (targetDates.length > 0) {
       const others: SessionCandidate[] = []
       for (const group of chunk(targetDates, 10)) {

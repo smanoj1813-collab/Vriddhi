@@ -543,7 +543,7 @@ Return JSON only, matching the schema.`
 
 function clampString(value: unknown, max: number): string {
   return String(value ?? '')
-    .replace(/\u0000/g, '')
+    .split(String.fromCharCode(0)).join('')
     .replace(/[ \t]+/g, ' ')
     .trim()
     .slice(0, max)

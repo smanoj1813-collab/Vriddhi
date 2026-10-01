@@ -209,6 +209,7 @@ describe('batchFieldsIntersect', () => {
 describe('server ↔ browser parity (division letters and scope overlap)', () => {
   const SCOPES: Array<{ branch?: unknown; batch?: unknown; division?: unknown; section?: unknown }> = [
     { branch: 'BBA', batch: '2026-2027', division: 'A,B,C,D' },
+    { branch: 'BBA', batch: '2027', division: 'A,B' },
     { branch: 'BBA', batch: '2027', division: 'A' },
     { branch: 'BBA', batch: '2027', section: 'A' },
     { branch: 'BBA', batch: '2026', division: 'B' },
@@ -219,9 +220,10 @@ describe('server ↔ browser parity (division letters and scope overlap)', () =>
     { batch: '' },
   ]
 
-  it('agrees on the letters of a field', () => {
-    for (const value of ['A,B,C,D', 'Div A, Div B', 'ABCD', '', 'Div', 'a b', null]) {
-      assert.deepEqual(cohortLetters(value), browserCohortLetters(value, 'division'), `cohortLetters(${String(value)})`)
+  it('agrees on merged division and section letters', () => {
+    for (const value of ['A,B', 'A,B,C,D', 'Div A, Div B', 'Section A / Sec. B', 'ABCD', '', 'Div', 'a b', null]) {
+      assert.deepEqual(cohortLetters(value), browserCohortLetters(value, 'division'), `division letters: ${String(value)}`)
+      assert.deepEqual(cohortLetters(value), browserCohortLetters(value, 'section'), `section letters: ${String(value)}`)
     }
   })
 

@@ -33,7 +33,11 @@ Every faculty member's **current weekly teaching load** is computed from all
 *active* `curriculumFacultyMappings` in the college (any curriculum, any
 batch). A course's `totalHours` is converted to periods/week by dividing by the
 semester length (default 15 weeks, configurable); courses without hours fall
-back to `credits × 4`.
+back to `credits × 4`. The per-group demand is multiplied by the number of
+distinct teaching groups served: an unscoped legacy mapping uses the enrolled
+branch/batch groups, while an explicit comma-separated scope such as `A,B` is
+one merged group and counts once. Proposals show `periods per group × groups
+served`, so the HOD can inspect the actual arithmetic before applying.
 
 ### 2. Score (0–100 per faculty × course)
 
@@ -53,11 +57,15 @@ just loses points and shows in the reasons).
    courses, then a stable code/semester tiebreak). A course that only one
    person can teach never loses a bidding war to a popular one.
 2. Each course goes to the highest-scoring faculty who is
-   - **not already mapped** to that course in this batch/division/section
+   - **not already mapped** to an overlapping group in this batch
      (identity matched by uid, profile id *or* email — legacy rows included), and
-   - **within capacity** (default 24 periods/week — UGC regular faculty).
-3. If *nobody* fits the capacity, the best faculty is still proposed but
-   flagged **`overload-risk`** — a visible compromise beats a silent gap.
+   - within capacity when any candidate fits (default 24 periods/week for a
+     regular faculty member; guest faculty has its own smaller ceiling).
+3. If *nobody* fits capacity, the best faculty is still proposed but flagged
+   **`overload-risk`**. The reason reports existing + requested = projected
+   periods/week and suggests a concrete same-subject division merge, including
+   the estimated periods saved. This is a preview for the HOD, not an automatic
+   merge; the chosen divisions must still be explicitly selected.
 4. No faculty at all → the course is returned **unassigned** with a reason.
 
 ### 4. Guarantees
@@ -107,20 +115,16 @@ The mapping step answers **"who teaches what"**; the timetable answers
 The UI flow for both features is the same two-step, human-in-the-loop pattern:
 **generate → review → apply**.
 
-## Future enhancements (deliberately out of scope for v1)
+## Future enhancements
 
-1. **Time-slot suggestion** — once a mapping exists, run the same scoring over
-   free slots in the weekly grid to propose *times*, not just people.
-2. **Preference inputs** — per-faculty "prefers morning / avoids Friday"
-   flags fed into the balance term.
-3. **Exact solver** — the greedy is O(courses × faculty) and explainable; a
-   max-weight bipartite matching (or min-cost flow with capacity) would find
-   the globally optimal assignment when scoring gets more sophisticated. The
-   pure-core boundary (`runAutoMapping(options) → result`) means swapping the
-   strategy touches one function.
-4. **Rebalancing** — a "what-if" mode that can *move* an existing mapping
-   (with an explicit, logged `autoMapped: 'rebalanced'` marker) when a faculty
-   member leaves mid-term.
+1. **Preference inputs** — per-faculty "prefers morning / avoids Friday"
+   flags can feed the slot preference order without weakening clash or capacity
+   constraints.
+2. **Exact solver** — the current greedy planner is explainable; a min-cost
+   flow or constraint solver could improve the global result when scoring gets
+   more sophisticated. The pure-core boundary keeps that change isolated.
+3. **Rebalancing** — a "what-if" mode could move an existing mapping or slot
+   (with an explicit, logged audit marker) when faculty availability changes.
 
 ## Tests
 

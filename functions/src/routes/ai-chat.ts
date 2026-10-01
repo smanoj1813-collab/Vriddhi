@@ -18,8 +18,8 @@ const router = express.Router()
 function cleanKey(raw: string): string {
   return String(raw || '')
     .toLowerCase()
-    .replace(/^(?:bba|b\.?\s*com|bca|ba|b\.?\s*sc|b\.?\s*tech|be|mba|m\.?\s*com|mca)\s*[-–:]*\s*[\w\.\-]+(?:\s*[-–:]+\s*|\s+)/i, '')
-    .replace(/^(?:unit|module|chapter|session|part)\s*[-–:]*\s*(?:[ivxlcdm]+|\d+[\.\d]*)\s*[-–:]+\s*/i, '')
+    .replace(/^(?:bba|b\.?\s*com|bca|ba|b\.?\s*sc|b\.?\s*tech|be|mba|m\.?\s*com|mca)\s*[-–:]*\s*[\w.-]+(?:\s*[-–:]+\s*|\s+)/i, '')
+    .replace(/^(?:unit|module|chapter|session|part)\s*[-–:]*\s*(?:[ivxlcdm]+|\d+[.\d]*)\s*[-–:]+\s*/i, '')
     .replace(/[^a-z0-9]+/g, '_')
     .replace(/^_+|_+$/g, '')
     .substring(0, 50);

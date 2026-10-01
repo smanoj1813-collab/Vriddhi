@@ -468,6 +468,26 @@ describe('matchCohortRows — diagnostics', () => {
     assert.equal(diagnostics.nearMissTotal, 0)
   })
 
+  it('diagnoses a merged A,B roster as one scope and names excluded groups', () => {
+    const rows = [
+      student({ batch: '2027', division: 'A' }),
+      student({ batch: '2027', division: 'B' }),
+      student({ batch: '2027', division: 'C' }),
+    ]
+    const { matched, diagnostics } = matchCohortRows(
+      rows,
+      criteria({ batch: '2027', division: 'A,B', section: '' }),
+      450,
+    )
+    assert.deepEqual(matched.map((row) => row.division), ['A', 'B'])
+    assert.equal(diagnostics.target.division, 'A,B')
+    assert.equal(diagnostics.matched, 2)
+    assert.equal(diagnostics.mismatches.division?.count, 1)
+    assert.deepEqual(diagnostics.mismatches.division?.values, ['C'])
+    assert.equal(diagnostics.nearMissTotal, 1)
+    assert.equal(diagnostics.nearMisses.division?.count, 1)
+  })
+
   it('still attributes a letter the class does not teach, printing the list', () => {
     const { matched, diagnostics } = matchCohortRows(
       [student({ batch: '2027', division: 'E' })],

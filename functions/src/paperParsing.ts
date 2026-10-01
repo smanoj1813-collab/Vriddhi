@@ -500,15 +500,15 @@ const DET_SECTION_RE = /^(?:section|part)\s+[-–—:.]?\s*(?:[A-J]\b|[IVX]{1,4}
 const DET_QUESTION_START_RE = /^(?:Q(?:uestion)?\s*[.:]?\s*)?(\d{1,3})\s*[.)]\s*(.*)$/
 /** Leading marks token — float-right marks sit BEFORE the question text in a
  *  PDF/DOCX text layer even though they print to its right. */
-const DET_LEADING_MARKS_RE = /^[\[(]\s*(\d{1,3}(?:\.\d)?)\s*(?:marks?|mks?\.?|M\.?)?\s*[\])]\s*(.+)$/i
+const DET_LEADING_MARKS_RE = /^(?:\[|\()\s*(\d{1,3}(?:\.\d)?)\s*(?:marks?|mks?\.?|M\.?)?\s*(?:\]|\))\s*(.+)$/i
 const DET_OPTION_RE = /^\(?\s*([A-H])\s*[.)]\s*(.+)$/
-const DET_TRAILING_MARKS_RE = /[[(]\s*(\d{1,3}(?:\.\d)?)\s*(?:marks?|mks?\.?|M\.?)?\s*[\])]\s*$/i
-const DET_MARKS_ONLY_RE = /^[\[(]\s*(\d{1,3}(?:\.\d)?)\s*(?:marks?|mks?\.?|M\.?)?\s*[\])]$/i
+const DET_TRAILING_MARKS_RE = /(?:\[|\()\s*(\d{1,3}(?:\.\d)?)\s*(?:marks?|mks?\.?|M\.?)?\s*(?:\]|\))\s*$/i
+const DET_MARKS_ONLY_RE = /^(?:\[|\()\s*(\d{1,3}(?:\.\d)?)\s*(?:marks?|mks?\.?|M\.?)?\s*(?:\]|\))$/i
 const DET_DEFAULT_MARKS_RE = /\b(?:each|all|every)\b[\s\S]{0,60}?\b(?:carries|carry|carrying)\b\s*(?:up\s+to\s+)?(\d{1,3}(?:\.\d)?)\s*(?:marks?|mks?)?/i
 const DET_MAX_MARKS_RE = /^(?:max(?:imum)?\.?\s*marks?|total\s*marks?)\s*[:.\-–=]?\s*(\d{1,4}(?:\.\d)?)/i
 const DET_TIME_RE = /^(?:time|duration)\s*[:.\-–=]?\s*(\d{1,3}(?:\.\d)?)\s*(hours?|hrs?|h|minutes?|mins?|m)\b/i
 const DET_SUBJECT_RE = /^(?:subject|sub)\s*[:.\-–=]\s*(.{2,120})$/i
-const DET_DATE_LINE_RE = /^(?:date\s*[:.\-]?\s*\S.*)|(?:^\d{1,2}[/.-]\d{1,2}[/.-]\d{2,4}$)|(?:\b(?:session|academic year)\b[^\n]*\b20\d\d\b)/i
+const DET_DATE_LINE_RE = /^(?:date\s*[-:.]?\s*\S.*)|(?:^\d{1,2}[/.-]\d{1,2}[/.-]\d{2,4}$)|(?:\b(?:session|academic year)\b[^\n]*\b20\d\d\b)/i
 const DET_TITLE_RE = /(?:question\s+paper|pre-?assessment|examination|mid-?sem|model\s+exam|class\s+test|end\s+semester)/i
 const DET_LONG_ANSWER_RE = /^(?:explain|describe|discuss|derive|prove|evaluate|elaborate|critically\s+examine|write\s+(?:a\s+)?(?:note|essay|answer))/i
 
@@ -995,7 +995,7 @@ export const parsePaperFile = onCall(
 
     const [fileData] = await file.download()
     const extracted = await extractPaperText(Buffer.from(fileData), contentType)
-    const text = extracted.text.replace(/\u0000/g, '').trim()
+    const text = extracted.text.split(String.fromCharCode(0)).join('').trim()
     if (text.length < MIN_TEXT_CHARS) {
       const result: ParsePaperFileResult = {
         status: 'scanned',

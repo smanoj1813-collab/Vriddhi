@@ -17,7 +17,7 @@ import { useQuery } from '@tanstack/react-query';
 import { collection, getDocs, query, where } from 'firebase/firestore';
 import {
   Alert, Box, Button, Chip, Dialog, DialogActions, DialogContent,
-  DialogTitle, Divider, IconButton, MenuItem, Stack, Switch,
+  DialogTitle, Divider, FormControl, FormHelperText, IconButton, InputLabel, ListItemText, MenuItem, Select, Stack, Switch,
   TextField, ToggleButton, ToggleButtonGroup, Tooltip, Typography,
   Table, TableBody, TableCell, TableHead, TableRow, Checkbox,
 } from '@mui/material';
@@ -40,6 +40,8 @@ import {
   type RoomStrategy,
 } from '../api/autoScheduleApi';
 import type { DayOfWeek } from '../types/schedule';
+import { fetchDivisionsFromStudents } from '../api/scheduleApi';
+import { divisionOptions as buildDivisionOptions, divisionSelection, divisionSelectionValue } from '@/shared/utils/divisionGroups';
 
 interface CurriculumOption {
   id: string;
@@ -72,6 +74,7 @@ interface Props {
   onClose: () => void;
   /** called after a successful apply so the timetable reloads */
   onApplied: () => void;
+  divisionOptions?: string[];
 }
 
 interface FormState {
@@ -87,11 +90,19 @@ interface FormState {
   labSpan: number;
   rooms: string;
   maxPerDay: number;
+  maxWeeklyPeriods: number;
   dateFrom: string;
   dateTo: string;
   strategy: PlacementStrategy;
   roomStrategy: RoomStrategy;
   seed: string;
+}
+
+function teachingScopeLabel(division?: string, section?: string): string {
+  return [
+    division ? `Div ${division.replace(/,/g, '+')}` : '',
+    section ? `Sec ${section.replace(/,/g, '+')}` : '',
+  ].filter(Boolean).join(' / ')
 }
 
 const initialForm: FormState = {
@@ -107,6 +118,7 @@ const initialForm: FormState = {
   labSpan: 2,
   rooms: 'Room 1, Room 2, Room 3',
   maxPerDay: 4,
+  maxWeeklyPeriods: 24,
   dateFrom: '',
   dateTo: '',
   strategy: 'uniform',
@@ -119,7 +131,7 @@ interface OverrideEdit {
   periods?: number | null;
 }
 
-export default function AutoScheduleDialog({ collegeId, open, onClose, onApplied }: Props) {
+export default function AutoScheduleDialog({ collegeId, open, onClose, onApplied, divisionOptions: knownDivisionOptions = [] }: Props) {
   const [form, setForm] = useState<FormState>(initialForm);
   const [preview, setPreview] = useState<AutoScheduleResponse | null>(null);
   const [busy, setBusy] = useState<'preview' | 'apply' | null>(null);
@@ -130,6 +142,17 @@ export default function AutoScheduleDialog({ collegeId, open, onClose, onApplied
   const [overrides, setOverrides] = useState<Record<string, OverrideEdit>>({});
   // Last known demand list (survives config edits that invalidate the preview).
   const [demand, setDemand] = useState<AutoSchedulePlan['demand']>([]);
+
+  const divisionValuesQuery = useQuery({
+    queryKey: ['autoScheduleDivisionOptions', collegeId],
+    enabled: !!collegeId && open,
+    queryFn: () => fetchDivisionsFromStudents(collegeId),
+  });
+  const availableDivisions = useMemo(
+    () => buildDivisionOptions([...(divisionValuesQuery.data ?? []), ...knownDivisionOptions]),
+    [divisionValuesQuery.data, knownDivisionOptions],
+  );
+  const selectedDivisions = useMemo(() => divisionSelection(form.division), [form.division]);
 
   const curriculaQuery = useQuery({
     queryKey: ['autoScheduleCurricula', collegeId],
@@ -192,6 +215,7 @@ export default function AutoScheduleDialog({ collegeId, open, onClose, onApplied
       },
       rooms: form.rooms.split(',').map((r) => r.trim()).filter(Boolean),
       maxPeriodsPerDayPerFaculty: form.maxPerDay,
+      maxWeeklyPeriodsPerFaculty: form.maxWeeklyPeriods,
       dryRun,
       ...(form.dateFrom
         ? { dateRange: { from: form.dateFrom, ...(form.dateTo ? { to: form.dateTo } : {}) } }
@@ -283,8 +307,30 @@ export default function AutoScheduleDialog({ collegeId, open, onClose, onApplied
           <Grid size={{ xs: 4, md: 2 }}>
             <TextField fullWidth size="small" label="Batch" value={form.batch} onChange={(e) => setCohort('batch', e.target.value)} placeholder="2026" helperText="Multi-intake: 2027, 2028" />
           </Grid>
-          <Grid size={{ xs: 4, md: 2 }}>
-            <TextField fullWidth size="small" label="Division (opt.)" value={form.division} onChange={(e) => setCohort('division', e.target.value)} />
+          <Grid size={{ xs: 12, md: 3 }}>
+            <FormControl fullWidth size="small">
+              <InputLabel id="auto-schedule-divisions-label">Limit to divisions</InputLabel>
+              <Select
+                labelId="auto-schedule-divisions-label"
+                multiple
+                label="Limit to divisions"
+                value={selectedDivisions}
+                renderValue={(selected) => Array.isArray(selected) && selected.length > 0 ? selected.join(' + ') : 'All mapped groups'}
+                onChange={(event) => {
+                  const value = event.target.value
+                  const selected = divisionSelection(Array.isArray(value) ? value : String(value).split(','))
+                  setCohort('division', divisionSelectionValue(selected))
+                }}
+              >
+                {availableDivisions.map((item) => (
+                  <MenuItem key={item} value={item}>
+                    <Checkbox size="small" checked={selectedDivisions.includes(item)} />
+                    <ListItemText primary={`Division ${item}`} />
+                  </MenuItem>
+                ))}
+              </Select>
+              <FormHelperText>Blank includes all mapped groups; merges are defined on each curriculum mapping.</FormHelperText>
+            </FormControl>
           </Grid>
           <Grid size={{ xs: 4, md: 2 }}>
             <TextField fullWidth size="small" label="Section (opt.)" value={form.section} onChange={(e) => setCohort('section', e.target.value)} placeholder="A" />
@@ -339,6 +385,11 @@ export default function AutoScheduleDialog({ collegeId, open, onClose, onApplied
           <Grid size={{ xs: 3, md: 1.5 }}>
             <TextField fullWidth size="small" type="number" label="Faculty max/day" value={form.maxPerDay}
               onChange={(e) => set('maxPerDay', Number(e.target.value) || 4)} />
+          </Grid>
+          <Grid size={{ xs: 3, md: 1.5 }}>
+            <TextField fullWidth size="small" type="number" label="Faculty max/week" value={form.maxWeeklyPeriods}
+              onChange={(e) => set('maxWeeklyPeriods', Number(e.target.value) || 24)}
+              helperText="Default 24 periods" slotProps={{ htmlInput: { min: 1, max: 60 } }} />
           </Grid>
 
           {/* P3 — pattern + room pick + seed */}
@@ -414,11 +465,14 @@ export default function AutoScheduleDialog({ collegeId, open, onClose, onApplied
             <Typography variant="subtitle2" sx={{ mb: 0.5 }}>
               Courses this run {Object.keys(overrides).length > 0 ? `(${Object.keys(overrides).length} edited — clear edits by closing the dialog)` : ''}
             </Typography>
+            <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.5 }}>
+              Each row is one teaching group. A weekly-period override applies to every group from that curriculum mapping.
+            </Typography>
             <Table size="small">
               <TableHead>
                 <TableRow>
                   <TableCell padding="checkbox">In</TableCell>
-                  <TableCell>Course</TableCell>
+                  <TableCell>Course / teaching group</TableCell>
                   <TableCell>Faculty</TableCell>
                   <TableCell sx={{ width: 130 }}>Periods/week</TableCell>
                   <TableCell>Note</TableCell>
@@ -429,8 +483,9 @@ export default function AutoScheduleDialog({ collegeId, open, onClose, onApplied
                   const edit = overrides[row.mappingId] ?? {};
                   const included = edit.include ?? row.included;
                   const periods = edit.periods !== undefined ? edit.periods : row.periodsRequested;
+                  const group = teachingScopeLabel(row.division, row.section) || 'Whole batch';
                   return (
-                    <TableRow key={row.mappingId} hover>
+                    <TableRow key={row.demandKey} hover>
                       <TableCell padding="checkbox">
                         <Checkbox
                           size="small"
@@ -442,6 +497,9 @@ export default function AutoScheduleDialog({ collegeId, open, onClose, onApplied
                       </TableCell>
                       <TableCell>
                         <b>{row.courseCode}</b> {row.courseName}
+                        <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
+                          {group}
+                        </Typography>
                       </TableCell>
                       <TableCell>{row.facultyName}</TableCell>
                       <TableCell>
@@ -489,6 +547,29 @@ export default function AutoScheduleDialog({ collegeId, open, onClose, onApplied
               ))}
             </Stack>
 
+            {plan.cohortDailyCoverage.length > 0 && (
+              <Box sx={{ mb: 2 }}>
+                <Stack direction="row" spacing={1} sx={{ mb: 0.75, flexWrap: 'wrap', rowGap: 0.5 }}>
+                  <Typography variant="subtitle2">Student-group density · target 4–5 classes/day</Typography>
+                  <Chip size="small" variant="outlined" label={`${plan.summary.divisionsInTarget ?? 0}/${new Set(plan.cohortDailyCoverage.map((x) => x.division)).size} divisions on target all week`} />
+                </Stack>
+                {[...new Set(plan.cohortDailyCoverage.map((x) => x.division))].map((division) => (
+                  <Stack key={division} direction="row" spacing={0.75} sx={{ mb: 0.5, flexWrap: 'wrap', rowGap: 0.5 }}>
+                    <Chip size="small" variant="outlined" label={division === 'All' ? 'Whole batch' : `Division ${division}`} />
+                    {plan.cohortDailyCoverage.filter((x) => x.division === division).map((item) => (
+                      <Chip
+                        key={`${division}-${item.day}`}
+                        size="small"
+                        color={item.onTarget ? 'success' : item.classes > item.targetMax ? 'warning' : 'default'}
+                        variant={item.onTarget ? 'filled' : 'outlined'}
+                        label={`${dayHeader(item.day)} ${item.classes} class${item.classes === 1 ? '' : 'es'}${item.onTarget ? ' ✓' : ''}`}
+                      />
+                    ))}
+                  </Stack>
+                ))}
+              </Box>
+            )}
+
             {/* grid */}
             <Box sx={{ overflowX: 'auto', border: '1px solid', borderColor: 'divider', borderRadius: 1 }}>
               <table style={{ borderCollapse: 'collapse', width: '100%', fontSize: 12 }}>
@@ -512,17 +593,20 @@ export default function AutoScheduleDialog({ collegeId, open, onClose, onApplied
                           {cell.length === 0 ? (
                             <Typography variant="caption" color="text.disabled">—</Typography>
                           ) : (
-                            cell.map((x, i) => (
-                              <Box key={i} sx={{
-                                p: 0.5, mb: 0.5, borderRadius: 1, fontSize: 11, lineHeight: 1.2,
-                                bgcolor: x.type === 'lab' ? 'secondary.50' : 'primary.50',
-                                border: '1px solid',
-                                borderColor: x.type === 'lab' ? 'secondary.200' : 'primary.200',
-                              }}>
-                                <b>{x.subjectCode || x.subject}</b>
-                                <div>{x.facultyName.split(' ').slice(-1)[0]} · {x.room}{x.type === 'lab' ? ' · lab' : ''}</div>
-                              </Box>
-                            ))
+                            cell.map((x, i) => {
+                              const group = teachingScopeLabel(x.division, x.section)
+                              return (
+                                <Box key={i} sx={{
+                                  p: 0.5, mb: 0.5, borderRadius: 1, fontSize: 11, lineHeight: 1.2,
+                                  bgcolor: x.type === 'lab' ? 'secondary.50' : 'primary.50',
+                                  border: '1px solid',
+                                  borderColor: x.type === 'lab' ? 'secondary.200' : 'primary.200',
+                                }}>
+                                  <b>{x.subjectCode || x.subject}</b>
+                                  <div>{x.facultyName.split(' ').slice(-1)[0]} · {x.room}{group ? ` · ${group}` : ''}{x.type === 'lab' ? ' · lab' : ''}</div>
+                                </Box>
+                              )
+                            })
                           )}
                         </td>
                       ))}
@@ -538,12 +622,29 @@ export default function AutoScheduleDialog({ collegeId, open, onClose, onApplied
                 <Typography variant="subtitle2" sx={{ mb: 1 }}>Faculty weekly load</Typography>
                 {plan.facultyLoad.length === 0 && <Typography variant="caption" color="text.secondary">No faculty loaded.</Typography>}
                 {plan.facultyLoad.map((f) => (
-                  <Stack key={f.facultyId} direction="row" spacing={1} sx={{ alignItems: 'center', py: 0.25 }}>
-                    <Typography variant="body2" sx={{ flex: 1 }} noWrap>{f.facultyName}</Typography>
-                    <Chip size="small" variant="outlined" label={`existing ${f.existingWeekly}`} />
-                    <Chip size="small" color={f.overloaded ? 'error' : 'primary'}
-                      label={`${f.totalWeekly}/${f.capacity}${f.overloaded ? ' overload' : ''}`} />
-                  </Stack>
+                  <Box key={f.facultyId} sx={{ py: 0.75, borderBottom: '1px solid', borderColor: 'divider' }}>
+                    <Stack direction="row" spacing={1} sx={{ alignItems: 'center', py: 0.25 }}>
+                      <Typography variant="body2" sx={{ flex: 1 }} noWrap>{f.facultyName}</Typography>
+                      <Chip size="small" variant="outlined" label={`existing ${f.existingWeekly}`} />
+                      <Chip size="small" color={f.demandExceeded || f.overloaded ? 'error' : 'primary'}
+                        label={`${f.projectedWeekly}/${f.capacity} projected`} />
+                      <Chip size="small" variant="outlined" label={`${f.placedWeekly} placed`} />
+                    </Stack>
+                    {f.demandExceeded && (
+                      <Alert severity="warning" sx={{ mt: 0.5, py: 0.25 }}>
+                        Load arithmetic: {f.existingWeekly} existing + {f.requestedWeekly} requested = {f.projectedWeekly}/{f.capacity} periods/week.
+                        {f.mergeSuggestions.length > 0 && (
+                          <Box component="span" sx={{ display: 'block' }}>{f.mergeSuggestions.join(' · ')}</Box>
+                        )}
+                      </Alert>
+                    )}
+                    {f.demandBreakdown.map((line) => (
+                      <Typography key={`${f.facultyId}-${line.courseId}-${line.groups.join('|')}`} variant="caption" color="text.secondary" sx={{ display: 'block', pl: 1 }}>
+                        {line.subject}: {line.groupsServed} group{line.groupsServed === 1 ? '' : 's'} × {line.periodsPerGroup} = {line.periodsRequested} periods/week
+                        {line.groupsServed > 0 ? ` (${line.groups.join('; ')})` : ''}
+                      </Typography>
+                    ))}
+                  </Box>
                 ))}
               </Grid>
               {/* unplaced */}
@@ -552,11 +653,14 @@ export default function AutoScheduleDialog({ collegeId, open, onClose, onApplied
                 {plan.unplaced.length === 0 ? (
                   <Alert severity="success" icon={false} sx={{ py: 0.5 }}>Every requested period found a slot.</Alert>
                 ) : (
-                  plan.unplaced.map((u, i) => (
-                    <Alert key={i} severity="warning" sx={{ mb: 0.5, py: 0.5 }}>
-                      {u.subject}: placed {u.periodsPlaced}/{u.periodsRequested} — {u.reason}
-                    </Alert>
-                  ))
+                  plan.unplaced.map((u) => {
+                    const group = teachingScopeLabel(u.division, u.section) || 'Whole batch'
+                    return (
+                      <Alert key={`${u.mappingId}|${u.division}|${u.section}`} severity="warning" sx={{ mb: 0.5, py: 0.5 }}>
+                        {u.subject} · {group}: placed {u.periodsPlaced}/{u.periodsRequested} — {u.reason}
+                      </Alert>
+                    )
+                  })
                 )}
               </Grid>
             </Grid>
@@ -565,8 +669,7 @@ export default function AutoScheduleDialog({ collegeId, open, onClose, onApplied
 
         <Divider sx={{ mt: 2 }} />
         <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1 }}>
-          Hard constraints (cohort/faculty/room busy, daily cap, one span/day, lab contiguity) hold in every
-          pattern — only the preference order changes. Weekly 24-period UGC ceiling is flagged, never hidden.
+          Hard constraints (cohort/faculty/room busy, daily and weekly faculty caps, one meeting per subject/day, lab contiguity) hold in every pattern — only the preference order changes.
         </Typography>
       </DialogContent>
 
