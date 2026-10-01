@@ -39,13 +39,16 @@ test('operations: library/inventory, shared fines, no finance', () => {
   assert.equal(canAccessAdminPath('operations', '/admin/students'), false)
 })
 
-test('payroll: principal always; accounts only when the college allows it', () => {
+test('payroll: accounts manages it and principal retains approval access', () => {
   assert.equal(canAccessAdminPath('principal', '/admin/payroll'), true)
-  assert.equal(canAccessAdminPath('accounts', '/admin/payroll'), false)
-  assert.equal(canAccessAdminPath('accounts', '/admin/payroll', { payrollRoles: ['accounts'] }), true)
-  // a college cannot grant payroll to a role outside the grantable set
+  assert.equal(canAccessAdminPath('accounts', '/admin/payroll'), true)
+  // Legacy access documents cannot grant payroll to academic or operations roles.
   assert.equal(canAccessAdminPath('hod', '/admin/payroll', { payrollRoles: ['hod'] }), false)
   assert.equal(canAccessAdminPath('operations', '/admin/payroll', { payrollRoles: ['operations'] }), false)
+  assert.equal(roleHasPermission('accounts', 'payroll.manage'), true)
+  assert.equal(roleHasPermission('accounts', 'payroll.approve'), false)
+  assert.equal(roleHasPermission('principal', 'payroll.manage'), false)
+  assert.equal(roleHasPermission('principal', 'payroll.approve'), true)
 })
 
 test('principal oversees everything; superadmin bypasses', () => {

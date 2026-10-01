@@ -47,10 +47,10 @@ export function useFinanceRules() {
     void load()
   }, [load])
 
-  const save = useCallback(async (next: FinanceRulesDoc, nextBranding?: BrandingSettings) => {
+  const save = useCallback(async (next: FinanceRulesDoc, nextBranding?: BrandingSettings, preservePayroll = false) => {
     setSaving(true)
     try {
-      await saveFinanceRules(next)
+      await saveFinanceRules(next, undefined, { preservePayroll })
       setRules(next)
       if (nextBranding) {
         await saveBranding(nextBranding)

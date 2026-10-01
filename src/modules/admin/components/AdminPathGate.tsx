@@ -17,7 +17,7 @@ export function AdminPathGate({ children }: { children: React.ReactNode }) {
 
   if (!user) return <>{children}</>
   if (canAccessAdminPath(user.role, pathname, access)) return <>{children}</>
-  // Payroll visibility depends on the college setting: wait for it.
+  // Keep the legacy access-document wait in place for older permission settings.
   if (loading) {
     return <div className="flex h-screen items-center justify-center text-sm text-slate-500">Loading…</div>
   }

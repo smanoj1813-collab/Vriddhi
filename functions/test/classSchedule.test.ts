@@ -1476,6 +1476,7 @@ describe('ledger faculty ids (one topic, one row)', () => {
 
 import {
   isMovableSession,
+  isSessionAffectedByHoliday,
   nextDateForDay,
   planReschedule,
   MAX_RESCHEDULE_SESSIONS,
@@ -1537,10 +1538,23 @@ describe('isMovableSession', () => {
   it('refuses delivered history', () => {
     assert.equal(isMovableSession(session({ attendanceMarked: true }), from), false)
     assert.equal(isMovableSession(session({ attendanceCount: 12 }), from), false)
+    assert.equal(isMovableSession(session({ presentCount: 1 }), from), false)
     assert.equal(isMovableSession(session({ topicsCovered: ['Depreciation'] }), from), false)
     assert.equal(isMovableSession(session({ status: 'completed' }), from), false)
     assert.equal(isMovableSession(session({ status: 'cancelled' }), from), false)
     assert.equal(isMovableSession(session({ date: '2026-09-28' }), from), false)
+  })
+})
+
+describe('isSessionAffectedByHoliday', () => {
+  const from = '2026-10-01'
+  const holiday = { startDate: '2026-10-02', endDate: '2026-10-02' }
+
+  it('selects only unmarked future sessions on the holiday date', () => {
+    assert.equal(isSessionAffectedByHoliday(session({ date: '2026-10-02' }), holiday, from), true)
+    assert.equal(isSessionAffectedByHoliday(session({ date: '2026-10-03' }), holiday, from), false)
+    assert.equal(isSessionAffectedByHoliday(session({ date: '2026-10-02', attendanceMarked: true }), holiday, from), false)
+    assert.equal(isSessionAffectedByHoliday(session({ date: '2026-10-02', status: 'completed' }), holiday, from), false)
   })
 })
 

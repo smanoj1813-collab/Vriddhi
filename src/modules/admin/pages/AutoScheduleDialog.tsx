@@ -38,6 +38,8 @@ import {
   type AutoScheduleResponse,
   type PlacementStrategy,
   type RoomStrategy,
+  type FacultyDayPreference,
+  type TeachingGroupMode,
 } from '../api/autoScheduleApi';
 import type { DayOfWeek } from '../types/schedule';
 import { fetchDivisionsFromStudents } from '../api/scheduleApi';
@@ -53,9 +55,9 @@ interface CurriculumOption {
 const ALL_DAYS: DayOfWeek[] = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
 
 const STRATEGY_INFO: Record<PlacementStrategy, string> = {
-  uniform: 'Machine-stamped: every day identical, earliest periods first (pre-v2 behaviour).',
-  spread: 'Rotated days + early/late period dispersion — a varied grid, still deterministic.',
-  random: 'Seeded shuffle of days and periods — different look per seed, constraints unchanged.',
+  uniform: 'Deterministic placement using the selected faculty-day preference and earliest legal periods.',
+  spread: 'Rotates tie-breaks and early/late starts; the chosen faculty-day preference still applies.',
+  random: 'Seeded variation within equally preferred choices; hard constraints are unchanged.',
 };
 
 const ROOM_INFO: Record<RoomStrategy, string> = {
@@ -90,6 +92,9 @@ interface FormState {
   labSpan: number;
   rooms: string;
   maxPerDay: number;
+  targetClassesPerDay: number;
+  facultyDayPreference: FacultyDayPreference;
+  teachingGroupMode: TeachingGroupMode;
   maxWeeklyPeriods: number;
   dateFrom: string;
   dateTo: string;
@@ -118,6 +123,9 @@ const initialForm: FormState = {
   labSpan: 2,
   rooms: 'Room 1, Room 2, Room 3',
   maxPerDay: 4,
+  targetClassesPerDay: 3,
+  facultyDayPreference: 'compact',
+  teachingGroupMode: 'mapping',
   maxWeeklyPeriods: 24,
   dateFrom: '',
   dateTo: '',
@@ -194,8 +202,8 @@ export default function AutoScheduleDialog({ collegeId, open, onClose, onApplied
   };
 
   const buildRequest = (dryRun: boolean): AutoScheduleRequest => {
-    const overrideRows = Object.entries(overrides).map(([mappingId, edit]) => ({
-      mappingId,
+    const overrideRows = Object.entries(overrides).map(([demandKey, edit]) => ({
+      demandKey,
       ...(edit.include === undefined ? {} : { include: edit.include }),
       ...(edit.periods === undefined || edit.periods === null ? {} : { weeklyPeriods: edit.periods }),
     }));
@@ -215,6 +223,9 @@ export default function AutoScheduleDialog({ collegeId, open, onClose, onApplied
       },
       rooms: form.rooms.split(',').map((r) => r.trim()).filter(Boolean),
       maxPeriodsPerDayPerFaculty: form.maxPerDay,
+      targetFacultyClassesPerDay: form.targetClassesPerDay,
+      facultyDayPreference: form.facultyDayPreference,
+      teachingGroupMode: form.teachingGroupMode,
       maxWeeklyPeriodsPerFaculty: form.maxWeeklyPeriods,
       dryRun,
       ...(form.dateFrom
@@ -382,14 +393,51 @@ export default function AutoScheduleDialog({ collegeId, open, onClose, onApplied
             <TextField fullWidth size="small" type="number" label="Lab span" value={form.labSpan}
               onChange={(e) => set('labSpan', Number(e.target.value) || 2)} />
           </Grid>
-          <Grid size={{ xs: 3, md: 1.5 }}>
-            <TextField fullWidth size="small" type="number" label="Faculty max/day" value={form.maxPerDay}
-              onChange={(e) => set('maxPerDay', Number(e.target.value) || 4)} />
+          <Grid size={{ xs: 6, md: 2 }}>
+            <TextField fullWidth size="small" type="number" label="Faculty max periods/day" value={form.maxPerDay}
+              onChange={(e) => {
+                const maxPerDay = Number(e.target.value) || 4;
+                setForm((current) => ({ ...current, maxPerDay, targetClassesPerDay: Math.min(current.targetClassesPerDay, maxPerDay) }));
+                setPreview(null);
+                setAppliedInfo('');
+              }}
+              helperText="Hard limit" slotProps={{ htmlInput: { min: 1, max: 10 } }} />
           </Grid>
-          <Grid size={{ xs: 3, md: 1.5 }}>
+          <Grid size={{ xs: 6, md: 2 }}>
+            <TextField fullWidth size="small" type="number" label="Target classes/day" value={form.targetClassesPerDay}
+              onChange={(e) => set('targetClassesPerDay', Math.max(1, Math.min(form.maxPerDay, 10, Number(e.target.value) || 3)))}
+              helperText="Soft target (default 3)" slotProps={{ htmlInput: { min: 1, max: Math.min(10, form.maxPerDay) } }} />
+          </Grid>
+          <Grid size={{ xs: 6, md: 2 }}>
             <TextField fullWidth size="small" type="number" label="Faculty max/week" value={form.maxWeeklyPeriods}
               onChange={(e) => set('maxWeeklyPeriods', Number(e.target.value) || 24)}
               helperText="Default 24 periods" slotProps={{ htmlInput: { min: 1, max: 60 } }} />
+          </Grid>
+          <Grid size={{ xs: 12, md: 3 }}>
+            <Typography variant="caption" color="text.secondary">Faculty day preference</Typography>
+            <ToggleButtonGroup
+              exclusive size="small" fullWidth value={form.facultyDayPreference}
+              onChange={(_, value: FacultyDayPreference | null) => value && set('facultyDayPreference', value)}
+            >
+              <ToggleButton value="compact">Compact days</ToggleButton>
+              <ToggleButton value="balanced">Student balance</ToggleButton>
+            </ToggleButtonGroup>
+            <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
+              Compact fills toward your target, allowing one extra meeting when it fits before opening another day; in Separate groups mode, it also prefers same-day A/B/C rotation when capacity allows.
+            </Typography>
+          </Grid>
+          <Grid size={{ xs: 12, md: 3 }}>
+            <Typography variant="caption" color="text.secondary">Mapped multi-division classes</Typography>
+            <ToggleButtonGroup
+              exclusive size="small" fullWidth value={form.teachingGroupMode}
+              onChange={(_, value: TeachingGroupMode | null) => value && set('teachingGroupMode', value)}
+            >
+              <ToggleButton value="mapping">Respect mapping</ToggleButton>
+              <ToggleButton value="separate">Separate groups</ToggleButton>
+            </ToggleButtonGroup>
+            <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
+              Separate turns A,B,C into distinct classes; mapping mode keeps them together.
+            </Typography>
           </Grid>
 
           {/* P3 — pattern + room pick + seed */}
@@ -480,7 +528,7 @@ export default function AutoScheduleDialog({ collegeId, open, onClose, onApplied
               </TableHead>
               <TableBody>
                 {demand.map((row) => {
-                  const edit = overrides[row.mappingId] ?? {};
+                  const edit = overrides[row.demandKey] ?? {};
                   const included = edit.include ?? row.included;
                   const periods = edit.periods !== undefined ? edit.periods : row.periodsRequested;
                   const group = teachingScopeLabel(row.division, row.section) || 'Whole batch';
@@ -491,7 +539,7 @@ export default function AutoScheduleDialog({ collegeId, open, onClose, onApplied
                           size="small"
                           checked={included}
                           onChange={(e) =>
-                            setOverrides((o) => ({ ...o, [row.mappingId]: { ...o[row.mappingId], include: e.target.checked } }))
+                            setOverrides((o) => ({ ...o, [row.demandKey]: { ...o[row.demandKey], include: e.target.checked } }))
                           }
                         />
                       </TableCell>
@@ -507,7 +555,7 @@ export default function AutoScheduleDialog({ collegeId, open, onClose, onApplied
                           size="small" type="number" value={periods} disabled={!included}
                           onChange={(e) => {
                             const v = e.target.value === '' ? null : Number(e.target.value);
-                            setOverrides((o) => ({ ...o, [row.mappingId]: { ...o[row.mappingId], periods: v } }));
+                            setOverrides((o) => ({ ...o, [row.demandKey]: { ...o[row.demandKey], periods: v } }));
                           }}
                           sx={{ width: 100 }}
                           slotProps={{ htmlInput: { min: 0, max: 40 } }}
@@ -630,6 +678,20 @@ export default function AutoScheduleDialog({ collegeId, open, onClose, onApplied
                         label={`${f.projectedWeekly}/${f.capacity} projected`} />
                       <Chip size="small" variant="outlined" label={`${f.placedWeekly} placed`} />
                     </Stack>
+                    {plan.facultyDailyLoad.some((row) => row.facultyId === f.facultyId) && (
+                      <Stack direction="row" spacing={0.5} sx={{ mt: 0.5, flexWrap: 'wrap', rowGap: 0.5, pl: 1 }}>
+                        <Typography variant="caption" color="text.secondary" sx={{ alignSelf: 'center' }}>Daily:</Typography>
+                        {plan.facultyDailyLoad.filter((row) => row.facultyId === f.facultyId).map((row) => (
+                          <Chip
+                            key={`${f.facultyId}-${row.day}`}
+                            size="small"
+                            color={row.targetMet ? 'success' : 'warning'}
+                            variant={row.targetMet ? 'filled' : 'outlined'}
+                            label={`${dayHeader(row.day)} ${row.classes} class${row.classes === 1 ? '' : 'es'} · ${row.periods}p`}
+                          />
+                        ))}
+                      </Stack>
+                    )}
                     {f.demandExceeded && (
                       <Alert severity="warning" sx={{ mt: 0.5, py: 0.25 }}>
                         Load arithmetic: {f.existingWeekly} existing + {f.requestedWeekly} requested = {f.projectedWeekly}/{f.capacity} periods/week.
@@ -669,7 +731,7 @@ export default function AutoScheduleDialog({ collegeId, open, onClose, onApplied
 
         <Divider sx={{ mt: 2 }} />
         <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1 }}>
-          Hard constraints (cohort/faculty/room busy, daily and weekly faculty caps, one meeting per subject/day, lab contiguity) hold in every pattern — only the preference order changes.
+          Daily faculty target is a preference, not a requirement; max periods/day and max periods/week remain hard limits. Faculty counts are meetings (a multi-period lab is one class) plus occupied periods. Cohort/faculty/room clashes and one meeting per subject/group/day remain hard constraints.
         </Typography>
       </DialogContent>
 

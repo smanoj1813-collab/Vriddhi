@@ -69,6 +69,8 @@ export interface GenerateSessionsResult {
   skippedHolidays?: { date: string; reason: string }[]
   /** P4: occurrences suppressed by suspendsClasses calendar events. */
   skippedHolidayCount?: number
+  /** Future unmarked sessions cancelled when holiday events are reconciled. */
+  cancelledHolidaySessions?: number
   /** P1: occurrences outside a slot's effectiveFrom/effectiveTo window. */
   skippedOutsideWindow?: number
 }

@@ -1,9 +1,12 @@
 // src/pages/AdminClassSchedule.tsx
 import React, { useState, useMemo, useCallback, useEffect } from 'react'
-import { useLocation } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
 import AutoScheduleDialog from './AutoScheduleDialog'
 import HolidayBanner from '@/shared/components/HolidayBanner'
+import { useAcademicCalendar } from '@/shared/hooks/useAcademicCalendar'
+import { KARNATAKA_PUBLIC_HOLIDAYS } from '@/shared/data/karnatakaPublicHolidays'
+import { eventCoversDate } from '@/shared/types/calendarEvent'
 import MergedDivisionChip from '@/shared/components/MergedDivisionChip'
 
 import {
@@ -145,6 +148,8 @@ const AdminClassSchedule: React.FC = () => {
   const { user } = useAuth()
   const collegeId = user?.collegeId || localStorage.getItem('vriddhi_college_id') || ''
   const location = useLocation()
+  const navigate = useNavigate()
+  const calendarQuery = useAcademicCalendar(collegeId || undefined)
 
   // ─── Prefill from AdminCurriculum "Schedule Class" ────────────────────
   // AdminCurriculum navigates here with state.prefill for the selected mapping.
@@ -246,6 +251,15 @@ const AdminClassSchedule: React.FC = () => {
   const [generateConflicts, setGenerateConflicts] = useState<SessionConflict[]>([])
   const [skipConflicting, setSkipConflicting] = useState(false)
   const [cancellingId, setCancellingId] = useState<string | null>(null)
+  const missingKnownHolidays = useMemo(() => {
+    const { from, to } = generateWindow
+    if (!isValidDateKey(from) || !isValidDateKey(to) || from > to || !calendarQuery.data) return []
+    return KARNATAKA_PUBLIC_HOLIDAYS
+      .filter((holiday) => holiday.date >= from && holiday.date <= to)
+      // A suspending holiday blocks a date; an explicit non-suspending event
+      // means the college reviewed the date and intentionally teaches.
+      .filter((holiday) => !(calendarQuery.data ?? []).some((event) => eventCoversDate(event, holiday.date)))
+  }, [generateWindow, calendarQuery.data])
 
   // ─── Apply prefill from AdminCurriculum "Schedule Class" ──────────────
   useEffect(() => {
@@ -463,6 +477,18 @@ const AdminClassSchedule: React.FC = () => {
       setSnackbar({ open: true, message: 'The start date must be on or before the end date', severity: 'error' })
       return
     }
+    if (calendarQuery.isError) {
+      setSnackbar({ open: true, message: 'Could not verify the academic calendar. Restore calendar access before generating sessions.', severity: 'error' })
+      return
+    }
+    if (calendarQuery.isLoading || calendarQuery.data === undefined) {
+      setSnackbar({ open: true, message: 'Wait for the academic calendar to load before generating sessions.', severity: 'warning' })
+      return
+    }
+    if (missingKnownHolidays.length > 0) {
+      setSnackbar({ open: true, message: 'Add or import the known holidays before generating sessions. If the college teaches on one, add an explicit non-suspending calendar event.', severity: 'warning' })
+      return
+    }
     setGenerating(true)
     setGenerateResult(null)
     setGenerateConflicts([])
@@ -471,20 +497,26 @@ const AdminClassSchedule: React.FC = () => {
       setGenerateResult(result)
       setGenerateConflicts(result.conflicts || [])
       const skipped = result.skippedConflicts || 0
+      const skippedHolidays = result.skippedHolidayCount || 0
+      const cancelledHolidays = result.cancelledHolidaySessions || 0
       const linked = result.assignmentsLinked || 0
       const linkedNote =
         linked > 0
           ? ` ${linked} attached assignment draft(s) were created — the faculty publishes them from Assignments.`
           : ''
+      const holidayNote = [
+        skippedHolidays > 0 ? ` ${skippedHolidays} occurrence(s) were excluded by the academic calendar.` : '',
+        cancelledHolidays > 0 ? ` ${cancelledHolidays} already-generated future session(s) were cancelled for holidays.` : '',
+      ].join('')
       setSnackbar({
         open: true,
-        severity: skipped > 0 ? 'warning' : 'success',
+        severity: skipped > 0 || cancelledHolidays > 0 ? 'warning' : 'success',
         message:
-          result.created === 0 && skipped === 0
+          result.created === 0 && skipped === 0 && skippedHolidays === 0 && cancelledHolidays === 0
             ? `Already up to date — ${result.skippedExisting} session(s) existed for ${result.slotsScanned} slot(s), nothing new created.${linkedNote}`
             : skipped > 0
-              ? `Created ${result.created} session(s) and skipped ${skipped} that would double-book a faculty member or a room.${linkedNote}`
-              : `Created ${result.created} class session(s) from ${result.slotsScanned} weekly slot(s).${linkedNote}`,
+              ? `Created ${result.created} session(s) and skipped ${skipped} that would double-book a faculty member or a room.${holidayNote}${linkedNote}`
+              : `Created ${result.created} class session(s) from ${result.slotsScanned} weekly slot(s).${holidayNote}${linkedNote}`,
       })
     } catch (error) {
       // S2.5: the server refuses to materialise a timetable that double-books.
@@ -1381,7 +1413,9 @@ const AdminClassSchedule: React.FC = () => {
           <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
             Turns the active weekly timetable into real class sessions that faculty can mark
             attendance and topic coverage against. Running it twice over the same range is safe —
-            each slot-day maps to one session, so nothing is duplicated.
+            each slot-day maps to one session, so nothing is duplicated. Suspending
+            holidays in Academic Calendar are excluded; future unmarked sessions already
+            created for those dates are cancelled. Import the college's public holidays first.
           </Typography>
           <Stack spacing={2} sx={{ mt: 1 }}>
             <TextField
@@ -1401,6 +1435,20 @@ const AdminClassSchedule: React.FC = () => {
               fullWidth
             />
           </Stack>
+          {calendarQuery.isError && (
+            <Alert severity="error" sx={{ mt: 2 }}>
+              Could not verify the college calendar in this view. Session generation only skips holidays that are stored in Academic Calendar.
+              <Button size="small" sx={{ ml: 1 }} onClick={() => navigate('/admin/academic-calendar')}>Open calendar</Button>
+            </Alert>
+          )}
+          {missingKnownHolidays.length > 0 && (
+            <Alert severity="warning" sx={{ mt: 2 }}>
+              <b>Known Karnataka holidays are missing from this college calendar:</b>{' '}
+              {missingKnownHolidays.map((holiday) => `${holiday.title} (${holiday.date})`).join(' · ')}.
+              Add or import these dates before generating sessions. If the college teaches on one, add an explicit non-suspending calendar event to record that decision.
+              <Button size="small" sx={{ ml: 1 }} onClick={() => navigate('/admin/academic-calendar')}>Review/import</Button>
+            </Alert>
+          )}
           <FormControlLabel
             sx={{ mt: 1 }}
             control={
@@ -1418,10 +1466,15 @@ const AdminClassSchedule: React.FC = () => {
           </Typography>
 
           {generateResult && (
-            <Alert severity={(generateResult.skippedConflicts || 0) > 0 ? 'warning' : 'success'} sx={{ mt: 2 }}>
+            <Alert
+              severity={(generateResult.skippedConflicts || 0) > 0 || (generateResult.cancelledHolidaySessions || 0) > 0 ? 'warning' : 'success'}
+              sx={{ mt: 2 }}
+            >
               {generateResult.created} created · {generateResult.skippedExisting} already existed
-              {(generateResult.skippedConflicts || 0) > 0 && ` · ${generateResult.skippedConflicts} skipped (clash)`} ·{' '}
-              {generateResult.slotsScanned} active slot(s) × {generateResult.scheduledOccurrences} occurrence(s)
+              {(generateResult.skippedConflicts || 0) > 0 && ` · ${generateResult.skippedConflicts} skipped (clash)`}
+              {(generateResult.skippedHolidayCount || 0) > 0 && ` · ${generateResult.skippedHolidayCount} occurrence(s) excluded by holiday calendar`}
+              {(generateResult.cancelledHolidaySessions || 0) > 0 && ` · ${generateResult.cancelledHolidaySessions} existing session(s) cancelled`}
+              {' · '}{generateResult.slotsScanned} active slot(s) × {generateResult.scheduledOccurrences} occurrence(s)
               in range.
               {(generateResult.assignmentsLinked || 0) > 0 && (
                 <Typography variant="caption" component="div" sx={{ mt: 0.5 }}>
@@ -1456,7 +1509,11 @@ const AdminClassSchedule: React.FC = () => {
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setGenerateOpen(false)}>Close</Button>
-          <Button variant="contained" onClick={handleGenerate} disabled={generating}>
+          <Button
+            variant="contained"
+            onClick={handleGenerate}
+            disabled={generating || calendarQuery.isLoading || calendarQuery.isError || missingKnownHolidays.length > 0}
+          >
             {generating ? 'Generating...' : generateResult ? 'Generate again' : 'Generate'}
           </Button>
         </DialogActions>

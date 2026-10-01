@@ -119,6 +119,7 @@ export default function AcademicCalendar() {
   const [editor, setEditor] = useState<EditorState | null>(null);
   const [error, setError] = useState('');
   const [info, setInfo] = useState('');
+  const [warning, setWarning] = useState('');
   const [importYear, setImportYear] = useState(karnatakaHolidayYears()[0]);
   const [confirmDelete, setConfirmDelete] = useState<CalendarEvent | null>(null);
 
@@ -174,12 +175,10 @@ export default function AcademicCalendar() {
     onSuccess: (res) => {
       setEditor(null);
       setError('');
+      setWarning(res.warnings.join('; '));
+      const cancelled = res.cancelledSessions || 0;
       setInfo(
-        res.warnings.length > 0
-          ? `Saved — check overlaps: ${res.warnings.join('; ')}`
-          : res.updated
-            ? 'Event updated'
-            : 'Event created',
+        `${res.updated ? 'Event updated' : 'Event created'}${cancelled > 0 ? ` · cancelled ${cancelled} unmarked future class session(s)` : ''}`,
       );
       queryClient.invalidateQueries({ queryKey: ['academicCalendar'] });
     },
@@ -190,6 +189,7 @@ export default function AcademicCalendar() {
     mutationFn: (id: string) => deleteCalendarEvent(id),
     onSuccess: () => {
       setConfirmDelete(null);
+      setWarning('');
       setInfo('Event deleted');
       queryClient.invalidateQueries({ queryKey: ['academicCalendar'] });
     },
@@ -199,7 +199,12 @@ export default function AcademicCalendar() {
   const importMutation = useMutation({
     mutationFn: (year: number) => importKarnatakaHolidays(year),
     onSuccess: (res) => {
-      setInfo(`Imported ${res.created} Karnataka public holidays for ${importYear} — verify tentative (lunar) dates`);
+      const parts = [`Imported ${res.created} new Karnataka public holiday(s) for ${importYear}`];
+      if (res.alreadyPresent > 0) parts.push(`${res.alreadyPresent} already present`);
+      if (res.cancelledSessions > 0) parts.push(`${res.cancelledSessions} future class session(s) cancelled`);
+      parts.push('verify tentative (lunar) dates');
+      setInfo(parts.join(' · '));
+      setWarning(res.warnings.join('; '));
       queryClient.invalidateQueries({ queryKey: ['academicCalendar'] });
     },
     onError: (e) => setError(e instanceof Error ? e.message : 'Import failed'),
@@ -235,7 +240,13 @@ export default function AcademicCalendar() {
         </Button>
       </Stack>
 
+      {eventsQuery.isError && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          Could not read this college's academic calendar. Holiday status cannot be verified until access or connectivity is restored.
+        </Alert>
+      )}
       {error && <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError('')}>{error}</Alert>}
+      {warning && <Alert severity="warning" sx={{ mb: 2 }} onClose={() => setWarning('')}>{warning}</Alert>}
       {info && <Alert severity="success" sx={{ mb: 2 }} onClose={() => setInfo('')}>{info}</Alert>}
 
       <Stack direction="row" sx={{ mb: 1, alignItems: 'center', gap: 1 }}>

@@ -30,7 +30,14 @@
 
 import * as admin from 'firebase-admin'
 import { HttpsError, onCall } from 'firebase-functions/v2/https'
-import { isValidDateKey, daysBetween, dateKeysInRange, resolveSchedulingStaff } from './classSchedule'
+import * as logger from 'firebase-functions/logger'
+import {
+  isValidDateKey,
+  daysBetween,
+  dateKeysInRange,
+  resolveSchedulingStaff,
+  cancelScheduledSessionsForHolidayRange,
+} from './classSchedule'
 import type { DayOfWeek } from './classSchedule'
 
 // ═════════════════════════════════════════════════════════════════════════════
@@ -367,13 +374,34 @@ export const saveCalendarEvent = onCall(REGION, async (request) => {
     { merge: true },
   )
 
+  const warnings = overlaps.map((e) => `Overlaps “${e.title}” (${e.startDate} → ${e.endDate})`)
+  let cancelledSessions = 0
+  if (event.suspendsClasses) {
+    try {
+      cancelledSessions = await cancelScheduledSessionsForHolidayRange(db, {
+        collegeId,
+        startDate: event.startDate,
+        endDate: event.endDate,
+        title: event.title,
+        actorUid: uid,
+      })
+    } catch (error) {
+      // The calendar save already committed. Surface reconciliation failure
+      // instead of making the caller believe the event itself was not saved.
+      logger.error('[calendar] holiday session reconciliation failed', {
+        collegeId,
+        eventId: ref.id,
+        error,
+      })
+      warnings.push('Calendar event saved, but existing future sessions could not all be reconciled. Save again or regenerate the affected date range.')
+    }
+  }
+
   return {
     id: ref.id,
     updated: isUpdate,
-    warnings:
-      overlaps.length > 0
-        ? overlaps.map((e) => `Overlaps “${e.title}” (${e.startDate} → ${e.endDate})`)
-        : [],
+    cancelledSessions,
+    warnings,
   }
 })
 

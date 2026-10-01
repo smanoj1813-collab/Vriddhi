@@ -4,9 +4,8 @@ import { DEFAULT_ACCESS_SETTINGS, type AccessSettings } from '@/modules/auth/per
 import { fetchAccessSettings } from '../api/accessApi'
 
 /**
- * The college's access choices (who besides the principal sees payroll).
- * Only roles whose menu depends on it fetch the doc; everyone else gets the
- * default immediately. Never throws — a failed read means "defaults".
+ * Legacy access document loader. `payrollRoles` is retained for compatibility
+ * but no longer controls the accounts/principal payroll workflow. Never throws.
  */
 export function useAccessSettings(): { access: AccessSettings; loading: boolean } {
   const { user } = useAuth()

@@ -21,8 +21,17 @@ interface Props {
 }
 
 export default function HolidayBanner({ date, collegeId }: Props) {
-  const holiday = useHolidayForDate(date, collegeId);
-  if (!date || !holiday) return null;
+  const { holiday, isError } = useHolidayForDate(date, collegeId);
+  if (!date) return null;
+  if (isError) {
+    return (
+      <Alert severity="error" icon={<EventBusy />} sx={{ mb: 2 }}>
+        <AlertTitle>Calendar could not be checked</AlertTitle>
+        Holiday status for {fmt(date)} is unavailable. Refresh or contact an administrator before relying on this timetable.
+      </Alert>
+    );
+  }
+  if (!holiday) return null;
   return (
     <Alert severity="warning" icon={<EventBusy />} sx={{ mb: 2 }}>
       <AlertTitle>Holiday — no classes</AlertTitle>

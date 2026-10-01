@@ -40,6 +40,7 @@ export default function AIStudyCompanionModal({
   const [error, setError] = useState<string | null>(null);
   const [source, setSource] = useState<'cache' | 'generated' | null>(null);
   const [servedVersion, setServedVersion] = useState<number | null>(null);
+  const [cacheUnavailable, setCacheUnavailable] = useState(false);
   const [cooldownNote, setCooldownNote] = useState<string | null>(null);
   const [waitingNote, setWaitingNote] = useState<string | null>(null);
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
@@ -48,6 +49,7 @@ export default function AIStudyCompanionModal({
     if (!context.subject || !context.topic) return;
     setLoading(true);
     setError(null);
+    setCacheUnavailable(false);
     setCooldownNote(null);
     setWaitingNote(null);
 
@@ -73,16 +75,22 @@ export default function AIStudyCompanionModal({
       setServedVersion(typeof res.servedVersion === 'number' ? res.servedVersion : null);
     } catch (err: any) {
       const serverBody = (err as { body?: unknown })?.body as Record<string, unknown> | undefined;
-      if (err?.status === 429 && serverBody?.regenerateAvailableAt) {
+      if (serverBody?.code === 'STUDY_PACK_NOT_CACHED') {
+        setCacheUnavailable(true);
+        setError(
+          typeof serverBody.error === 'string'
+            ? serverBody.error
+            : 'No cached summary is available. Please use the current study materials or ask your faculty.'
+        );
+      } else if (err?.status === 429 && serverBody?.regenerateAvailableAt) {
         // Per-key cooldown (staff refresh): the pack on screen is still
         // valid — keep it and say why the refresh did not happen.
         setCooldownNote(err?.message || 'This pack was generated very recently. Try again later.');
         setTimeout(() => setCooldownNote(null), 8000);
       } else {
-        // Daily caps / exam freeze / real failures surface as hard errors
-        // with the server's own reason text.
+        // Daily caps / exam freeze / real failures surface with the server's reason.
         console.error('[AIStudyCompanion] Load failed:', err);
-        setError(err?.message || 'Could not load AI study material. Please try again.');
+        setError(err?.message || 'Could not load the cached AI study material. Please try again.');
       }
     } finally {
       setLoading(false);
@@ -98,6 +106,7 @@ export default function AIStudyCompanionModal({
       setError(null);
       setSource(null);
       setServedVersion(null);
+      setCacheUnavailable(false);
       setCooldownNote(null);
       setWaitingNote(null);
     }
@@ -308,16 +317,22 @@ export default function AIStudyCompanionModal({
             <div className="py-16 text-center space-y-3">
               <Loader2 className="w-8 h-8 text-teal-500 animate-spin mx-auto" />
               <p className="text-xs font-bold text-slate-800 dark:text-slate-200">
-                Crafting Structured Study Pack for {context.topic}...
+                Checking for a cached summary of {context.topic}...
               </p>
               <p className="text-[11px] text-slate-500">
-                {waitingNote || 'Analyzing university syllabus requirements and generating exam-focused summaries'}
+                {waitingNote || (canRegenerate
+                  ? 'Loading the shared pack or processing a platform content update.'
+                  : 'Only previously saved study packs are shown; no new AI generation will be started.')}
               </p>
             </div>
           )}
 
           {error && !loading && (
-            <div className="p-4 rounded-2xl bg-rose-50 dark:bg-rose-950/20 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-400 text-xs flex items-center gap-3">
+            <div className={`p-4 rounded-2xl border text-xs flex items-center gap-3 ${
+              cacheUnavailable
+                ? 'bg-amber-50 dark:bg-amber-950/20 border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-300'
+                : 'bg-rose-50 dark:bg-rose-950/20 border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-400'
+            }`}>
               <AlertCircle className="w-5 h-5 shrink-0" />
               <span>{error}</span>
             </div>
@@ -454,8 +469,7 @@ export default function AIStudyCompanionModal({
         </div>
 
         {/* Footer */}
-        <div className="p-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 flex items-center justify-between text-xs text-slate-500">
-          <span>Vriddhi Academic AI • Cached for 100% Institution Free Access</span>
+        <div className="p-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 flex items-center justify-end">
           <button
             onClick={onClose}
             className="px-4 py-2 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-bold transition-all text-xs"

@@ -258,15 +258,28 @@ export function computePayslip(input: PayslipInput, settings: PayrollSettings): 
 }
 
 // ── Payslip lifecycle ───────────────────────────────────
-export type PayslipStatus = 'draft' | 'approved' | 'paid' | 'cancelled'
+export type PayslipStatus = 'draft' | 'pending_approval' | 'approved' | 'paid' | 'cancelled'
+export type PayrollActorRole = 'accounts' | 'principal' | 'superadmin'
 
-export function canTransitionPayslip(from: PayslipStatus, to: PayslipStatus, requireApproval: boolean): boolean {
+/** Role-aware monthly payroll workflow. Firestore rules enforce the same transitions. */
+export function canTransitionPayslip(from: PayslipStatus, to: PayslipStatus, actor: PayrollActorRole): boolean {
   if (from === to) return false
+
+  // Superadmins can perform both sides of the workflow, but do not bypass the
+  // lifecycle itself: approval still follows submission, and payment follows approval.
+  if (actor === 'superadmin' && from === 'pending_approval' && to === 'approved') return true
+
+  if (actor === 'principal' || (actor === 'superadmin' && from === 'pending_approval' && to === 'draft')) {
+    return from === 'pending_approval' && (to === 'approved' || to === 'draft')
+  }
+
   switch (from) {
     case 'draft':
-      return to === 'approved' || to === 'cancelled' || (to === 'paid' && !requireApproval)
+      return to === 'pending_approval' || to === 'cancelled'
+    case 'pending_approval':
+      return to === 'draft'
     case 'approved':
-      return to === 'paid' || to === 'draft' || to === 'cancelled'
+      return to === 'paid'
     case 'cancelled':
       return to === 'draft'
     case 'paid':

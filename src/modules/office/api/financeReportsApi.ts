@@ -50,7 +50,7 @@ export interface DaybookOptions {
   includeFees: boolean
   includeFines: boolean
   includeVendors: boolean
-  /** payroll only when the viewer is allowed to see it */
+  /** payroll for accounts and principal; Firestore also enforces the role split */
   includePayroll: boolean
   onProgress?: (msg: string) => void
 }
@@ -125,7 +125,7 @@ export async function buildDaybook(o: DaybookOptions): Promise<{ entries: Dayboo
       (async () => {
         for (const month of monthsBetween(o.from, o.to)) {
           try {
-            const [slips, guest] = await Promise.all([fetchPayslips(month), fetchGuestBills(month)])
+            const [slips, guest] = await Promise.all([fetchPayslips(month, false), fetchGuestBills(month)])
             for (const s of slips) {
               if (s.status !== 'paid' || !inRange(s.paidOn, o.from, o.to)) continue
               entries.push({ date: s.paidOn!.slice(0, 10), kind: 'salary_payment', ref: `SAL-${month}-${s.name.slice(0, 12)}`, party: s.name, narration: `Salary ${month} — ${s.name}${s.paymentRef ? ` ref ${s.paymentRef}` : ''}`, amount: s.net, mode: 'bank' })

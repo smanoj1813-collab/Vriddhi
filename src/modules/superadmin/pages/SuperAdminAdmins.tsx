@@ -525,7 +525,7 @@ const SuperAdminAdmins: React.FC = () => {
                     <option value="hod">HOD</option>
                     <option value="mentor">Mentor</option>
                     <optgroup label="College office teams">
-                      <option value="accounts">Accounts Team (fees, payments, bills)</option>
+                      <option value="accounts">Accounts Team (fees, payments, payroll)</option>
                       <option value="operations">Operations Team (library, inventory)</option>
                     </optgroup>
                   </select>

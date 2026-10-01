@@ -25,6 +25,7 @@
 import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
 import {
+  canGenerateStudyPackOnCacheMiss,
   decideGenerationLock,
   decidePinMoves,
   decideStudyServeTarget,
@@ -33,6 +34,23 @@ import {
   nextStudyVersion,
   studyVersionDocId,
 } from '../src/routes/ai-chat.ts'
+
+describe('canGenerateStudyPackOnCacheMiss', () => {
+  it('keeps cold generation limited to the platform superadmin by default', () => {
+    assert.equal(canGenerateStudyPackOnCacheMiss('superadmin', false), true)
+    assert.equal(canGenerateStudyPackOnCacheMiss('student', false), false)
+    assert.equal(canGenerateStudyPackOnCacheMiss('parent', false), false)
+    assert.equal(canGenerateStudyPackOnCacheMiss('faculty', false), false)
+    assert.equal(canGenerateStudyPackOnCacheMiss('admin', false), false)
+  })
+
+  it('allows student and parent cold generation only when the rollout flag is enabled', () => {
+    assert.equal(canGenerateStudyPackOnCacheMiss('student', true), true)
+    assert.equal(canGenerateStudyPackOnCacheMiss('parent', true), true)
+    assert.equal(canGenerateStudyPackOnCacheMiss('faculty', true), false)
+    assert.equal(canGenerateStudyPackOnCacheMiss('superadmin', false), true)
+  })
+})
 
 describe('nextStudyVersion', () => {
   it('starts numbering at 1 for a brand-new key', () => {

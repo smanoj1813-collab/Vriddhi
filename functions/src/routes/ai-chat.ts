@@ -65,22 +65,17 @@ interface ChatMessage {
  *     colleges CONSUME the shared library, they do not pay to regenerate
  *     it. Every refresh is a paid LLM call, so a forged refresh from any
  *     non-superadmin account gets 403.
- *  2. Even for staff, a cache key may be regenerated at most once per
- *     REGENERATE_COOLDOWN window. The key is global across every campus, so
+ *  2. For the platform superadmin, a cache key may be regenerated at most
+ *     once per REGENERATE_COOLDOWN window. The key is global across every campus, so
  *     this caps worst-case regeneration spend per topic no matter how many
  *     colleges share it.
- *  3. CONCURRENCY: a short-lived `generating` lease on the summary doc makes
- *     exactly one caller pay for a cold key — the 9PM exam-eve stampede
- *     (100 students opening the same uncached unit at once) produces ONE LLM
- *     call; everyone else gets HTTP 202 and polls until the pack lands.
- *  4. NEW-KEY CREATION is capped separately from the generic rate limiter:
- *     students/parents get STUDENT_DAILY_GENERATION_LIMIT cold-key
- *     generations per UTC day (a scripted account cycling random topics can
- *     never be absorbed by the cache, so it needs its own ceiling). Each
- *     campus additionally has a COLLEGE daily circuit breaker — when it
- *     trips the campus falls back to cache-only until the day resets.
- *     Both counters increment ATOMICALLY inside the claim transaction so
- *     concurrent requests can never slip past the cap together.
+ *  3. CONCURRENCY: a short-lived `generating` lease on the summary doc ensures
+ *     only one platform operation creates a cold key; any concurrent readers
+ *     can reuse the shared result after it lands.
+ *  4. STUDENT GENERATION IS OFF BY DEFAULT. Students/parents consume cached
+ *     packs only. `STUDENT_STUDY_GENERATION_ENABLED=true` is the explicit
+ *     future rollout switch; if enabled, existing per-account and per-campus
+ *     generation caps still apply.
  *  5. EXAM FREEZE WINDOWS (per campus, `ai_config/{collegeId}`) pause all
  *     generation/regeneration during internal assessments: cached packs
  *     still serve for free, but no new spend is authorised in the
@@ -99,6 +94,8 @@ const STUDY_TEXT_FIELD_MAX = 140
 /** Daily cold-key generation caps (per UTC day; both overridable per campus). */
 const DEFAULT_STUDENT_DAILY_GENERATION_LIMIT = 5
 const DEFAULT_COLLEGE_DAILY_GENERATION_LIMIT = 400
+/** Explicitly enable student/parent cold generation only after the rollout is approved. */
+const STUDENT_STUDY_GENERATION_ENABLED = process.env.STUDENT_STUDY_GENERATION_ENABLED === 'true'
 /** Pre-warm batching keeps a prewarm call well inside the 60s function timeout. */
 const PREWARM_BATCH_SIZE = 2
 const MAX_PREWARM_MODULES = 40
@@ -110,6 +107,20 @@ export const studyVersionDocId = (n: number): string => `v${String(n).padStart(4
 export function nextStudyVersion(latestVersion: unknown): number {
   const v = Number(latestVersion)
   return Number.isFinite(v) && v >= 0 ? Math.floor(v) + 1 : 1
+}
+
+/**
+ * Only the platform content team may create cold packs by default. Student and
+ * parent generation is an explicit future rollout, controlled server-side so
+ * older clients cannot bypass cache-only mode by omitting a request flag.
+ */
+export function canGenerateStudyPackOnCacheMiss(
+  role: unknown,
+  studentGenerationEnabled = STUDENT_STUDY_GENERATION_ENABLED,
+): boolean {
+  const normalizedRole = String(role || '')
+  return normalizedRole === 'superadmin' ||
+    (studentGenerationEnabled && ['student', 'parent'].includes(normalizedRole))
 }
 
 export interface StudyServeTarget {
@@ -887,6 +898,18 @@ router.post('/study-material', verifyAuth, aiGenerationLimiter, async (req: Auth
           }
         }
       }
+    }
+
+    // Students and colleges are cache consumers in the current rollout. A miss
+    // is a normal "not published yet" result, never permission to spend on an LLM.
+    // The check is server-side so older/modified clients cannot bypass it.
+    if (!canGenerateStudyPackOnCacheMiss(user.role)) {
+      res.status(404).json({
+        code: 'STUDY_PACK_NOT_CACHED',
+        error: 'No cached AI summary is available for this topic yet. Please use the Current Study Materials for this module or ask your faculty.',
+        cacheKey,
+      })
+      return
     }
 
     // ── Everything below this line spends money on an LLM call. ──────────

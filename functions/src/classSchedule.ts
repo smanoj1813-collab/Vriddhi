@@ -1217,6 +1217,7 @@ export const generateClassSessions = onCall(
     // defensively here so this module stays independent of it.
     const skippedHolidays: Array<{ date: string; reason: string }> = []
     let skippedHolidayCount = 0
+    let cancelledHolidaySessions = 0
     {
       const blockers: Array<{ title: string; startDate: string; endDate: string }> = []
       const calSnap = await db
@@ -1235,6 +1236,23 @@ export const generateClassSessions = onCall(
         if (!title || !isValidDateKey(start) || !isValidDateKey(end)) continue
         blockers.push({ title, startDate: start, endDate: end })
       }
+      // Calendar events can be imported after the range was initially
+      // materialised. Reconcile any already-created future sessions before
+      // skipping new occurrences; the helper preserves marked history.
+      for (const blocker of blockers) {
+        const startDate = blocker.startDate > payload.from ? blocker.startDate : payload.from
+        const endDate = blocker.endDate < payload.to ? blocker.endDate : payload.to
+        if (startDate <= endDate) {
+          cancelledHolidaySessions += await cancelScheduledSessionsForHolidayRange(db, {
+            collegeId: payload.collegeId,
+            startDate,
+            endDate,
+            title: blocker.title,
+            actorUid: uid,
+          })
+        }
+      }
+
       const kept: typeof planned = []
       const seenDates = new Set<string>()
       for (const item of planned) {
@@ -1406,6 +1424,7 @@ export const generateClassSessions = onCall(
       skippedExisting,
       skippedConflicts: conflictedIds.size,
       skippedHolidayCount,
+      cancelledHolidaySessions,
       skippedOutsideWindow,
       assignmentsLinked: slotAssignmentIds.size,
       batches,
@@ -1431,6 +1450,7 @@ export const generateClassSessions = onCall(
       // occurrence on its dates).
       skippedHolidays,
       skippedHolidayCount,
+      cancelledHolidaySessions,
       skippedOutsideWindow,
     }
   }
@@ -1615,6 +1635,7 @@ export interface PlannedSession {
   status?: unknown
   attendanceMarked?: unknown
   attendanceCount?: unknown
+  presentCount?: unknown
   topicsCovered?: unknown
   startTime?: unknown
   endTime?: unknown
@@ -1679,9 +1700,96 @@ export function isMovableSession(session: PlannedSession, from: string): boolean
   if (!isValidDateKey(session.date) || session.date < from) return false
   if (session.attendanceMarked === true) return false
   if (Number(session.attendanceCount || 0) > 0) return false
+  if (Number(session.presentCount || 0) > 0) return false
   const topics = Array.isArray(session.topicsCovered) ? session.topicsCovered : []
   if (topics.length > 0) return false
   return true
+}
+
+/** True when an unmarked scheduled session falls inside a suspending event. */
+export function isSessionAffectedByHoliday(
+  session: PlannedSession,
+  holiday: { startDate: string; endDate: string },
+  from: string,
+): boolean {
+  return session.date >= holiday.startDate && session.date <= holiday.endDate && isMovableSession(session, from)
+}
+
+/**
+ * Cancel unmarked future sessions covered by a suspending calendar event.
+ * Marked/completed sessions are deliberately preserved as academic history.
+ * The query is paged and each chunk is transactionally re-checked so a
+ * concurrent attendance write cannot be overwritten by the holiday update.
+ */
+export async function cancelScheduledSessionsForHolidayRange(
+  db: admin.firestore.Firestore,
+  params: {
+    collegeId: string
+    startDate: string
+    endDate: string
+    title: string
+    actorUid: string
+    fromDate?: string
+  },
+): Promise<number> {
+  const today = params.fromDate && isValidDateKey(params.fromDate) ? params.fromDate : todayKey()
+  const from = params.startDate > today ? params.startDate : today
+  const to = params.endDate
+  if (!isValidDateKey(from) || !isValidDateKey(to) || from > to) return 0
+
+  const reason = `Academic calendar: ${String(params.title || 'holiday').trim()}`.slice(0, 300)
+  let cursor: FirebaseFirestore.QueryDocumentSnapshot | undefined
+  let cancelled = 0
+  while (true) {
+    let pageQuery = db
+      .collection('classSessions')
+      .where('collegeId', '==', params.collegeId)
+      .where('date', '>=', from)
+      .where('date', '<=', to)
+      .orderBy('date')
+      .limit(MAX_CANCEL_DOCS_PER_TXN)
+    if (cursor) pageQuery = pageQuery.startAfter(cursor)
+    const page = await pageQuery.get()
+    if (page.empty) break
+
+    const applied = await db.runTransaction(async (txn) => {
+      const currentRows: Array<{ snapshot: FirebaseFirestore.DocumentSnapshot; data: Record<string, unknown> }> = []
+      // Firestore transactions require all reads to complete before writes.
+      for (const snapshot of page.docs) {
+        const fresh = await txn.get(snapshot.ref)
+        const data = fresh.data() as Record<string, unknown> | undefined
+        if (fresh.exists && data) currentRows.push({ snapshot: fresh, data })
+      }
+
+      let count = 0
+      const now = new Date().toISOString()
+      for (const { snapshot, data } of currentRows) {
+        const session: PlannedSession = {
+          id: snapshot.id,
+          date: String(data.date ?? ''),
+          status: data.status,
+          attendanceMarked: data.attendanceMarked,
+          attendanceCount: data.attendanceCount,
+          presentCount: data.presentCount,
+          topicsCovered: data.topicsCovered,
+        }
+        if (!isSessionAffectedByHoliday(session, { startDate: from, endDate: to }, from)) continue
+        txn.update(snapshot.ref, {
+          status: 'cancelled',
+          cancelledAt: now,
+          cancelledBy: params.actorUid,
+          cancelReason: reason,
+          updatedAt: now,
+        })
+        count += 1
+      }
+      return count
+    })
+    cancelled += applied
+    cursor = page.docs[page.docs.length - 1]
+    if (page.size < MAX_CANCEL_DOCS_PER_TXN) break
+  }
+  return cancelled
 }
 
 /**
@@ -1928,6 +2036,7 @@ export const rescheduleClass = onCall(
         status: data.status,
         attendanceMarked: data.attendanceMarked,
         attendanceCount: data.attendanceCount,
+        presentCount: data.presentCount,
         topicsCovered: data.topicsCovered,
         startTime: data.startTime,
         endTime: data.endTime,

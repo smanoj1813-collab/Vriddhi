@@ -18,10 +18,11 @@
 //                 computed here and echoed back so the preview and the written
 //                 docs can never disagree.
 //   3. PLACE    — courses in demand order (heaviest first, then code for a
-//                 stable tiebreak). Cohort-day density is balanced first;
-//                 disjoint groups may share a period, while overlapping scopes
-//                 cannot. Faculty daily/weekly caps, room availability and
-//                 contiguous lab spans remain hard constraints.
+//                 stable tiebreak). Faculty-day preference can compact class
+//                 meetings toward a soft daily target or balance student days;
+//                 disjoint groups may share periods, overlapping scopes cannot.
+//                 Faculty daily/weekly caps, room availability and lab spans
+//                 remain hard constraints.
 //   4. TRUST    — the result carries college-wide slot utilization, per-division
 //                 daily density (target 4–5 classes/day), and explicit faculty
 //                 demand arithmetic with merge suggestions when projected load
@@ -60,12 +61,21 @@ export interface ScheduleGrid {
 export type PlacementStrategy = 'uniform' | 'spread' | 'random'
 /** P3 — room choice among the rooms free for a span. */
 export type RoomStrategy = 'leastLoaded' | 'random'
+/** How strongly the planner packs each faculty member's classes into fewer days. */
+export type FacultyDayPreference = 'balanced' | 'compact'
+/** Respect comma-joined merged mappings, or split them into one group per cohort. */
+export type TeachingGroupMode = 'mapping' | 'separate'
 export const PLACEMENT_STRATEGIES: PlacementStrategy[] = ['uniform', 'spread', 'random']
 export const ROOM_STRATEGIES: RoomStrategy[] = ['leastLoaded', 'random']
+export const FACULTY_DAY_PREFERENCES: FacultyDayPreference[] = ['balanced', 'compact']
+export const TEACHING_GROUP_MODES: TeachingGroupMode[] = ['mapping', 'separate']
 
 /** P2 — per-course steering for one apply run. */
 export interface CourseOverride {
-  mappingId: string
+  /** Legacy whole-mapping override; applied to all expanded teaching groups. */
+  mappingId?: string
+  /** Preferred group-specific key: `${mappingId}|${scopeIdentity}`. */
+  demandKey?: string
   /** Overrides hoursPerWeek() for this course. 0 (or include:false) excludes. */
   weeklyPeriods?: number | null
   include?: boolean
@@ -143,8 +153,10 @@ export interface Occupancy {
   cohortBusy: Set<string>
   /** Scoped busy keys let disjoint teaching groups use the same room-time grid. */
   cohortBusyScopes?: CohortBusyScope[]
-  /** `${facultyId}|${day}` → already occupied teaching periods. */
+  /** `${facultyId}|${day}` → already occupied timetable periods. */
   facultyDaily?: Map<string, number>
+  /** `${facultyId}|${day}` → existing class meetings (a multi-period lab is one meeting). */
+  facultyDailyMeetings?: Map<string, number>
   /** `${day}|${hh:mm}|${room}` already booked. */
   roomBusy: Set<string>
   /** facultyId → weekly periods already committed. */
@@ -158,15 +170,19 @@ export interface AutoScheduleInput {
   occupancy: Occupancy
   semesterWeeks: number
   maxPeriodsPerDayPerFaculty: number
+  /** Soft target: prefer this many distinct class meetings on an active faculty day. */
+  targetFacultyClassesPerDay?: number
+  /** 'compact' fills an active faculty day toward the target before opening another. */
+  facultyDayPreference?: FacultyDayPreference
   /** Hard weekly cap; defaults to the regular-faculty 24-period norm. */
   maxWeeklyPeriodsPerFaculty?: number
-  /** P3 — default 'uniform' = today's behaviour, zero surprise. */
+  /** P3 — default 'uniform' = earliest legal period, deterministic. */
   strategy?: PlacementStrategy
   /** P3 — deterministic RNG seed ('random' mode + roomStrategy:'random'). */
   randomSeed?: string
   /** P3 — default 'leastLoaded'. */
   roomStrategy?: RoomStrategy
-  /** P2 — include/weeklyPeriods steering, keyed by mappingId. */
+  /** P2 — include/weeklyPeriods steering, preferably keyed by demandKey. */
   courseOverrides?: CourseOverride[]
 }
 
@@ -174,6 +190,9 @@ export type PlacementType = 'lecture' | 'lab'
 
 export interface SchedulePlacement {
   mappingId: string
+  demandKey: string
+  /** Shared by period rows that belong to the same teaching meeting (e.g. a lab span). */
+  meetingKey: string
   courseId: string
   subject: string
   subjectCode: string
@@ -261,8 +280,21 @@ export interface CohortDailyCoverage {
   onTarget: boolean
 }
 
+export const TARGET_FACULTY_CLASSES_PER_DAY = 3
 export const TARGET_CLASSES_PER_DAY_MIN = 4
 export const TARGET_CLASSES_PER_DAY_MAX = 5
+
+export interface FacultyDailyLoad {
+  facultyId: string
+  facultyName: string
+  day: DayOfWeek
+  /** Distinct meetings, so a contiguous multi-period lab counts once. */
+  classes: number
+  /** Occupied grid periods, including a multi-period lab span. */
+  periods: number
+  targetClasses: number
+  targetMet: boolean
+}
 
 export interface DailyCoverage {
   day: DayOfWeek
@@ -279,6 +311,8 @@ export interface AutoSchedulePlan {
   placements: SchedulePlacement[]
   unplaced: UnplacedCourse[]
   facultyLoad: ScheduleFacultyLoad[]
+  /** Faculty meeting + period counts per active day, including existing slots. */
+  facultyDailyLoad: FacultyDailyLoad[]
   dailyCoverage: DailyCoverage[]
   /** Per-division periods/classes per day; merged placements count for every member division. */
   cohortDailyCoverage: CohortDailyCoverage[]
@@ -462,11 +496,23 @@ export function resolveMappingTeachingGroups(
   mapping: { division?: unknown; section?: unknown },
   rosterGroups: readonly TeachingGroupScope[],
   filter: { division?: unknown; section?: unknown } = {},
+  mode: TeachingGroupMode = 'mapping',
 ): TeachingGroupScope[] {
   const hasFilter = hasGroupLetters(filter)
   if (hasGroupLetters(mapping)) {
-    if (hasFilter && !divisionScopesOverlap(mapping, filter)) return []
-    return [{ division: String(mapping.division ?? ''), section: String(mapping.section ?? '') }]
+    const mappingGroups = mode === 'separate'
+      ? (() => {
+          const divisions = cohortLetters(mapping.division)
+          const sections = cohortLetters(mapping.section)
+          const divisionValues = divisions.length > 0 ? divisions : ['']
+          const sectionValues = sections.length > 0 ? sections : ['']
+          return divisionValues.flatMap((division) => sectionValues.map((section) => ({
+            division: division ? division.toUpperCase() : '',
+            section: section ? section.toUpperCase() : '',
+          })))
+        })()
+      : [{ division: String(mapping.division ?? ''), section: String(mapping.section ?? '') }]
+    return mappingGroups.filter((group) => !hasFilter || divisionScopesOverlap(group, filter))
   }
 
   const matchingGroups = rosterGroups.filter((group) => !hasFilter || divisionScopesOverlap(group, filter))
@@ -588,9 +634,10 @@ function mergeSuggestionsForDemand(
 /**
  * Place each subject × teaching-group demand into the grid. Disjoint groups
  * may share a time, while a merged A,B placement occupies both divisions.
- * The cohort-day score is always the first preference: place each student
- * group's meetings on the day with the fewest classes, then use period load as
- * a tie-break so merged lab spans still count as one class in the 4–5/day report.
+ * Compact mode fills active faculty days toward the soft meeting target (and
+ * permits one extra meeting when it fits) before opening another day; balanced
+ * mode prioritises cohort-day density. Period load remains separate so a
+ * multi-period lab counts as one meeting but every occupied period stays hard.
  */
 export function planAutoSchedule(input: AutoScheduleInput): AutoSchedulePlan {
   const rooms = input.rooms.length > 0 ? input.rooms : ['Room 1']
@@ -608,6 +655,9 @@ export function planAutoSchedule(input: AutoScheduleInput): AutoSchedulePlan {
   const roomBusy = new Set(input.occupancy.roomBusy)
   const facultyWeekly = new Map(input.occupancy.facultyWeekly)
   const facultyDaily = new Map(input.occupancy.facultyDaily ?? [])
+  const facultyDailyMeetings = new Map(input.occupancy.facultyDailyMeetings ?? [])
+  const facultyDayPreference: FacultyDayPreference = input.facultyDayPreference ?? 'compact'
+  const targetFacultyClassesPerDay = Math.max(1, Math.floor(input.targetFacultyClassesPerDay ?? TARGET_FACULTY_CLASSES_PER_DAY))
   const weeklyCapacity = Math.max(1, Math.floor(input.maxWeeklyPeriodsPerFaculty ?? DEFAULT_CAPACITY_WEEKLY_HOURS))
   const dailyCapacity = Math.max(1, input.maxPeriodsPerDayPerFaculty)
 
@@ -624,22 +674,26 @@ export function planAutoSchedule(input: AutoScheduleInput): AutoSchedulePlan {
   const cohortMeetingCount = new Map<string, number>()
 
   const overridesByMapping = new Map<string, CourseOverride>()
+  const overridesByDemand = new Map<string, CourseOverride>()
   for (const override of input.courseOverrides ?? []) {
     if (override && typeof override.mappingId === 'string' && override.mappingId) {
       overridesByMapping.set(override.mappingId, override)
+    }
+    if (override && typeof override.demandKey === 'string' && override.demandKey) {
+      overridesByDemand.set(override.demandKey, override)
     }
   }
 
   const demandRows: DemandRow[] = []
   const placeable: { course: AutoScheduleCourse; periods: number }[] = []
   for (const course of input.courses) {
-    const override = overridesByMapping.get(course.mappingId)
+    const demandKey = `${course.mappingId}|${scopeIdentity(course)}`
+    const override = overridesByDemand.get(demandKey) ?? overridesByMapping.get(course.mappingId)
     const overridePeriods =
       override && typeof override.weeklyPeriods === 'number' && Number.isFinite(override.weeklyPeriods)
         ? Math.max(0, Math.floor(override.weeklyPeriods))
         : null
     const include = override?.include !== false && overridePeriods !== 0
-    const demandKey = `${course.mappingId}|${scopeIdentity(course)}`
     const rowBase = {
       mappingId: course.mappingId,
       demandKey,
@@ -733,24 +787,38 @@ export function planAutoSchedule(input: AutoScheduleInput): AutoSchedulePlan {
     spanLoop: for (let spanRank = 0; spanRank < spansNeeded; spanRank++) {
       const thisSpan = isLab && periods - placed < span ? Math.max(1, periods - placed) : span
       const currentCourseDayCount = (day: DayOfWeek) => courseDayCount.get(courseDayKey(day)) ?? 0
-      let daysOrdered = [...byDay.keys()].sort(
-        (a, b) => cohortDayLoad(a) - cohortDayLoad(b) || cohortPeriodLoad(a) - cohortPeriodLoad(b) || currentCourseDayCount(a) - currentCourseDayCount(b) || input.grid.days.indexOf(a) - input.grid.days.indexOf(b),
+      const facultyDayKey = (day: DayOfWeek) => `${course.facultyId}|${day}`
+      const facultyDayClasses = (day: DayOfWeek) => facultyDailyMeetings.get(facultyDayKey(day)) ?? 0
+      const targetGap = (day: DayOfWeek) => targetFacultyClassesPerDay - Math.min(facultyDayClasses(day), targetFacultyClassesPerDay)
+      const compactDayScore = (day: DayOfWeek) => {
+        const classes = facultyDayClasses(day)
+        if (classes === 0) return targetFacultyClassesPerDay + 1
+        if (classes <= targetFacultyClassesPerDay) return classes
+        return targetFacultyClassesPerDay + 2 + (classes - targetFacultyClassesPerDay - 1)
+      }
+      const dayPreferenceScore = (day: DayOfWeek) => {
+        const cohortScore = cohortDayLoad(day) * 1_000_000 + cohortPeriodLoad(day) * 1_000 + currentCourseDayCount(day)
+        const facultyScore = compactDayScore(day) * 1_000_000 + cohortDayLoad(day) * 1_000 + cohortPeriodLoad(day) * 10 + currentCourseDayCount(day)
+        return facultyDayPreference === 'compact' ? facultyScore : cohortScore * 1_000 + targetGap(day)
+      }
+      const compareDays = (a: DayOfWeek, b: DayOfWeek, tieBreak = 0) =>
+        dayPreferenceScore(a) - dayPreferenceScore(b) || tieBreak
+      let daysOrdered = [...byDay.keys()].sort((a, b) =>
+        compareDays(a, b, input.grid.days.indexOf(a) - input.grid.days.indexOf(b)),
       )
 
       if (strategy === 'spread') {
         const n = Math.max(1, input.grid.days.length)
         const rankOffset = courseRank % n
         const rotatedIndex = (day: DayOfWeek) => (((input.grid.days.indexOf(day) - rankOffset) % n) + n) % n
-        daysOrdered = [...byDay.keys()].sort(
-          (a, b) => cohortDayLoad(a) - cohortDayLoad(b) || cohortPeriodLoad(a) - cohortPeriodLoad(b) || currentCourseDayCount(a) - currentCourseDayCount(b) || rotatedIndex(a) - rotatedIndex(b),
-        )
+        daysOrdered = [...byDay.keys()].sort((a, b) => compareDays(a, b, rotatedIndex(a) - rotatedIndex(b)))
       } else if (strategy === 'random') {
-        const score = (day: DayOfWeek) => cohortDayLoad(day) * 10_000 + cohortPeriodLoad(day) * 100 + currentCourseDayCount(day)
         const buckets = new Map<number, DayOfWeek[]>()
         for (const day of daysOrdered) {
-          const bucket = buckets.get(score(day)) ?? []
+          const score = dayPreferenceScore(day)
+          const bucket = buckets.get(score) ?? []
           bucket.push(day)
-          buckets.set(score(day), bucket)
+          buckets.set(score, bucket)
         }
         daysOrdered = [...buckets.keys()].sort((a, b) => a - b).flatMap((value) => shuffleWith(buckets.get(value) ?? [], rng))
       }
@@ -775,9 +843,8 @@ export function planAutoSchedule(input: AutoScheduleInput): AutoSchedulePlan {
         for (const index of starts) candidates.push(daySlots.slice(index, index + thisSpan))
       }
       if (strategy === 'random') {
-        // Keep the cohort-day balancing score sacred; randomise only candidates
-        // within a score tier so a seed cannot pile every group onto Monday.
-        const score = (candidate: PlannedSlot[]) => cohortDayLoad(candidate[0].day) * 10_000 + cohortPeriodLoad(candidate[0].day) * 100 + currentCourseDayCount(candidate[0].day)
+        // Randomise only candidates within the configured faculty/cohort score tier.
+        const score = (candidate: PlannedSlot[]) => dayPreferenceScore(candidate[0].day)
         const buckets = new Map<number, PlannedSlot[][]>()
         for (const candidate of candidates) {
           const bucket = buckets.get(score(candidate)) ?? []
@@ -849,6 +916,8 @@ export function planAutoSchedule(input: AutoScheduleInput): AutoSchedulePlan {
       }
 
       const day = chose[0].day
+      const demandKey = `${course.mappingId}|${scopeIdentity(course)}`
+      const meetingKey = `${demandKey}|${day}|${chose[0].startTime}`
       const weeklyAfter = (facultyWeekly.get(course.facultyId) ?? 0) + thisSpan
       const flags: string[] = []
       if (weeklyAfter > weeklyCapacity) flags.push('faculty-overloaded')
@@ -859,6 +928,8 @@ export function planAutoSchedule(input: AutoScheduleInput): AutoSchedulePlan {
       for (const slot of chose) {
         placements.push({
           mappingId: course.mappingId,
+          demandKey,
+          meetingKey,
           courseId: course.courseId,
           subject: course.courseName,
           subjectCode: course.courseCode,
@@ -884,6 +955,7 @@ export function planAutoSchedule(input: AutoScheduleInput): AutoSchedulePlan {
         roomBusy.add(`${key}|${choseRoom}`)
       }
       facultyDaily.set(`${course.facultyId}|${day}`, (facultyDaily.get(`${course.facultyId}|${day}`) ?? 0) + chose.length)
+      facultyDailyMeetings.set(`${course.facultyId}|${day}`, (facultyDailyMeetings.get(`${course.facultyId}|${day}`) ?? 0) + 1)
       facultyWeekly.set(course.facultyId, (facultyWeekly.get(course.facultyId) ?? 0) + chose.length)
       courseDayCount.set(courseDayKey(day), (courseDayCount.get(courseDayKey(day)) ?? 0) + chose.length)
       for (const key of cohortKeys) {
@@ -925,6 +997,34 @@ export function planAutoSchedule(input: AutoScheduleInput): AutoSchedulePlan {
       }
     })
     .sort((a, b) => b.projectedWeekly - a.projectedWeekly || a.facultyName.localeCompare(b.facultyName))
+
+  const facultyNameById = new Map<string, string>()
+  for (const course of input.courses) {
+    if (!facultyNameById.has(course.facultyId) && course.facultyName) facultyNameById.set(course.facultyId, course.facultyName)
+  }
+  const facultyIdsForDaily = new Set<string>([
+    ...input.courses.map((course) => course.facultyId).filter(Boolean),
+    ...[...facultyDailyMeetings.keys(), ...facultyDaily.keys()].map((key) => key.split('|')[0]).filter(Boolean),
+  ])
+  const facultyDailyLoad: FacultyDailyLoad[] = [...facultyIdsForDaily]
+    .flatMap((facultyId) => input.grid.days.map((day) => {
+      const key = `${facultyId}|${day}`
+      const classes = facultyDailyMeetings.get(key) ?? 0
+      const periods = facultyDaily.get(key) ?? 0
+      return classes > 0 || periods > 0
+        ? {
+            facultyId,
+            facultyName: facultyNameById.get(facultyId) || facultyId,
+            day,
+            classes,
+            periods,
+            targetClasses: targetFacultyClassesPerDay,
+            targetMet: classes >= targetFacultyClassesPerDay,
+          }
+        : null
+    }))
+    .filter((row): row is FacultyDailyLoad => row !== null)
+    .sort((a, b) => a.facultyName.localeCompare(b.facultyName) || input.grid.days.indexOf(a.day) - input.grid.days.indexOf(b.day))
 
   const dailyCoverage: DailyCoverage[] = input.grid.days.map((day) => {
     const dayPlacements = placements.filter((placement) => placement.dayOfWeek === day)
@@ -981,6 +1081,7 @@ export function planAutoSchedule(input: AutoScheduleInput): AutoSchedulePlan {
     placements,
     unplaced,
     facultyLoad,
+    facultyDailyLoad,
     dailyCoverage,
     cohortDailyCoverage,
     demand: demandRows,
@@ -1011,6 +1112,9 @@ export interface AutoSchedulePayload {
   rooms: string[]
   semesterWeeks: number
   maxPeriodsPerDayPerFaculty: number
+  targetFacultyClassesPerDay: number
+  facultyDayPreference: FacultyDayPreference
+  teachingGroupMode: TeachingGroupMode
   maxWeeklyPeriodsPerFaculty: number
   dryRun: boolean
   collegeId: string
@@ -1111,22 +1215,35 @@ export function validateAutoSchedulePayload(
   }
   const randomSeed = String(raw.randomSeed ?? '').trim().slice(0, 64)
 
-  // P2 — per-course inclusion & weekly-load overrides.
+  const facultyDayPreferenceRaw = String(raw.facultyDayPreference ?? 'compact').trim() || 'compact'
+  if (!FACULTY_DAY_PREFERENCES.includes(facultyDayPreferenceRaw as FacultyDayPreference)) {
+    throw new HttpsError('invalid-argument', `facultyDayPreference must be one of: ${FACULTY_DAY_PREFERENCES.join(', ')}`)
+  }
+  const teachingGroupModeRaw = String(raw.teachingGroupMode ?? 'mapping').trim() || 'mapping'
+  if (!TEACHING_GROUP_MODES.includes(teachingGroupModeRaw as TeachingGroupMode)) {
+    throw new HttpsError('invalid-argument', `teachingGroupMode must be one of: ${TEACHING_GROUP_MODES.join(', ')}`)
+  }
+
+  // P2 — per-course / teaching-group inclusion & weekly-load overrides.
   const courseOverrides: CourseOverride[] = []
   if (raw.courseOverrides !== undefined && raw.courseOverrides !== null) {
     if (!Array.isArray(raw.courseOverrides)) {
       throw new HttpsError('invalid-argument', 'courseOverrides must be an array')
     }
-    if (raw.courseOverrides.length > 60) {
-      throw new HttpsError('invalid-argument', 'courseOverrides allows at most 60 rows')
+    if (raw.courseOverrides.length > MAX_COURSE_GROUPS) {
+      throw new HttpsError('invalid-argument', `courseOverrides allows at most ${MAX_COURSE_GROUPS} rows`)
     }
     for (const [i, entry] of raw.courseOverrides.entries()) {
       const row = (entry || {}) as Record<string, unknown>
       const mappingId = String(row.mappingId ?? '').trim()
-      if (!mappingId || mappingId.length > 120) {
-        throw new HttpsError('invalid-argument', `courseOverrides[${i}].mappingId is required`)
+      const demandKey = String(row.demandKey ?? '').trim()
+      if ((!mappingId && !demandKey) || mappingId.length > 120 || demandKey.length > 500) {
+        throw new HttpsError('invalid-argument', `courseOverrides[${i}] needs a valid mappingId or demandKey`)
       }
-      const override: CourseOverride = { mappingId }
+      const override: CourseOverride = {
+        ...(mappingId ? { mappingId } : {}),
+        ...(demandKey ? { demandKey } : {}),
+      }
       if (row.weeklyPeriods !== undefined && row.weeklyPeriods !== null) {
         const periods = Number(row.weeklyPeriods)
         if (!Number.isFinite(periods) || periods < 0 || periods > 40) {
@@ -1147,6 +1264,27 @@ export function validateAutoSchedulePayload(
     }
   }
 
+  const maxPeriodsPerDayPerFaculty = boundedInt(
+    raw.maxPeriodsPerDayPerFaculty,
+    'maxPeriodsPerDayPerFaculty',
+    4,
+    1,
+    10,
+  )
+  const targetFacultyClassesPerDay = boundedInt(
+    raw.targetFacultyClassesPerDay,
+    'targetFacultyClassesPerDay',
+    Math.min(TARGET_FACULTY_CLASSES_PER_DAY, maxPeriodsPerDayPerFaculty),
+    1,
+    10,
+  )
+  if (targetFacultyClassesPerDay > maxPeriodsPerDayPerFaculty) {
+    throw new HttpsError(
+      'invalid-argument',
+      'targetFacultyClassesPerDay cannot exceed maxPeriodsPerDayPerFaculty',
+    )
+  }
+
   return {
     curriculumId,
     batch,
@@ -1165,7 +1303,10 @@ export function validateAutoSchedulePayload(
       ? raw.rooms.map((r) => String(r ?? '').trim()).filter(Boolean).slice(0, 30)
       : [],
     semesterWeeks: boundedInt(raw.semesterWeeks, 'semesterWeeks', DEFAULT_SEMESTER_WEEKS, 4, 30),
-    maxPeriodsPerDayPerFaculty: boundedInt(raw.maxPeriodsPerDayPerFaculty, 'maxPeriodsPerDayPerFaculty', 4, 1, 10),
+    maxPeriodsPerDayPerFaculty,
+    targetFacultyClassesPerDay,
+    facultyDayPreference: facultyDayPreferenceRaw as FacultyDayPreference,
+    teachingGroupMode: teachingGroupModeRaw as TeachingGroupMode,
     maxWeeklyPeriodsPerFaculty: boundedInt(raw.maxWeeklyPeriodsPerFaculty, 'maxWeeklyPeriodsPerFaculty', DEFAULT_CAPACITY_WEEKLY_HOURS, 1, 60),
     dryRun: raw.dryRun !== false, // default TRUE — nothing writes without intent
     collegeId,
@@ -1329,6 +1470,7 @@ export const autoGenerateWeeklySchedule = onCall(
         { division: mapping.division, section: mapping.section },
         rosterGroups,
         requestedScope,
+        payload.teachingGroupMode,
       )
       for (const group of groups) {
         courses.push({
@@ -1371,10 +1513,12 @@ export const autoGenerateWeeklySchedule = onCall(
       cohortBusy: new Set(),
       cohortBusyScopes: [],
       facultyDaily: new Map(),
+      facultyDailyMeetings: new Map(),
       roomBusy: new Set(),
       facultyWeekly: new Map(),
     }
 
+    const existingFacultyMeetings = new Set<string>()
     for (const document of schedulesSnap.docs) {
       const schedule = document.data() as Record<string, unknown>
       if (schedule.isActive === false) continue
@@ -1387,6 +1531,12 @@ export const autoGenerateWeeklySchedule = onCall(
         occupancy.facultyWeekly.set(facultyId, (occupancy.facultyWeekly.get(facultyId) ?? 0) + periodCount)
         const dailyKey = `${facultyId}|${day}`
         occupancy.facultyDaily!.set(dailyKey, (occupancy.facultyDaily!.get(dailyKey) ?? 0) + periodCount)
+        const meetingKey = String(schedule.meetingKey ?? '').trim()
+        const meetingIdentity = meetingKey ? `${facultyId}|${day}|${meetingKey}` : `${facultyId}|${day}|${document.id}`
+        if (!existingFacultyMeetings.has(meetingIdentity)) {
+          existingFacultyMeetings.add(meetingIdentity)
+          occupancy.facultyDailyMeetings!.set(dailyKey, (occupancy.facultyDailyMeetings!.get(dailyKey) ?? 0) + 1)
+        }
       }
       const room = String(schedule.room ?? '').trim()
       if (room) for (const key of keys) occupancy.roomBusy.add(`${key}|${room}`)
@@ -1406,6 +1556,8 @@ export const autoGenerateWeeklySchedule = onCall(
       occupancy,
       semesterWeeks: payload.semesterWeeks,
       maxPeriodsPerDayPerFaculty: payload.maxPeriodsPerDayPerFaculty,
+      targetFacultyClassesPerDay: payload.targetFacultyClassesPerDay,
+      facultyDayPreference: payload.facultyDayPreference,
       maxWeeklyPeriodsPerFaculty: payload.maxWeeklyPeriodsPerFaculty,
       strategy: payload.strategy,
       ...(payload.randomSeed ? { randomSeed: payload.randomSeed } : {}),
@@ -1502,6 +1654,8 @@ export const autoGenerateWeeklySchedule = onCall(
         isActive: true,
         autoScheduled: true,
         mappingId: p.mappingId,
+        demandKey: p.demandKey,
+        meetingKey: p.meetingKey,
         // P1 — write-through applicability window (legacy docs keep no window
         // and stay perpetual; these slots die with their term).
         ...(payload.dateRange?.from ? { effectiveFrom: payload.dateRange.from } : {}),

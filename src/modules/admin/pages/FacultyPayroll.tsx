@@ -11,24 +11,29 @@
 // wording is configured per college in Finance Settings → Payroll. Salary is
 // disbursed by the bank; "paid" stamps the ledger with the date and reference.
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import {
-  BadgeIndianRupee, CheckCircle2, Clock, Download, FileSignature, Loader2, Pencil, Plus,
-  RefreshCw, RotateCcw, Search, Settings as SettingsIcon, ShieldCheck, Trash2, Users, Wallet, X, XCircle,
+  BadgeIndianRupee, CheckCircle2, Clock, Download, Eye, FileSignature, Loader2, Pencil, Plus,
+  RefreshCw, RotateCcw, Search, Send, Settings as SettingsIcon, ShieldCheck, Trash2, Users, Wallet, X, XCircle,
 } from 'lucide-react'
 import { currentCollegeId, fetchCollegeFaculty, type FacultyDirectoryEntry } from '../api/facultyDirectoryApi'
 import {
+  cancelDraftPayslip,
   deletePayslip,
   fetchPayslips,
   fetchSalaryCertificates,
   fetchSalaryStructures,
   issueSalaryCertificate,
+  markPayslipPaid,
   payslipId,
+  restoreCancelledPayslip,
+  reviewPayslip,
   savePayslipDraft,
   saveSalaryStructure,
-  setPayslipStatus,
+  submitPayslipForApproval,
+  withdrawPayslipSubmission,
   type Payslip,
   type PayslipDraft,
   type SalaryCertificateRecord,
@@ -52,6 +57,7 @@ import {
   payslipToPdfModel,
 } from '../utils/payrollDocs'
 import { useFinanceRules } from '../hooks/useFinanceRules'
+import { useAuth } from '@/modules/auth/context/AuthContext'
 import { downloadPayslipPdf, downloadSalaryCertificatePdf } from '../../../shared/utils/financePdf'
 import { useNotification } from '../../../shared/providers/NotificationProvider'
 
@@ -60,7 +66,8 @@ const inr = (n: number) => `₹${formatINR(n)}`
 const STATUS_META: Record<PayslipStatus | 'none', { label: string; cls: string; icon: typeof Clock }> = {
   none: { label: 'Not generated', cls: 'bg-slate-500/10 text-slate-500 dark:text-slate-400', icon: Clock },
   draft: { label: 'Draft', cls: 'bg-amber-500/15 text-amber-700 dark:text-amber-400', icon: Clock },
-  approved: { label: 'Approved', cls: 'bg-blue-500/15 text-blue-700 dark:text-blue-400', icon: ShieldCheck },
+  pending_approval: { label: 'Pending approval', cls: 'bg-violet-500/15 text-violet-700 dark:text-violet-400', icon: Clock },
+  approved: { label: 'Approved · awaiting payment', cls: 'bg-blue-500/15 text-blue-700 dark:text-blue-400', icon: ShieldCheck },
   paid: { label: 'Paid', cls: 'bg-green-500/15 text-green-700 dark:text-green-400', icon: CheckCircle2 },
   cancelled: { label: 'Cancelled', cls: 'bg-red-500/10 text-red-600 dark:text-red-400', icon: XCircle },
 }
@@ -123,23 +130,52 @@ function buildDraft(
 
 export default function FacultyPayroll() {
   const collegeId = currentCollegeId()
-  const [tab, setTab] = useState<Tab>('structures')
+  const { user } = useAuth()
+  const queryClient = useQueryClient()
+  const isPrincipal = user?.role === 'principal'
+  const canPrepare = user?.role === 'accounts' || user?.role === 'superadmin'
+  useEffect(() => {
+    if (!isPrincipal || !collegeId) return
+    // Clear any payroll snapshots that may have been cached by an accounts
+    // session on a shared browser when this review-only page is entered.
+    queryClient.removeQueries({ predicate: query => {
+      const [key, cid, , scope] = query.queryKey
+      if (cid !== collegeId) return false
+      if (key === 'payslips') return scope !== 'review'
+      return ['payrollFaculty', 'salaryStructures', 'salaryCertificates', 'payslipsForCert'].includes(String(key))
+    } })
+  }, [isPrincipal, collegeId, queryClient])
+  const canApprove = isPrincipal || user?.role === 'superadmin'
+  const [tab, setTab] = useState<Tab>(() => isPrincipal ? 'payroll' : 'structures')
   const { rules, branding, loading: rulesLoading } = useFinanceRules()
   const settings = rules.payroll
 
+  // Principals only need the submitted payslip snapshots to review. Salary
+  // structures (which contain bank details) and faculty roster data stay with
+  // the accounts team.
   const facultyQuery = useQuery({
     queryKey: ['payrollFaculty', collegeId],
     queryFn: () => fetchCollegeFaculty(collegeId),
-    enabled: !!collegeId,
+    enabled: !!collegeId && canPrepare,
   })
   const structuresQuery = useQuery({
     queryKey: ['salaryStructures', collegeId],
     queryFn: fetchSalaryStructures,
-    enabled: !!collegeId,
+    enabled: !!collegeId && canPrepare,
   })
 
   const structures = structuresQuery.data ?? []
   const faculty = facultyQuery.data ?? []
+  const tabs: { id: Tab; label: string; icon: typeof Users }[] = canPrepare
+    ? [
+        { id: 'structures', label: 'Salary structures', icon: Users },
+        { id: 'payroll', label: 'Monthly payroll', icon: BadgeIndianRupee },
+        { id: 'certificates', label: 'Salary certificates', icon: FileSignature },
+      ]
+    : [{ id: 'payroll', label: 'Monthly payroll review', icon: BadgeIndianRupee }]
+  const currentTab = tabs.some(t => t.id === tab) ? tab : tabs[0].id
+  const loading = rulesLoading || (canPrepare && (facultyQuery.isLoading || structuresQuery.isLoading))
+  const dataError = canPrepare && (facultyQuery.isError || structuresQuery.isError)
 
   return (
     <div className="page-container">
@@ -147,42 +183,42 @@ export default function FacultyPayroll() {
         <div>
           <h1 className="section-title mb-1 flex items-center gap-2"><Wallet className="w-7 h-7 text-vriddhi-accent" /> Faculty Payroll</h1>
           <p className="text-sm text-vriddhi-muted max-w-2xl">
-            Salary structures, monthly payslips and salary certificates. Components, LOP rules, approvals and certificate wording
-            are set in <Link to="/admin/finance-settings" className="text-vriddhi-accent hover:underline">Finance Settings</Link>.
+            {isPrincipal
+              ? 'Review submitted monthly payroll details and approve or request changes. Accounts processes payment after approval.'
+              : 'Accounts prepares salary structures and monthly payslips, submits each payroll for principal approval, then records payment.'}
+            {canPrepare && <> Components and calculation rules are set in <Link to="/admin/finance-settings" className="text-vriddhi-accent hover:underline">Finance Settings</Link>.</>}
           </p>
         </div>
-        <Link to="/admin/finance-settings" className="self-start flex items-center gap-2 px-3 py-2 bg-vriddhi-card border border-vriddhi-border rounded-xl text-sm text-vriddhi-text hover:bg-vriddhi-border/50">
-          <SettingsIcon className="w-4 h-4" /> Payroll settings
-        </Link>
+        {canPrepare && (
+          <Link to="/admin/finance-settings" className="self-start flex items-center gap-2 px-3 py-2 bg-vriddhi-card border border-vriddhi-border rounded-xl text-sm text-vriddhi-text hover:bg-vriddhi-border/50">
+            <SettingsIcon className="w-4 h-4" /> Payroll settings
+          </Link>
+        )}
       </div>
 
       <div className="flex gap-2 mb-6 overflow-x-auto pb-1">
-        {([
-          { id: 'structures', label: 'Salary structures', icon: Users },
-          { id: 'payroll', label: 'Monthly payroll', icon: BadgeIndianRupee },
-          { id: 'certificates', label: 'Salary certificates', icon: FileSignature },
-        ] as { id: Tab; label: string; icon: typeof Users }[]).map(t => (
+        {tabs.map(t => (
           <button
             key={t.id}
             onClick={() => setTab(t.id)}
-            className={`flex items-center gap-2 px-5 py-3 rounded-xl font-medium text-sm whitespace-nowrap transition-all ${tab === t.id ? 'bg-vriddhi-accent text-white' : 'bg-vriddhi-card text-vriddhi-muted hover:text-slate-900 dark:hover:text-white hover:bg-vriddhi-border/50'}`}
+            className={`flex items-center gap-2 px-5 py-3 rounded-xl font-medium text-sm whitespace-nowrap transition-all ${currentTab === t.id ? 'bg-vriddhi-accent text-white' : 'bg-vriddhi-card text-vriddhi-muted hover:text-slate-900 dark:hover:text-white hover:bg-vriddhi-border/50'}`}
           >
             <t.icon className="w-4 h-4" /> {t.label}
           </button>
         ))}
       </div>
 
-      {(facultyQuery.isLoading || structuresQuery.isLoading || rulesLoading) ? (
+      {loading ? (
         <div className="glass-card h-64 flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-vriddhi-muted" /></div>
-      ) : structuresQuery.isError ? (
+      ) : dataError ? (
         <div className="glass-card p-6 text-sm text-red-600 dark:text-red-400">
-          Could not load payroll data. Payroll is restricted to college admins and the principal.
+          Could not load payroll preparation data. Confirm the accounts team has access to this college's payroll records.
         </div>
       ) : (
         <>
-          {tab === 'structures' && <StructuresTab faculty={faculty} structures={structures} settings={settings} />}
-          {tab === 'payroll' && <PayrollTab structures={structures} settings={settings} branding={branding} />}
-          {tab === 'certificates' && <CertificatesTab structures={structures} settings={settings} branding={branding} />}
+          {currentTab === 'structures' && canPrepare && <StructuresTab faculty={faculty} structures={structures} settings={settings} />}
+          {currentTab === 'payroll' && <PayrollTab structures={canPrepare ? structures : []} settings={settings} branding={branding} canPrepare={canPrepare} canApprove={canApprove} canProcess={canPrepare} />}
+          {currentTab === 'certificates' && canPrepare && <CertificatesTab structures={structures} settings={settings} branding={branding} />}
         </>
       )}
     </div>
@@ -381,7 +417,14 @@ function StructureEditor({ initial, settings, onClose }: { initial: Omit<SalaryS
 // ═══════════════════════════════════════════════════════════
 // Tab 2 — Monthly payroll
 // ═══════════════════════════════════════════════════════════
-function PayrollTab({ structures, settings, branding }: { structures: SalaryStructure[]; settings: PayrollSettings; branding: ReturnType<typeof useFinanceRules>['branding'] }) {
+function PayrollTab({ structures, settings, branding, canPrepare, canApprove, canProcess }: {
+  structures: SalaryStructure[]
+  settings: PayrollSettings
+  branding: ReturnType<typeof useFinanceRules>['branding']
+  canPrepare: boolean
+  canApprove: boolean
+  canProcess: boolean
+}) {
   const collegeId = currentCollegeId()
   const queryClient = useQueryClient()
   const { showSuccess, showError } = useNotification()
@@ -389,13 +432,19 @@ function PayrollTab({ structures, settings, branding }: { structures: SalaryStru
   const [busy, setBusy] = useState<string | null>(null)
   const [editing, setEditing] = useState<{ s: SalaryStructure; p?: Payslip } | null>(null)
   const [paying, setPaying] = useState<Payslip[] | null>(null)
+  const [viewing, setViewing] = useState<Payslip | null>(null)
 
   const payslipsQuery = useQuery({
-    queryKey: ['payslips', collegeId, month],
-    queryFn: () => fetchPayslips(month),
+    queryKey: ['payslips', collegeId, month, canPrepare ? 'accounts' : 'review'],
+    queryFn: () => fetchPayslips(month, canPrepare),
     enabled: !!collegeId,
   })
-  const payslips = payslipsQuery.data ?? []
+  const allPayslips = payslipsQuery.data ?? []
+  // Unsubmitted and cancelled records stay with accounts until they are sent
+  // to the principal. Submitted, approved and paid snapshots are reviewable.
+  const payslips = canPrepare
+    ? allPayslips
+    : allPayslips.filter(p => p.status === 'pending_approval' || p.status === 'approved' || p.status === 'paid')
   const refresh = () => queryClient.invalidateQueries({ queryKey: ['payslips', collegeId, month] })
 
   const active = structures.filter(s => s.active && s.basic > 0)
@@ -414,6 +463,7 @@ function PayrollTab({ structures, settings, branding }: { structures: SalaryStru
     paid: payslips.filter(p => p.status === 'paid').reduce((s, p) => s + p.net, 0),
     missing: rows.filter(r => r.s && !r.p).length,
     drafts: payslips.filter(p => p.status === 'draft'),
+    pending: payslips.filter(p => p.status === 'pending_approval'),
     approved: payslips.filter(p => p.status === 'approved'),
   }
 
@@ -428,8 +478,7 @@ function PayrollTab({ structures, settings, branding }: { structures: SalaryStru
     const todo = rows.filter(r => r.s && !r.p).map(r => r.s!)
     if (!todo.length) throw new Error('Every active faculty member already has a payslip for this month.')
     for (const s of todo) await savePayslipDraft(buildDraft(s, month, settings), 'Generated')
-    showSuccess(`${todo.length} payslip${todo.length === 1 ? '' : 's'} generated.`)
-  })
+  }, `${totals.missing} draft payslip${totals.missing === 1 ? '' : 's'} generated.`)
 
   const recalcDrafts = () => run('recalc', async () => {
     let n = 0
@@ -442,13 +491,18 @@ function PayrollTab({ structures, settings, branding }: { structures: SalaryStru
     showSuccess(`${n} draft payslip${n === 1 ? '' : 's'} recalculated with current settings.`)
   })
 
-  const approveAll = () => run('approveAll', async () => {
-    for (const p of totals.drafts) await setPayslipStatus(p.id, 'approved', { requireApproval: settings.requireApproval })
-    showSuccess(`${totals.drafts.length} payslip${totals.drafts.length === 1 ? '' : 's'} approved.`)
-  })
+  const submitAll = () => run('submitAll', async () => {
+    for (const p of totals.drafts) await submitPayslipForApproval(p.id)
+  }, `${totals.drafts.length} payslip${totals.drafts.length === 1 ? '' : 's'} submitted to the principal.`)
 
-  const status = (p: Payslip, to: PayslipStatus, msg: string) =>
-    run(`${p.id}:${to}`, () => setPayslipStatus(p.id, to, { requireApproval: settings.requireApproval }), msg)
+  const submit = (p: Payslip) => run(`${p.id}:submit`, () => submitPayslipForApproval(p.id), 'Submitted to the principal for approval.')
+  const withdraw = (p: Payslip) => run(`${p.id}:withdraw`, () => withdrawPayslipSubmission(p.id), 'Submission withdrawn to draft.')
+  const cancel = (p: Payslip) => run(`${p.id}:cancel`, () => cancelDraftPayslip(p.id), 'Draft cancelled.')
+  const restore = (p: Payslip) => run(`${p.id}:restore`, () => restoreCancelledPayslip(p.id), 'Cancelled draft restored.')
+  const review = (p: Payslip, decision: 'approved' | 'changes_requested', note = '') => run(`${p.id}:${decision}`, async () => {
+    await reviewPayslip(p.id, decision, note)
+    setViewing(null)
+  }, decision === 'approved' ? 'Payroll approved. Accounts can now process payment.' : 'Changes requested. The payslip is back with accounts.')
 
   const pdf = async (p: Payslip) => {
     try { await downloadPayslipPdf(payslipToPdfModel(p, branding, settings.payslipFooter)) }
@@ -474,102 +528,117 @@ function PayrollTab({ structures, settings, branding }: { structures: SalaryStru
       <div className="glass-card p-4 flex flex-wrap items-center gap-2 justify-between">
         <div className="flex items-center gap-2">
           <input type="month" value={month} onChange={e => setMonth(e.target.value)} className="input-field !w-auto" />
-          <button onClick={refresh} className="p-2.5 rounded-xl border border-vriddhi-border text-vriddhi-muted hover:bg-vriddhi-border/40"><RefreshCw className={`w-4 h-4 ${payslipsQuery.isFetching ? 'animate-spin' : ''}`} /></button>
+          <button onClick={refresh} className="p-2.5 rounded-xl border border-vriddhi-border text-vriddhi-muted hover:bg-vriddhi-border/40" title="Refresh payroll"><RefreshCw className={`w-4 h-4 ${payslipsQuery.isFetching ? 'animate-spin' : ''}`} /></button>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          {totals.drafts.length > 0 && (
-            <button onClick={recalcDrafts} disabled={busy === 'recalc'} className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium border border-vriddhi-border text-vriddhi-muted hover:bg-vriddhi-border/40 disabled:opacity-50">
+          {canPrepare && totals.drafts.length > 0 && (
+            <button onClick={recalcDrafts} disabled={!!busy} className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium border border-vriddhi-border text-vriddhi-muted hover:bg-vriddhi-border/40 disabled:opacity-50">
               {busy === 'recalc' ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RotateCcw className="w-3.5 h-3.5" />} Recalculate drafts
             </button>
           )}
-          {settings.requireApproval && totals.drafts.length > 0 && (
-            <button onClick={approveAll} disabled={busy === 'approveAll'} className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium bg-blue-500/15 text-blue-700 dark:text-blue-400 disabled:opacity-50">
-              <ShieldCheck className="w-3.5 h-3.5" /> Approve all ({totals.drafts.length})
+          {canPrepare && totals.drafts.length > 0 && (
+            <button onClick={submitAll} disabled={!!busy} className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium bg-violet-500/15 text-violet-700 dark:text-violet-400 disabled:opacity-50">
+              {busy === 'submitAll' ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />} Submit all drafts ({totals.drafts.length})
             </button>
           )}
-          {(settings.requireApproval ? totals.approved : [...totals.drafts, ...totals.approved]).length > 0 && (
-            <button onClick={() => setPaying(settings.requireApproval ? totals.approved : [...totals.drafts, ...totals.approved])} className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium bg-green-500/15 text-green-700 dark:text-green-400">
-              <CheckCircle2 className="w-3.5 h-3.5" /> Mark all paid
+          {canProcess && totals.approved.length > 0 && (
+            <button onClick={() => setPaying(totals.approved)} className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium bg-green-500/15 text-green-700 dark:text-green-400">
+              <CheckCircle2 className="w-3.5 h-3.5" /> Mark all approved paid
             </button>
           )}
-          <button onClick={exportRegister} disabled={live.length === 0} className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium border border-vriddhi-border text-vriddhi-muted hover:bg-vriddhi-border/40 disabled:opacity-50">
-            <Download className="w-3.5 h-3.5" /> Salary register (CSV)
-          </button>
-          <button onClick={generate} disabled={busy === 'gen' || totals.missing === 0} className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium text-white bg-vriddhi-accent hover:bg-teal-600 disabled:opacity-50">
-            {busy === 'gen' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />} Generate payslips{totals.missing ? ` (${totals.missing})` : ''}
-          </button>
+          {canPrepare && (
+            <>
+              <button onClick={exportRegister} disabled={live.length === 0} className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium border border-vriddhi-border text-vriddhi-muted hover:bg-vriddhi-border/40 disabled:opacity-50">
+                <Download className="w-3.5 h-3.5" /> Salary register (CSV)
+              </button>
+              <button onClick={generate} disabled={!!busy || totals.missing === 0} className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium text-white bg-vriddhi-accent hover:bg-teal-600 disabled:opacity-50">
+                {busy === 'gen' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />} Generate payslips{totals.missing ? ` (${totals.missing})` : ''}
+              </button>
+            </>
+          )}
         </div>
       </div>
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <Stat label={`Gross · ${monthLabel(month)}`} value={inr(totals.gross)} icon={BadgeIndianRupee} />
-        <Stat label="Deductions" value={inr(totals.deductions)} icon={XCircle} />
-        <Stat label="Net payable" value={inr(totals.net)} icon={Wallet} />
-        <Stat label="Marked paid" value={inr(totals.paid)} icon={CheckCircle2} />
-      </div>
-
-      {active.length === 0 && payslips.length === 0 ? (
-        <div className="glass-card p-10 text-center text-sm text-vriddhi-muted">No active salary structures yet. Set basic pay for faculty in the <b>Salary structures</b> tab.</div>
+      {payslipsQuery.isError ? (
+        <div className="glass-card p-5 text-sm text-red-600 dark:text-red-400">Could not load this month's payroll. Check your payroll access and try again.</div>
       ) : (
-        <div className="glass-card overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-vriddhi-border">
-                  <th className="table-header">Faculty</th>
-                  <th className="table-header text-center">Paid days</th>
-                  <th className="table-header text-right">Gross</th>
-                  <th className="table-header text-right">Deductions</th>
-                  <th className="table-header text-right">Net</th>
-                  <th className="table-header text-center">Status</th>
-                  <th className="table-header text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {rows.map(({ s, p, key }) => {
-                  const meta = STATUS_META[p ? p.status : 'none']
-                  const preview = !p && s ? computePayslip({ basic: s.basic, overrides: s.overrides, employmentType: s.employmentType, monthKey: month }, settings) : null
-                  return (
-                    <tr key={key} className="border-b border-vriddhi-border/50 hover:bg-vriddhi-dark/20">
-                      <td className="table-cell">
-                        <p className="font-medium text-slate-900 dark:text-white">{p?.name || s?.name}</p>
-                        <p className="text-xs text-vriddhi-muted">{(p?.staffCode || s?.staffCode) || '—'} · {(p?.designation || s?.designation) || '—'}</p>
-                        {p?.payslipNo && <p className="text-[11px] font-mono text-vriddhi-muted/80">{p.payslipNo}</p>}
-                      </td>
-                      <td className="table-cell text-center">{p ? `${p.paidDays}/${p.daysInPeriod}` : preview ? `${preview.paidDays}/${preview.daysInPeriod}` : '—'}{p && p.lopDays > 0 && <span className="block text-[11px] text-amber-600">LOP {p.lopDays}</span>}</td>
-                      <td className="table-cell text-right">{inr(p ? p.gross : preview?.gross ?? 0)}</td>
-                      <td className="table-cell text-right text-red-600 dark:text-red-400">{inr(p ? p.totalDeductions : preview?.totalDeductions ?? 0)}</td>
-                      <td className="table-cell text-right font-bold text-slate-900 dark:text-white">{inr(p ? p.net : preview?.net ?? 0)}</td>
-                      <td className="table-cell text-center">
-                        <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium ${meta.cls}`}><meta.icon className="w-3 h-3" /> {meta.label}</span>
-                        {p?.status === 'paid' && p.paidOn && <span className="block text-[10px] text-vriddhi-muted mt-0.5">{p.paidOn}{p.paymentRef ? ` · ${p.paymentRef}` : ''}</span>}
-                      </td>
-                      <td className="table-cell">
-                        <div className="flex items-center justify-end gap-1 flex-wrap">
-                          {!p && s && <Btn icon={Plus} label="Create" tone="accent" onClick={() => setEditing({ s })} />}
-                          {p?.status === 'draft' && s && <Btn icon={Pencil} label="Edit" onClick={() => setEditing({ s, p })} />}
-                          {p?.status === 'draft' && (settings.requireApproval
-                            ? <Btn icon={ShieldCheck} label="Approve" tone="blue" busy={busy === `${p.id}:approved`} onClick={() => status(p, 'approved', 'Payslip approved.')} />
-                            : <Btn icon={CheckCircle2} label="Paid" tone="green" onClick={() => setPaying([p])} />)}
-                          {p?.status === 'approved' && <>
-                            <Btn icon={CheckCircle2} label="Paid" tone="green" onClick={() => setPaying([p])} />
-                            <Btn icon={RotateCcw} label="" title="Revert to draft" onClick={() => status(p, 'draft', 'Reverted to draft.')} />
-                          </>}
-                          {p && (p.status === 'draft' || p.status === 'approved') && <Btn icon={X} label="" tone="red" title="Cancel" onClick={() => status(p, 'cancelled', 'Payslip cancelled.')} />}
-                          {p?.status === 'cancelled' && <>
-                            <Btn icon={RotateCcw} label="Restore" onClick={() => status(p, 'draft', 'Restored as draft.')} />
-                            <Btn icon={Trash2} label="" tone="red" title="Delete" onClick={() => run(`${p.id}:del`, () => deletePayslip(p), 'Payslip deleted.')} />
-                          </>}
-                          {p && p.status !== 'cancelled' && <Btn icon={Download} label="PDF" tone="accent" onClick={() => pdf(p)} />}
-                        </div>
-                      </td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
+        <>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <Stat label={`Gross · ${monthLabel(month)}`} value={inr(totals.gross)} icon={BadgeIndianRupee} />
+            <Stat label="Deductions" value={inr(totals.deductions)} icon={XCircle} />
+            <Stat label="Net payable" value={inr(totals.net)} icon={Wallet} />
+            <Stat label={canApprove ? 'Awaiting your approval' : 'Marked paid'} value={canApprove ? totals.pending.length : inr(totals.paid)} icon={canApprove ? Clock : CheckCircle2} />
           </div>
-        </div>
+
+          {active.length === 0 && payslips.length === 0 ? (
+            <div className="glass-card p-10 text-center text-sm text-vriddhi-muted">
+              {canApprove
+                ? 'No payroll has been submitted for this month yet. Accounts drafts will appear here after submission.'
+                : 'No active salary structures yet. Set basic pay in the Salary structures tab.'}
+            </div>
+          ) : rows.length === 0 ? (
+            <div className="glass-card p-10 text-center text-sm text-vriddhi-muted">No submitted or processed payslips to review for this month.</div>
+          ) : (
+            <div className="glass-card overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b border-vriddhi-border">
+                      <th className="table-header">Faculty</th>
+                      <th className="table-header text-center">Paid days</th>
+                      <th className="table-header text-right">Gross</th>
+                      <th className="table-header text-right">Deductions</th>
+                      <th className="table-header text-right">Net</th>
+                      <th className="table-header text-center">Status</th>
+                      <th className="table-header text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {rows.map(({ s, p, key }) => {
+                      const meta = STATUS_META[p ? p.status : 'none']
+                      const preview = !p && s ? computePayslip({ basic: s.basic, overrides: s.overrides, employmentType: s.employmentType, monthKey: month }, settings) : null
+                      return (
+                        <tr key={key} className="border-b border-vriddhi-border/50 hover:bg-vriddhi-dark/20">
+                          <td className="table-cell">
+                            <p className="font-medium text-slate-900 dark:text-white">{p?.name || s?.name}</p>
+                            <p className="text-xs text-vriddhi-muted">{(p?.staffCode || s?.staffCode) || '—'} · {(p?.designation || s?.designation) || '—'}</p>
+                            {p?.payslipNo && <p className="text-[11px] font-mono text-vriddhi-muted/80">{p.payslipNo}</p>}
+                          </td>
+                          <td className="table-cell text-center">{p ? `${p.paidDays}/${p.daysInPeriod}` : preview ? `${preview.paidDays}/${preview.daysInPeriod}` : '—'}{p && p.lopDays > 0 && <span className="block text-[11px] text-amber-600">LOP {p.lopDays}</span>}</td>
+                          <td className="table-cell text-right">{inr(p ? p.gross : preview?.gross ?? 0)}</td>
+                          <td className="table-cell text-right text-red-600 dark:text-red-400">{inr(p ? p.totalDeductions : preview?.totalDeductions ?? 0)}</td>
+                          <td className="table-cell text-right font-bold text-slate-900 dark:text-white">{inr(p ? p.net : preview?.net ?? 0)}</td>
+                          <td className="table-cell text-center">
+                            <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium ${meta.cls}`}><meta.icon className="w-3 h-3" /> {meta.label}</span>
+                            {p?.status === 'paid' && p.paidOn && <span className="block text-[10px] text-vriddhi-muted mt-0.5">{p.paidOn}{p.paymentRef ? ` · ${p.paymentRef}` : ''}</span>}
+                          </td>
+                          <td className="table-cell">
+                            <div className="flex items-center justify-end gap-1 flex-wrap">
+                              {p && <Btn icon={Eye} label={canApprove && p.status === 'pending_approval' ? 'Review' : 'Details'} onClick={() => setViewing(p)} />}
+                              {canPrepare && !p && s && <Btn icon={Plus} label="Create" tone="accent" onClick={() => setEditing({ s })} />}
+                              {canPrepare && p?.status === 'draft' && s && <>
+                                <Btn icon={Pencil} label="Edit" onClick={() => setEditing({ s, p })} />
+                                <Btn icon={Send} label="Submit" tone="blue" busy={busy === `${p.id}:submit`} onClick={() => submit(p)} />
+                                <Btn icon={X} label="" tone="red" title="Cancel draft" onClick={() => cancel(p)} />
+                              </>}
+                              {canPrepare && p?.status === 'pending_approval' && <Btn icon={RotateCcw} label="Withdraw" busy={busy === `${p.id}:withdraw`} onClick={() => withdraw(p)} />}
+                              {canPrepare && p?.status === 'approved' && <Btn icon={CheckCircle2} label="Process payment" tone="green" onClick={() => setPaying([p])} />}
+                              {canPrepare && p?.status === 'cancelled' && <>
+                                <Btn icon={RotateCcw} label="Restore" onClick={() => restore(p)} />
+                                <Btn icon={Trash2} label="" tone="red" title="Delete" onClick={() => run(`${p.id}:del`, () => deletePayslip(p), 'Payslip deleted.')} />
+                              </>}
+                              {canPrepare && p && p.status !== 'cancelled' && <Btn icon={Download} label="PDF" tone="accent" onClick={() => pdf(p)} />}
+                            </div>
+                          </td>
+                        </tr>
+                      )
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+        </>
       )}
 
       {editing && (
@@ -582,15 +651,22 @@ function PayrollTab({ structures, settings, branding }: { structures: SalaryStru
           onSaved={async () => { setEditing(null); await refresh() }}
         />
       )}
+      {viewing && (
+        <PayslipDetailsModal
+          payslip={viewing}
+          canApprove={canApprove}
+          busy={busy === `${viewing.id}:approved` || busy === `${viewing.id}:changes_requested`}
+          onClose={() => setViewing(null)}
+          onApprove={() => review(viewing, 'approved')}
+          onRequestChanges={note => review(viewing, 'changes_requested', note)}
+        />
+      )}
       {paying && (
         <MarkPaidModal
           payslips={paying}
           onClose={() => setPaying(null)}
           onConfirm={async (paidOn, ref) => {
-            for (const p of paying) {
-              if (p.status === 'draft' && settings.requireApproval) continue
-              await setPayslipStatus(p.id, 'paid', { requireApproval: settings.requireApproval, paidOn, paymentRef: ref })
-            }
+            for (const p of paying) await markPayslipPaid(p.id, paidOn, ref)
             showSuccess(`${paying.length} payslip${paying.length === 1 ? '' : 's'} marked paid.`)
             setPaying(null)
             await refresh()
@@ -598,6 +674,69 @@ function PayrollTab({ structures, settings, branding }: { structures: SalaryStru
         />
       )}
     </div>
+  )
+}
+
+function PayslipDetailsModal({ payslip: p, canApprove, busy, onClose, onApprove, onRequestChanges }: {
+  payslip: Payslip
+  canApprove: boolean
+  busy: boolean
+  onClose: () => void
+  onApprove: () => void
+  onRequestChanges: (note: string) => void
+}) {
+  const [requestMode, setRequestMode] = useState(false)
+  const [note, setNote] = useState('')
+  const meta = STATUS_META[p.status]
+  const reviewable = canApprove && p.status === 'pending_approval'
+
+  return (
+    <Modal title={`Payroll review · ${p.name}`} subtitle={`${monthLabel(p.month)} · ${p.payslipNo} · ${meta.label}`} onClose={onClose} wide
+      footer={requestMode ? <>
+        <button onClick={() => setRequestMode(false)} disabled={busy} className="flex-1 px-4 py-2.5 rounded-xl text-sm text-vriddhi-muted bg-vriddhi-dark border border-vriddhi-border">Back to details</button>
+        <button onClick={() => onRequestChanges(note.trim())} disabled={busy || !note.trim()} className="flex-1 px-4 py-2.5 rounded-xl text-sm font-medium text-white bg-amber-600 hover:bg-amber-700 disabled:opacity-50">{busy ? 'Sending…' : 'Return to accounts'}</button>
+      </> : <>
+        <button onClick={onClose} disabled={busy} className="flex-1 px-4 py-2.5 rounded-xl text-sm text-vriddhi-muted bg-vriddhi-dark border border-vriddhi-border">Close</button>
+        {reviewable && <>
+          <button onClick={() => setRequestMode(true)} disabled={busy} className="flex-1 px-4 py-2.5 rounded-xl text-sm font-medium text-amber-700 dark:text-amber-400 bg-amber-500/10 hover:bg-amber-500/20 disabled:opacity-50">Request changes</button>
+          <button onClick={onApprove} disabled={busy} className="flex-1 px-4 py-2.5 rounded-xl text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50">{busy ? 'Saving…' : 'Approve payroll'}</button>
+        </>}
+      </>}
+    >
+      <div className="space-y-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+          <div><p className="text-xs text-vriddhi-muted">Staff code</p><p className="font-medium">{p.staffCode || '—'}</p></div>
+          <div><p className="text-xs text-vriddhi-muted">Department</p><p className="font-medium">{p.department || '—'}</p></div>
+          <div><p className="text-xs text-vriddhi-muted">Designation</p><p className="font-medium">{p.designation || '—'}</p></div>
+          <div><p className="text-xs text-vriddhi-muted">Paid days / period</p><p className="font-medium">{p.paidDays}/{p.daysInPeriod}{p.lopDays ? ` · ${p.lopDays} LOP` : ''}</p></div>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="rounded-xl border border-vriddhi-border overflow-hidden">
+            <p className="px-3 py-2 bg-green-500/10 text-green-700 dark:text-green-400 text-xs font-semibold">Earnings</p>
+            {p.earnings.map((line, i) => <div key={`${line.label}-${i}`} className="flex justify-between gap-4 px-3 py-2 text-sm border-t border-vriddhi-border/60"><span>{line.label}</span><span>{inr(line.amount)}</span></div>)}
+            <div className="flex justify-between gap-4 px-3 py-2 text-sm font-semibold border-t border-vriddhi-border"><span>Gross</span><span>{inr(p.gross)}</span></div>
+          </div>
+          <div className="rounded-xl border border-vriddhi-border overflow-hidden">
+            <p className="px-3 py-2 bg-red-500/10 text-red-700 dark:text-red-400 text-xs font-semibold">Deductions</p>
+            {p.deductions.length === 0 ? <p className="px-3 py-3 text-sm text-vriddhi-muted">No deductions</p> : p.deductions.map((line, i) => <div key={`${line.label}-${i}`} className="flex justify-between gap-4 px-3 py-2 text-sm border-t border-vriddhi-border/60"><span>{line.label}</span><span>{inr(line.amount)}</span></div>)}
+            <div className="flex justify-between gap-4 px-3 py-2 text-sm font-semibold border-t border-vriddhi-border"><span>Total deductions</span><span>{inr(p.totalDeductions)}</span></div>
+          </div>
+        </div>
+        <div className="flex justify-between items-center p-4 rounded-xl bg-vriddhi-accent text-white"><span className="font-medium">Net payable</span><span className="text-xl font-bold">{inr(p.net)}</span></div>
+        <div className="text-xs text-vriddhi-muted space-y-1">
+          {p.submittedBy && <p>Submitted by {p.submittedBy}{p.submittedAt ? ` · ${new Date(p.submittedAt).toLocaleString()}` : ''}</p>}
+          {p.approvedBy && <p>Approved by {p.approvedBy}{p.approvedAt ? ` · ${new Date(p.approvedAt).toLocaleString()}` : ''}</p>}
+          {p.reviewNote && <p className="text-amber-700 dark:text-amber-400">Principal's note: {p.reviewNote}</p>}
+          {p.status === 'paid' && <p>Payment processed by {p.markedPaidBy || 'accounts'}{p.paidOn ? ` · ${p.paidOn}` : ''}{p.paymentRef ? ` · Ref ${p.paymentRef}` : ''}</p>}
+        </div>
+        {requestMode && (
+          <label className="block text-sm">
+            <span className="block text-xs text-vriddhi-muted mb-1">What should accounts correct?</span>
+            <textarea value={note} onChange={e => setNote(e.target.value)} rows={3} maxLength={500} className="input-field w-full resize-y" placeholder="Explain what needs to be corrected before resubmission." />
+          </label>
+        )}
+      </div>
+    </Modal>
   )
 }
 
@@ -708,7 +847,7 @@ function CertificatesTab({ structures, settings, branding }: { structures: Salar
       const months: string[] = []
       const d = new Date()
       for (let i = 0; i < 12; i++) { months.push(new Date(d.getFullYear(), d.getMonth() - i, 1).toISOString().slice(0, 7)) }
-      const all = await Promise.all(months.map(m => fetchPayslips(m).catch(() => [] as Payslip[])))
+      const all = await Promise.all(months.map(m => fetchPayslips(m, false).catch(() => [] as Payslip[])))
       return all.flat().filter(p => p.facultyProfileId === profileId && (p.status === 'paid' || p.status === 'approved'))
     },
     enabled: !!profileId,

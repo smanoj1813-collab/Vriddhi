@@ -5,7 +5,7 @@
 // (staff-read / admin-write per Firestore rules). Plus a pure helper to resolve
 // the academic score a score-based discount reads from.
 
-import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore'
+import { doc, getDoc, setDoc, updateDoc, serverTimestamp } from 'firebase/firestore'
 import { db } from '@/Firebase/config'
 import { stripUndefined } from '@/shared/utils/firestoreClean'
 import type {
@@ -175,15 +175,34 @@ function normalizePayroll(raw: unknown): PayrollSettings {
   const r = (raw && typeof raw === 'object' ? raw : {}) as Record<string, unknown>
   return {
     ...merged,
+    // Old colleges may have stored false before the mandatory principal-review
+    // workflow. Ignore that legacy value so no client can skip approval.
+    requireApproval: true,
     components: Array.isArray(r.components) ? (r.components as PayrollSettings['components']) : DEFAULT_PAYROLL_SETTINGS.components,
     certificate: mergeObject(DEFAULT_CERTIFICATE_SETTINGS, r.certificate),
   }
 }
 
 /** Persist the college's finance rules (admin only — enforced by Firestore). */
-export async function saveFinanceRules(rules: FinanceRulesDoc, collegeId?: string | null): Promise<void> {
+export async function saveFinanceRules(
+  rules: FinanceRulesDoc,
+  collegeId?: string | null,
+  options: { preservePayroll?: boolean } = {},
+): Promise<void> {
+  const ref = financeRef(collegeId)
+  if (options.preservePayroll) {
+    // Principal may update general finance settings, but payroll calculation
+    // policy belongs to accounts. Omit the payroll map entirely so it cannot
+    // be overwritten as a side effect of saving another finance tab.
+    const { payroll: _payroll, ...financeOnly } = stripUndefined(rules)
+    const payload = { ...financeOnly, updatedAt: serverTimestamp() }
+    const existing = await getDoc(ref)
+    if (existing.exists()) await updateDoc(ref, payload)
+    else await setDoc(ref, payload)
+    return
+  }
   await setDoc(
-    financeRef(collegeId),
+    ref,
     // Full overwrite (not merge): a merge would deep-merge maps, so a removed
     // key (e.g. a per-employment-type rate) could never be deleted.
     { ...stripUndefined(rules), updatedAt: serverTimestamp() },

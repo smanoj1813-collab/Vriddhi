@@ -43,8 +43,8 @@ export const PROVISIONABLE_ROLES = [
   'student',
   'parent',
   // College office roles (no academic access): the accounts team owns fees,
-  // payments and (when the college allows) payroll; operations owns the
-  // library, inventory and stores.
+  // payments, payroll preparation and post-approval processing; the principal
+  // owns payroll review/approval. Operations owns the library, inventory and stores.
   'accounts',
   'operations',
 ]

@@ -62,6 +62,8 @@ export async function fetchCalendarEvents(collegeId?: string): Promise<CalendarE
 export interface SaveCalendarResult {
   id: string;
   updated: boolean;
+  /** Future, unmarked sessions reconciled immediately for a suspending event. */
+  cancelledSessions: number;
   warnings: string[];
 }
 
@@ -96,33 +98,69 @@ export async function deleteCalendarEvent(id: string, collegeId?: string): Promi
   await call({ id, collegeId: collegeId || currentCollegeId() });
 }
 
+/** Stable, college-scoped ID so concurrent/repeated imports are idempotent. */
+function importedHolidayId(collegeId: string, date: string): string {
+  let hash = 2166136261;
+  for (let i = 0; i < collegeId.length; i += 1) {
+    hash ^= collegeId.charCodeAt(i);
+    hash = Math.imul(hash, 16777619);
+  }
+  return `kph-${(hash >>> 0).toString(36)}-${date.replace(/-/g, '')}`;
+}
+
+function normalizedHolidayTitle(value: string): string {
+  return value.normalize('NFKD').replace(/[\u0300-\u036f]/g, '').trim().toLowerCase().replace(/\s+/g, ' ');
+}
+
 /**
- * "Import Karnataka public holidays (year)" — the bundled static list pushed
- * through the same saveCalendarEvent door, one event per date (all one-day
- * public holidays with suspendsClasses:true). Returns the ids written.
+ * Import the bundled Karnataka list through the callable write door. Existing
+ * matching rows are updated in place (and reconciled for already-generated
+ * sessions), while new rows use stable IDs so repeated imports cannot clone
+ * the same holiday.
  */
 export async function importKarnatakaHolidays(
   year: number,
   collegeId?: string,
-): Promise<{ created: number; ids: string[] }> {
+): Promise<{ created: number; alreadyPresent: number; cancelledSessions: number; ids: string[]; warnings: string[] }> {
+  const cid = collegeId || currentCollegeId();
+  const existingEvents = await fetchCalendarEvents(cid);
   const ids: string[] = [];
+  const warnings: string[] = [];
+  let created = 0;
+  let alreadyPresent = 0;
+  let cancelledSessions = 0;
+
   for (const holiday of karnatakaHolidaysForYear(year)) {
+    const existing = existingEvents.find((event) =>
+      event.type === 'public-holiday' &&
+      event.startDate === holiday.date &&
+      event.endDate === holiday.date &&
+      normalizedHolidayTitle(event.title) === normalizedHolidayTitle(holiday.title),
+    );
+    const notes = existing?.notes || (holiday.tentative
+      ? 'Tentative date (lunar sighting) — verify against the gazetted list'
+      : 'Imported from the bundled Karnataka public-holiday list');
     const result = await saveCalendarEvent(
       {
-        title: holiday.title,
-        type: 'public-holiday' as CalendarEventType,
+        ...(existing ? { id: existing.id } : { id: importedHolidayId(cid, holiday.date) }),
+        title: existing?.title || holiday.title,
+        type: 'public-holiday',
         startDate: holiday.date,
         endDate: holiday.date,
-        suspendsClasses: DEFAULT_SUSPENDS_CLASSES['public-holiday'],
-        notes: holiday.tentative
-          ? 'Tentative date (lunar sighting) — verify against the gazetted list'
-          : 'Imported from the bundled Karnataka public-holiday list',
+        // Preserve a college's explicit teach-on-holiday override on re-import.
+        suspendsClasses: existing ? existing.suspendsClasses : DEFAULT_SUSPENDS_CLASSES['public-holiday'],
+        notes,
       },
-      collegeId,
+      cid,
     );
     ids.push(result.id);
+    if (existing) alreadyPresent += 1;
+    else created += 1;
+    cancelledSessions += result.cancelledSessions || 0;
+    warnings.push(...result.warnings);
   }
-  return { created: ids.length, ids };
+
+  return { created, alreadyPresent, cancelledSessions, ids, warnings };
 }
 
 export { KARNATAKA_PUBLIC_HOLIDAYS };

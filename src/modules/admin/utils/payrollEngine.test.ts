@@ -105,13 +105,20 @@ test('roundTo', () => {
   assert.equal(roundTo(1234.567, 0), 1234.57)
 })
 
-test('payslip lifecycle respects approval setting', () => {
-  assert.equal(canTransitionPayslip('draft', 'paid', true), false)
-  assert.equal(canTransitionPayslip('draft', 'paid', false), true)
-  assert.equal(canTransitionPayslip('draft', 'approved', true), true)
-  assert.equal(canTransitionPayslip('approved', 'paid', true), true)
-  assert.equal(canTransitionPayslip('paid', 'draft', true), false)
-  assert.equal(canTransitionPayslip('cancelled', 'draft', true), true)
+test('payroll workflow separates preparation, approval and processing by role', () => {
+  assert.equal(canTransitionPayslip('draft', 'pending_approval', 'accounts'), true)
+  assert.equal(canTransitionPayslip('draft', 'approved', 'accounts'), false)
+  assert.equal(canTransitionPayslip('draft', 'paid', 'accounts'), false)
+  assert.equal(canTransitionPayslip('pending_approval', 'approved', 'principal'), true)
+  assert.equal(canTransitionPayslip('pending_approval', 'draft', 'principal'), true)
+  assert.equal(canTransitionPayslip('pending_approval', 'paid', 'principal'), false)
+  assert.equal(canTransitionPayslip('approved', 'paid', 'accounts'), true)
+  assert.equal(canTransitionPayslip('approved', 'draft', 'accounts'), false)
+  assert.equal(canTransitionPayslip('paid', 'draft', 'accounts'), false)
+  assert.equal(canTransitionPayslip('cancelled', 'draft', 'accounts'), true)
+  assert.equal(canTransitionPayslip('draft', 'paid', 'superadmin'), false)
+  assert.equal(canTransitionPayslip('pending_approval', 'approved', 'superadmin'), true)
+  assert.equal(canTransitionPayslip('approved', 'paid', 'superadmin'), true)
 })
 
 test('amountInWords — Indian numbering', () => {
