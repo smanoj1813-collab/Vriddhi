@@ -10,6 +10,11 @@
 // Scope of the port: the pure clash maths only. The client keeps the full
 // module for its advisory warnings and its React-facing formatting helpers;
 // this file is what the callables use to *reject* a hard clash.
+//
+// COHORT IDENTITY follows ./cohortBatch: a batch range is the class of its END
+// year and a division field may be a LIST ("A,B,C,D"). Two rows share a
+// cohort when their scopes overlap — the same rule the student curriculum page
+// and the auto-scheduler read with.
 
 export type DayOfWeek =
   | 'monday'
@@ -19,6 +24,8 @@ export type DayOfWeek =
   | 'friday'
   | 'saturday'
   | 'sunday'
+
+import { cohortScopesOverlap } from '../cohortBatch'
 
 export type ClashKind = 'faculty' | 'cohort' | 'room'
 
@@ -102,9 +109,9 @@ export function findClashes(
       continue
     }
     if (existing.facultyId === candidate.facultyId) clashes.push('faculty')
-    if (cohortKey(existing) === cohortKey(candidate) && cohortKey(candidate) !== '||') {
-      clashes.push('cohort')
-    }
+    // Batch ranges and division lists compare by scope overlap, so a slot for
+    // "2026-2027 / A,B,C,D" is recognised as the cohort of "2027 / A".
+    if (cohortScopesOverlap(existing, candidate)) clashes.push('cohort')
     if (candidate.room && existing.room === candidate.room) clashes.push('room')
   }
 
@@ -186,13 +193,9 @@ export function findSessionClashes(
     const kinds: ClashKind[] = []
     if (other.facultyId && other.facultyId === candidate.facultyId) kinds.push('faculty')
     if (candidate.room && other.room === candidate.room) kinds.push('room')
-    if (
-      cohortKey(other) === cohortKey(candidate) &&
-      cohortKey(candidate) !== '||' &&
-      cohortKey(candidate) !== '|'
-    ) {
-      kinds.push('cohort')
-    }
+    // Same overlap rule as the weekly matcher above; two blank scopes are "no
+    // identifiable cohort" and never produce a clash.
+    if (cohortScopesOverlap(other, candidate)) kinds.push('cohort')
 
     kinds.forEach((kind) => {
       conflicts.push({

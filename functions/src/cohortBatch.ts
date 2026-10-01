@@ -1,6 +1,8 @@
 // functions/src/cohortBatch.ts
 //
-// Batch (academic year) identity, shared by every server-side cohort matcher.
+// Cohort identity — batch (academic year) AND division/section letters —
+// shared by every server-side cohort matcher: the student curriculum page,
+// the auto-scheduler, the bulk schedule import and the clash detector.
 //
 // WHY THIS EXISTS
 // A cohort's batch is recorded two ways in this codebase:
@@ -98,4 +100,131 @@ export function normalizeBatchKey(value: unknown): string {
  */
 export function batchKeysMatch(left: unknown, right: unknown): boolean {
   return normalizeBatchKey(left) === normalizeBatchKey(right)
+}
+
+/** Multi-intake separators: "2027,2028", "2027/2028", "2027 2028". A hyphen
+ *  is NOT a separator — "2026-2027" is one academic-year token, not two. */
+const BATCH_LIST_SPLIT = /[,/;|&\s]+/
+
+/**
+ * The batch tokens of a multi-intake list ("2027, 2028" → ["2027","2028"]),
+ * each canonicalised with normalizeBatchKey so a token that is an
+ * academic-year range ("2026-2027") is compared as its END year.
+ * Empty list → [].
+ */
+export function batchKeyTokens(value: unknown): string[] {
+  const out: string[] = []
+  for (const raw of String(value ?? '').split(BATCH_LIST_SPLIT)) {
+    const key = normalizeBatchKey(raw)
+    if (key && !out.includes(key)) out.push(key)
+  }
+  return out
+}
+
+/**
+ * Do two batch FIELDS name at least one common class? Either side may hold a
+ * multi-intake list, and every token is compared keyed (range ≡ end year).
+ * Both empty → true; exactly one empty → false (a field that names no class
+ * cannot be assumed to be the other one).
+ */
+export function batchFieldsIntersect(left: unknown, right: unknown): boolean {
+  const leftTokens = batchKeyTokens(left)
+  const rightTokens = batchKeyTokens(right)
+  if (leftTokens.length === 0 && rightTokens.length === 0) return true
+  if (leftTokens.length === 0 || rightTokens.length === 0) return false
+  return leftTokens.some((token) => rightTokens.includes(token))
+}
+
+// ─── Division / section letters ─────────────────────────────────────────────
+
+/** Words that carry no letter of their own: "Div A, Div B" → ["a", "b"]. */
+const LETTER_PREFIX_WORDS = new Set(['div', 'division', 'sec', 'sect', 'section'])
+
+/** List separators: "A,B,C,D", "A/B", "A;B", "A B", "A&B". */
+const LETTER_SPLIT = /[,/;|&+]+|\s+/
+
+const foldLetter = (value: unknown) => String(value ?? '').trim().toLowerCase().replace(/\s+/g, ' ')
+const normLetter = (value: unknown) =>
+  foldLetter(value).replace(/^div(ision)?[.\s]*/, '').replace(/^sec(tion)?[.\s]*/, '').trim()
+
+/**
+ * Every letter a division/section FIELD holds.
+ *
+ * Staff write a LIST when one class covers several divisions — "A,B,C,D".
+ * Reading that as one token ("abcd") made the class equal nobody, so a
+ * correctly mapped subject was reported as "a different class than yours"
+ * (and the same value blanks the attendance roster). A field with no
+ * separators is still ONE token: "ABCD" ≠ "A".
+ */
+export function cohortLetters(value: unknown): string[] {
+  const out: string[] = []
+  for (const raw of String(value ?? '').split(LETTER_SPLIT)) {
+    const letter = normLetter(raw)
+    if (!letter || LETTER_PREFIX_WORDS.has(letter)) continue
+    if (!out.includes(letter)) out.push(letter)
+  }
+  return out
+}
+
+/** A row's division/section scope — any object carrying the two fields. */
+export interface DivisionScope {
+  division?: unknown
+  section?: unknown
+}
+
+/**
+ * Do two division/section scopes address at least one common division?
+ *
+ * A scope is the pair (division, section) because records split the letter
+ * across the two fields. A blank side is "no constraint" (true) — the same
+ * wildcard rule the student matcher uses. A list on either side overlaps a
+ * single letter or another list as soon as one letter is shared.
+ */
+export function divisionScopesOverlap(left: DivisionScope, right: DivisionScope): boolean {
+  const leftLetters = [...cohortLetters(left.division), ...cohortLetters(left.section)]
+  const rightLetters = [...cohortLetters(right.division), ...cohortLetters(right.section)]
+  if (leftLetters.length === 0 || rightLetters.length === 0) return true
+  return leftLetters.some((letter) => rightLetters.includes(letter))
+}
+
+/** A row's cohort scope — branch + batch + division/section. */
+export interface CohortScope extends DivisionScope {
+  branch?: unknown
+  batch?: unknown
+}
+
+const foldBranch = (value: unknown) =>
+  String(value ?? '').trim().toLowerCase().replace(/[.,;:'’"·]+/g, '').replace(/\s+/g, ' ').trim()
+
+/**
+ * Do two cohort scopes (branch, batch, division/section) overlap — i.e. could
+ * they contain the same students?
+ *
+ * Used by clash detection and the auto-scheduler to decide whether two
+ * timetable rows compete for one cohort. Two fully blank scopes are "no
+ * identifiable cohort" and never overlap; a blank FIELD inside a scope is a
+ * wildcard (a slot with no division recorded covers every division).
+ */
+export function cohortScopesOverlap(left: CohortScope, right: CohortScope): boolean {
+  const leftBranch = foldBranch(left.branch)
+  const rightBranch = foldBranch(right.branch)
+  const leftBatch = batchKeyTokens(left.batch)
+  const rightBatch = batchKeyTokens(right.batch)
+  const leftLetters = [...cohortLetters(left.division), ...cohortLetters(left.section)]
+  const rightLetters = [...cohortLetters(right.division), ...cohortLetters(right.section)]
+
+  if (!leftBranch && !rightBranch && leftBatch.length === 0 && rightBatch.length === 0 &&
+      leftLetters.length === 0 && rightLetters.length === 0) {
+    return false
+  }
+  if (leftBranch && rightBranch && leftBranch !== rightBranch) return false
+  if (leftBatch.length > 0 && rightBatch.length > 0 &&
+      !leftBatch.some((token) => rightBatch.includes(token))) {
+    return false
+  }
+  if (leftLetters.length > 0 && rightLetters.length > 0 &&
+      !leftLetters.some((letter) => rightLetters.includes(letter))) {
+    return false
+  }
+  return true
 }

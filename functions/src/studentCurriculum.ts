@@ -27,7 +27,7 @@ import * as admin from 'firebase-admin'
 import * as logger from 'firebase-functions/logger'
 import { HttpsError, onCall } from 'firebase-functions/v2/https'
 import { addDays, isTopicCovered, normalizeSessionDate, normalizeTopicKey, todayKey } from './classSchedule'
-import { batchKeysMatch, normalizeBatchKey } from './cohortBatch'
+import { batchKeysMatch, cohortLetters, divisionScopesOverlap, normalizeBatchKey } from './cohortBatch'
 
 // ─── Types returned to the client ───────────────────────────────────────────
 
@@ -262,33 +262,12 @@ const fold = (v: unknown) => String(v ?? '').trim().toLowerCase().replace(/\s+/g
 const normProgram = (v: unknown) => fold(v).replace(NOISE_PUNCT, '').replace(/\s+/g, ' ').trim()
 /** Course/subject codes — NOT for batches: those use ./cohortBatch keys. */
 const normToken = (v: unknown) => fold(v).replace(NOISE_PUNCT, '')
-const normLetter = (v: unknown) =>
-  fold(v).replace(/^div(ision)?[.\s]*/, '').replace(/^sec(tion)?[.\s]*/, '').trim()
 
-/** Words that carry no letter of their own: "Div A, Div B" → ["a", "b"]. */
-const LETTER_PREFIX_WORDS = new Set(['div', 'division', 'sec', 'sect', 'section'])
-
-/** List separators: "A,B,C,D", "A/B", "A;B", "A B", "A&B". */
-const LETTER_SPLIT = /[,/;|&+]+|\s+/
-
-/**
- * Every letter a division/section FIELD holds.
- *
- * Staff write a LIST when one class covers several divisions — "A,B,C,D".
- * Reading that as one token ("abcd") made the class equal nobody, so a
- * correctly mapped subject was reported as "a different class than yours"
- * (and the same value blanks the attendance roster). A field with no
- * separators is still ONE token.
- */
-export function cohortLetters(value: unknown): string[] {
-  const out: string[] = []
-  for (const raw of String(value ?? '').split(LETTER_SPLIT)) {
-    const letter = normLetter(raw)
-    if (!letter || LETTER_PREFIX_WORDS.has(letter)) continue
-    if (!out.includes(letter)) out.push(letter)
-  }
-  return out
-}
+// Division/section letters and batch keys live in ./cohortBatch (one server
+// copy, shared with the auto-scheduler and the clash detector). Re-exported
+// here because this module was their original home and the tests import them
+// from it.
+export { cohortLetters }
 
 export interface CohortLike {
   branch?: unknown
@@ -331,12 +310,9 @@ export function sessionMatchesCohort(row: CohortLike, student: CohortLike): bool
   const sSem = Number(student.semester) || 0
   if (rSem && sSem && rSem !== sSem) return false
 
-  const rowLetters = [...cohortLetters(row.division), ...cohortLetters(row.section)]
-  const studentLetters = [...cohortLetters(student.division), ...cohortLetters(student.section)]
-  if (rowLetters.length && studentLetters.length) {
-    if (!rowLetters.some((l) => studentLetters.includes(l))) return false
-  }
-  return true
+  // Division / section — letters as a SET: a class mapped to "A,B,C,D" is the
+  // class of "A". A blank side is a wildcard (the ./cohortBatch rule).
+  return divisionScopesOverlap(row, student)
 }
 
 // ─── Classification ─────────────────────────────────────────────────────────

@@ -113,6 +113,37 @@ describe('timetable conflict utilities', () => {
       []
     )
   })
+
+  it('sees a division LIST as covering each of its letters', () => {
+    // The mapping/import shape: one row for the whole batch ("A,B,C,D").
+    const clashes = findClashes(
+      entry({ facultyId: 'new-faculty', division: 'A', room: 'new-room' }),
+      [entry({ id: 'other', facultyId: 'other-faculty', division: 'A,B,C,D', room: 'other-room' })]
+    )
+    assert.deepEqual(clashes, ['cohort'])
+    // ...and the reverse direction, too.
+    const reverse = findClashes(
+      entry({ facultyId: 'new-faculty', division: 'A,B,C,D', room: 'new-room' }),
+      [entry({ id: 'other', facultyId: 'other-faculty', division: 'B', room: 'other-room' })]
+    )
+    assert.deepEqual(reverse, ['cohort'])
+  })
+
+  it('sees an academic-year range as the class of its end year', () => {
+    const clashes = findClashes(
+      entry({ facultyId: 'new-faculty', batch: '2027', room: 'new-room' }),
+      [entry({ id: 'other', facultyId: 'other-faculty', batch: '2026-2027', room: 'other-room' })]
+    )
+    assert.deepEqual(clashes, ['cohort'])
+    // A bare start year is still a different cohort.
+    assert.deepEqual(
+      findClashes(
+        entry({ facultyId: 'new-faculty', batch: '2026', room: 'new-room' }),
+        [entry({ id: 'other', facultyId: 'other-faculty', batch: '2026-2027', room: 'other-room' })]
+      ),
+      []
+    )
+  })
 })
 
 // ═══════════════════════════════════════════════════════════════════════════

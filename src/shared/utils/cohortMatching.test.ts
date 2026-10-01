@@ -10,7 +10,10 @@ import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
 
 import {
+  batchFieldsIntersect,
   batchKeysMatch,
+  cohortScopesOverlap,
+  divisionScopesOverlap,
   extractStudentCohortFields,
   matchCohortRows,
   matchStudentToCohort,
@@ -540,5 +543,54 @@ describe('matchCohortRows — near misses ("almost this class")', () => {
     const { diagnostics } = matchCohortRows([student()], criteria(), 450)
     assert.equal(diagnostics.nearMissTotal, 0)
     assert.deepEqual(diagnostics.nearMisses, {})
+  })
+})
+
+// ─── Cohorts for the TIMETABLE, not the roster ──────────────────────────────
+//
+// The roster matcher above is what "Mark Attendance" asks. The clash detector
+// (src/shared/utils/timetableConflicts.ts) and the auto-scheduler ask whether
+// two timetable rows could contain the same students — same batch rule, same
+// letter sets, plus the wildcard rules that make "no division recorded" mean
+// "the whole batch". These cases pin that helper, and
+// functions/test/cohortBatch.test.ts pins it against the server copy.
+
+describe('cohort scope overlap (timetable rows)', () => {
+  it('a division list covers each of its letters', () => {
+    assert.equal(divisionScopesOverlap({ division: 'A,B,C,D' }, { division: 'A' }), true)
+    assert.equal(divisionScopesOverlap({ division: 'A' }, { division: 'A,B,C,D' }), true)
+    assert.equal(divisionScopesOverlap({ division: 'B,C' }, { division: 'A' }), false)
+  })
+
+  it('reads the letter out of the section field too', () => {
+    assert.equal(divisionScopesOverlap({ section: 'A' }, { division: 'a' }), true)
+    assert.equal(divisionScopesOverlap({ section: 'B' }, { division: 'A' }), false)
+  })
+
+  it('treats a blank side as no constraint', () => {
+    assert.equal(divisionScopesOverlap({ division: '' }, { division: 'A' }), true)
+  })
+
+  it('overlaps a batch range with its end year and a division list with a letter', () => {
+    assert.equal(
+      cohortScopesOverlap(
+        { branch: 'BBA', batch: '2026-2027', division: 'A,B,C,D' },
+        { branch: 'BBA', batch: '2027', division: 'A' },
+      ),
+      true,
+    )
+  })
+
+  it('does not overlap different cohorts, and never two blank scopes', () => {
+    assert.equal(cohortScopesOverlap({ batch: '2027', division: 'B' }, { batch: '2027', division: 'A' }), false)
+    assert.equal(cohortScopesOverlap({ batch: '2026' }, { batch: '2027' }), false)
+    assert.equal(cohortScopesOverlap({ branch: 'B.Com' }, { branch: 'BBA' }), false)
+    assert.equal(cohortScopesOverlap({}, {}), false)
+  })
+
+  it('compares multi-intake batch lists token by token', () => {
+    assert.equal(batchFieldsIntersect('2027, 2028', '2027;2028'), true)
+    assert.equal(batchFieldsIntersect('2027', '2026-2027'), true)
+    assert.equal(batchFieldsIntersect('2026', '2026-2027'), false)
   })
 })

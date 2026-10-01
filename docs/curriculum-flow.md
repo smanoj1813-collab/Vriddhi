@@ -1,5 +1,8 @@
 # The Curriculum → Timetable → Reschedule flow
 
+> Whole-chain view (curriculum → faculty mapping → timetable → student page):
+> [curriculum-to-student-flow.md](./curriculum-to-student-flow.md).
+
 Date: 2026-09-30 · Surface: **Admin → Curriculum** (`/admin/curriculum`) ·
 Server: `functions/src/classSchedule.ts` (S2.6), `rescheduleClass`
 

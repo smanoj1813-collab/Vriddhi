@@ -11,9 +11,20 @@
 
 import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
-import { batchKeysMatch, normalizeBatchKey } from '../src/cohortBatch.ts'
 import {
+  batchFieldsIntersect,
+  batchKeysMatch,
+  cohortLetters,
+  cohortScopesOverlap,
+  divisionScopesOverlap,
+  normalizeBatchKey,
+} from '../src/cohortBatch.ts'
+import {
+  batchFieldsIntersect as browserBatchFieldsIntersect,
   batchKeysMatch as browserBatchKeysMatch,
+  cohortLetters as browserCohortLetters,
+  cohortScopesOverlap as browserCohortScopesOverlap,
+  divisionScopesOverlap as browserDivisionScopesOverlap,
   normalizeBatchKey as browserNormalizeBatchKey,
 } from '../../src/shared/utils/cohortMatching.ts'
 
@@ -107,6 +118,132 @@ describe('server copy ≡ browser copy', () => {
           batchKeysMatch(left, right),
           browserBatchKeysMatch(left, right),
           `batchKeysMatch(${JSON.stringify(left)}, ${JSON.stringify(right)})`,
+        )
+      }
+    }
+  })
+})
+
+// ─── Division letters + cohort scope overlap ────────────────────────────────
+//
+// Same story as the batch rule above, one field over: staff write a LIST when
+// a class covers several divisions ("A,B,C,D") and the auto-scheduler / clash
+// detector / student page must all read that as a set of letters. The last
+// block pins the SERVER copy and the BROWSER copy together.
+
+describe('cohortLetters', () => {
+  it('splits a list on every separator staff use', () => {
+    assert.deepEqual(cohortLetters('A,B,C,D'), ['a', 'b', 'c', 'd'])
+    assert.deepEqual(cohortLetters('A/B'), ['a', 'b'])
+    assert.deepEqual(cohortLetters('A;B'), ['a', 'b'])
+    assert.deepEqual(cohortLetters('a b'), ['a', 'b'])
+    assert.deepEqual(cohortLetters('A&B'), ['a', 'b'])
+    assert.deepEqual(cohortLetters('Div A, Div B'), ['a', 'b'])
+    assert.deepEqual(cohortLetters('division a'), ['a'])
+  })
+
+  it('keeps an unseparated token as ONE letter', () => {
+    assert.deepEqual(cohortLetters('ABCD'), ['abcd'])
+    assert.notDeepEqual(cohortLetters('ABCD'), cohortLetters('A'))
+  })
+
+  it('is empty for blank and prefix-only fields', () => {
+    assert.deepEqual(cohortLetters(''), [])
+    assert.deepEqual(cohortLetters(null), [])
+    assert.deepEqual(cohortLetters('Div'), [])
+  })
+})
+
+describe('divisionScopesOverlap / cohortScopesOverlap', () => {
+  it('a list covers each of its letters and a blank side covers everything', () => {
+    assert.equal(divisionScopesOverlap({ division: 'A,B,C,D' }, { division: 'A' }), true)
+    assert.equal(divisionScopesOverlap({ division: 'B' }, { division: 'A' }), false)
+    assert.equal(divisionScopesOverlap({ division: '' }, { division: 'A' }), true)
+    assert.equal(divisionScopesOverlap({ division: 'A' }, { section: 'A' }), true)
+  })
+
+  it('overlaps a batch range with its end year and a division list with a letter', () => {
+    assert.equal(
+      cohortScopesOverlap(
+        { branch: 'BBA', batch: '2026-2027', division: 'A,B,C,D' },
+        { branch: 'BBA', batch: '2027', division: 'A' },
+      ),
+      true,
+    )
+  })
+
+  it('does not overlap different cohorts', () => {
+    assert.equal(
+      cohortScopesOverlap({ branch: 'BBA', batch: '2027', division: 'B' }, { branch: 'BBA', batch: '2027', division: 'A' }),
+      false,
+    )
+    assert.equal(
+      cohortScopesOverlap({ branch: 'BBA', batch: '2026' }, { branch: 'BBA', batch: '2027' }),
+      false,
+    )
+    assert.equal(
+      cohortScopesOverlap({ branch: 'B.Com', batch: '2027' }, { branch: 'BBA', batch: '2027' }),
+      false,
+    )
+  })
+
+  it('never overlaps two fully blank scopes', () => {
+    // "no cohort recorded" is not a cohort everyone belongs to.
+    assert.equal(cohortScopesOverlap({}, {}), false)
+    assert.equal(cohortScopesOverlap({ division: '' }, { division: '' }), false)
+    // One identifying field is enough to compare.
+    assert.equal(cohortScopesOverlap({ batch: '2027' }, { batch: '2027' }), true)
+  })
+})
+
+describe('batchFieldsIntersect', () => {
+  it('matches multi-intake lists token by token, keyed', () => {
+    assert.equal(batchFieldsIntersect('2027, 2028', '2027;2028'), true)
+    assert.equal(batchFieldsIntersect('2027', '2026-2027'), true)
+    assert.equal(batchFieldsIntersect('2026', '2026-2027'), false)
+    assert.equal(batchFieldsIntersect('', '2027'), false)
+    assert.equal(batchFieldsIntersect('', ''), true)
+  })
+})
+
+describe('server ↔ browser parity (division letters and scope overlap)', () => {
+  const SCOPES: Array<{ branch?: unknown; batch?: unknown; division?: unknown; section?: unknown }> = [
+    { branch: 'BBA', batch: '2026-2027', division: 'A,B,C,D' },
+    { branch: 'BBA', batch: '2027', division: 'A' },
+    { branch: 'BBA', batch: '2027', section: 'A' },
+    { branch: 'BBA', batch: '2026', division: 'B' },
+    { branch: 'B.Com', batch: '2027', division: 'A' },
+    { branch: 'BBA', batch: '2027', division: '' },
+    { division: 'Div A, Div B' },
+    {},
+    { batch: '' },
+  ]
+
+  it('agrees on the letters of a field', () => {
+    for (const value of ['A,B,C,D', 'Div A, Div B', 'ABCD', '', 'Div', 'a b', null]) {
+      assert.deepEqual(cohortLetters(value), browserCohortLetters(value, 'division'), `cohortLetters(${String(value)})`)
+    }
+  })
+
+  it('agrees on division-scope overlap for every pair', () => {
+    for (const left of SCOPES) {
+      for (const right of SCOPES) {
+        assert.equal(
+          divisionScopesOverlap(left, right),
+          browserDivisionScopesOverlap(left, right),
+          `divisionScopesOverlap(${JSON.stringify(left)}, ${JSON.stringify(right)})`,
+        )
+      }
+    }
+  })
+
+  it('agrees on cohort-scope overlap for every pair', () => {
+    for (const left of SCOPES) {
+      for (const right of SCOPES) {
+        assert.equal(
+          cohortScopesOverlap(left, right),
+          browserCohortScopesOverlap(left, right),
+          `cohortScopesOverlap(${JSON.stringify(left)}, ${JSON.stringify(right)})`,
         )
       }
     }

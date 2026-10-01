@@ -158,6 +158,93 @@ export function batchKeysMatch(left: unknown, right: unknown): boolean {
   return normalizeBatchKey(left) === normalizeBatchKey(right)
 }
 
+/** Multi-intake separators: "2027,2028", "2027/2028", "2027 2028". A hyphen
+ *  is NOT a separator — "2026-2027" is one academic-year token, not two. */
+const BATCH_LIST_SPLIT = /[,/;|&\s]+/
+
+/**
+ * The batch tokens of a multi-intake list, each canonicalised as a batch key
+ * (so an academic-year token counts as its END year). Empty list → [].
+ */
+export function batchKeyTokens(value: unknown): string[] {
+  const out: string[] = []
+  for (const raw of String(value ?? '').split(BATCH_LIST_SPLIT)) {
+    const key = normalizeBatchKey(raw)
+    if (key && !out.includes(key)) out.push(key)
+  }
+  return out
+}
+
+/**
+ * Do two batch FIELDS name at least one common class? Either side may hold a
+ * multi-intake list; every token is compared keyed (range ≡ end year).
+ * Both empty → true; exactly one empty → false.
+ */
+export function batchFieldsIntersect(left: unknown, right: unknown): boolean {
+  const leftTokens = batchKeyTokens(left)
+  const rightTokens = batchKeyTokens(right)
+  if (leftTokens.length === 0 && rightTokens.length === 0) return true
+  if (leftTokens.length === 0 || rightTokens.length === 0) return false
+  return leftTokens.some((token) => rightTokens.includes(token))
+}
+
+/** A row's cohort/division scope — any object carrying these fields. */
+export interface CohortScope {
+  branch?: unknown
+  batch?: unknown
+  division?: unknown
+  section?: unknown
+}
+
+const foldScopeText = (value: unknown) =>
+  String(value ?? '').trim().toLowerCase().replace(NOISE_PUNCT, '').replace(/\s+/g, ' ').trim()
+
+/**
+ * Do two division/section scopes address a common division? A blank side is
+ * "no constraint" (true); otherwise the letters must intersect — so a class
+ * mapped to "A,B,C,D" covers division "A". Same rule as the server copy in
+ * functions/src/cohortBatch.ts.
+ */
+export function divisionScopesOverlap(left: CohortScope, right: CohortScope): boolean {
+  const leftLetters = [...cohortLetters(left.division, 'division'), ...cohortLetters(left.section, 'section')]
+  const rightLetters = [...cohortLetters(right.division, 'division'), ...cohortLetters(right.section, 'section')]
+  if (leftLetters.length === 0 || rightLetters.length === 0) return true
+  return leftLetters.some((letter) => rightLetters.includes(letter))
+}
+
+/**
+ * Do two cohort scopes (branch, batch, division/section) overlap — i.e. could
+ * they contain the same students? Used by clash detection both in the browser
+ * and on the server (functions/src/utils/timetableConflicts.ts).
+ *
+ * Two fully blank scopes are "no identifiable cohort" and never overlap; a
+ * blank FIELD inside a scope is a wildcard. Batches compare as keyed token
+ * lists, divisions as letter sets.
+ */
+export function cohortScopesOverlap(left: CohortScope, right: CohortScope): boolean {
+  const leftBranch = foldScopeText(left.branch)
+  const rightBranch = foldScopeText(right.branch)
+  const leftBatch = batchKeyTokens(left.batch)
+  const rightBatch = batchKeyTokens(right.batch)
+  const leftLetters = [...cohortLetters(left.division, 'division'), ...cohortLetters(left.section, 'section')]
+  const rightLetters = [...cohortLetters(right.division, 'division'), ...cohortLetters(right.section, 'section')]
+
+  if (!leftBranch && !rightBranch && leftBatch.length === 0 && rightBatch.length === 0 &&
+      leftLetters.length === 0 && rightLetters.length === 0) {
+    return false
+  }
+  if (leftBranch && rightBranch && leftBranch !== rightBranch) return false
+  if (leftBatch.length > 0 && rightBatch.length > 0 &&
+      !leftBatch.some((token) => rightBatch.includes(token))) {
+    return false
+  }
+  if (leftLetters.length > 0 && rightLetters.length > 0 &&
+      !leftLetters.some((letter) => rightLetters.includes(letter))) {
+    return false
+  }
+  return true
+}
+
 /** "Div A" / "division a" / "div. a" / "A" → "a". */
 export function normalizeDivision(value: unknown): string {
   return foldText(value).replace(NOISE_PUNCT, '').replace(/\s+/g, ' ').replace(DIVISION_PREFIXES, '').trim()

@@ -1,6 +1,16 @@
 // src/shared/utils/timetableConflicts.ts
 // Timetable Clash Detection Engine
 // Detects faculty, cohort (branch/batch/division), and room overlaps
+//
+// Cohort identity follows utils/cohortMatching.ts: a batch RANGE is the class
+// of its END year, and a division field may be a LIST ("A,B,C,D"). Two rows
+// share a cohort when their scopes overlap — so a slot recorded
+// "2026-2027 / A,B,C,D" is recognised as the cohort of a new "2027 / A" slot
+// instead of being treated as an unrelated class. The server port
+// (functions/src/utils/timetableConflicts.ts) imports the mirror-image helper
+// from functions/src/cohortBatch.ts and behaves identically.
+
+import { cohortScopesOverlap } from './cohortMatching'
 
 export type DayOfWeek =
   | 'monday'
@@ -142,10 +152,9 @@ export function findClashes(
       })
     }
 
-    // 2. Cohort clash (same branch + batch + division)
-    const existingCohort = `${existing.branch}|${existing.batch}|${existing.division}`.toLowerCase()
-    const newCohort = `${entry.branch}|${entry.batch}|${entry.division}`.toLowerCase()
-    if (existingCohort && existingCohort === newCohort && existingCohort !== '||') {
+    // 2. Cohort clash (overlapping branch + batch + division/section — batch
+    //    ranges and division lists compare as sets, not as strings)
+    if (cohortScopesOverlap(existing, entry)) {
       clashes.push({
         kind: 'cohort',
         entryId: '',
