@@ -52,6 +52,12 @@ export interface StudentProfileData {
   mentor?: string;
   collegeId?: string;
   cgpa?: number;
+  // Platform-access subscription (see shared/utils/accessWindow.ts)
+  accessProductId?: string;
+  accessProductName?: string;
+  accessDurationMonths?: number;
+  accessStart?: string;
+  accessEnd?: string;
 }
 
 export interface StudentAttendanceRecord {
@@ -217,6 +223,12 @@ export async function fetchProfile(studentId: string, email?: string): Promise<S
       mentor: data.mentor || data.mentorName,
       collegeId: data.collegeId,
       cgpa: typeof data.cgpa === 'number' ? data.cgpa : undefined,
+      accessProductId: data.accessProductId,
+      accessProductName: data.accessProductName,
+      accessDurationMonths:
+        typeof data.accessDurationMonths === 'number' ? data.accessDurationMonths : undefined,
+      accessStart: data.accessStart,
+      accessEnd: data.accessEnd,
     };
   };
 

@@ -79,6 +79,11 @@ function mapProfile(p: StudentProfileData | null): StudentProfile | null {
     avatar: p.avatar,
     collegeId: p.collegeId,
     course: p.course,
+    accessProductId: p.accessProductId,
+    accessProductName: p.accessProductName,
+    accessDurationMonths: p.accessDurationMonths,
+    accessStart: p.accessStart,
+    accessEnd: p.accessEnd,
   };
 }
 

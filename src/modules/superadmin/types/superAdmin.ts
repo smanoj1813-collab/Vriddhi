@@ -197,6 +197,119 @@ export interface Student {
   phone?: string;
   avatar?: string;
   uid?: string;
+  // ── Platform access (see AccessProduct) ──
+  accessProductId?: string;
+  accessProductName?: string;
+  accessDurationMonths?: number;
+  accessPrice?: number;
+  accessCurrency?: string;
+  /** First day of access, yyyy-mm-dd. */
+  accessStart?: string;
+  /** LAST day of access, inclusive, yyyy-mm-dd. Status is derived from this. */
+  accessEnd?: string;
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// PLATFORM-ACCESS PRODUCTS (duration + price, sold per student)
+// ═══════════════════════════════════════════════════════════════════════
+
+/**
+ * A sellable unit of platform access: a name, a duration in MONTHS (12, 24,
+ * 36 = 1/2/3 years) and a price per student. Assigning one to a student writes
+ * the window it buys (accessStart → accessEnd) onto the student record, which
+ * is what the onboarding import, the student list and the MIS all read.
+ */
+export interface AccessProduct {
+  id: string;
+  name: string;
+  /** Short code shown in tables (auto-derived when left blank). */
+  code: string;
+  durationMonths: number;
+  /** Price per student, in `currency`. */
+  price: number;
+  currency: string;
+  description?: string;
+  /** Archived products stay readable but cannot be assigned. */
+  active: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface AccessProductInput {
+  name: string;
+  code?: string;
+  durationMonths: number;
+  price: number;
+  currency?: string;
+  description?: string;
+  active?: boolean;
+}
+
+export interface AccessMisProductRow {
+  productId: string;
+  productName: string;
+  durationMonths: number;
+  price: number;
+  students: number;
+  active: number;
+  expiring: number;
+  expired: number;
+  /** price × (active + expiring) — the access still running. */
+  activeValue: number;
+  /** price × expired — lapsed access, the renewal pipeline. */
+  expiredValue: number;
+}
+
+export interface AccessMisResponse {
+  generatedAt: string;
+  /** The day the buckets were computed for (IST). */
+  today: string;
+  totals: {
+    students: number;
+    withProduct: number;
+    active: number;
+    expiring: number;
+    expired: number;
+    unassigned: number;
+    activeValue: number;
+    expiredValue: number;
+  };
+  byProduct: AccessMisProductRow[];
+  byCollege: Array<{
+    collegeId: string;
+    students: number;
+    active: number;
+    expiring: number;
+    expired: number;
+    unassigned: number;
+  }>;
+  expiringSoon: Array<{
+    studentId: string;
+    name: string;
+    regNo: string;
+    collegeId: string;
+    productName: string;
+    end: string;
+    daysLeft: number | null;
+  }>;
+}
+
+export interface BulkAccessUpdateInput {
+  studentIds: string[];
+  productId?: string;
+  /** yyyy-mm-dd; defaults to today. Ignored when clearAccess is true. */
+  startDate?: string;
+  /** Remove the access fields entirely (product was sold outside the system). */
+  clearAccess?: boolean;
+}
+
+export interface BulkAccessUpdateResult {
+  updated: number;
+  missingIds: string[];
+  productName: string;
+  accessStart: string;
+  accessEnd: string;
+  cleared: number;
 }
 
 export interface ListStudentsOptions {
@@ -274,6 +387,12 @@ export interface ImportUsersInput {
   deliveryMode?: 'temp-password' | 'reset-email';
   /** Staff rows whose account already exists: leave them or rotate credentials. */
   onExisting?: 'skip' | 'reset';
+  /**
+   * Platform-access product applied to every imported student, and the day its
+   * window starts (yyyy-mm-dd, default: today). See AccessProduct.
+   */
+  productId?: string;
+  accessStart?: string;
   /**
    * Called as each batch is dispatched. Rows go up in batches because one
    * request cannot be held open for the minutes a large upload takes — see

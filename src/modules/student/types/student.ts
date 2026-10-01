@@ -177,6 +177,12 @@ export interface StudentProfile {
   avatar?: string;
   collegeId?: string;
   course?: string;
+  // Platform-access subscription (product + window stamped on the student doc)
+  accessProductId?: string;
+  accessProductName?: string;
+  accessDurationMonths?: number;
+  accessStart?: string;
+  accessEnd?: string;
   // UUCMS - Karnataka
   uucmsCandidateId?: string;
   uucmsUSN?: string;

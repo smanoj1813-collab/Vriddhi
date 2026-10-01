@@ -76,6 +76,7 @@ import {
   ReceiptLong,
   AssignmentTurnedIn,
   AccountBalanceWallet,
+  Layers as LayersIcon,
 } from "@mui/icons-material";
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '@/Firebase/config';
@@ -167,6 +168,9 @@ const navItems: NavItem[] = [
   { label: "Question Bank", path: "/superadmin/question-bank", icon: <QuestionAnswer fontSize="small" />, roles: ["superadmin"], section: "Academic" },
   { label: "Comparison", path: "/superadmin/comparison", icon: <BarChartIcon fontSize="small" />, roles: ["superadmin"], section: "System" },
   { label: "Billing", path: "/superadmin/billing", icon: <CreditCardIcon fontSize="small" />, roles: ["superadmin"], section: "System" },
+  // Products & Access MIS: the duration-and-price catalogue students are
+  // onboarded onto, plus the subscription buckets and value per product.
+  { label: "Products & Access MIS", path: "/superadmin/products", icon: <LayersIcon fontSize="small" />, roles: ["superadmin"], section: "System" },
   { label: "System Management", path: "/superadmin/system-management", icon: <Settings fontSize="small" />, roles: ["superadmin"], section: "System" },
   { label: "System Health", path: "/superadmin/health", icon: <MonitorHeartIcon fontSize="small" />, roles: ["superadmin"], section: "System" },
   // Superadmin can open the shared Settings surface (hosted under /admin, whose

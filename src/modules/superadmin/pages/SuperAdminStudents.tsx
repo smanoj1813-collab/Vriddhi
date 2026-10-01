@@ -8,6 +8,13 @@ import type { Student, College } from '../types/superAdmin';
 import { filterStudentRows, studentFilterOptions } from '../../../shared/utils/studentFilters';
 import BulkCredentialReset from '../components/BulkCredentialReset';
 import BulkStudentAcademicUpdate from '../components/BulkStudentAcademicUpdate';
+import BulkStudentAccessUpdate from '../components/BulkStudentAccessUpdate';
+import { accessStatus, formatDurationMonths } from '../../../shared/utils/accessWindow';
+
+/** Today as yyyy-mm-dd in IST — matches the server's bucket day. */
+function todayIst(): string {
+  return new Date(Date.now() + 5.5 * 60 * 60 * 1000).toISOString().slice(0, 10);
+}
 
 const SuperAdminStudents: React.FC = () => {
   const navigate = useNavigate();
@@ -32,6 +39,7 @@ const SuperAdminStudents: React.FC = () => {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [showBulkReset, setShowBulkReset] = useState(false);
   const [showBulkAcademicUpdate, setShowBulkAcademicUpdate] = useState(false);
+  const [showBulkAccessUpdate, setShowBulkAccessUpdate] = useState(false);
 
   // College + status narrow the SERVER query; batch / branch / section / search
   // are applied over the loaded rows (the same normalised matching the
@@ -188,6 +196,15 @@ const SuperAdminStudents: React.FC = () => {
             <GraduationCap className="w-4 h-4" /> Bulk change batch / branch / semester
             {selectedStudents.length > 0 && ` (${selectedStudents.length})`}
           </button>
+          <button
+            onClick={() => setShowBulkAccessUpdate(true)}
+            disabled={selectedStudents.length === 0}
+            title={selectedStudents.length ? 'Assign a platform-access product to the selected students' : 'Select students first'}
+            className="btn-secondary flex items-center gap-2 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            <KeyRound className="w-4 h-4" /> Change platform access
+            {selectedStudents.length > 0 && ` (${selectedStudents.length})`}
+          </button>
           {selectedStudents.length > 0 && (
             <button
               onClick={() => setShowBulkReset(true)}
@@ -223,7 +240,7 @@ const SuperAdminStudents: React.FC = () => {
         <Info className="mt-0.5 h-4 w-4 shrink-0" />
         <div>
           <p className="font-medium">To change student batch, branch or semester in bulk</p>
-          <p className="mt-0.5 text-xs">Filter the list if needed, select the student rows (or Select all), then click <strong>Bulk change batch / branch / semester</strong>. Only the fields you choose are updated.</p>
+          <p className="mt-0.5 text-xs">Filter the list if needed, select the student rows (or Select all), then click <strong>Bulk change batch / branch / semester</strong>. Only the fields you choose are updated. <strong>Change platform access</strong> assigns a duration-and-price product to the selected students.</p>
         </div>
       </div>
 
@@ -349,6 +366,7 @@ const SuperAdminStudents: React.FC = () => {
               <th className="table-header text-center">Division</th>
               <th className="table-header text-center">Section</th>
               <th className="table-header text-center">Branch</th>
+              <th className="table-header">Platform access</th>
               <th className="table-header text-center">Status</th>
               <th className="table-header text-center">Actions</th>
             </tr>
@@ -377,6 +395,30 @@ const SuperAdminStudents: React.FC = () => {
                 </td>
                 <td className="table-cell text-center">
                   <span className="text-slate-600 dark:text-slate-400">{student.department || "-"}</span>
+                </td>
+                <td className="table-cell">
+                  {student.accessProductId ? (
+                    <div>
+                      <p className="text-xs font-medium text-slate-800 dark:text-slate-200">
+                        {student.accessProductName || "Product"}
+                        {student.accessDurationMonths ? ` · ${formatDurationMonths(student.accessDurationMonths)}` : ""}
+                      </p>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                        till {student.accessEnd || "—"}
+                      </p>
+                      <span className={`mt-0.5 inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium ${
+                        accessStatus(student.accessEnd, todayIst()) === "active"
+                          ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300"
+                          : accessStatus(student.accessEnd, todayIst()) === "expiring"
+                            ? "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300"
+                            : "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300"
+                      }`}>
+                        {accessStatus(student.accessEnd, todayIst())}
+                      </span>
+                    </div>
+                  ) : (
+                    <span className="text-xs text-slate-400">Not set</span>
+                  )}
                 </td>
                 <td className="table-cell text-center">
                   <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
@@ -613,6 +655,17 @@ const SuperAdminStudents: React.FC = () => {
           items={selectedStudents.map((s) => ({ id: s.id, name: s.name, email: s.email, regNo: s.regNo, department: s.branch || s.department }))}
           onClose={() => setShowBulkReset(false)}
           title={`Regenerate ${selectedStudents.length} student credential(s)`}
+        />
+      )}
+
+      {showBulkAccessUpdate && (
+        <BulkStudentAccessUpdate
+          students={selectedStudents}
+          onClose={() => setShowBulkAccessUpdate(false)}
+          onUpdated={() => {
+            setShowBulkAccessUpdate(false)
+            setSelectedIds(new Set())
+          }}
         />
       )}
 

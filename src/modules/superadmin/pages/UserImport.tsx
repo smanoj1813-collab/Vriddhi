@@ -1,6 +1,6 @@
 import React, { useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useColleges, useImportUsers } from '../hooks/useSuperAdmin'
+import { useColleges, useImportUsers, useAccessProducts } from '../hooks/useSuperAdmin'
 import { useNotification } from '../../../shared/providers/NotificationProvider'
 import { Upload, ArrowLeft, Download, FileSpreadsheet, CheckCircle2, XCircle, AlertTriangle, Eye, EyeOff, Key } from 'lucide-react'
 import { parseCSV, validateCSV, generateCSVTemplate, downloadCsv } from '../../../shared/utils/parseCSV'
@@ -10,7 +10,13 @@ import ImportExports from '../components/ImportExports'
 import ImportProgressOverlay from '../components/ImportProgressOverlay'
 import { useBlockUnload } from '../../../shared/hooks/useBlockUnload'
 import type { BatchProgress } from '../../../shared/utils/batchedImport'
+import { computeAccessWindow, formatDurationMonths } from '@/shared/utils/accessWindow'
 import type { College, ImportResult } from '../api/superAdminApi'
+
+/** Today as yyyy-mm-dd in IST — the same day the server stamps. */
+function todayIst(): string {
+  return new Date(Date.now() + 5.5 * 60 * 60 * 1000).toISOString().slice(0, 10)
+}
 
 const UserImport: React.FC = () => {
   const navigate = useNavigate()
@@ -28,14 +34,26 @@ const UserImport: React.FC = () => {
   const [preflight, setPreflight] = useState<ValidationResult | null>(null)
   const [preflightWarnings, setPreflightWarnings] = useState<string[]>([])
   const [deliveryMode, setDeliveryMode] = useState<'temp-password' | 'reset-email'>('temp-password')
+  // Platform access sold with this batch: the product (duration + price) and
+  // the day its window starts. Leaving the product blank imports the students
+  // with no access record — the MIS reports them as "unassigned" rather than
+  // inventing a duration.
+  const [productId, setProductId] = useState('')
+  const [accessStart, setAccessStart] = useState(todayIst())
   // Live batch progress. Rows go up in batches because one request cannot stay
   // open for the minutes a large upload takes.
   const [progress, setProgress] = useState<BatchProgress | null>(null)
 
   const { data: collegesData, isLoading: collegesLoading } = useColleges({ status: 'all' })
+  const { data: accessProducts } = useAccessProducts()
   const importUsers = useImportUsers()
 
   const colleges = collegesData?.items || []
+  const products = (accessProducts || []).filter((p) => p.active)
+  const selectedProduct = products.find((p) => p.id === productId)
+  const accessPreview = selectedProduct
+    ? computeAccessWindow(accessStart, selectedProduct.durationMonths)
+    : null
 
   // Closing or reloading the tab mid-import would discard the response — and
   // with it every password the backend has already generated.
@@ -99,6 +117,7 @@ const UserImport: React.FC = () => {
       const result = await importUsers.mutateAsync({
         collegeId: selectedCollege,
         deliveryMode,
+        ...(productId ? { productId, accessStart } : {}),
         onProgress: setProgress,
         users: validation.validRows.map((r: Record<string, string>) => ({
           name: r.name,
@@ -197,6 +216,41 @@ const UserImport: React.FC = () => {
           Either way the password is never written to Firestore. Rows the backend could not confirm in
           Firebase Authentication are flagged below.
         </p>
+      </div>
+
+      {/* Platform access product */}
+      <div className="glass-card p-5 mb-6">
+        <label className="block text-sm text-slate-700 dark:text-slate-300 mb-2">Platform access (optional)</label>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <select value={productId} onChange={e => setProductId(e.target.value)} className="input-field">
+            <option value="">No product — import without an access window</option>
+            {products.map(product => (
+              <option key={product.id} value={product.id}>
+                {product.name} · {formatDurationMonths(product.durationMonths)} · ₹{product.price} per student
+              </option>
+            ))}
+          </select>
+          <input
+            type="date"
+            value={accessStart}
+            onChange={e => setAccessStart(e.target.value)}
+            disabled={!productId}
+            className="input-field disabled:opacity-50"
+            aria-label="Access start date"
+          />
+        </div>
+        {products.length === 0 && (
+          <p className="mt-2 text-xs text-amber-600 dark:text-amber-400">
+            No active products yet. Create the 1-year / 2-year / 3-year packages on
+            Super Admin → Products &amp; Access MIS.
+          </p>
+        )}
+        {accessPreview && selectedProduct && (
+          <p className="mt-2 text-xs text-emerald-600 dark:text-emerald-400">
+            Every student in this batch will be covered from {accessPreview.start} to {accessPreview.end} (inclusive)
+            — {formatDurationMonths(accessPreview.durationMonths)} on “{selectedProduct.name}”.
+          </p>
+        )}
       </div>
 
       {/* File Upload */}

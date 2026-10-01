@@ -10,6 +10,7 @@ const CreateCollegeAdmin = lazy(() => import('./pages/CreateCollegeAdmin'));
 const FacultyImport = lazy(() => import('./pages/FacultyImport'));
 const MultiCollegeComparison = lazy(() => import('./pages/MultiCollegeComparison'));
 const SubscriptionBilling = lazy(() => import('./pages/SubscriptionBilling'));
+const AccessProducts = lazy(() => import('./pages/AccessProducts'));
 const SuperAdminAdmins = lazy(() => import('./pages/SuperAdminAdmins'));
 const SuperAdminCollegeDetail = lazy(() => import('./pages/SuperAdminCollegeDetail'));
 const SuperAdminColleges = lazy(() => import('./pages/SuperAdminColleges'));
@@ -67,6 +68,7 @@ export const superadminRoutes: RouteObject[] = [
       { path: 'curriculum', element: <SuperAdminCurriculum /> },
       { path: 'comparison', element: <MultiCollegeComparison /> },
       { path: 'billing', element: <SubscriptionBilling /> },
+      { path: 'products', element: <AccessProducts /> },
       { path: 'health', element: <SystemHealthMonitor /> },
       { path: 'system-management', element: <SystemManagement /> },
       { path: 'question-bank', element: <SuperAdminQuestionBank /> },
