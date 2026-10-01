@@ -6,17 +6,17 @@
 //
 // IMPORTANT: this is a UX/authorisation *hint*, not a security boundary.
 // Firestore rules and Cloud Functions remain the only trusted enforcement
-// points (current-firestore.rules mirrors this matrix: isFinance / isOps /
-// isPayrollManager). Use it to show/hide controls and gate routes only.
+// points (current-firestore.rules mirrors this matrix: isFinance / isOps and
+// the payroll accounts/approver role checks). Use it to gate routes and controls.
 //
 // Office roles
 //   accounts   — fees, payments, receipts, challans, finance settings, guest
 //                billing, vendor bills, library fines, finance reports and
-//                (only when the college enables it) payroll.
+//                payroll preparation / processing.
 //   operations — library, inventory, stores, purchase orders, vendors,
 //                library fines, no-dues.
-// HODs / department admins hold NO finance access; the principal keeps
-// oversight of everything, including payroll, always.
+// HODs / department admins hold NO finance access; payroll approval remains
+// with the principal while accounts owns preparation and payment processing.
 // ------------------------------------------------------------------
 import type { UserRole } from './context/auth';
 
@@ -55,8 +55,10 @@ export const PERMISSION_MATRIX: Readonly<Record<string, readonly UserRole[]>> = 
   'guestBilling.manage': ['accounts', 'principal'],
   'vendorBills.manage': ['accounts', 'principal'],
   'fines.waive': ['accounts', 'principal'],
-  // Payroll: principal always; other roles only via AccessSettings.payrollRoles.
-  'payroll.view': ['principal'],
+  // Segregated payroll workflow: accounts prepares/processes; principal reviews.
+  'payroll.view': ['principal', 'accounts'],
+  'payroll.manage': ['accounts'],
+  'payroll.approve': ['principal'],
 
   // ── Operations (library, inventory, stores) ───────────────────
   'operations.desk': ['operations', 'principal'],
@@ -85,15 +87,18 @@ export const OFFICE_ROLES: readonly UserRole[] = ['accounts', 'operations'];
 /** Roles that may use the academic admin surface (/admin/* academic pages). */
 export const ACADEMIC_ADMIN_ROLES: readonly UserRole[] = ['admin', 'hod', 'principal', 'superadmin'];
 
-/** Per-college access choices, stored at colleges/{id}/config/access. */
+/**
+ * Legacy per-college access document. `payrollRoles` is retained so older
+ * documents remain readable, but payroll is now a fixed accounts/principal
+ * workflow and this field no longer grants or removes access.
+ */
 export interface AccessSettings {
-  /** Roles (besides the principal) that may view and run payroll. */
   payrollRoles: UserRole[];
 }
 
-export const DEFAULT_ACCESS_SETTINGS: AccessSettings = { payrollRoles: [] };
+export const DEFAULT_ACCESS_SETTINGS: AccessSettings = { payrollRoles: ['accounts'] };
 
-/** Roles a college may additionally grant payroll to. */
+/** Legacy normalizer allowlist; no longer used to gate payroll access. */
 export const PAYROLL_GRANTABLE_ROLES: readonly UserRole[] = ['accounts'];
 
 /**
@@ -101,7 +106,7 @@ export const PAYROLL_GRANTABLE_ROLES: readonly UserRole[] = ['accounts'];
  *
  * - no role → `false`;
  * - `superadmin` → `true` (global bypass);
- * - `payroll.view` also honours the college's AccessSettings;
+ * - payroll permissions are role-defined (accounts manage; principal approves);
  * - unknown permission → `false`.
  */
 export function roleHasPermission(
@@ -111,9 +116,6 @@ export function roleHasPermission(
 ): boolean {
   if (!role) return false;
   if (role === 'superadmin') return true;
-  if (permission === 'payroll.view' && access.payrollRoles.includes(role)) {
-    return (PAYROLL_GRANTABLE_ROLES as readonly string[]).includes(role);
-  }
   const allowed = PERMISSION_MATRIX[permission];
   return Array.isArray(allowed) && (allowed as readonly string[]).includes(role);
 }

@@ -36,7 +36,7 @@ const initialFormData: AdminFormData = {
 
 // What each office team can do — shown under the role picker.
 const ROLE_HINTS: Record<string, string> = {
-  accounts: 'Fees, receipts, challans, vendor bills, library fines, finance reports & Tally export. Payroll only if the principal allows it in Finance Settings.',
+  accounts: 'Fees, receipts, challans, vendor bills, library fines, finance reports & Tally export. Prepares and processes faculty payroll after principal approval.',
   operations: 'Library, inventory & assets, stores, purchase orders, vendors and no-dues clearance.',
 };
 

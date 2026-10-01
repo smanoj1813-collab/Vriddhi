@@ -261,6 +261,98 @@ describe('planAutoSchedule', () => {
 })
 
 describe('group-aware placement, hard capacity and daily density', () => {
+  it('packs separate A/B/C meetings for one faculty into a compact three-class day', () => {
+    const courses = ['A', 'B', 'C'].map((division) => mappedCourse({
+      mappingId: 'mapping-module',
+      courseId: 'module-1',
+      courseCode: 'MOD1',
+      courseName: 'Business Law',
+      totalHours: 15, // one weekly meeting per group
+      facultyId: 'shared-faculty',
+      facultyName: 'Dr. Shared',
+      division,
+      section: '',
+    }))
+    const plan = planAutoSchedule({
+      courses,
+      grid: { ...GRID_5P, days: ['monday', 'tuesday'] },
+      rooms: ['R1', 'R2'],
+      occupancy: emptyOccupancy(),
+      semesterWeeks: 15,
+      maxPeriodsPerDayPerFaculty: 4,
+      targetFacultyClassesPerDay: 3,
+      facultyDayPreference: 'compact',
+    })
+    assert.equal(plan.placements.length, 3)
+    assert.deepEqual(plan.placements.map((p) => p.division).sort(), ['A', 'B', 'C'])
+    assert.ok(plan.placements.every((p) => p.dayOfWeek === 'monday'))
+    assert.equal(new Set(plan.placements.map((p) => p.startTime)).size, 3)
+    const load = plan.facultyDailyLoad.find((row) => row.facultyId === 'shared-faculty' && row.day === 'monday')
+    assert.deepEqual(load && { classes: load.classes, periods: load.periods, targetMet: load.targetMet }, {
+      classes: 3, periods: 3, targetMet: true,
+    })
+  })
+
+  it('fills a compact faculty day to the soft target plus one meeting, then opens another day', () => {
+    const courses = ['A', 'B', 'C', 'D', 'E'].map((division, index) => mappedCourse({
+      mappingId: `mapping-${division}`,
+      courseId: `module-${division}`,
+      courseCode: `MOD${index + 1}`,
+      courseName: `Module ${division}`,
+      totalHours: 15,
+      facultyId: 'shared-faculty',
+      facultyName: 'Dr. Shared',
+      division,
+      section: '',
+    }))
+    const plan = planAutoSchedule({
+      courses,
+      grid: { ...GRID_5P, days: ['monday', 'tuesday'] },
+      rooms: ['R1'],
+      occupancy: emptyOccupancy(),
+      semesterWeeks: 15,
+      maxPeriodsPerDayPerFaculty: 4,
+      targetFacultyClassesPerDay: 3,
+      facultyDayPreference: 'compact',
+    })
+    assert.equal(plan.placements.filter((placement) => placement.dayOfWeek === 'monday').length, 4)
+    assert.equal(plan.placements.filter((placement) => placement.dayOfWeek === 'tuesday').length, 1)
+    const monday = plan.facultyDailyLoad.find((row) => row.facultyId === 'shared-faculty' && row.day === 'monday')
+    assert.equal(monday?.classes, 4)
+    assert.equal(monday?.periods, 4)
+    assert.equal(monday?.targetMet, true)
+  })
+
+  it('applies a demandKey override to one section without changing sibling sections', () => {
+    const courses = ['A', 'B'].map((division) => mappedCourse({
+      mappingId: 'legacy-shared',
+      courseId: 'module-2',
+      courseCode: 'MOD2',
+      courseName: 'Economics',
+      totalHours: 0,
+      division,
+      section: '',
+    }))
+    const input = {
+      courses,
+      grid: { ...GRID_5P, days: ['monday'] },
+      rooms: ['R1', 'R2'],
+      occupancy: emptyOccupancy(),
+      semesterWeeks: 15,
+      maxPeriodsPerDayPerFaculty: 4,
+    }
+    const base = planAutoSchedule(input)
+    const aDemand = base.demand.find((row) => row.division === 'A')!
+    const updated = planAutoSchedule({
+      ...input,
+      courseOverrides: [{ demandKey: aDemand.demandKey, weeklyPeriods: 1 }],
+    })
+    assert.equal(updated.demand.find((row) => row.division === 'A')?.periodsRequested, 1)
+    assert.equal(updated.demand.find((row) => row.division === 'B')?.periodsRequested, 0)
+    assert.equal(updated.placements.filter((p) => p.division === 'A').length, 1)
+    assert.equal(updated.placements.filter((p) => p.division === 'B').length, 0)
+  })
+
   it('allows disjoint divisions to share the same period but keeps merged scopes conflict-safe', () => {
     const disjoint = planAutoSchedule({
       courses: [
@@ -338,6 +430,27 @@ describe('group-aware placement, hard capacity and daily density', () => {
     assert.equal(plan.placements.length, 4)
     assert.equal(plan.cohortDailyCoverage.reduce((sum, row) => sum + row.classes, 0), 2)
     assert.equal(plan.cohortDailyCoverage.filter((row) => row.classes === 1).length, 2)
+  })
+
+  it('counts a multi-period lab as one faculty meeting but counts every occupied period', () => {
+    const plan = planAutoSchedule({
+      courses: [mappedCourse({
+        courseCode: 'LB01',
+        courseName: 'Computer Lab',
+        totalHours: 30,
+      })],
+      grid: { ...GRID_5P, days: ['monday'] },
+      rooms: ['LAB-1'],
+      occupancy: emptyOccupancy(),
+      semesterWeeks: 15,
+      maxPeriodsPerDayPerFaculty: 4,
+      targetFacultyClassesPerDay: 3,
+    })
+    const monday = plan.facultyDailyLoad[0]
+    assert.equal(monday.classes, 1)
+    assert.equal(monday.periods, 2)
+    assert.equal(monday.targetClasses, 3)
+    assert.equal(monday.targetMet, false)
   })
 
   it('balances a 20-period cohort into four classes per day across five days', () => {
@@ -528,6 +641,17 @@ describe('teaching-group expansion', () => {
     assert.deepEqual(
       resolveMappingTeachingGroups({ division: 'A,B', section: '' }, rosterGroups),
       [{ division: 'A,B', section: '' }],
+    )
+  })
+
+  it('can split an explicit merged mapping into one independent group per division', () => {
+    assert.deepEqual(
+      resolveMappingTeachingGroups({ division: 'A,B,C', section: '' }, rosterGroups, {}, 'separate'),
+      [{ division: 'A', section: '' }, { division: 'B', section: '' }, { division: 'C', section: '' }],
+    )
+    assert.deepEqual(
+      resolveMappingTeachingGroups({ division: 'A,B', section: '1' }, rosterGroups, { division: 'B' }, 'separate'),
+      [{ division: 'B', section: '1' }],
     )
   })
 
@@ -779,6 +903,9 @@ describe('validateAutoSchedulePayload v2 fields', () => {
     assert.equal(p.dateRange, undefined)
     assert.equal(p.strategy, 'uniform')
     assert.equal(p.roomStrategy, 'leastLoaded')
+    assert.equal(p.targetFacultyClassesPerDay, 3)
+    assert.equal(p.facultyDayPreference, 'compact')
+    assert.equal(p.teachingGroupMode, 'mapping')
     assert.deepEqual(p.courseOverrides, [])
     assert.equal(p.maxWeeklyPeriodsPerFaculty, 24)
     assert.deepEqual(p.warnings, [])
@@ -833,6 +960,34 @@ describe('validateAutoSchedulePayload v2 fields', () => {
     )
     assert.throws(
       () => validateAutoSchedulePayload({ ...base, maxWeeklyPeriodsPerFaculty: 61 }, 'hod', 'col-1'),
+      (e: any) => e.code === 'invalid-argument',
+    )
+  })
+
+  it('validates faculty packing and teaching-group preferences', () => {
+    const p = validateAutoSchedulePayload({
+      ...base,
+      targetFacultyClassesPerDay: 3,
+      facultyDayPreference: 'balanced',
+      teachingGroupMode: 'separate',
+      courseOverrides: [{ demandKey: 'mapping|branch|2026|a', include: false }],
+    }, 'hod', 'col-1')
+    assert.equal(p.targetFacultyClassesPerDay, 3)
+    assert.equal(p.facultyDayPreference, 'balanced')
+    assert.equal(p.teachingGroupMode, 'separate')
+    assert.deepEqual(p.courseOverrides, [{ demandKey: 'mapping|branch|2026|a', include: false }])
+    const legacyCap = validateAutoSchedulePayload({ ...base, maxPeriodsPerDayPerFaculty: 2 }, 'hod', 'col-1')
+    assert.equal(legacyCap.targetFacultyClassesPerDay, 2)
+    assert.throws(
+      () => validateAutoSchedulePayload({ ...base, facultyDayPreference: 'packed' }, 'hod', 'col-1'),
+      (e: any) => e.code === 'invalid-argument',
+    )
+    assert.throws(
+      () => validateAutoSchedulePayload({ ...base, teachingGroupMode: 'explode' }, 'hod', 'col-1'),
+      (e: any) => e.code === 'invalid-argument',
+    )
+    assert.throws(
+      () => validateAutoSchedulePayload({ ...base, maxPeriodsPerDayPerFaculty: 2, targetFacultyClassesPerDay: 3 }, 'hod', 'col-1'),
       (e: any) => e.code === 'invalid-argument',
     )
   })

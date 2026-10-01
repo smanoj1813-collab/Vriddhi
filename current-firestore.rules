@@ -493,8 +493,10 @@ service cloud.firestore {
           || (docId in ['branding', 'library', 'nodues'] && collegeId() == collegeId));
         allow list: if isSignedIn() && (isSuperadmin()
           || ((isStaff() || isOffice()) && collegeId() == collegeId));
-        // Each settings doc belongs to the office that runs it. config/access
-        // (who may see payroll) is the principal's alone.
+        // `config/access` is legacy; payroll roles no longer depend on it.
+        // Finance policy is managed by accounts. The principal may still update
+        // other finance settings, but cannot create/update/delete the payroll
+        // calculation map from the UI or a direct client write.
         allow write: if docId == 'access'
           ? (isSuperadmin() || (role() == 'principal' && collegeId() == collegeId))
           : docId == 'courses'
@@ -503,14 +505,26 @@ service cloud.firestore {
             // read the doc (students must, to resolve their assigned courses),
             // but only the platform decides what is switched on.
             ? isSuperadmin()
-          : docId in ['finance', 'branding', 'tally']
+          : docId in ['branding', 'tally']
             ? isFinance(collegeId)
+          : docId == 'finance'
+            ? false
             : docId == 'procurement'
               // purchase workflow (ops) + TDS sections (accounts)
               ? (isOps(collegeId) || isFinance(collegeId))
             : docId in ['library', 'inventory', 'nodues']
               ? isOps(collegeId)
               : (isSuperadmin() || (role() in ['admin', 'hod', 'principal'] && collegeId() == collegeId));
+
+        // The principal may initialize general finance settings without adding
+        // payroll policy. Accounts owns payroll settings after the handoff.
+        allow create: if docId == 'finance' && isFinance(collegeId)
+          && (isSuperadmin() || role() != 'principal' || !('payroll' in request.resource.data));
+        allow update: if docId == 'finance' && isFinance(collegeId)
+          && (isSuperadmin() || role() == 'accounts'
+            || !request.resource.data.diff(resource.data).affectedKeys().hasAny(['payroll']));
+        allow delete: if docId == 'finance'
+          && (isSuperadmin() || (role() == 'accounts' && collegeId() == collegeId));
       }
 
       // Learner progress is tenant-path scoped. Students may read/write their
@@ -670,22 +684,25 @@ service cloud.firestore {
       }
 
       // -- Faculty pay ledgers (Guest Faculty Billing + Payroll) --------------
-      // Salary data is personal: only the finance office manages it, and a
-      // faculty member is admitted to their OWN rows only (facultyUid == uid).
-      // The own-row branch is last so a row without facultyUid simply denies.
-      // Guest bills: principal + accounts. Payroll: the principal always; the
-      // accounts team only when the college lists it in
-      // config/access.payrollRoles (Office Staff & Access page).
-      function isPayrollManager(cid) {
-        return isSuperadmin() || (collegeId() == cid && (role() == 'principal'
-          || (role() == 'accounts'
-            && 'accounts' in get(/databases/$(database)/documents/colleges/$(cid)/config/access).data.get('payrollRoles', []))));
+      // Payroll is a segregated workflow: accounts manages structures, drafts
+      // and payment processing; the principal reads submitted snapshots and may
+      // approve or request changes, but cannot edit or pay them.
+      function isPayrollAccounts(cid) {
+        return isSuperadmin() || (collegeId() == cid && role() == 'accounts');
+      }
+      function isPayrollApprover(cid) {
+        return isSuperadmin() || (collegeId() == cid && role() == 'principal');
       }
       function isGuestBillManager(cid) {
         return isFinance(cid);
       }
       function ownsPayRow(cid) {
         return isSignedIn() && collegeId() == cid && resource.data.facultyUid == request.auth.uid;
+      }
+      function ownsReleasedPayslip(cid) {
+        return isSignedIn() && collegeId() == cid
+          && resource.data.facultyUid == request.auth.uid
+          && resource.data.status in ['approved', 'paid'];
       }
 
       match /guestBills/{docId} {
@@ -694,19 +711,93 @@ service cloud.firestore {
       }
 
       match /salaryStructures/{docId} {
-        allow get, list: if isPayrollManager(collegeId) || ownsPayRow(collegeId);
-        allow write: if isPayrollManager(collegeId);
+        // Salary structures contain bank and tax identifiers, so only the
+        // accounts team manages them; faculty may still read their own row.
+        allow get, list: if isPayrollAccounts(collegeId) || ownsPayRow(collegeId);
+        allow create, update, delete: if isPayrollAccounts(collegeId);
       }
 
       match /payslips/{docId} {
-        allow get, list: if isPayrollManager(collegeId) || ownsPayRow(collegeId);
-        allow write: if isPayrollManager(collegeId);
-      }
+        function accountPayslipUpdate() {
+          let changed = request.resource.data.diff(resource.data).affectedKeys();
+          let statusOnly = changed.hasOnly(['status', 'updatedAt', 'history']);
+          return (
+            (resource.data.status == 'draft' && request.resource.data.status == 'draft'
+              && request.resource.data.month == resource.data.month
+              && request.resource.data.facultyProfileId == resource.data.facultyProfileId
+              && request.resource.data.facultyUid == resource.data.facultyUid
+              && request.resource.data.payslipNo == resource.data.payslipNo
+              && changed.hasOnly(['name', 'staffCode', 'department', 'designation', 'employmentType',
+                'joiningDate', 'pan', 'uan', 'bankName', 'accountNo', 'basic', 'lopDays', 'adjustments',
+                'daysInPeriod', 'paidDays', 'earnings', 'deductions', 'gross', 'totalDeductions', 'net',
+                'updatedAt', 'history']))
+            || (resource.data.status == 'draft' && request.resource.data.status == 'pending_approval'
+              && request.resource.data.submittedBy is string
+              && request.resource.data.submittedByUid == request.auth.uid
+              && request.resource.data.submittedAt is timestamp
+              && !('reviewedBy' in request.resource.data)
+              && !('reviewedByUid' in request.resource.data)
+              && !('reviewedAt' in request.resource.data)
+              && !('reviewDecision' in request.resource.data)
+              && !('reviewNote' in request.resource.data)
+              && !('approvedBy' in request.resource.data)
+              && !('approvedByUid' in request.resource.data)
+              && !('approvedAt' in request.resource.data)
+              && changed.hasOnly(['status', 'submittedBy', 'submittedByUid', 'submittedAt',
+                'reviewedBy', 'reviewedByUid', 'reviewedAt', 'reviewDecision', 'reviewNote',
+                'approvedBy', 'approvedByUid', 'approvedAt', 'updatedAt', 'history']))
+            || (resource.data.status == 'pending_approval' && request.resource.data.status == 'draft'
+              && request.resource.data.withdrawnBy is string
+              && request.resource.data.withdrawnByUid == request.auth.uid
+              && request.resource.data.withdrawnAt is timestamp
+              && changed.hasOnly(['status', 'withdrawnBy', 'withdrawnByUid', 'withdrawnAt', 'updatedAt', 'history']))
+            || (resource.data.status == 'approved' && request.resource.data.status == 'paid'
+              && request.resource.data.paidOn is string
+              && request.resource.data.markedPaidBy is string
+              && request.resource.data.markedPaidByUid == request.auth.uid
+              && changed.hasOnly(['status', 'paidOn', 'paymentRef', 'markedPaidBy', 'markedPaidByUid', 'updatedAt', 'history']))
+            || (resource.data.status == 'draft' && request.resource.data.status == 'cancelled' && statusOnly)
+            || (resource.data.status == 'cancelled' && request.resource.data.status == 'draft' && statusOnly)
+          );
+        }
 
+        function principalPayslipReview() {
+          let changed = request.resource.data.diff(resource.data).affectedKeys();
+          return resource.data.status == 'pending_approval'
+            && request.resource.data.status in ['approved', 'draft']
+            && request.resource.data.reviewedBy is string
+            && request.resource.data.reviewedByUid == request.auth.uid
+            && request.resource.data.reviewedAt is timestamp
+            && ((request.resource.data.status == 'approved'
+                && request.resource.data.reviewDecision == 'approved'
+                && request.resource.data.approvedBy is string
+                && request.resource.data.approvedByUid == request.auth.uid
+                && request.resource.data.approvedAt is timestamp)
+              || (request.resource.data.status == 'draft'
+                && request.resource.data.reviewDecision == 'changes_requested'
+                && request.resource.data.reviewNote is string
+                && request.resource.data.reviewNote.size() > 0))
+            && changed.hasOnly(['status', 'reviewedBy', 'reviewedByUid', 'reviewedAt', 'reviewDecision',
+              'reviewNote', 'approvedBy', 'approvedByUid', 'approvedAt', 'updatedAt', 'history']);
+        }
+
+        // Principals see only submissions and released payroll. The client query
+        // carries the same status filter, as Firestore requires for list rules.
+        allow get, list: if isPayrollAccounts(collegeId)
+          || (isPayrollApprover(collegeId) && resource.data.status in ['pending_approval', 'approved', 'paid'])
+          || ownsReleasedPayslip(collegeId);
+        allow create: if isPayrollAccounts(collegeId)
+          && request.resource.data.status == 'draft'
+          && request.resource.data.month is string
+          && request.resource.data.facultyUid is string;
+        allow update: if (isPayrollAccounts(collegeId) && accountPayslipUpdate())
+          || (isPayrollApprover(collegeId) && principalPayslipReview());
+        allow delete: if isPayrollAccounts(collegeId)
+          && resource.data.status in ['draft', 'cancelled'];
+      }
       match /salaryCertificates/{docId} {
-        allow get, list: if isPayrollManager(collegeId) || ownsPayRow(collegeId);
-        allow create: if isPayrollManager(collegeId);
-        allow update, delete: if isSuperadmin() || (role() == 'principal' && collegeId() == collegeId);
+        allow get, list: if isPayrollAccounts(collegeId) || ownsPayRow(collegeId);
+        allow create, update, delete: if isPayrollAccounts(collegeId);
       }
 
       // University exam-fee challans (Karnataka-pattern 3-copy bank slips:

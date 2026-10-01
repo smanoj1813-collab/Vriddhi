@@ -1894,7 +1894,13 @@ describe('office roles — finance moved from HODs to the accounts team', () => 
         setDoc(doc(db, 'colleges', COLLEGE_A, 'feePayments', 'fp1'), {
           studentId: STUDENT_ID, studentName: 'Student A', amount: 1000, paidAmount: 0, category: 'tuition', collegeId: COLLEGE_A,
         }),
-        setDoc(doc(db, 'colleges', COLLEGE_A, 'payslips', '2026-09_p1'), { facultyUid: 'faculty-a', net: 100, month: '2026-09' }),
+        setDoc(doc(db, 'colleges', COLLEGE_A, 'payslips', '2026-09_p1'), {
+          facultyUid: 'faculty-a', facultyProfileId: 'p1', payslipNo: 'PS-202609-P1',
+          net: 100, month: '2026-09', status: 'pending_approval',
+        }),
+        setDoc(doc(db, 'colleges', COLLEGE_A, 'salaryStructures', 'p1'), {
+          facultyUid: 'faculty-a', facultyProfileId: 'p1', basic: 1000,
+        }),
         setDoc(doc(db, 'colleges', COLLEGE_A, 'libraryTitles', 't1'), { title: 'Algorithms', collegeId: COLLEGE_A }),
         setDoc(doc(db, 'colleges', COLLEGE_A, 'libraryLoans', 'l1'), {
           memberUid: STUDENT_UID, status: 'issued', titleId: 't1', dueDate: '2026-10-01',
@@ -1933,8 +1939,12 @@ describe('office roles — finance moved from HODs to the accounts team', () => 
     }))
   })
 
-  it('finance settings: accounts writes, HODs cannot; access settings are principal-only', async () => {
-    await assertSucceeds(setDoc(doc(accounts().firestore(), 'colleges', COLLEGE_A, 'config', 'finance'), { x: 1 }))
+  it('finance settings: accounts owns payroll policy; principal may change non-payroll settings only', async () => {
+    const accountFinance = doc(accounts().firestore(), 'colleges', COLLEGE_A, 'config', 'finance')
+    const principalFinance = doc(principalContext().firestore(), 'colleges', COLLEGE_A, 'config', 'finance')
+    await assertSucceeds(setDoc(accountFinance, { fees: { modes: ['cash'] }, payroll: { requireApproval: true } }))
+    await assertSucceeds(updateDoc(principalFinance, { fees: { modes: ['cash', 'upi'] } }))
+    await assertFails(updateDoc(principalFinance, { payroll: { requireApproval: false } }))
     await assertFails(setDoc(doc(hod().firestore(), 'colleges', COLLEGE_A, 'config', 'finance'), { x: 1 }))
     await assertFails(setDoc(doc(accounts().firestore(), 'colleges', COLLEGE_A, 'config', 'access'), { payrollRoles: ['accounts'] }))
     await assertSucceeds(setDoc(doc(principalContext().firestore(), 'colleges', COLLEGE_A, 'config', 'access'), { payrollRoles: ['accounts'] }))
@@ -1944,17 +1954,65 @@ describe('office roles — finance moved from HODs to the accounts team', () => 
     await assertSucceeds(getDoc(doc(studentContext().firestore(), 'colleges', COLLEGE_A, 'config', 'library')))
   })
 
-  it('payroll: principal always; accounts only after the college grants it', async () => {
+  it('payroll: accounts prepares/processes while principal may only review submitted payslips', async () => {
     const path = ['colleges', COLLEGE_A, 'payslips', '2026-09_p1'] as const
-    await assertSucceeds(getDoc(doc(principalContext().firestore(), ...path)))
-    await assertFails(getDoc(doc(accounts().firestore(), ...path)))
+    const principalRef = doc(principalContext().firestore(), ...path)
+    const accountsRef = doc(accounts().firestore(), ...path)
+    const structurePath = ['colleges', COLLEGE_A, 'salaryStructures', 'p1'] as const
+
+    await assertSucceeds(getDoc(principalRef))
+    await assertSucceeds(getDoc(accountsRef))
+    await assertFails(getDoc(doc(facultyContext().firestore(), ...path)))
     await assertFails(getDoc(doc(hod().firestore(), ...path)))
-    await testEnv.withSecurityRulesDisabled(async (context) => {
-      await setDoc(doc(context.firestore(), 'colleges', COLLEGE_A, 'config', 'access'), { payrollRoles: ['accounts'] })
-    })
-    await assertSucceeds(getDoc(doc(accounts().firestore(), ...path)))
     await assertFails(getDoc(doc(operations().firestore(), ...path)))
-    // faculty still sees their own payslip
+
+    const draftData = { month: '2026-09', facultyProfileId: 'p2', facultyUid: 'faculty-b', payslipNo: 'PS-202609-P2', status: 'draft', gross: 100, net: 100, history: [] }
+    const accountDraftRef = doc(accounts().firestore(), 'colleges', COLLEGE_A, 'payslips', '2026-09_p2')
+    const principalDraftRef = doc(principalContext().firestore(), 'colleges', COLLEGE_A, 'payslips', '2026-09_p2')
+    await assertSucceeds(setDoc(accountDraftRef, draftData))
+    await assertSucceeds(updateDoc(accountDraftRef, {
+      status: 'pending_approval', submittedBy: 'Accounts', submittedByUid: 'accounts-a', submittedAt: Timestamp.now(),
+    }))
+    await assertSucceeds(updateDoc(principalDraftRef, {
+      status: 'draft', reviewedBy: 'Principal', reviewedByUid: 'principal-a', reviewedAt: Timestamp.now(),
+      reviewDecision: 'changes_requested', reviewNote: 'Please verify the LOP days.',
+    }))
+    await assertFails(getDoc(principalDraftRef))
+    const principalPayslips = collection(principalContext().firestore(), 'colleges', COLLEGE_A, 'payslips')
+    await assertFails(getDocs(query(principalPayslips, where('month', '==', '2026-09'))))
+    await assertSucceeds(getDocs(query(principalPayslips, where('month', '==', '2026-09'), where('status', 'in', ['pending_approval', 'approved', 'paid']))))
+    await assertSucceeds(updateDoc(accountDraftRef, { gross: 110 }))
+
+    await assertSucceeds(getDoc(doc(accounts().firestore(), ...structurePath)))
+    await assertFails(getDoc(doc(principalContext().firestore(), ...structurePath)))
+    await assertSucceeds(updateDoc(doc(accounts().firestore(), ...structurePath), { basic: 1200 }))
+    await assertFails(updateDoc(doc(principalContext().firestore(), ...structurePath), { basic: 2000 }))
+
+    const accountCertificate = doc(accounts().firestore(), 'colleges', COLLEGE_A, 'salaryCertificates', 'cert1')
+    const principalCertificate = doc(principalContext().firestore(), 'colleges', COLLEGE_A, 'salaryCertificates', 'cert1')
+    await assertSucceeds(setDoc(accountCertificate, { facultyUid: 'faculty-a', certificateNo: 'CERT-1' }))
+    await assertFails(getDoc(principalCertificate))
+    await assertFails(setDoc(principalCertificate, { facultyUid: 'faculty-a', certificateNo: 'CERT-2' }))
+
+    // Accounts cannot self-approve or process a payslip before approval.
+    await assertFails(updateDoc(accountsRef, { status: 'approved', approvedBy: 'Accounts' }))
+    await assertFails(updateDoc(accountsRef, { status: 'paid', paidOn: '2026-09-30', markedPaidBy: 'Accounts', markedPaidByUid: 'accounts-a' }))
+    // Principal cannot alter the financial figures or jump directly to paid.
+    await assertFails(updateDoc(principalRef, { status: 'approved', gross: 999999 }))
+    await assertFails(updateDoc(principalRef, { status: 'paid', paidOn: '2026-09-30' }))
+    await assertSucceeds(updateDoc(principalRef, {
+      status: 'approved', reviewedBy: 'Principal', reviewedByUid: 'principal-a',
+      reviewedAt: Timestamp.now(), reviewDecision: 'approved', reviewNote: '',
+      approvedBy: 'Principal', approvedByUid: 'principal-a', approvedAt: Timestamp.now(),
+    }))
+    // Once approved, only accounts may record the bank payment.
+    await assertSucceeds(updateDoc(accountsRef, {
+      status: 'paid', paidOn: '2026-09-30', paymentRef: 'BANK-123',
+      markedPaidBy: 'Accounts', markedPaidByUid: 'accounts-a',
+    }))
+    await assertFails(updateDoc(principalRef, { paymentRef: 'PRINCIPAL-EDIT' }))
+
+    // Faculty still sees their own payslip.
     await assertSucceeds(getDoc(doc(facultyContext().firestore(), ...path)))
   })
 

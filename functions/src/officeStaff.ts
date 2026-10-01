@@ -1,8 +1,8 @@
 // functions/src/officeStaff.ts
 //
-// College office staff — the ACCOUNTS team (fees, payments, vendor bills and,
-// when the college allows it, payroll) and the OPERATIONS team (library,
-// inventory, stores, procurement).
+// College office staff — the ACCOUNTS team (fees, payments, vendor bills,
+// payroll preparation and post-approval processing) and the OPERATIONS team
+// (library, inventory, stores, procurement). The principal reviews and approves payroll.
 //
 // SUPERADMIN ONLY. Accounts are created from the superadmin's Create Admin
 // form (grantUserRole with role accounts / operations, which also writes the

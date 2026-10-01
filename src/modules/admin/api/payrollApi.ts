@@ -5,16 +5,16 @@
 //   payslips/{month_facultyProfileId}     — immutable-once-paid monthly payslip snapshot
 //   salaryCertificates/{autoId}           — issued certificate log (re-downloadable)
 //
-// Rules: admin / principal (and superadmin) manage everything; a faculty
-// member can read only their own payslips and certificates (facultyUid).
-// The app records payroll; salary disbursement happens in the bank — marking
-// a payslip "paid" stamps the date + bank reference for the ledger.
+// Roles are intentionally segregated: accounts manage structures, draft and
+// submit payslips, then record payment; the principal reviews submissions and
+// can only approve or request changes. Faculty read only their released rows.
 
 import {
   addDoc,
   arrayUnion,
   collection,
   deleteDoc,
+  deleteField,
   doc,
   getDocs,
   query,
@@ -87,8 +87,17 @@ export interface Payslip {
   totalDeductions: number
   net: number
   status: PayslipStatus
+  submittedBy?: string
+  submittedAt?: string
+  reviewedBy?: string
+  reviewedAt?: string
+  reviewDecision?: 'approved' | 'changes_requested'
+  reviewNote?: string
+  approvedBy?: string
+  approvedAt?: string
   paidOn?: string
   paymentRef?: string
+  markedPaidBy?: string
   history: PayslipHistoryEntry[]
   updatedAt?: string
 }
@@ -196,8 +205,17 @@ function mapPayslip(id: string, r: Record<string, unknown>): Payslip {
     totalDeductions: num(r.totalDeductions),
     net: num(r.net),
     status: (r.status as PayslipStatus) || 'draft',
+    submittedBy: r.submittedBy ? str(r.submittedBy) : undefined,
+    submittedAt: iso(r.submittedAt),
+    reviewedBy: r.reviewedBy ? str(r.reviewedBy) : undefined,
+    reviewedAt: iso(r.reviewedAt),
+    reviewDecision: r.reviewDecision === 'approved' || r.reviewDecision === 'changes_requested' ? r.reviewDecision : undefined,
+    reviewNote: r.reviewNote ? str(r.reviewNote) : undefined,
+    approvedBy: r.approvedBy ? str(r.approvedBy) : undefined,
+    approvedAt: iso(r.approvedAt),
     paidOn: r.paidOn ? str(r.paidOn) : undefined,
     paymentRef: r.paymentRef ? str(r.paymentRef) : undefined,
+    markedPaidBy: r.markedPaidBy ? str(r.markedPaidBy) : undefined,
     history: Array.isArray(r.history) ? (r.history as PayslipHistoryEntry[]) : [],
     updatedAt: iso(r.updatedAt),
   }
@@ -242,8 +260,14 @@ export async function saveSalaryStructure(s: Omit<SalaryStructure, 'id' | 'updat
 }
 
 // ─── Payslips ─────────────────────────────────────────────
-export async function fetchPayslips(month: string): Promise<Payslip[]> {
-  const snap = await getDocs(query(col('payslips'), where('month', '==', month)))
+export async function fetchPayslips(month: string, includeUnsubmitted = false): Promise<Payslip[]> {
+  // Principals only query submitted/approved/paid snapshots; the status filter
+  // is also required by Firestore rules so unsubmitted drafts remain private to
+  // accounts. Accounts may include their own drafts and cancelled rows.
+  const q = includeUnsubmitted
+    ? query(col('payslips'), where('month', '==', month))
+    : query(col('payslips'), where('month', '==', month), where('status', 'in', ['pending_approval', 'approved', 'paid']))
+  const snap = await getDocs(q)
   return snap.docs.map(d => mapPayslip(d.id, d.data() as Record<string, unknown>))
 }
 
@@ -256,7 +280,7 @@ export async function fetchMyPayslips(uid: string): Promise<Payslip[]> {
     .sort((a, b) => b.month.localeCompare(a.month))
 }
 
-/** Create/refresh a draft payslip. Approved/paid payslips are locked. */
+/** Create/refresh an editable draft. Submitted, approved and paid rows are locked. */
 export async function savePayslipDraft(draft: PayslipDraft, note = 'Saved draft'): Promise<void> {
   const cid = collegeId()
   const ref = doc(col('payslips', cid), payslipId(draft.month, draft.facultyProfileId))
@@ -265,7 +289,7 @@ export async function savePayslipDraft(draft: PayslipDraft, note = 'Saved draft'
     const snap = await tx.get(ref)
     if (snap.exists()) {
       const status = (snap.data().status as PayslipStatus) || 'draft'
-      if (status !== 'draft') throw new Error(`This payslip is ${status}. Revert it to draft before editing.`)
+      if (status !== 'draft') throw new Error(`This payslip is ${status} and cannot be edited.`)
       tx.update(ref, { ...stripUndefined(draft), updatedAt: serverTimestamp(), history: arrayUnion(entry) })
     } else {
       tx.set(ref, {
@@ -281,36 +305,148 @@ export async function savePayslipDraft(draft: PayslipDraft, note = 'Saved draft'
   })
 }
 
-export async function setPayslipStatus(
-  id: string,
-  to: PayslipStatus,
-  opts: { requireApproval: boolean; paidOn?: string; paymentRef?: string; note?: string },
-): Promise<void> {
+/** Accounts submits a completed draft into the principal's review queue. */
+export async function submitPayslipForApproval(id: string): Promise<void> {
   const ref = doc(col('payslips'), id)
+  const by = actor()
+  const uid = auth.currentUser?.uid || ''
   await runTransaction(db, async tx => {
     const snap = await tx.get(ref)
     if (!snap.exists()) throw new Error('Payslip not found.')
     const from = (snap.data().status as PayslipStatus) || 'draft'
-    if (!canTransitionPayslip(from, to, opts.requireApproval)) {
-      throw new Error(
-        to === 'paid' && from === 'draft'
-          ? 'This college requires payslips to be approved before they are marked paid.'
-          : `A ${from} payslip cannot be moved to ${to}.`,
-      )
+    if (!canTransitionPayslip(from, 'pending_approval', 'accounts')) {
+      throw new Error(`A ${from} payslip cannot be submitted for approval.`)
     }
-    const by = actor()
-    const patch: Record<string, unknown> = {
-      status: to,
+    tx.update(ref, {
+      status: 'pending_approval',
+      submittedBy: by,
+      submittedByUid: uid,
+      submittedAt: serverTimestamp(),
+      reviewedBy: deleteField(),
+      reviewedByUid: deleteField(),
+      reviewedAt: deleteField(),
+      reviewDecision: deleteField(),
+      reviewNote: deleteField(),
+      approvedBy: deleteField(),
+      approvedByUid: deleteField(),
+      approvedAt: deleteField(),
       updatedAt: serverTimestamp(),
-      history: arrayUnion({ at: new Date().toISOString(), by, action: `Status → ${to}`, ...(opts.note ? { note: opts.note } : {}) }),
+      history: arrayUnion({ at: new Date().toISOString(), by, action: 'Submitted for principal approval' }),
+    })
+  })
+}
+
+/** Principal approves a submission or returns it to accounts with a reason. */
+export async function reviewPayslip(
+  id: string,
+  decision: 'approved' | 'changes_requested',
+  note = '',
+): Promise<void> {
+  if (decision === 'changes_requested' && !note.trim()) throw new Error('Add a note explaining the requested changes.')
+  const to: PayslipStatus = decision === 'approved' ? 'approved' : 'draft'
+  const ref = doc(col('payslips'), id)
+  const by = actor()
+  const uid = auth.currentUser?.uid || ''
+  await runTransaction(db, async tx => {
+    const snap = await tx.get(ref)
+    if (!snap.exists()) throw new Error('Payslip not found.')
+    const from = (snap.data().status as PayslipStatus) || 'draft'
+    if (!canTransitionPayslip(from, to, 'principal')) {
+      throw new Error(`A ${from} payslip cannot be reviewed.`)
     }
-    if (to === 'approved') { patch.approvedBy = by; patch.approvedAt = serverTimestamp() }
-    if (to === 'paid') {
-      patch.paidOn = (opts.paidOn || new Date().toISOString().slice(0, 10)).slice(0, 10)
-      if (opts.paymentRef) patch.paymentRef = opts.paymentRef
-      patch.markedPaidBy = by
+    tx.update(ref, {
+      status: to,
+      reviewedBy: by,
+      reviewedByUid: uid,
+      reviewedAt: serverTimestamp(),
+      reviewDecision: decision,
+      reviewNote: note.trim(),
+      ...(decision === 'approved' ? { approvedBy: by, approvedByUid: uid, approvedAt: serverTimestamp() } : {}),
+      updatedAt: serverTimestamp(),
+      history: arrayUnion({
+        at: new Date().toISOString(),
+        by,
+        action: decision === 'approved' ? 'Principal approved payroll' : 'Principal requested changes',
+        ...(note.trim() ? { note: note.trim() } : {}),
+      }),
+    })
+  })
+}
+
+/** Accounts may withdraw a submission for correction before it is reviewed. */
+export async function withdrawPayslipSubmission(id: string): Promise<void> {
+  const ref = doc(col('payslips'), id)
+  const by = actor()
+  const uid = auth.currentUser?.uid || ''
+  await runTransaction(db, async tx => {
+    const snap = await tx.get(ref)
+    if (!snap.exists()) throw new Error('Payslip not found.')
+    const from = (snap.data().status as PayslipStatus) || 'draft'
+    if (!canTransitionPayslip(from, 'draft', 'accounts')) throw new Error('Only a pending submission can be withdrawn.')
+    tx.update(ref, {
+      status: 'draft',
+      withdrawnBy: by,
+      withdrawnByUid: uid,
+      withdrawnAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+      history: arrayUnion({ at: new Date().toISOString(), by, action: 'Submission withdrawn by accounts' }),
+    })
+  })
+}
+
+/** Accounts records the real-world bank payment after principal approval. */
+export async function markPayslipPaid(id: string, paidOn?: string, paymentRef?: string): Promise<void> {
+  const ref = doc(col('payslips'), id)
+  const by = actor()
+  const uid = auth.currentUser?.uid || ''
+  await runTransaction(db, async tx => {
+    const snap = await tx.get(ref)
+    if (!snap.exists()) throw new Error('Payslip not found.')
+    const from = (snap.data().status as PayslipStatus) || 'draft'
+    if (!canTransitionPayslip(from, 'paid', 'accounts')) {
+      throw new Error('Only a principal-approved payslip can be marked paid.')
     }
-    tx.update(ref, patch)
+    tx.update(ref, {
+      status: 'paid',
+      paidOn: (paidOn || new Date().toISOString().slice(0, 10)).slice(0, 10),
+      ...(paymentRef?.trim() ? { paymentRef: paymentRef.trim() } : {}),
+      markedPaidBy: by,
+      markedPaidByUid: uid,
+      updatedAt: serverTimestamp(),
+      history: arrayUnion({ at: new Date().toISOString(), by, action: 'Payment processed', ...(paymentRef?.trim() ? { note: paymentRef.trim() } : {}) }),
+    })
+  })
+}
+
+export async function cancelDraftPayslip(id: string): Promise<void> {
+  const ref = doc(col('payslips'), id)
+  const by = actor()
+  await runTransaction(db, async tx => {
+    const snap = await tx.get(ref)
+    if (!snap.exists()) throw new Error('Payslip not found.')
+    const from = (snap.data().status as PayslipStatus) || 'draft'
+    if (!canTransitionPayslip(from, 'cancelled', 'accounts')) throw new Error('Only an editable draft can be cancelled.')
+    tx.update(ref, {
+      status: 'cancelled',
+      updatedAt: serverTimestamp(),
+      history: arrayUnion({ at: new Date().toISOString(), by, action: 'Draft cancelled' }),
+    })
+  })
+}
+
+export async function restoreCancelledPayslip(id: string): Promise<void> {
+  const ref = doc(col('payslips'), id)
+  const by = actor()
+  await runTransaction(db, async tx => {
+    const snap = await tx.get(ref)
+    if (!snap.exists()) throw new Error('Payslip not found.')
+    const from = (snap.data().status as PayslipStatus) || 'draft'
+    if (!canTransitionPayslip(from, 'draft', 'accounts')) throw new Error('Only a cancelled payslip can be restored.')
+    tx.update(ref, {
+      status: 'draft',
+      updatedAt: serverTimestamp(),
+      history: arrayUnion({ at: new Date().toISOString(), by, action: 'Cancelled draft restored' }),
+    })
   })
 }
 

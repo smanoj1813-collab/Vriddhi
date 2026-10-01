@@ -14,13 +14,13 @@ import {
 
 /**
  * The college's calendar events (bounded; stale for 5 minutes — holidays
- * change rarely). Degrades to an empty list on rules/network hiccups so a
- * banner never sinks the page it decorates.
+ * change rarely). Read failures remain visible so a timetable does not imply
+ * that a date was verified as a teaching day when the calendar was unavailable.
  */
 export function useAcademicCalendar(collegeId?: string) {
   return useQuery<CalendarEvent[]>({
     queryKey: ['academicCalendar', collegeId ?? 'current'],
-    queryFn: () => fetchCalendarEvents(collegeId).catch(() => [] as CalendarEvent[]),
+    queryFn: () => fetchCalendarEvents(collegeId),
     staleTime: 5 * 60_000,
   });
 }
@@ -32,10 +32,15 @@ export function useAcademicCalendar(collegeId?: string) {
 export function useHolidayForDate(
   dateKey: string | undefined,
   collegeId?: string,
-): { title: string; startDate: string; endDate: string } | null {
+): {
+  holiday: { title: string; startDate: string; endDate: string } | null;
+  isLoading: boolean;
+  isError: boolean;
+} {
   const events = useAcademicCalendar(collegeId);
-  return useMemo(() => {
+  const holiday = useMemo(() => {
     if (!dateKey || !events.data) return null;
     return suspendingEventOn(events.data, dateKey);
   }, [events.data, dateKey]);
+  return { holiday, isLoading: events.isLoading, isError: events.isError };
 }

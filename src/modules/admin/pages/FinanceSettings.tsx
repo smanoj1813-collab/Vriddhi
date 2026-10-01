@@ -19,6 +19,7 @@ import {
   RotateCcw, Save, Trash2, Users, Wallet,
 } from 'lucide-react'
 import { useFinanceRules } from '../hooks/useFinanceRules'
+import { useAuth } from '@/modules/auth/context/AuthContext'
 import { ALL_PAYMENT_MODES, type BrandingSettings, type FinanceRulesDoc } from '../api/financeApi'
 import type { PaymentMode } from '../api/feeApi'
 import { buildSchedule } from '../utils/financeRules'
@@ -150,7 +151,11 @@ function SaveControls({ dirty, saving, onReset, onSave, compact = false }: {
 
 export default function FinanceSettings() {
   const { rules, branding, loading, saving, save } = useFinanceRules()
+  const { user } = useAuth()
   const { showSuccess, showError } = useNotification()
+  const visibleTabs = user?.role === 'principal'
+    ? TABS.filter(t => t.id !== 'payroll' && t.id !== 'certificate')
+    : TABS
   const [draft, setDraft] = useState<FinanceRulesDoc | null>(null)
   const [brand, setBrand] = useState<BrandingSettings | null>(null)
   const [tab, setTab] = useState<TabId>('branding')
@@ -202,7 +207,7 @@ export default function FinanceSettings() {
         setTab('fees')
         return
       }
-      await save(draft, brand)
+      await save(draft, brand, user?.role === 'principal')
       showSuccess('Finance settings saved.')
     } catch (err) {
       console.error('[FinanceSettings] save failed', err)
@@ -243,7 +248,7 @@ export default function FinanceSettings() {
       <div className="grid grid-cols-1 lg:grid-cols-[240px_1fr] gap-6">
         {/* Tab nav */}
         <nav className="flex lg:flex-col gap-2 overflow-x-auto pb-2 lg:pb-0 lg:sticky lg:top-4 lg:self-start">
-          {TABS.map(t => {
+          {visibleTabs.map(t => {
             const Icon = t.icon
             const active = tab === t.id
             return (
@@ -479,7 +484,7 @@ export default function FinanceSettings() {
           {/* ── Payroll ── */}
           {tab === 'payroll' && (
             <>
-              <Section title="Payroll rules" description="How payslips are calculated and approved.">
+              <Section title="Payroll rules" description="Accounts maintains salary calculations; the principal must approve every submitted monthly payroll before accounts can record payment.">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                   <Field label="Loss-of-pay (LOP) basis">
                     <select value={draft.payroll.lopBasis} onChange={e => patchPayroll({ lopBasis: e.target.value as FinanceRulesDoc['payroll']['lopBasis'] })} className={inputCls}>
@@ -498,7 +503,9 @@ export default function FinanceSettings() {
                   <Field label="Payslip number prefix"><input className={`${inputCls} font-mono`} value={draft.payroll.payslipPrefix} onChange={e => patchPayroll({ payslipPrefix: e.target.value.toUpperCase() })} /></Field>
                   <Field label="Payslip footer" className="md:col-span-2"><input className={inputCls} value={draft.payroll.payslipFooter} onChange={e => patchPayroll({ payslipFooter: e.target.value })} /></Field>
                 </div>
-                <Toggle checked={draft.payroll.requireApproval} onChange={v => patchPayroll({ requireApproval: v })} label="Payslips must be approved before they are marked paid" hint="Faculty only see approved or paid payslips." />
+                <div className="rounded-xl border border-blue-500/20 bg-blue-500/5 px-4 py-3 text-sm text-blue-800 dark:text-blue-300">
+                  Principal approval is mandatory. Accounts can only record payment after the principal approves the submitted payslip.
+                </div>
               </Section>
 
               <SalaryComponentsEditor

@@ -1,7 +1,7 @@
 // src/modules/admin/api/accessApi.ts
-// Per-college access choices (colleges/{id}/config/access). Principal-only
-// write in the security rules; the rules read the same doc to decide whether
-// the accounts team may touch payroll collections.
+// Legacy per-college access document (colleges/{id}/config/access). It remains
+// readable for compatibility, but payroll access and workflow are now fixed by
+// role: accounts prepares/processes and the principal approves.
 
 import { doc, getDoc, setDoc } from 'firebase/firestore'
 import { db } from '@/Firebase/config'

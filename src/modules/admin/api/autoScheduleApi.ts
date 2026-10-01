@@ -3,9 +3,9 @@
 // Preview (dryRun) is the default — the dialog renders the plan; only an
 // explicit Apply writes weeklySchedules docs server-side.
 //
-// v2 additions: dateRange (slot applicability window), strategy/randomSeed/
-// roomStrategy (P3 placement patterns), courseOverrides (P2 per-course
-// steering), demand rows + calendar view in the plan (P2/P4).
+// Additions: dateRange (slot applicability window), placement and room
+// strategies, group-specific demand overrides, faculty-day packing preferences,
+// and calendar/daily-load diagnostics in the preview.
 
 import { httpsCallable } from 'firebase/functions';
 import { functions } from '@/Firebase/config';
@@ -14,6 +14,8 @@ import type { CalendarEventType } from '@/shared/types/calendarEvent';
 
 export type PlacementStrategy = 'uniform' | 'spread' | 'random';
 export type RoomStrategy = 'leastLoaded' | 'random';
+export type FacultyDayPreference = 'balanced' | 'compact';
+export type TeachingGroupMode = 'mapping' | 'separate';
 
 export interface AutoScheduleGridInput {
   days?: DayOfWeek[];
@@ -26,7 +28,10 @@ export interface AutoScheduleGridInput {
 }
 
 export interface CourseOverrideInput {
-  mappingId: string;
+  /** Legacy override applied to every group expanded from this mapping. */
+  mappingId?: string;
+  /** Preferred key for editing a single mapping + division/section demand. */
+  demandKey?: string;
   /** Overrides the hoursPerWeek derivation. 0 (or include:false) excludes. */
   weeklyPeriods?: number | null;
   include?: boolean;
@@ -40,7 +45,11 @@ export interface AutoScheduleRequest {
   grid: AutoScheduleGridInput;
   rooms: string[];
   semesterWeeks?: number;
+  /** Hard period cap, distinct from the soft class-meeting target. */
   maxPeriodsPerDayPerFaculty?: number;
+  targetFacultyClassesPerDay?: number;
+  facultyDayPreference?: FacultyDayPreference;
+  teachingGroupMode?: TeachingGroupMode;
   maxWeeklyPeriodsPerFaculty?: number;
   dryRun?: boolean;
   /** P1 — one applicability window per apply run (written to every doc). */
@@ -57,6 +66,8 @@ export interface AutoScheduleRequest {
 
 export interface AutoSchedulePlacement {
   mappingId: string;
+  demandKey: string;
+  meetingKey: string;
   courseId: string;
   subject: string;
   subjectCode: string;
@@ -134,6 +145,15 @@ export interface AutoSchedulePlan {
     periodsRequested: number;
     periodsPlaced: number;
     reason: string;
+  }[];
+  facultyDailyLoad: {
+    facultyId: string;
+    facultyName: string;
+    day: DayOfWeek;
+    classes: number;
+    periods: number;
+    targetClasses: number;
+    targetMet: boolean;
   }[];
   facultyLoad: {
     facultyId: string;

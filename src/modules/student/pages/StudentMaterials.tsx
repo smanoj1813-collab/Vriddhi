@@ -11,7 +11,6 @@ import { useStudentProfile } from '../hooks/useStudentProfile';
 import { useMyCurriculum, type StudentSubject, type StudentModule } from '../hooks/useMyCurriculum';
 import { materialApi, type MaterialItem, type MaterialType } from '@/api/materialApi';
 import { isSameSubject, isSameTopic, extractCanonicalSubject } from '@/shared/utils/curriculumMatcher';
-import { openAIChatWithQuery } from '@/shared/components/FloatingAIChatWidget';
 import AIStudyCompanionModal from '@/shared/components/study/AIStudyCompanionModal';
 
 const typeIcons: Record<string, React.ReactNode> = {
@@ -187,7 +186,7 @@ export default function StudentMaterials() {
     topic: '',
   });
 
-  const handleAskAIStudyGuide = (
+  const handleOpenCachedSummary = (
     subjectName: string,
     topicOrModule: string,
     modName?: string,
@@ -235,9 +234,9 @@ export default function StudentMaterials() {
               </span>
             )}
           </div>
-          <h1 className="text-xl md:text-2xl font-extrabold tracking-tight">Curriculum Study Materials</h1>
+          <h1 className="text-xl md:text-2xl font-extrabold tracking-tight">Current Study Materials</h1>
           <p className="text-xs md:text-sm text-slate-300 mt-1">
-            Official lecture notes, presentations, and AI learning guides matched to your enrolled subjects
+            Faculty-shared lecture notes, presentations, and resources for your enrolled subjects
           </p>
         </div>
 
@@ -341,13 +340,6 @@ export default function StudentMaterials() {
                 Faculty: <strong className="text-slate-700 dark:text-slate-300">{activeSubject.facultyName || 'Department Faculty'}</strong> • Credits: {activeSubject.credits} • Syllabus Modules: {activeSubject.modules.length}
               </p>
             </div>
-            <button
-              onClick={() => handleAskAIStudyGuide(activeSubject.courseName, 'Overview and important exam questions')}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-teal-600 hover:bg-teal-700 text-white text-xs font-bold shadow-xs transition-all"
-            >
-              <Sparkles className="w-3.5 h-3.5" />
-              AI Subject Guide
-            </button>
           </div>
 
           {/* Module-by-Module Breakdown */}
@@ -384,9 +376,10 @@ export default function StudentMaterials() {
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
-                          handleAskAIStudyGuide(activeSubject.courseName, `Module ${mod.moduleNo}: ${mod.moduleName}`);
+                          handleOpenCachedSummary(activeSubject.courseName, `Module ${mod.moduleNo}: ${mod.moduleName}`, mod.moduleName, mod.moduleNo);
                         }}
-                        className="hidden sm:inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold text-teal-700 dark:text-teal-300 bg-teal-50 dark:bg-teal-950/40 hover:bg-teal-100 border border-teal-500/20"
+                        title="Open a cached AI summary if one is available"
+                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold text-teal-700 dark:text-teal-300 bg-teal-50 dark:bg-teal-950/40 hover:bg-teal-100 border border-teal-500/20"
                       >
                         <Sparkles className="w-3 h-3 text-teal-500" />
                         AI Summary
@@ -407,15 +400,12 @@ export default function StudentMaterials() {
                         </p>
                         <div className="flex flex-wrap gap-1.5">
                           {mod.topics.map((t, idx) => (
-                            <button
+                            <span
                               key={idx}
-                              onClick={() => handleAskAIStudyGuide(activeSubject.courseName, t.title)}
-                              className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-teal-50 dark:hover:bg-teal-950/40 hover:text-teal-600 dark:hover:text-teal-300 border border-transparent hover:border-teal-500/20 text-slate-700 dark:text-slate-300 text-xs font-medium transition-colors flex items-center gap-1.5"
-                              title="Click to ask AI for topic explanation"
+                              className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-medium"
                             >
-                              <span>{t.title}</span>
-                              <Sparkles className="w-2.5 h-2.5 text-teal-500 opacity-60" />
-                            </button>
+                              {t.title}
+                            </span>
                           ))}
                         </div>
                       </div>
@@ -475,16 +465,9 @@ export default function StudentMaterials() {
                               No faculty uploads for Module {mod.moduleNo} yet
                             </p>
                             <p className="text-[11px] text-slate-500">
-                              You can prepare with Vriddhi AI study summaries for these topics in the meantime.
+                              Please check the current course materials or ask your faculty to share notes for this module.
                             </p>
                           </div>
-                          <button
-                            onClick={() => handleAskAIStudyGuide(activeSubject.courseName, `Module ${mod.moduleNo}: ${mod.moduleName}`, mod.moduleName, mod.moduleNo)}
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-teal-50 dark:bg-teal-950/40 text-teal-700 dark:text-teal-300 border border-teal-500/20 text-xs font-bold hover:bg-teal-100 transition-colors shrink-0"
-                          >
-                            <Sparkles className="w-3.5 h-3.5 text-teal-500" />
-                            Generate AI Study Notes
-                          </button>
                         </div>
                       )}
                     </div>

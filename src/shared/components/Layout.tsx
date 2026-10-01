@@ -534,8 +534,8 @@ const hodNav: SidebarEntry[] = [
 ];
 
 /**
- * Accounts team — the college finance office. Payroll appears only when the
- * college grants it (principal → Finance Settings → Payroll visibility); the filter below hides it.
+ * Accounts team — the college finance office. Accounts always prepares and
+ * processes payroll; the principal reviews submitted runs for approval.
  */
 const accountsNav: SidebarEntry[] = [
   { kind: "link", label: "Accounts Desk", path: "/admin/accounts", icon: <Dashboard fontSize="small" /> },
@@ -617,7 +617,7 @@ const operationsNav: SidebarEntry[] = [
   { kind: "link", label: "Install App", path: "/admin/install-app", icon: <InstallMobile fontSize="small" /> },
 ];
 
-/** Drop /admin entries the role may not open (payroll follows the college setting). */
+/** Drop /admin entries the role may not open using the fixed role permissions. */
 function filterNavForRole(entries: SidebarEntry[] | undefined, role: UserRole, access: AccessSettings): SidebarEntry[] | null {
   if (!entries) return null;
   const ok = (path: string) => !path.startsWith('/admin') || canAccessAdminPath(role, path, access);
