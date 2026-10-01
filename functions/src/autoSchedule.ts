@@ -40,6 +40,7 @@ import { resolveSchedulingStaff, isValidDateKey, daysBetween, MAX_GENERATE_RANGE
 import { hoursPerWeek, DEFAULT_SEMESTER_WEEKS, DEFAULT_CAPACITY_WEEKLY_HOURS } from './autoCurriculumMapping'
 import { normalizeDay, isValidTime } from './scheduleImport'
 import { buildCalendarView, toCalendarEventLite, MAX_CALENDAR_READ, type CalendarView, type CalendarEventLite } from './calendar'
+import { batchFieldsIntersect, cohortLetters, divisionScopesOverlap, cohortScopesOverlap } from './cohortBatch'
 import type { DayOfWeek } from './classSchedule'
 
 // ═════════════════════════════════════════════════════════════════════════════
@@ -322,12 +323,36 @@ export function batchTokens(value: unknown): string[] {
  * intersects the mapping's batch list. Empty-batch semantics unchanged.
  */
 export function batchListMatches(requested: unknown, mappingBatch: unknown): boolean {
-  const requestTokens = batchTokens(requested)
-  const mappingTokens = batchTokens(mappingBatch)
-  if (requestTokens.length === 0 && mappingTokens.length === 0) return true
-  if (requestTokens.length === 0 || mappingTokens.length === 0) return false
-  const mappingSet = new Set(mappingTokens)
-  return requestTokens.some((t) => mappingSet.has(t))
+  // Every token is compared as a BATCH KEY (./cohortBatch): a range counts as
+  // the class of its END year, so a mapping written "2026-2027" is demand for
+  // a run whose batch is "2027" — the same rule the student page reads with.
+  // Before this, that mapping was invisible here and the run failed with
+  // "No active faculty mappings ... run Auto Map first" about demand that
+  // existed.
+  return batchFieldsIntersect(requested, mappingBatch)
+}
+
+/**
+ * Does an ACTIVE mapping serve the cohort an auto-schedule run targets?
+ *
+ * `batch` may be a multi-intake list on either side ("2027, 2028"), compared
+ * keyed. Division/section are LETTER SETS (shared ./cohortBatch rule): a
+ * mapping that covers "A,B,C,D" is demand for a run of division A, and a
+ * mapping with no division recorded is a whole-batch class. A run that names
+ * no division schedules only whole-batch mappings — it must not silently
+ * expand a division-specific mapping into a class for students who are not
+ * its cohort.
+ */
+export function mappingServesCohort(
+  mapping: Record<string, unknown>,
+  target: { batch?: unknown; division?: unknown; section?: unknown },
+): boolean {
+  if (!batchListMatches(target.batch, mapping.batch)) return false
+  const targetHasDivision = cohortLetters(target.division).length + cohortLetters(target.section).length > 0
+  const mappingHasDivision = cohortLetters(mapping.division).length + cohortLetters(mapping.section).length > 0
+  if (!targetHasDivision) return !mappingHasDivision
+  if (!mappingHasDivision) return true
+  return divisionScopesOverlap(mapping, target)
 }
 
 /**
@@ -846,16 +871,14 @@ export const autoGenerateWeeklySchedule = onCall(
       .where('curriculumId', '==', payload.curriculumId)
       .limit(400)
       .get()
-    const lower = (v: unknown) => String(v ?? '').trim().toLowerCase()
     type MappingRow = Record<string, unknown> & { id: string }
     const courses: AutoScheduleCourse[] = mappingsSnap.docs
       .map((d): MappingRow => ({ id: d.id, ...(d.data() as Record<string, unknown>) }))
       .filter((m) => {
         if (String(m.status ?? 'active') === 'removed' || String(m.status) === 'inactive') return false
-        // Tokenised multi-batch matching: "2027,2028" matches "2027, 2028".
-        if (!batchListMatches(payload.batch, m.batch)) return false
-        if (lower(m.division ?? '') !== lower(payload.division)) return false
-        if (lower(m.section ?? '') !== lower(payload.section)) return false
+        // Cohort match (batch keyed — range ≡ end year; division/section as
+        // letter sets, so a mapping for "A,B,C,D" is demand for a run of A).
+        if (!mappingServesCohort(m, payload)) return false
         if (!String(m.facultyId ?? '').trim()) return false
         return true
       })
@@ -895,12 +918,12 @@ export const autoGenerateWeeklySchedule = onCall(
       facultyWeekly: new Map(),
     }
     const cohortFacultyIds = new Set(courses.map((c) => c.facultyId.toLowerCase()))
-    // Cohort identity is token-normalised on batch so "2027, 2028" and
-    // "2027,2028" name the same cohort (same root cause as batchListMatches).
-    const batchKey = (v: unknown) => batchTokens(v).sort().join('+')
-    const cohortKey = (d: Record<string, unknown>) =>
-      [lower(d.branch), batchKey(d.batch), lower(d.division ?? ''), lower(d.section ?? '')].join('|')
-    const targetCohort = cohortKey({ branch, batch: payload.batch, division: payload.division, section: payload.section })
+    // The cohorts this run schedules — one per course, because a mapping may
+    // name its own division ("A") or a list ("A,B,C,D") even when the run's
+    // fields are filled in. An existing slot blocks the period when it
+    // overlaps ANY of them (./cohortBatch cohortScopesOverlap: batch ranges
+    // and division lists compared the same way everywhere).
+    const runCohorts = courses.map((c) => ({ branch: c.branch || branch, batch: c.batch, division: c.division, section: c.section }))
 
     for (const d of schedulesSnap.docs) {
       const s = d.data() as Record<string, unknown>
@@ -920,8 +943,13 @@ export const autoGenerateWeeklySchedule = onCall(
       const room = String(s.room ?? '').trim()
       if (room) occupancy.roomBusy.add(`${key}|${room}`)
       // Cohort busy: match on the schedule's own cohort identity — a schedule
-      // for B.Com 2026 A blocks this cohort even if it came from another curriculum.
-      if (cohortKey({ branch: s.branch, batch: s.batch, division: s.division, section: s.section }) === targetCohort) {
+      // for B.Com 2026 A blocks this cohort even if it came from another
+      // curriculum, and a slot recorded "2026-2027 / A,B,C,D" blocks a run of
+      // "2027 / A" (they share students).
+      if (runCohorts.some((target) => cohortScopesOverlap(
+        { branch: s.branch, batch: s.batch, division: s.division, section: s.section },
+        target,
+      ))) {
         occupancy.cohortBusy.add(key)
       }
     }

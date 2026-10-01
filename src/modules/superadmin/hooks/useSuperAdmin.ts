@@ -59,6 +59,15 @@ import {
   type RelinkFacultyResult,
   type CreateAdminResult,
 } from "../api/superAdminApi";
+import {
+  listAccessProducts,
+  createAccessProduct,
+  updateAccessProduct,
+  archiveAccessProduct,
+  deleteAccessProduct,
+  bulkUpdateStudentAccess,
+  getAccessMis,
+} from "../api/accessProductsApi";
 import type { BatchProgress } from "@/shared/utils/batchedImport";
 
 import {
@@ -100,6 +109,11 @@ import {
   type ImportResult,
   type ListCollegesOptions,
   type ListAdminsOptions,
+  type AccessProduct,
+  type AccessProductInput,
+  type AccessMisResponse,
+  type BulkAccessUpdateInput,
+  type BulkAccessUpdateResult,
 } from "../types/superAdmin";
 
 // ═══════════════════════════════════════════════════════════════════════
@@ -134,6 +148,8 @@ export const superAdminKeys = {
   comparisonTrend: (collegeId: string | null, metric: string, timeRange: string) =>
     [...superAdminKeys.all, "comparison-trend", collegeId || "all", metric, timeRange] as const,
   benchmark: (collegeId: string) => [...superAdminKeys.all, "benchmark", collegeId] as const,
+  accessProducts: () => [...superAdminKeys.all, "access-products"] as const,
+  accessMis: (collegeId?: string) => [...superAdminKeys.all, "access-mis", collegeId || "all"] as const,
   subscriptionPlans: () => [...superAdminKeys.all, "subscription-plans"] as const,
   subscriptions: () => [...superAdminKeys.all, "subscriptions"] as const,
   payments: (options?: object) => [...superAdminKeys.all, "payments", options || {}] as const,
@@ -765,3 +781,75 @@ export const useBulkResetFacultyPasswords = () => {
 };
 
 export type { BulkResetItem, BulkResetOutcome } from "../api/superAdminApi";
+
+// ═══════════════════════════════════════════════════════════════════════
+// PLATFORM-ACCESS PRODUCTS + MIS
+// ═══════════════════════════════════════════════════════════════════════
+export const useAccessProducts = () => {
+  return useQuery<AccessProduct[], SuperAdminApiError>({
+    queryKey: superAdminKeys.accessProducts(),
+    queryFn: listAccessProducts,
+    staleTime: 1000 * 60 * 5,
+  });
+};
+
+export const useCreateAccessProduct = () => {
+  const queryClient = useQueryClient();
+  return useMutation<string, SuperAdminApiError, AccessProductInput>({
+    mutationFn: createAccessProduct,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: superAdminKeys.accessProducts() });
+    },
+  });
+};
+
+export const useUpdateAccessProduct = () => {
+  const queryClient = useQueryClient();
+  return useMutation<void, SuperAdminApiError, { productId: string; updates: Partial<AccessProductInput> }>({
+    mutationFn: ({ productId, updates }) => updateAccessProduct(productId, updates),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: superAdminKeys.accessProducts() });
+      queryClient.invalidateQueries({ queryKey: superAdminKeys.accessMis() });
+    },
+  });
+};
+
+export const useArchiveAccessProduct = () => {
+  const queryClient = useQueryClient();
+  return useMutation<void, SuperAdminApiError, { productId: string; active: boolean }>({
+    mutationFn: ({ productId, active }) => archiveAccessProduct(productId, active),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: superAdminKeys.accessProducts() });
+    },
+  });
+};
+
+export const useDeleteAccessProduct = () => {
+  const queryClient = useQueryClient();
+  return useMutation<void, SuperAdminApiError, string>({
+    mutationFn: deleteAccessProduct,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: superAdminKeys.accessProducts() });
+    },
+  });
+};
+
+export const useAccessMis = (collegeId?: string) => {
+  return useQuery<AccessMisResponse, SuperAdminApiError>({
+    queryKey: superAdminKeys.accessMis(collegeId),
+    queryFn: () => getAccessMis(collegeId),
+    staleTime: 1000 * 60 * 2,
+  });
+};
+
+export const useBulkUpdateStudentAccess = () => {
+  const queryClient = useQueryClient();
+  return useMutation<BulkAccessUpdateResult, SuperAdminApiError, BulkAccessUpdateInput>({
+    mutationFn: bulkUpdateStudentAccess,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: superAdminKeys.students() });
+      queryClient.invalidateQueries({ queryKey: superAdminKeys.accessMis() });
+      queryClient.invalidateQueries({ queryKey: superAdminKeys.dashboard() });
+    },
+  });
+};

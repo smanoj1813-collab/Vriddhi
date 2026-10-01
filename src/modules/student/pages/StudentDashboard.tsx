@@ -5,13 +5,43 @@ import StudentAcademicSummary from '../components/StudentAcademicSummary';
 import {
   Calendar, BookOpen, FileText, CreditCard, Clock, CheckCircle, AlertTriangle,
   Bell, ChevronRight, TrendingUp, MapPin, BarChart3, Library, Settings, Receipt,
-  GraduationCap, Sparkles, User, CalendarDays, BookMarked
+  GraduationCap, Sparkles, User, CalendarDays, BookMarked, ShieldCheck
 } from 'lucide-react';
-import type { Assessment, ClassSchedule } from '../types/student';
+import type { Assessment, ClassSchedule, StudentProfile } from '../types/student';
 import { deadlineCountdown, linkageBadgeText } from '../utils/deadlineCountdown';
 import { useTranslation } from '../../../shared/contexts/LanguageProvider';
 import type { TranslationKey } from '../../../shared/i18n';
 import { groupTilesByNavSection } from '../studentNav';
+import { accessStatus, formatDurationMonths, isDateKey } from '../../../shared/utils/accessWindow';
+
+/**
+ * Where the student's platform access stands, from the fields the import /
+ * bulk-assign stamps on their record. Absent for accounts provisioned before
+ * products existed — the dashboard then simply shows nothing extra.
+ */
+function AccessBadge({ profile }: { profile: Pick<StudentProfile, 'accessEnd' | 'accessProductName' | 'accessDurationMonths'> }) {
+  const end = typeof profile.accessEnd === 'string' ? profile.accessEnd : '';
+  if (!isDateKey(end)) return null;
+  const today = new Date(Date.now() + 5.5 * 60 * 60 * 1000).toISOString().slice(0, 10);
+  const status = accessStatus(end, today);
+  const tone =
+    status === 'active'
+      ? 'bg-white/20 text-teal-50'
+      : status === 'expiring'
+        ? 'bg-amber-400/30 text-amber-50'
+        : 'bg-rose-500/30 text-rose-50';
+  const endLabel = new Date(`${end}T12:00:00Z`).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+  return (
+    <p className={`mt-1.5 inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${tone}`}>
+      <ShieldCheck size={13} />
+      {typeof profile.accessProductName === 'string' && profile.accessProductName
+        ? `${profile.accessProductName} · `
+        : ''}
+      {typeof profile.accessDurationMonths === 'number' ? `${formatDurationMonths(profile.accessDurationMonths)} · ` : ''}
+      {status === 'expired' ? `Access ended ${endLabel}` : `Access till ${endLabel}`}
+    </p>
+  );
+}
 
 // ─── Sub-components ─────────────────────────────────────────────────
 
@@ -306,6 +336,7 @@ export default function StudentDashboard() {
               <p className="text-xs md:text-sm text-teal-100 font-medium mt-0.5">
                 {profile?.regNo || 'Reg. ID'} &bull; {profile?.course || 'Undergraduate'} &bull; {profile?.batch || '2026'}
               </p>
+              {profile && <AccessBadge profile={profile} />}
             </div>
           </div>
           <div className="flex items-center gap-2">

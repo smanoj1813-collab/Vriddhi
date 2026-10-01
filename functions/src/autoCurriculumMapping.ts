@@ -25,7 +25,9 @@
 //   3. ASSIGN    — courses are processed most-constrained-first (fewest
 //                  eligible candidates first, then heavier courses), each
 //                  going to the highest-scoring faculty who is not already
-//                  mapped to that course in this batch and who stays within
+//                  mapped to that course in this batch (an academic-year
+//                  range counts: "2026-2027" IS "2027" — see ./cohortBatch)
+//                  and who stays within
 //                  the weekly capacity (default 24 periods/week — UGC regular
 //                  faculty). If nobody fits, the best faculty is still
 //                  proposed but flagged `overload-risk` so the HOD can see
@@ -45,6 +47,7 @@ import * as admin from 'firebase-admin'
 import { Timestamp } from 'firebase-admin/firestore'
 import { HttpsError, onCall } from 'firebase-functions/v2/https'
 import { resolveSchedulingStaff } from './classSchedule'
+import { batchKeysMatch } from './cohortBatch'
 
 // ═════════════════════════════════════════════════════════════════════════════
 // Pure core
@@ -416,11 +419,16 @@ export function runAutoMapping(options: AutoMapOptions): AutoMapResult {
   const initialLoad = new Map(load)
 
   // Who already teaches which course in this exact batch/division/section.
+  // "This exact batch" is the academic-year rule (./cohortBatch), not string
+  // equality: a row stored as "2026-2027" IS this batch when the run is for
+  // "2027". Comparing the raw strings dropped that row from `taken`, so
+  // applyAutoMapping re-proposed the faculty who is already mapped and wrote a
+  // duplicate mapping for the same class.
   const taken = new Map<string, Set<string>>()
   for (const m of options.existing) {
     const uid = resolveUid(m)
     if (!uid) continue
-    if ((m.batch || '').trim().toLowerCase() !== batch) continue
+    if (!batchKeysMatch(m.batch, batch)) continue
     if (String(m.division ?? '').trim().toLowerCase() !== division) continue
     if (String(m.section ?? '').trim().toLowerCase() !== section) continue
     const key = mappingKey(m.courseCode, m.branch, m.semester, batch, division, section)

@@ -16,6 +16,7 @@ import {
   withAuthQuotaRetry,
 } from './identityShared'
 import { buildMentorDirectory, resolveMentorAssignment } from './mentorAssignment'
+import { buildAccessFields, loadActiveProduct, todayInIst, type AccessFields } from './accessProducts'
 
 /** A throttle is transient and recoverable, so it gets a log line rather than a
  * row failure the operator has to interpret. The retry policy itself lives in
@@ -55,6 +56,14 @@ interface BulkStudentPayload {
   deliveryMode?: 'temp-password' | 'reset-email'
   /** Absolute URL the reset link should return the student to. */
   continueUrl?: string
+  /**
+   * Platform-access product (accessProducts/{id}) applied to every row in this
+   * batch, and the day its window starts (yyyy-mm-dd, default: today in IST).
+   * The window the product buys is stamped on each student so onboarding
+   * records what was sold — see ./accessProducts.
+   */
+  productId?: string
+  accessStart?: string
 }
 
 interface StudentResult {
@@ -129,6 +138,38 @@ function normalizeSemester(val: number | string | undefined): number {
   return isNaN(parsed) ? 1 : parsed
 }
 
+/**
+ * The cohort fields a student row MUST carry, checked per row.
+ *
+ * WHY: name + email alone produced perfectly importable students that matched
+ * no class — no batch, no division, no department (which is the profile's
+ * `branch`), and a semester that silently defaulted to 1. The student then saw
+ * "no curriculum assigned" (or "mapped to a different class") and every roster
+ * looked empty, with nothing in the import result to explain it. A row that
+ * cannot be placed in a class is rejected with the reason, and the operator
+ * fixes the file instead of the database.
+ *
+ * Returns the human-readable reason, or null when the row is complete.
+ * Pure: exported for unit tests.
+ */
+export function validateStudentCohortRow(row: {
+  department?: unknown
+  batch?: unknown
+  division?: unknown
+  semester?: unknown
+}): string | null {
+  if (!String(row.department ?? '').trim()) return 'Missing department/branch'
+  if (!String(row.batch ?? '').trim()) return 'Missing batch (admission year, e.g. 2027)'
+  if (!String(row.division ?? '').trim()) return 'Missing division'
+  const rawSemester = String(row.semester ?? '').trim()
+  if (!rawSemester) return 'Missing semester (1-12)'
+  const semester = Number(rawSemester)
+  if (!Number.isInteger(semester) || semester < 1 || semester > 12) {
+    return `Invalid semester "${rawSemester}" (1-12)`
+  }
+  return null
+}
+
 async function getCollegeData(collegeId: string) {
   const collegeDoc = await admin.firestore().doc(`colleges/${collegeId}`).get()
   if (!collegeDoc.exists) {
@@ -162,6 +203,8 @@ export const bulkCreateStudentAccounts = onCall(
       defaultPassword,
       deliveryMode = 'temp-password',
       continueUrl,
+      productId,
+      accessStart,
     } = (request.data || {}) as BulkStudentPayload
     if (!['temp-password', 'reset-email'].includes(deliveryMode)) {
       throw new HttpsError('invalid-argument', "deliveryMode must be 'temp-password' or 'reset-email'")
@@ -202,6 +245,29 @@ export const bulkCreateStudentAccounts = onCall(
     const college = await getCollegeData(collegeId)
     const db = admin.firestore()
     const auth = admin.auth()
+
+    // ── Platform-access product (optional) ──
+    // Resolved BEFORE the first Auth account is created: a bad product id must
+    // fail the request, not leave 200 students provisioned with no window (and
+    // no chance to re-run — the second attempt would hit duplicate emails).
+    let accessFields: AccessFields | null = null
+    if (String(productId || '').trim()) {
+      const product = await loadActiveProduct(db, productId)
+      if (!product) {
+        throw new HttpsError(
+          'failed-precondition',
+          'The selected platform-access product does not exist or has been archived'
+        )
+      }
+      const startDate = String(accessStart || '').trim() || todayInIst()
+      accessFields = buildAccessFields(product, startDate)
+      if (!accessFields) {
+        throw new HttpsError(
+          'invalid-argument',
+          `Access start date "${startDate}" is not a yyyy-mm-dd date`
+        )
+      }
+    }
 
     // Faculty profiles use a stable code as their document id but faculty-owned
     // records use the Auth uid. Resolve the CSV's Mentor value (FAC001, uid,
@@ -278,9 +344,12 @@ export const bulkCreateStudentAccounts = onCall(
       const email = normalizeEmail(row.email)
       const regNo = String(row.regNo || '').trim()
 
-      // ── Per-row validation (name + email are the only hard requirements,
-      //    matching the client CSV importer). Optional fields default to ''
-      //    below so an empty department/batch/division never blocks the import.
+      // ── Per-row validation ──
+      //    Name + email make the ACCOUNT; department, batch, division and
+      //    semester make the STUDENT placeable in a class. The old contract
+      //    accepted a row with none of the cohort fields and defaulted the
+      //    semester to 1, which is how a college ended up with 343 students
+      //    that every roster and every curriculum mapping missed.
       const name = String(row.name || '').trim()
       if (!name) {
         failedCount++
@@ -292,6 +361,13 @@ export const bulkCreateStudentAccounts = onCall(
         failedCount++
         errors.push({ row: rowNum, regNo, message: 'Invalid email address' })
         results.push({ regNo, name, email, success: false, error: 'Invalid email address' })
+        continue
+      }
+      const cohortError = validateStudentCohortRow(row)
+      if (cohortError) {
+        failedCount++
+        errors.push({ row: rowNum, regNo, message: cohortError })
+        results.push({ regNo, name, email, success: false, error: cohortError })
         continue
       }
       const semester = normalizeSemester(row.semester)
@@ -479,6 +555,9 @@ export const bulkCreateStudentAccounts = onCall(
           status: 'active',
           importedBy: caller.uid,
           importedAt: admin.firestore.FieldValue.serverTimestamp(),
+          // Platform access bought for this student (blank when the batch was
+          // imported without a product — the MIS reports those as unassigned).
+          ...(accessFields || {}),
         }
 
         // 3. Prepare the user doc in /users (for auth context resolution).
@@ -506,6 +585,7 @@ export const bulkCreateStudentAccounts = onCall(
           avatar: '',
           createdAt: admin.firestore.FieldValue.serverTimestamp(),
           status: 'active',
+          ...(accessFields || {}),
         }
 
         // 4. Write all Firestore representations atomically. If this commit

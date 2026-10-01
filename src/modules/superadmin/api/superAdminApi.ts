@@ -205,6 +205,14 @@ function docToStudent(docSnap: QueryDocumentSnapshot<DocumentData>): Student {
     phone: data.phone,
     avatar: data.avatar,
     uid: data.uid,
+    // Platform access (undefined on rows imported before products existed).
+    accessProductId: data.accessProductId || undefined,
+    accessProductName: data.accessProductName || undefined,
+    accessDurationMonths: data.accessDurationMonths ? Number(data.accessDurationMonths) : undefined,
+    accessPrice: data.accessPrice !== undefined ? Number(data.accessPrice) : undefined,
+    accessCurrency: data.accessCurrency || undefined,
+    accessStart: data.accessStart || undefined,
+    accessEnd: data.accessEnd || undefined,
   };
 }
 
@@ -959,7 +967,14 @@ export async function importUsers(input: ImportUsersInput): Promise<ImportResult
         isFatal: (err: any) => err?.fatal === true,
         run: async (batch, meta) => {
           const bulkCreateFn = httpsCallable<
-            { collegeId: string; students: any[]; deliveryMode?: CredentialDelivery },
+            {
+              collegeId: string;
+              students: any[];
+              deliveryMode?: CredentialDelivery;
+              /** Platform access (accessProducts/{id}) applied to every row. */
+              productId?: string;
+              accessStart?: string;
+            },
             StudentBatchData
             // The explicit deadline is the whole point of batching: the SDK's
             // default is 70 s, which any real upload exceeds.
@@ -968,6 +983,7 @@ export async function importUsers(input: ImportUsersInput): Promise<ImportResult
           const result = await bulkCreateFn({
             collegeId: input.collegeId,
             deliveryMode: input.deliveryMode,
+            ...(input.productId ? { productId: input.productId, accessStart: input.accessStart } : {}),
             students: batch,
           });
 

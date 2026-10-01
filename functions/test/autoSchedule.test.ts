@@ -9,6 +9,7 @@ import {
   validateAutoSchedulePayload,
   batchListMatches,
   batchTokens,
+  mappingServesCohort,
   seededRandom,
   shuffleWith,
   DEFAULT_GRID,
@@ -316,6 +317,66 @@ describe('batchListMatches', () => {
     assert.equal(batchListMatches('', ''), true) // both empty → match
     assert.equal(batchListMatches('', '2027'), false) // one empty → mismatch
     assert.equal(batchListMatches('2027', ''), false)
+  })
+
+  it('reads an academic-year range as the class of its END year', () => {
+    // The curriculum/auto-map dialogs store "2026-2027"; the operator runs the
+    // scheduler for "2027". Before this the run found no demand at all and
+    // said "run Auto Map first" about mappings that existed.
+    assert.equal(batchListMatches('2027', '2026-2027'), true)
+    assert.equal(batchListMatches('2026-2027', '2027'), true)
+    assert.equal(batchListMatches('2026-27', '2027'), true)
+    assert.equal(batchListMatches('2027, 2028', '2026-2027'), true)
+  })
+
+  it('keeps a bare start year out of its own range', () => {
+    // "2026" is the class before 2027 — it must not be swept into 2026-2027.
+    assert.equal(batchListMatches('2026', '2026-2027'), false)
+    assert.equal(batchListMatches('2026-2027', '2026'), false)
+  })
+})
+
+// ─── mappingServesCohort (auto-schedule demand filter) ──────────────────────
+
+describe('mappingServesCohort', () => {
+  const target = { batch: '2027', division: 'A', section: '' }
+
+  it('includes a mapping whose batch is the run batch spelling of the same class', () => {
+    assert.equal(mappingServesCohort({ batch: '2026-2027', division: 'A' }, target), true)
+  })
+
+  it('includes a mapping that covers the run division as part of a list', () => {
+    // The live shape: Auto Map wrote ONE mapping for the whole batch with
+    // division "A,B,C,D"; the admin schedules division A. The class covers A.
+    assert.equal(mappingServesCohort({ batch: '2027', division: 'A,B,C,D' }, target), true)
+    assert.equal(mappingServesCohort({ batch: '2027', division: 'A,B,C,D' }, { batch: '2027', division: 'b' }), true)
+  })
+
+  it('excludes a mapping for a different division', () => {
+    assert.equal(mappingServesCohort({ batch: '2027', division: 'B' }, target), false)
+    // A list that does not contain the run's letter is a different division.
+    assert.equal(mappingServesCohort({ batch: '2027', division: 'B,C' }, target), false)
+  })
+
+  it('treats a blank mapping division as the whole-batch class', () => {
+    assert.equal(mappingServesCohort({ batch: '2027', division: '' }, target), true)
+    assert.equal(mappingServesCohort({ batch: '2027' }, target), true)
+  })
+
+  it('does not expand a division-specific mapping into a blank run', () => {
+    // A run with no division schedules only whole-batch demand; including a
+    // mapping for "A" would put a class on every division's timetable.
+    assert.equal(mappingServesCohort({ batch: '2027', division: 'A' }, { batch: '2027', division: '' }), false)
+    assert.equal(mappingServesCohort({ batch: '2027', division: '' }, { batch: '2027', division: '' }), true)
+  })
+
+  it('reads the letter from the section field too', () => {
+    assert.equal(mappingServesCohort({ batch: '2027', section: 'A' }, target), true)
+    assert.equal(mappingServesCohort({ batch: '2027', section: 'B' }, target), false)
+  })
+
+  it('still requires the batch to name the same class', () => {
+    assert.equal(mappingServesCohort({ batch: '2026', division: 'A' }, target), false)
   })
 })
 

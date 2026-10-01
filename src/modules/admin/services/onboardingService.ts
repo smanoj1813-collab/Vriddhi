@@ -71,35 +71,41 @@ interface Faculty {
 export const STUDENT_TEMPLATE: UploadTemplate = {
   id: 'student_onboarding',
   name: 'Student Onboarding',
-  description: 'Bulk upload students to a college. Each student gets a unique Reg No.',
+  description:
+    'Bulk upload students to a college. Required: Registration Number, Full Name, Email, Department, Batch, Semester and Division — a student imported without them belongs to no class and will match no curriculum, roster or timetable. Phone, DOB, Gender, Blood Group and Mentor ID are optional.',
   fields: [
-    { name: 'Registration Number', key: 'regNo', label: 'Registration Number', required: true, type: 'text', description: 'Unique student registration number', example: 'R2026001', validation: { unique: true } },
-    { name: 'Full Name', key: 'name', label: 'Full Name', required: true, type: 'text', description: 'Student full name', example: 'Rahul Sharma' },
-    { name: 'Email', key: 'email', label: 'Email', required: true, type: 'email', description: 'Student email address', example: 'rahul.sharma@student.edu', validation: { unique: true } },
-    { name: 'Phone', key: 'phone', label: 'Phone', required: true, type: 'phone', description: 'Phone number with country code', example: '+919876543210' },
-    { name: 'Date of Birth', key: 'dateOfBirth', label: 'Date of Birth', required: false, type: 'date', description: 'YYYY-MM-DD format', example: '2005-03-15' },
-    { name: 'Gender', key: 'gender', label: 'Gender', required: false, type: 'select', options: ['male', 'female', 'other'], description: 'Student gender', example: 'male' },
-    { name: 'Blood Group', key: 'bloodGroup', label: 'Blood Group', required: false, type: 'text', description: 'Blood group', example: 'B+' },
-    { name: 'Course', key: 'course', label: 'Course', required: true, type: 'text', description: 'Course name', example: 'B.Com (Computer Applications)' },
-    { name: 'Department', key: 'department', label: 'Department', required: true, type: 'text', description: 'Department name', example: 'Commerce' },
-    { name: 'Batch', key: 'batch', label: 'Batch', required: true, type: 'text', description: 'Batch / admission year (UG = 3 yrs, PG = 2 yrs)', example: '2026' },
-    { name: 'Semester', key: 'semester', label: 'Semester', required: true, type: 'number', description: 'Current semester number', example: '2', validation: { min: 1, max: 6 } },
-    { name: 'Division', key: 'division', label: 'Division', required: true, type: 'text', description: 'Class division', example: 'A' },
-    { name: 'Mentor ID', key: 'mentorId', label: 'Mentor ID', required: false, type: 'text', description: 'Assigned faculty ID', example: 'FAC001' },
+    { name: 'Registration Number', key: 'regNo', label: 'Registration Number', required: true, type: 'text', description: 'Unique student registration number (used to match results imports)', example: 'R2027001', validation: { unique: true } },
+    { name: 'Full Name', key: 'name', label: 'Full Name', required: true, type: 'text', description: 'Student full name', example: 'Ananya Rao' },
+    { name: 'Email', key: 'email', label: 'Email', required: true, type: 'email', description: 'Student email address — becomes their login', example: 'ananya.rao@college.edu', validation: { unique: true } },
+    /**
+     * The programme the student is enrolled in. This single column is the
+     * profile's `branch` and `department` at once — the old separate "Course"
+     * column never reached the database, so it was removed rather than left
+     * to be filled in and ignored.
+     */
+    { name: 'Department', key: 'department', label: 'Department / Branch', required: true, type: 'text', description: 'Programme, e.g. BBA or B.Com — this is the branch the timetable is matched on', example: 'BBA' },
+    { name: 'Batch', key: 'batch', label: 'Batch', required: true, type: 'text', description: 'Admission year (UG = 3 yrs, PG = 2 yrs). Must equal the batch on the curriculum mapping', example: '2027' },
+    { name: 'Semester', key: 'semester', label: 'Semester', required: true, type: 'number', description: 'Current semester, 1–12. NOT defaulted: a blank semester is rejected', example: '3', validation: { min: 1, max: 12 } },
+    { name: 'Division', key: 'division', label: 'Division', required: true, type: 'text', description: 'One letter per student (A, B, C…). Never a list like "A,B,C,D"', example: 'C' },
+    { name: 'Phone', key: 'phone', label: 'Phone', required: false, type: 'phone', description: 'Optional — phone number with country code', example: '+919876543210' },
+    { name: 'Date of Birth', key: 'dateOfBirth', label: 'Date of Birth', required: false, type: 'date', description: 'Optional — YYYY-MM-DD format', example: '2006-03-15' },
+    { name: 'Gender', key: 'gender', label: 'Gender', required: false, type: 'select', options: ['male', 'female', 'other'], description: 'Optional — student gender', example: 'female' },
+    // Removed: 'Blood Group'. Nothing in the import path stored it (the old
+    // "Course" column had the same problem) — a template field that is
+    // silently dropped is worse than no field at all.
+    { name: 'Mentor ID', key: 'mentorId', label: 'Mentor ID', required: false, type: 'text', description: 'Optional — assigned faculty ID; a name that matches no faculty is kept for later repair', example: 'FAC001' },
   ],
   sampleRow: {
-    regNo: 'R2026001',
-    name: 'Rahul Sharma',
-    email: 'rahul.sharma@student.edu',
+    regNo: 'R2027001',
+    name: 'Ananya Rao',
+    email: 'ananya.rao@college.edu',
+    department: 'BBA',
+    batch: '2027',
+    semester: '3',
+    division: 'C',
     phone: '+919876543210',
-    dateOfBirth: '2005-03-15',
-    gender: 'male',
-    bloodGroup: 'B+',
-    course: 'B.Com (Computer Applications)',
-    department: 'Commerce',
-    batch: '2026',
-    semester: '2',
-    division: 'A',
+    dateOfBirth: '2006-03-15',
+    gender: 'female',
     mentorId: 'FAC001',
   },
 };

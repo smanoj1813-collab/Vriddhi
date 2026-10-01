@@ -34,8 +34,11 @@
 //   branch     schedule empty → no constraint; otherwise normalised program
 //                names must be equal (case, whitespace, dots and punctuation
 //                ignored: "BBA" = "bba" = "B.B.A" = " bba ");
-//   batch      schedule empty → no constraint; otherwise trimmed,
-//                case-folded tokens must be equal ("2027" = 2027 = " 2027 ");
+//   batch      schedule empty → no constraint; otherwise the batch KEYS must
+//                be equal ("2027" = 2027 = " 2027 "), and an academic-year
+//                RANGE names the class of its END year ("2026-2027" =
+//                "2026-27" = "2027") while a bare start year stays a
+//                different cohort ("2026" ≠ "2027"). See normalizeBatchKey;
 //   semester   both unknown    → no constraint (neither side says which
 //                cohort — a legacy gap, not a mismatch);
 //              schedule unknown → no constraint, BUT if the matched students
@@ -95,6 +98,153 @@ export function normalizeCohortToken(value: unknown): string {
 const DIVISION_PREFIXES = /^(?:division|div)\s+/
 const SECTION_PREFIXES = /^(?:section|sect|sec)\s+/
 
+/**
+ * A two-part year range: "2026-2027", "2026-27", "2026 – 2027", "2026/2027".
+ * The dash may be a hyphen, en/em dash or a slash; spaces around it are noise
+ * (both already collapse to one space by the time this runs).
+ */
+const ACADEMIC_YEAR_RANGE = /^(\d{2,4})\s*[-–—/]\s*(\d{2,4})$/
+
+/**
+ * End year of a two-part year range, or null when the pair is not a
+ * CONSECUTIVE academic year.
+ *
+ * A four-digit start anchors the century: "2026-27" ends in 2027, and
+ * "1999-00" wraps to 2000. A two-digit start ("26-27") is read as the 2000s —
+ * the only century this app stores batches in.
+ */
+function academicYearEnd(startPart: string, endPart: string): number | null {
+  const start = startPart.length === 4 ? Number(startPart) : 2000 + Number(startPart)
+  const rawEnd =
+    endPart.length === 4 ? Number(endPart) : Math.floor(start / 100) * 100 + Number(endPart)
+  const end = endPart.length === 2 && rawEnd <= start ? rawEnd + 100 : rawEnd
+  // "2026-2028" is a span of years, not one academic year — leave it literal
+  // so it cannot match a class by accident.
+  return end === start + 1 ? end : null
+}
+
+/**
+ * Batch / academic-year canonical key.
+ *
+ * The same class is recorded two ways in this codebase: by its graduating
+ * year ("2027") and by the academic-year range that ends in it ("2026-2027",
+ * "2026-27"). Both name the same cohort, so a range canonicalises to its END
+ * year — the range 2026-2027 IS the class of 2027.
+ *
+ * A bare start year is NOT that class: "2026" keeps its own key, so "2026" is
+ * neither "2027" nor "2026-2027". Everything that is not a consecutive year
+ * range is untouched: "2027" = 2027 = " 2027 ", "A" = "a".
+ *
+ * KEEP IN SYNC with functions/src/cohortBatch.ts — the server-side matchers
+ * (student curriculum, auto faculty mapping) use the same rule, and the two
+ * sides must not disagree about who is in a class.
+ */
+export function normalizeBatchKey(value: unknown): string {
+  const token = normalizeCohortToken(value)
+  const range = ACADEMIC_YEAR_RANGE.exec(token)
+  if (!range) return token
+  const endYear = academicYearEnd(range[1], range[2])
+  return endYear === null ? token : String(endYear)
+}
+
+/**
+ * Do two batch values name the same class? Pure key comparison: a blank batch
+ * is an empty key (two blanks compare equal, a blank against a known batch
+ * does not). Wildcard/"unknown" semantics belong to the matcher — the schedule
+ * treats a blank batch as "no constraint" and a blank student batch as
+ * "unknown" BEFORE this is called.
+ */
+export function batchKeysMatch(left: unknown, right: unknown): boolean {
+  return normalizeBatchKey(left) === normalizeBatchKey(right)
+}
+
+/** Multi-intake separators: "2027,2028", "2027/2028", "2027 2028". A hyphen
+ *  is NOT a separator — "2026-2027" is one academic-year token, not two. */
+const BATCH_LIST_SPLIT = /[,/;|&\s]+/
+
+/**
+ * The batch tokens of a multi-intake list, each canonicalised as a batch key
+ * (so an academic-year token counts as its END year). Empty list → [].
+ */
+export function batchKeyTokens(value: unknown): string[] {
+  const out: string[] = []
+  for (const raw of String(value ?? '').split(BATCH_LIST_SPLIT)) {
+    const key = normalizeBatchKey(raw)
+    if (key && !out.includes(key)) out.push(key)
+  }
+  return out
+}
+
+/**
+ * Do two batch FIELDS name at least one common class? Either side may hold a
+ * multi-intake list; every token is compared keyed (range ≡ end year).
+ * Both empty → true; exactly one empty → false.
+ */
+export function batchFieldsIntersect(left: unknown, right: unknown): boolean {
+  const leftTokens = batchKeyTokens(left)
+  const rightTokens = batchKeyTokens(right)
+  if (leftTokens.length === 0 && rightTokens.length === 0) return true
+  if (leftTokens.length === 0 || rightTokens.length === 0) return false
+  return leftTokens.some((token) => rightTokens.includes(token))
+}
+
+/** A row's cohort/division scope — any object carrying these fields. */
+export interface CohortScope {
+  branch?: unknown
+  batch?: unknown
+  division?: unknown
+  section?: unknown
+}
+
+const foldScopeText = (value: unknown) =>
+  String(value ?? '').trim().toLowerCase().replace(NOISE_PUNCT, '').replace(/\s+/g, ' ').trim()
+
+/**
+ * Do two division/section scopes address a common division? A blank side is
+ * "no constraint" (true); otherwise the letters must intersect — so a class
+ * mapped to "A,B,C,D" covers division "A". Same rule as the server copy in
+ * functions/src/cohortBatch.ts.
+ */
+export function divisionScopesOverlap(left: CohortScope, right: CohortScope): boolean {
+  const leftLetters = [...cohortLetters(left.division, 'division'), ...cohortLetters(left.section, 'section')]
+  const rightLetters = [...cohortLetters(right.division, 'division'), ...cohortLetters(right.section, 'section')]
+  if (leftLetters.length === 0 || rightLetters.length === 0) return true
+  return leftLetters.some((letter) => rightLetters.includes(letter))
+}
+
+/**
+ * Do two cohort scopes (branch, batch, division/section) overlap — i.e. could
+ * they contain the same students? Used by clash detection both in the browser
+ * and on the server (functions/src/utils/timetableConflicts.ts).
+ *
+ * Two fully blank scopes are "no identifiable cohort" and never overlap; a
+ * blank FIELD inside a scope is a wildcard. Batches compare as keyed token
+ * lists, divisions as letter sets.
+ */
+export function cohortScopesOverlap(left: CohortScope, right: CohortScope): boolean {
+  const leftBranch = foldScopeText(left.branch)
+  const rightBranch = foldScopeText(right.branch)
+  const leftBatch = batchKeyTokens(left.batch)
+  const rightBatch = batchKeyTokens(right.batch)
+  const leftLetters = [...cohortLetters(left.division, 'division'), ...cohortLetters(left.section, 'section')]
+  const rightLetters = [...cohortLetters(right.division, 'division'), ...cohortLetters(right.section, 'section')]
+
+  if (!leftBranch && !rightBranch && leftBatch.length === 0 && rightBatch.length === 0 &&
+      leftLetters.length === 0 && rightLetters.length === 0) {
+    return false
+  }
+  if (leftBranch && rightBranch && leftBranch !== rightBranch) return false
+  if (leftBatch.length > 0 && rightBatch.length > 0 &&
+      !leftBatch.some((token) => rightBatch.includes(token))) {
+    return false
+  }
+  if (leftLetters.length > 0 && rightLetters.length > 0 &&
+      !leftLetters.some((letter) => rightLetters.includes(letter))) {
+    return false
+  }
+  return true
+}
+
 /** "Div A" / "division a" / "div. a" / "A" → "a". */
 export function normalizeDivision(value: unknown): string {
   return foldText(value).replace(NOISE_PUNCT, '').replace(/\s+/g, ' ').replace(DIVISION_PREFIXES, '').trim()
@@ -103,6 +253,38 @@ export function normalizeDivision(value: unknown): string {
 /** "Section B" / "sec. b" / "B" → "b". */
 export function normalizeSection(value: unknown): string {
   return foldText(value).replace(NOISE_PUNCT, '').replace(/\s+/g, ' ').replace(SECTION_PREFIXES, '').trim()
+}
+
+/**
+ * Prefix words that carry no letter of their own, so a list spelled out as
+ * "Div A, Div B" does not leave "div" behind as a letter of its own.
+ */
+const LETTER_PREFIX_WORDS = new Set(['div', 'division', 'sec', 'sect', 'section'])
+
+/** List separators: "A,B,C,D", "A/B", "A;B", "A B", "A&B". */
+const LETTER_SPLIT = /[,/;|&+]+|\s+/
+
+/**
+ * Every letter a division/section FIELD holds.
+ *
+ * Most records carry one letter ("A" = "div a"), but staff routinely write a
+ * LIST when one class covers several divisions — "A,B,C,D", "Div A, Div B",
+ * "a b". The old comparison read the whole field as a single token: "A,B,C,D"
+ * normalised to "abcd", which equals no student's "A", so the class matched
+ * nobody and the page blamed the student's division.
+ *
+ * A field with no separators is still ONE token: "ABCD" remains "abcd" and
+ * does not magically equal "A".
+ */
+export function cohortLetters(value: unknown, kind: 'division' | 'section'): string[] {
+  const normalize = kind === 'division' ? normalizeDivision : normalizeSection
+  const out: string[] = []
+  for (const raw of String(value ?? '').split(LETTER_SPLIT)) {
+    const letter = normalize(raw)
+    if (!letter || LETTER_PREFIX_WORDS.has(letter)) continue
+    if (!out.includes(letter)) out.push(letter)
+  }
+  return out
 }
 
 /** 3, "3" → 3; 0, "", null, "x" → null (unknown, not "semester zero"). */
@@ -196,14 +378,18 @@ export interface CohortMatchResult {
 
 /** Letters the class is taught to, from its division and section slots. */
 function scheduleLetters(criteria: CohortCriteria): string[] {
-  const letters = [normalizeDivision(criteria.division), normalizeSection(criteria.section)]
-  return letters.filter((l) => l !== '')
+  return [
+    ...cohortLetters(criteria.division, 'division'),
+    ...cohortLetters(criteria.section, 'section'),
+  ]
 }
 
 /** Letters the student is recorded under, from their division and section fields. */
 function studentLetters(fields: StudentCohortFields): string[] {
-  const letters = [normalizeDivision(fields.division), normalizeSection(fields.section)]
-  return letters.filter((l) => l !== '')
+  return [
+    ...cohortLetters(fields.division, 'division'),
+    ...cohortLetters(fields.section, 'section'),
+  ]
 }
 
 /**
@@ -263,9 +449,11 @@ export function matchStudentToCohort(fields: StudentCohortFields, criteria: Coho
     mismatches.push('branch')
   }
 
-  // Batch.
-  const criterionBatch = normalizeCohortToken(criteria.batch)
-  if (criterionBatch && normalizeCohortToken(fields.batch) !== criterionBatch) {
+  // Batch — keyed so an academic-year range agrees with its end year: a class
+  // scheduled for "2026-2027" is the class of "2027", while a student whose
+  // batch is the bare start year "2026" belongs to a different cohort.
+  const criterionBatch = normalizeBatchKey(criteria.batch)
+  if (criterionBatch && !batchKeysMatch(criteria.batch, fields.batch)) {
     mismatches.push('batch')
   }
 
@@ -296,11 +484,15 @@ export function matchStudentToCohort(fields: StudentCohortFields, criteria: Coho
     !stu.some((letter) => sched.includes(letter))
   ) {
     // Attribute the failure to the field(s) the student actually carries, so
-    // the UI can say which column to fix.
-    if (normalizeDivision(fields.division) !== '' && !sched.includes(normalizeDivision(fields.division))) {
+    // the UI can say which column to fix. Both sides are letter SETS: a class
+    // for "A,B,C,D" that omits the student's "E" fails on division, and a
+    // student's multi-letter field fails unless the class teaches one of them.
+    const ownDivision = cohortLetters(fields.division, 'division')
+    if (ownDivision.length > 0 && !ownDivision.some((letter) => sched.includes(letter))) {
       mismatches.push('division')
     }
-    if (normalizeSection(fields.section) !== '' && !sched.includes(normalizeSection(fields.section))) {
+    const ownSection = cohortLetters(fields.section, 'section')
+    if (ownSection.length > 0 && !ownSection.some((letter) => sched.includes(letter))) {
       mismatches.push('section')
     }
     // Both letters are off but were already attributed to neither field

@@ -1454,6 +1454,16 @@ service cloud.firestore {
       allow read, write: if isSuperadmin();
     }
 
+    // -- Platform-access products (duration + price sold per student) ---------
+    // Superadmin master data, like colleges and systemConfig. Any write that
+    // touches STUDENT records (assigning a window) goes through the
+    // bulkUpdateStudentAccess callable instead, because it must stay atomic
+    // with users/{uid} and is college-scoped.
+    match /accessProducts/{productId} {
+      allow read: if isSignedIn() && (isSuperadmin() || isStaff() || isOffice());
+      allow create, update, delete: if isSuperadmin();
+    }
+
     match /systemAuditLogs/{docId} {
       allow read: if isSuperadmin();
       allow create: if isSuperadmin();

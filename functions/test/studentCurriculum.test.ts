@@ -1,6 +1,11 @@
 import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
-import { classifyTopics, sessionMatchesCohort, diagnoseCohortExclusion } from '../src/studentCurriculum.ts'
+import {
+  classifyTopics,
+  sessionMatchesCohort,
+  diagnoseCohortExclusion,
+  ledgerRowBatchMatches,
+} from '../src/studentCurriculum.ts'
 
 describe('sessionMatchesCohort', () => {
   const student = { branch: 'BBA', batch: '2027', semester: 3, division: 'A', section: '' }
@@ -18,11 +23,60 @@ describe('sessionMatchesCohort', () => {
     assert.equal(sessionMatchesCohort({ branch: 'BBA', semester: 4 }, student), false)
     assert.equal(sessionMatchesCohort({ branch: 'BBA', division: 'B' }, student), false)
   })
+  it('agrees with an academic-year range: the class of 2027 is "2026-2027"', () => {
+    // The student page reported "mapped — but to a different class than yours"
+    // because the mappings said 2026-2027 while the student record said 2027.
+    assert.equal(sessionMatchesCohort({ branch: 'BBA', batch: '2026-2027' }, student), true)
+    assert.equal(sessionMatchesCohort({ branch: 'BBA', batch: '2026-27' }, student), true)
+    assert.equal(sessionMatchesCohort({ branch: 'BBA', batch: ' 2026 - 2027 ' }, student), true)
+    // Either side may carry the range — the student record often does.
+    assert.equal(sessionMatchesCohort({ batch: '2027' }, { ...student, batch: '2026-2027' }), true)
+    assert.equal(sessionMatchesCohort({ batch: 2027 }, { ...student, batch: '2026-27' }), true)
+  })
+  it('still excludes the start year and every other academic year', () => {
+    assert.equal(sessionMatchesCohort({ branch: 'BBA', batch: '2026' }, student), false)
+    assert.equal(sessionMatchesCohort({ branch: 'BBA', batch: '2027-2028' }, student), false)
+    assert.equal(sessionMatchesCohort({ branch: 'BBA', batch: '2025-2026' }, student), false)
+    assert.equal(sessionMatchesCohort({ branch: 'BBA', batch: '2026-2028' }, student), false)
+    // The trap in both directions: the range never collapses to its start.
+    assert.equal(sessionMatchesCohort({ batch: '2026' }, { ...student, batch: '2026-2027' }), false)
+  })
+  it('reads a division LIST as the set of letters the class covers', () => {
+    // The reported symptom: Auto-Map wrote division "A,B,C,D" (the subject is
+    // taught to all four divisions), the student record says "A". Read as one
+    // token it was "abcd", so a correct mapping matched nobody.
+    assert.equal(sessionMatchesCohort({ branch: 'BBA', batch: '2026-2027', division: 'A,B,C,D' }, student), true)
+    assert.equal(sessionMatchesCohort({ division: 'A,B,C,D' }, { ...student, division: 'D' }), true)
+    // Both sides may be lists; the sets only need to intersect.
+    assert.equal(sessionMatchesCohort({ division: 'A,B,C,D' }, { ...student, division: 'D,E' }), true)
+    assert.equal(sessionMatchesCohort({ division: 'Div A, Div B' }, { ...student, division: 'b' }), true)
+    // A letter the class does not teach is still excluded.
+    assert.equal(sessionMatchesCohort({ division: 'A,B,C,D' }, { ...student, division: 'E' }), false)
+    // No separators means ONE token: a bare "ABCD" letter code is not "A".
+    assert.equal(sessionMatchesCohort({ division: 'ABCD' }, student), false)
+  })
   it('accepts a class taught to the student section letter via the section slot', () => {
     assert.equal(sessionMatchesCohort({ division: '', section: 'A' }, student), true)
   })
   it('does not exclude a student with unknown semester', () => {
     assert.equal(sessionMatchesCohort({ semester: 3 }, { ...student, semester: 0 }), true)
+  })
+})
+
+describe('ledgerRowBatchMatches', () => {
+  // The facultyTopics ledger carries the batch a topic was covered under. A
+  // row written for "2026-2027" must still credit the "2027" student with the
+  // topic; before the batch-key rule it was silently dropped from coverage.
+  it('credits an academic-year range to its end-year batch', () => {
+    assert.equal(ledgerRowBatchMatches('2026-2027', '2027'), true)
+    assert.equal(ledgerRowBatchMatches('2026-27', 2027), true)
+    assert.equal(ledgerRowBatchMatches('2025-2026', '2027'), false)
+    assert.equal(ledgerRowBatchMatches('2026', '2027'), false)
+  })
+  it('treats a blank batch on either side as a wildcard', () => {
+    assert.equal(ledgerRowBatchMatches('', '2027'), true)
+    assert.equal(ledgerRowBatchMatches('2026-2027', ''), true)
+    assert.equal(ledgerRowBatchMatches(undefined, undefined), true)
   })
 })
 
@@ -202,6 +256,53 @@ describe('diagnoseCohortExclusion', () => {
     const d = diagnoseCohortExclusion(mappings, student)
     assert.deepEqual(d.mismatches[0].mappingValues, ['B', 'SEP'])
     assert.equal(d.mismatches[0].wouldMatch, 3)
+  })
+
+  it('does not call an academic-year range a batch mismatch', () => {
+    // The reported symptom: mappings written as "2026-2027", the student
+    // record says "2027". The page showed the "mapped — but to a different
+    // class than yours" panel with batch at the top of the list. Both rows
+    // below ARE this student's class, so there is nothing to diagnose.
+    const mappings = [
+      { branch: 'BBA', batch: '2026-2027', semester: 3, division: 'A' },
+      { branch: 'BBA', batch: '2026-27', semester: 3, division: 'A' },
+    ]
+    assert.equal(sessionMatchesCohort(mappings[0], student), true)
+    const d = diagnoseCohortExclusion(mappings, student)
+    assert.equal(d.totalActiveMappings, 2)
+    assert.deepEqual(d.mismatches, [])
+  })
+
+  it('does not call a covered division list a mismatch', () => {
+    // After the batch fix, the mappings and the student agreed on batch and
+    // semester but the page still reported division "A,B,C,D" vs "A".
+    const mappings = Array.from({ length: 8 }, (_, i) => ({
+      branch: 'BBA', batch: '2026-2027', semester: 3, division: 'A,B,C,D', courseId: `c${i}`,
+    }))
+    assert.equal(sessionMatchesCohort(mappings[0], student), true)
+    const d = diagnoseCohortExclusion(mappings, student)
+    assert.equal(d.totalActiveMappings, 8)
+    assert.deepEqual(d.mismatches, [])
+  })
+
+  it('still diagnoses a letter the class does not teach, printing the list', () => {
+    const mappings = [{ branch: 'BBA', batch: '2026-2027', semester: 3, division: 'A,B,C,D' }]
+    const d = diagnoseCohortExclusion(mappings, { ...student, division: 'E' })
+    assert.equal(d.mismatches.length, 1)
+    assert.equal(d.mismatches[0].field, 'division')
+    assert.equal(d.mismatches[0].studentValue, 'E')
+    assert.deepEqual(d.mismatches[0].mappingValues, ['A,B,C,D'])
+  })
+
+  it('still diagnoses a genuinely different batch, and shows both spellings', () => {
+    // The start year is a different cohort: the diagnosis must still name
+    // batch, printing the mapping's range next to the student's year.
+    const mappings = [{ branch: 'BBA', batch: '2025-2026', semester: 3, division: 'A' }]
+    const d = diagnoseCohortExclusion(mappings, student)
+    assert.equal(d.mismatches.length, 1)
+    assert.equal(d.mismatches[0].field, 'batch')
+    assert.equal(d.mismatches[0].studentValue, '2027')
+    assert.deepEqual(d.mismatches[0].mappingValues, ['2025-2026'])
   })
 
   it('has nothing to say when there are no mappings at all', () => {
