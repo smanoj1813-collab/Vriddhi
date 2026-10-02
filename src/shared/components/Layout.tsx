@@ -156,6 +156,7 @@ const navItems: NavItem[] = [
   { label: "Admins", path: "/superadmin/admins", icon: <SupervisedUserCircle fontSize="small" />, roles: ["superadmin"], section: "User Management" },
   { label: "Create Admin", path: "/superadmin/admins/new", icon: <AdminPanelSettings fontSize="small" />, roles: ["superadmin"], section: "User Management" },
   { label: "Access Control", path: "/superadmin/access", icon: <AdminPanelSettings fontSize="small" />, roles: ["superadmin"], section: "User Management" },
+  { label: "Platform Employees", path: "/superadmin/employees", icon: <BadgeIcon fontSize="small" />, roles: ["superadmin"], section: "User Management" },
   { label: "Manage Faculty", path: "/superadmin/faculty", icon: <People fontSize="small" />, roles: ["superadmin"], section: "User Management" },
   { label: "Import Faculty", path: "/superadmin/faculty/import", icon: <UploadFile fontSize="small" />, roles: ["superadmin"], section: "User Management" },
   { label: "Manage Students", path: "/superadmin/students", icon: <ManageAccounts fontSize="small" />, roles: ["superadmin"], section: "User Management" },
@@ -634,8 +635,81 @@ function filterNavForRole(entries: SidebarEntry[] | undefined, role: UserRole, a
 }
 
 /** Roles whose sidebar renders as collapsible master groups. */
+/**
+ * Vriddhi platform employee: the academic workspace only. Every /admin path
+ * below is admitted for the employee role by canAccessAdminPath (and the
+ * institution-only pages are excluded there), so the sidebar and the route
+ * gate cannot drift apart. Paths under /faculty are the shareable academic
+ * pages that key off the acting uid, which is exactly how an employee works
+ * "as faculty" in the active college.
+ */
+const employeeNav: SidebarEntry[] = [
+  { kind: "link", label: "Dashboard", path: "/employee/dashboard", icon: <Dashboard fontSize="small" /> },
+
+  {
+    kind: "group",
+    label: "Scheduling",
+    icon: <CalendarToday fontSize="small" />,
+    children: [
+      { label: "Class Schedule", path: "/admin/class-schedule", icon: <CalendarToday fontSize="small" /> },
+      { label: "My Weekly Schedule", path: "/faculty/schedule", icon: <CalendarToday fontSize="small" /> },
+      { label: "Attendance", path: "/admin/attendance", icon: <CheckCircle fontSize="small" /> },
+      { label: "Faculty Attendance", path: "/admin/faculty-attendance", icon: <BadgeIcon fontSize="small" /> },
+    ],
+  },
+
+  {
+    kind: "group",
+    label: "Curriculum",
+    icon: <School fontSize="small" />,
+    children: [
+      { label: "Curriculum", path: "/admin/curriculum", icon: <School fontSize="small" /> },
+      { label: "Curriculum Progress", path: "/admin/curriculum-progress", icon: <School fontSize="small" /> },
+      { label: "My Curriculum", path: "/faculty/curriculum", icon: <School fontSize="small" /> },
+      { label: "Academic Calendar", path: "/admin/academic-calendar", icon: <CalendarToday fontSize="small" /> },
+    ],
+  },
+
+  {
+    kind: "group",
+    label: "Assessments & Papers",
+    icon: <Assignment fontSize="small" />,
+    children: [
+      { label: "Assessments", path: "/admin/assessments", icon: <Assignment fontSize="small" /> },
+      { label: "Schedule Test", path: "/admin/schedule-tests", icon: <Assignment fontSize="small" /> },
+      { label: "Question Bank", path: "/admin/question-bank", icon: <QuestionAnswer fontSize="small" /> },
+      { label: "Question Generator", path: "/admin/ai-questions", icon: <AutoAwesome fontSize="small" /> },
+      { label: "Paper Generator", path: "/admin/paper-generator", icon: <Description fontSize="small" /> },
+      { label: "Paper Review", path: "/admin/paper-review", icon: <Description fontSize="small" /> },
+      { label: "Paper Builder", path: "/admin/papers/builder", icon: <Description fontSize="small" /> },
+    ],
+  },
+
+  {
+    kind: "group",
+    label: "Students",
+    icon: <People fontSize="small" />,
+    children: [
+      { label: "Students", path: "/admin/students", icon: <People fontSize="small" /> },
+      { label: "360° View", path: "/admin/view360", icon: <Assessment fontSize="small" /> },
+    ],
+  },
+
+  {
+    kind: "group",
+    label: "Results & Reports",
+    icon: <TrendingUp fontSize="small" />,
+    children: [
+      { label: "Grade Records", path: "/admin/grade-records", icon: <Assignment fontSize="small" /> },
+      { label: "Test Reports", path: "/admin/test-reports", icon: <BarChartIcon fontSize="small" /> },
+      { label: "Analytics", path: "/admin/analytics", icon: <BarChartIcon fontSize="small" /> },
+    ],
+  },
+];
+
 const collapsibleNavByRole: Partial<Record<string, SidebarEntry[]>> = {
   faculty: facultyNav,
+  employee: employeeNav,
   // Admin ≡ department HOD: they get the HOD portal, not a separate admin
   // surface. Principal gets the deliberately minimal university-exam nav.
   admin: hodNav,
@@ -675,6 +749,27 @@ interface MobileNavSection {
 
 /** The four destinations a role reaches with a thumb, plus "More". */
 const mobileTabsByRole: Record<string, MobileTab[]> = {
+  employee: [
+    { label: "Dashboard", path: "/employee/dashboard", icon: <Dashboard fontSize="small" /> },
+    {
+      label: "Scheduling",
+      path: "/admin/class-schedule",
+      icon: <CalendarToday fontSize="small" />,
+      aliases: ["/faculty/schedule", "/admin/attendance"],
+    },
+    {
+      label: "Curriculum",
+      path: "/admin/curriculum",
+      icon: <School fontSize="small" />,
+      aliases: ["/admin/curriculum-progress", "/faculty/curriculum"],
+    },
+    {
+      label: "Assessments",
+      path: "/admin/assessments",
+      icon: <Assignment fontSize="small" />,
+      aliases: ["/admin/schedule-tests", "/admin/question-bank", "/admin/paper-generator"],
+    },
+  ],
   faculty: [
     { label: "Dashboard", path: "/faculty/dashboard", icon: <Dashboard fontSize="small" /> },
     {

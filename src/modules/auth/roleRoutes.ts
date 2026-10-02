@@ -28,6 +28,8 @@ export const ROLE_DASHBOARD: Record<UserRole, string> = {
   // College office roles land on their own desk inside the /admin shell.
   accounts: '/admin/accounts',
   operations: '/admin/operations',
+  // Vriddhi platform employee: the college switcher and academic workspace.
+  employee: '/employee/dashboard',
 }
 
 /**

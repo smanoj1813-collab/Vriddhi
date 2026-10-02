@@ -30,17 +30,45 @@ interface ManagedGradeRecord extends FirebaseFirestore.DocumentData {
   publishedAt?: string
 }
 
-async function resolveGradeStaff(uid: string, token: Record<string, unknown>): Promise<GradeStaff> {
+/**
+ * Who may touch official grade records, per stage.
+ *
+ * Drafts are preparation work: a Vriddhi platform employee grades inside their
+ * active college and leaves drafts behind. Publishing is the approval step and
+ * stays with the institution (HOD / admin / principal / superadmin), so an
+ * employee can never turn their own marks into a published transcript.
+ */
+export type GradeStage = 'draft' | 'publish'
+
+export const GRADE_STAGE_ROLES: Record<GradeStage, readonly string[]> = {
+  draft: ['superadmin', 'admin', 'principal', 'hod', 'employee'],
+  publish: ['superadmin', 'admin', 'principal', 'hod'],
+}
+
+export function gradeStageAllows(stage: GradeStage, role: unknown): boolean {
+  return GRADE_STAGE_ROLES[stage].includes(String(role || '').trim().toLowerCase())
+}
+
+async function resolveGradeStaff(
+  uid: string,
+  token: Record<string, unknown>,
+  stage: GradeStage,
+): Promise<GradeStaff> {
   const userDoc = await admin.firestore().collection('users').doc(uid).get()
   const user = userDoc.data()
   const role = String(token.role || user?.role || '')
   const collegeId = String(token.collegeId || user?.collegeId || '')
   if (
     !userDoc.exists
-    || !['superadmin', 'admin', 'principal', 'hod'].includes(role)
+    || !gradeStageAllows(stage, role)
     || (role !== 'superadmin' && !collegeId)
   ) {
-    throw new HttpsError('permission-denied', 'Registrar-grade access is required')
+    throw new HttpsError(
+      'permission-denied',
+      stage === 'draft'
+        ? 'Registrar-grade access is required'
+        : 'Only the college HOD, admin, principal or a superadmin can publish official grades',
+    )
   }
   return { uid, role, collegeId }
 }
@@ -126,7 +154,7 @@ export const listManagedGradeRecords = onCall(
   async (request) => {
     const uid = request.auth?.uid
     if (!uid) throw new HttpsError('unauthenticated', 'Authentication is required')
-    const staff = await resolveGradeStaff(uid, request.auth?.token || {})
+    const staff = await resolveGradeStaff(uid, request.auth?.token || {}, 'draft')
     const collegeId = staff.role === 'superadmin' ? String(request.data?.collegeId || '') : staff.collegeId
     const status = String(request.data?.status || '')
     if (!collegeId || (status && !['draft', 'published'].includes(status))) {
@@ -160,7 +188,7 @@ export const saveDraftGradeRecords = onCall(
   async (request) => {
     const uid = request.auth?.uid
     if (!uid) throw new HttpsError('unauthenticated', 'Authentication is required')
-    const staff = await resolveGradeStaff(uid, request.auth?.token || {})
+    const staff = await resolveGradeStaff(uid, request.auth?.token || {}, 'draft')
     const collegeId = staff.role === 'superadmin' ? String(request.data?.collegeId || '') : staff.collegeId
     const values: unknown[] = Array.isArray(request.data?.records) ? request.data.records : []
     if (!collegeId || values.length < 1 || values.length > 200) {
@@ -234,7 +262,7 @@ export const publishGradeRecords = onCall(
   async (request) => {
     const uid = request.auth?.uid
     if (!uid) throw new HttpsError('unauthenticated', 'Authentication is required')
-    const staff = await resolveGradeStaff(uid, request.auth?.token || {})
+    const staff = await resolveGradeStaff(uid, request.auth?.token || {}, 'publish')
     const ids = recordIds(request.data?.ids)
     if (ids.length < 1) throw new HttpsError('invalid-argument', 'Choose at least one draft record')
     const db = admin.firestore()
@@ -280,7 +308,7 @@ export const deleteDraftGradeRecords = onCall(
   async (request) => {
     const uid = request.auth?.uid
     if (!uid) throw new HttpsError('unauthenticated', 'Authentication is required')
-    const staff = await resolveGradeStaff(uid, request.auth?.token || {})
+    const staff = await resolveGradeStaff(uid, request.auth?.token || {}, 'publish')
     const ids = recordIds(request.data?.ids)
     if (ids.length < 1) throw new HttpsError('invalid-argument', 'Choose at least one draft record')
     const db = admin.firestore()

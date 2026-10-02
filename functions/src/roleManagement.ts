@@ -11,7 +11,7 @@ import {
 import { describeCollegeResolutionFailure, resolveCollegeReference } from './collegeResolve'
 
 const db = admin.firestore()
-const ALLOWED_ROLES = ['superadmin', 'admin', 'principal', 'hod', 'mentor', 'faculty', 'student', 'parent', 'accounts', 'operations'] as const
+const ALLOWED_ROLES = ['superadmin', 'admin', 'principal', 'hod', 'mentor', 'faculty', 'student', 'parent', 'accounts', 'operations', 'employee'] as const
 type Role = typeof ALLOWED_ROLES[number]
 
 function password(): string {
@@ -54,7 +54,9 @@ export const grantUserRole = onCall(
     if (!email || !email.includes('@') || !role || !ALLOWED_ROLES.includes(role)) {
       throw new HttpsError('invalid-argument', 'A valid email and supported role are required')
     }
-    if (role !== 'superadmin' && !collegeId) {
+    // `employee` is a Vriddhi-wide role: its colleges come from the employee
+    // assignment screen (assignEmployeeColleges), not from a home college.
+    if (role !== 'superadmin' && role !== 'employee' && !collegeId) {
       throw new HttpsError('invalid-argument', 'collegeId is required for this role')
     }
     if (providedPassword && providedPassword.length < 10) {

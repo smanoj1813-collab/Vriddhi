@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
 import {
   deterministicGradeRecordId,
+  gradeStageAllows,
   validateDraftGradeRecord,
 } from '../src/gradeRecords'
 
@@ -48,5 +49,26 @@ describe('official grade record validation', () => {
     assert.equal(first, deterministicGradeRecordId('college-a', 'student-a', 2, 'CS102'))
     assert.notEqual(first, deterministicGradeRecordId('college-b', 'student-a', 2, 'CS102'))
     assert.match(first, /^[a-f0-9]{64}$/)
+  })
+})
+
+describe('official grade record stages', () => {
+  it('lets platform employees prepare drafts but never publish', () => {
+    assert.equal(gradeStageAllows('draft', 'employee'), true)
+    assert.equal(gradeStageAllows('publish', 'employee'), false)
+  })
+
+  it('keeps publishing with the college approval roles', () => {
+    for (const role of ['hod', 'admin', 'principal', 'superadmin']) {
+      assert.equal(gradeStageAllows('draft', role), true, role)
+      assert.equal(gradeStageAllows('publish', role), true, role)
+    }
+  })
+
+  it('refuses every other role and unknown spellings', () => {
+    for (const role of ['faculty', 'student', 'parent', 'accounts', 'operations', 'EMPLOYEE suspended']) {
+      assert.equal(gradeStageAllows('draft', role), false, role)
+      assert.equal(gradeStageAllows('publish', role), false, role)
+    }
   })
 })

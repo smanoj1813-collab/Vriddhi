@@ -47,6 +47,9 @@ export const PROVISIONABLE_ROLES = [
   // owns payroll review/approval. Operations owns the library, inventory and stores.
   'accounts',
   'operations',
+  // Vriddhi platform employee: academic staff assigned across colleges, not a
+  // member of any one institution.
+  'employee',
 ]
 
 /** Office roles a principal may create for their own college. */

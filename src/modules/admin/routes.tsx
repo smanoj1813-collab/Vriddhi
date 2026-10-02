@@ -120,7 +120,7 @@ function LazyPage({ children }: { children: ReactNode }) {
 // or hand-typed URL bounces the principal out too, instead of silently
 // rendering a page the nav no longer advertises. (AI Question Generator is
 // deliberately NOT in this list — principal keeps it.)
-const QUESTION_WORKFLOW_ROLES: UserRole[] = ['admin', 'hod', 'superadmin'];
+const QUESTION_WORKFLOW_ROLES: UserRole[] = ['admin', 'hod', 'superadmin', 'employee'];
 const questionWorkflowOnly = (node: ReactNode) => (
   <RoleRoute allowedRoles={QUESTION_WORKFLOW_ROLES}>{node}</RoleRoute>
 );
@@ -131,7 +131,7 @@ export const adminRoutes: RouteObject[] = [
     element: (
       // Every role that uses the /admin shell; AdminPathGate then decides page
       // by page (office roles reach only their modules, HODs no finance).
-      <RoleRoute allowedRoles={['admin', 'principal', 'hod', 'superadmin', 'accounts', 'operations']}>
+      <RoleRoute allowedRoles={['admin', 'principal', 'hod', 'superadmin', 'accounts', 'operations', 'employee']}>
         <AdminPathGate>
           <Layout />
         </AdminPathGate>
