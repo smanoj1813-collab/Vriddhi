@@ -2283,7 +2283,7 @@ describe('vriddhi platform employees (employee role)', () => {
   it('works inside the active college like college staff', async () => {
     const db = activeEmployee()
     await assertSucceeds(getDoc(doc(db, 'colleges', COLLEGE_A)))
-    await assertSucceeds(setDoc(doc(db, 'facultyAvailability', EMPLOYEE_UID), availability(COLLEGE_A)))
+    await assertSucceeds(setDoc(doc(db, 'colleges', COLLEGE_A, 'facultyAvailability', EMPLOYEE_UID), availability(COLLEGE_A)))
     // Own faculty row (faculty-mode profile / settings / availability).
     await assertSucceeds(setDoc(doc(db, 'faculty', EMPLOYEE_UID), {
       uid: EMPLOYEE_UID,
@@ -2296,7 +2296,7 @@ describe('vriddhi platform employees (employee role)', () => {
   it('is refused in any college that is not the active claim', async () => {
     const db = activeEmployee()
     await assertFails(getDoc(doc(db, 'colleges', COLLEGE_B)))
-    await assertFails(setDoc(doc(db, 'facultyAvailability', EMPLOYEE_UID), availability(COLLEGE_B)))
+    await assertFails(setDoc(doc(db, 'colleges', COLLEGE_B, 'facultyAvailability', EMPLOYEE_UID), availability(COLLEGE_B)))
     await assertFails(setDoc(doc(db, 'faculty', EMPLOYEE_UID), {
       uid: EMPLOYEE_UID,
       collegeId: COLLEGE_B,
@@ -2308,7 +2308,7 @@ describe('vriddhi platform employees (employee role)', () => {
     // Staff-gated reads and writes are refused.
     await assertFails(getDoc(doc(db, 'users', 'faculty-a')))
     await assertFails(getDoc(doc(db, 'faculty', 'legacy-faculty-a')))
-    await assertFails(setDoc(doc(db, 'facultyAvailability', EMPLOYEE_UID), availability(COLLEGE_A)))
+    await assertFails(setDoc(doc(db, 'colleges', COLLEGE_A, 'facultyAvailability', EMPLOYEE_UID), availability(COLLEGE_A)))
   })
 
   it('keeps the assignment document server-written and self-readable', async () => {
