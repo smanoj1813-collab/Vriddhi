@@ -1,6 +1,6 @@
 // src/modules/admin/pages/QuestionBank.tsx
 // Unified Question Bank hub for Principal/Admin (B revamp)
-// One page with 3 tabs: College Bank | Universal Bank | Review Queue
+// One page with 4 tabs: College Bank | Universal Bank | Review Queue | Previous Year Papers
 // Old routes /admin/universal-bank and /admin/review-queue now redirect here via routes.tsx aliases.
 
 import React, { useEffect, useState } from 'react';
@@ -13,8 +13,11 @@ import UniversalQuestionBank from '../components/UniversalQuestionBank';
 import ReviewQueue from '../components/ReviewQueue';
 import { getBatchBranchConfig, getQuestionStats } from '../api/questionBankApi';
 import { DEFAULT_SUBJECTS } from '@/shared/constants/academicPrograms';
+import AssignedPyqPapersPanel from '@/shared/components/pyq/AssignedPyqPapersPanel';
 
-export type QuestionBankTab = 'college' | 'universal' | 'review';
+export type QuestionBankTab = 'college' | 'universal' | 'review' | 'pyq';
+
+const TAB_INDEX: Record<QuestionBankTab, number> = { college: 0, universal: 1, review: 2, pyq: 3 };
 
 interface Props {
   initialTab?: QuestionBankTab;
@@ -32,12 +35,14 @@ export default function QuestionBank({ initialTab = 'college' }: Props) {
   const [toast, setToast] = useState('');
   const [reloadKey, setReloadKey] = useState(0);
 
-  const tabIndex = initialTab === 'universal' ? 1 : initialTab === 'review' ? 2 : 0;
-  const [tab, setTab] = useState(tabIndex);
+  const [tab, setTab] = useState(TAB_INDEX[initialTab] ?? 0);
 
   useEffect(() => {
-    setTab(initialTab === 'universal' ? 1 : initialTab === 'review' ? 2 : 0);
+    setTab(TAB_INDEX[initialTab] ?? 0);
   }, [initialTab]);
+  const schedulePath = ['admin', 'principal', 'superadmin'].includes(String(user?.role || ''))
+    ? '/admin/schedule-tests'
+    : '/faculty/assessments';
 
   useEffect(() => {
     if (!collegeId) {
@@ -80,7 +85,7 @@ export default function QuestionBank({ initialTab = 'college' }: Props) {
     <Box sx={{ p: 3 }}>
       <Typography variant="h5" sx={{ fontWeight: 800, mb: 0.5 }}>Question Bank & Exam Management</Typography>
       <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-        College-private questions, the shared Universal pool, and the review queue — one place.
+        College-private questions, the shared Universal pool, the review queue and assigned previous year papers — one place.
       </Typography>
 
       <Paper sx={{ mb: 2 }}>
@@ -88,6 +93,7 @@ export default function QuestionBank({ initialTab = 'college' }: Props) {
           <Tab label="College Bank" />
           <Tab label="Universal Bank" />
           <Tab label="Review Queue" />
+          <Tab label="Previous Year Papers" />
         </Tabs>
       </Paper>
 
@@ -113,6 +119,16 @@ export default function QuestionBank({ initialTab = 'college' }: Props) {
       {tab === 2 && (
         <Box sx={{ mt: 1 }}>
           <ReviewQueue />
+        </Box>
+      )}
+
+      {tab === 3 && (
+        <Box sx={{ mt: 1 }}>
+          <AssignedPyqPapersPanel
+            collegeId={collegeId}
+            schedulePath={schedulePath}
+            actAsSuperadmin={user?.role === 'superadmin'}
+          />
         </Box>
       )}
 

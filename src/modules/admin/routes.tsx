@@ -170,6 +170,7 @@ export const adminRoutes: RouteObject[] = [
       // B revamp: single hub — old deep-links render same page on its Universal / Review tab so bookmarks don't 404
       { path: 'universal-bank', element: questionWorkflowOnly(<LazyPage><QuestionBank initialTab="universal" /></LazyPage>) },
       { path: 'review-queue', element: questionWorkflowOnly(<LazyPage><QuestionBank initialTab="review" /></LazyPage>) },
+      { path: 'pyq-papers', element: questionWorkflowOnly(<LazyPage><QuestionBank initialTab="pyq" /></LazyPage>) },
       { path: 'paper-review', element: questionWorkflowOnly(<LazyPage><PaperReview /></LazyPage>) },
       { path: 'paper-generator', element: questionWorkflowOnly(<LazyPage><PaperGeneratorAdmin /></LazyPage>) },
       { path: 'class-schedule', element: <LazyPage><AdminClassSchedule /></LazyPage> },

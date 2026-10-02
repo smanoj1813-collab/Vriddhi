@@ -3,6 +3,7 @@
 // through "Upload Questions" only — the duplicate "Paste Import" was removed.
 
 import React, { useState, useEffect, useCallback } from 'react';
+import AssignedPyqPapersPanel from '@/shared/components/pyq/AssignedPyqPapersPanel';
 import {
   Box,
   Paper,
@@ -150,7 +151,7 @@ const FacultyQuestionBank: React.FC = () => {
   });
 
   const [tabValue, setTabValue] = useState(0);
-  // Tab indices: 0 All, 1 My, 2 PYQ, 3 Linked, 4 Assessment Pool, 5 Universal
+  // Tab indices: 0 All, 1 My, 2 PYQ, 3 Linked, 4 Assessment Pool, 5 Universal, 6 Previous Year Papers
   const pyqMode = tabValue === 2;
   const myQuestionsOnly = tabValue === 1;
   const linkedOnly = tabValue === 3;
@@ -420,6 +421,7 @@ const FacultyQuestionBank: React.FC = () => {
           <Tab label="Linked Papers" />
           <Tab label="Assessment Pool" />
           <Tab label="Universal Bank" />
+          <Tab label="Previous Year Papers" />
         </Tabs>
 
         <TabPanel value={tabValue} index={0}></TabPanel>
@@ -442,7 +444,13 @@ const FacultyQuestionBank: React.FC = () => {
         </TabPanel>
       </Paper>
 
-      {tabValue === 5 ? (
+      {tabValue === 6 ? (
+        <AssignedPyqPapersPanel
+          collegeId={collegeId}
+          schedulePath={['admin', 'principal', 'superadmin'].includes(String(user?.role || '')) ? '/admin/schedule-tests' : '/faculty/assessments'}
+          actAsSuperadmin={user?.role === 'superadmin'}
+        />
+      ) : tabValue === 5 ? (
         <UniversalQuestionBank showSubmitButton={false} />
       ) : (
         <>

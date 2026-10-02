@@ -1,6 +1,22 @@
 # Handoff — PYQ papers → platform question bank → college assignment → assessment
 
-**Written:** 2026-10-02 · **Base:** `main` @ `091c6d5` (PR #100 merged) · **Status:** none of this is implemented yet.
+**Written:** 2026-10-02 · **Base:** `main` @ `091c6d5` (PR #100 merged) · **Status:** R2–R5 shipped for transcribed papers (see "Implemented" below); R1 (transcribing the 153 PDFs) is still open.
+
+> **Implemented (PR #101).** The owner's ask — "make previous year papers assignable like courses, and let faculty
+> conduct assessments on them" — is built on the **existing `prep_papers` catalogue** rather than on
+> `questionBank_meta`, because the 50 transcribed papers already carry sections + questions there:
+>
+> | Piece | Where |
+> |---|---|
+> | Assignment store (same model as course packs) | `colleges/{collegeId}/config/pyqPapers` → `{ assignments: { [prepPaperId]: { enabled, assignedAt, assignedBy } } }`; rules: superadmin-only writes, own-college staff read, students blocked (`current-firestore.rules`, config block) |
+> | Superadmin assign UI | `src/shared/components/pyq/PyqAssignmentPanel.tsx`, mounted in Super Admin → College detail and Prep Content Studio → "Previous year paper assignments per college" |
+> | College UI | `src/shared/components/pyq/AssignedPyqPapersPanel.tsx` — Question Bank → **Previous Year Papers** tab (`/admin/question-bank`, deep link `/admin/pyq-papers`; faculty `/faculty/question-bank`) |
+> | Conduct assessment | Dialog picks questions (Select all / Match the paper's rubric) → callable `createPyqAssessmentPaper` (`functions/src/pyqAssessments.ts`) re-checks the assignment, copies the questions **verbatim** into a college `papers/{id}` (`status: published`, `verificationStatus: not-required`, `examType: 'PYQ Practice'`, `source: 'platform-pyq'`, `sourcePrepPaperId`) + `paperReviewAudit` row → "Schedule test now" opens the scheduler with `?paperId=` |
+> | Grading | Unchanged — descriptive questions become `short_answer` (≤ 3 marks) / `long_answer` and flow to Assessments → Manual grading |
+> | Tests | `functions/test/pyqAssessments.test.ts` (every transcribed seed paper converts to a schedulable paper, no university name), `src/shared/pyq/pyqAssignmentModel.test.ts`, rules block in `functions/test/firestore.rules.test.ts` |
+>
+> PDF-only papers can be assigned and opened, but show "questions not transcribed yet" and cannot be used online
+> until R1 below transcribes them into `prep_papers` sections. `employee` still cannot create/schedule (§2.5 #4).
 **Audience:** a fresh Arena session / developer picking this up. Everything below was verified by reading the code at that commit; file:line references are from that revision.
 
 > **Revision note (re-verified 2026-10-02).** An earlier draft of this handoff stated that the
