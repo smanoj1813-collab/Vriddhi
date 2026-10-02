@@ -110,16 +110,23 @@ service cloud.firestore {
           && data.collegeId == claimCollege());
     }
 
+    // `employeeStatus` is stamped by the employeeAccess callables: a suspended
+    // Vriddhi employee keeps the role in `users/{uid}` (so their account still
+    // resolves) but must lose every staff grant immediately. The membership
+    // test matters — a token without the claim is every other role, and the
+    // rules DSL does not tolerate reading a key the token does not carry.
+    function employeeSuspended() {
+      return 'employeeStatus' in request.auth.token
+        && request.auth.token.employeeStatus == 'suspended';
+    }
+
     function isStaff() {
       // `employee` is a Vriddhi platform employee: not a member of any one
       // institution, but scoped to the collegeId claim of the college they
       // are currently working in, so every collegeId() comparison below
       // still holds.
-      // `employeeStatus` is stamped by the employeeAccess callables: a
-      // suspended Vriddhi employee keeps the role in `users/{uid}` (so their
-      // account still resolves) but must lose every staff grant immediately.
       return isSignedIn()
-        && request.auth.token.employeeStatus != 'suspended'
+        && !employeeSuspended()
         && role() in ['superadmin', 'admin', 'principal', 'hod', 'faculty', 'mentor', 'employee'];
     }
 
@@ -144,7 +151,11 @@ service cloud.firestore {
     // check. Purely a reordering of || operands: no condition was added, removed
     // or weakened, and the result is identical for every input.
     function sameCollege(data) {
-      return (collegeId() != null && 'collegeId' in data && data.collegeId == collegeId())
+      // A suspended employee keeps no college scope even if a stale token still
+      // carries one: the claim branch refuses outright, so no same-college read
+      // survives suspension. Other roles have no employeeStatus claim.
+      return (!employeeSuspended()
+          && collegeId() != null && 'collegeId' in data && data.collegeId == collegeId())
         || isSuperadmin();
     }
 
