@@ -364,8 +364,9 @@ export interface PrepSeedProgramResult {
   subjectCount: number
   topicCount: number
   questionCount: number
-  /** Only on the 'papers' bundle (previous-year question papers). */
+  /** Only on paper bundles: reviewed text or original-PDF file links. */
   paperCount?: number
+  skippedPaperCount?: number
   valid: boolean
   errorCount: number
   warningCount: number
@@ -374,6 +375,8 @@ export interface PrepSeedProgramResult {
 export interface PrepSeedAllResult {
   success: boolean
   message: string
+  paperCount?: number
+  skippedPaperFileCount?: number
   programs: string[]
   unseedable?: string[]
   subjectCount: number
@@ -508,6 +511,18 @@ export async function saveCompanyPrepSettings(
 
 // ── Previous-year university question papers (mirrors functions/src/prepPapers.ts) ──
 
+/** Extra original-PDF categories; the academic study-pack catalogue is unchanged. */
+export const PREP_PAPER_FILE_PROGRAMS = [
+  { code: 'bsw', label: 'BSW', degreeLevel: 'undergraduate' as const },
+  { code: 'ma', label: 'MA', degreeLevel: 'postgraduate' as const },
+  { code: 'med', label: 'M.Ed', degreeLevel: 'postgraduate' as const },
+  { code: 'mlib', label: 'M.Lib', degreeLevel: 'postgraduate' as const },
+  { code: 'msw', label: 'MSW', degreeLevel: 'postgraduate' as const },
+  { code: 'languages', label: 'Languages', degreeLevel: 'undergraduate' as const },
+  { code: 'open-electives', label: 'Open Electives', degreeLevel: 'postgraduate' as const },
+  { code: 'ug-open-elective', label: 'UG Open Elective', degreeLevel: 'undergraduate' as const },
+]
+
 export interface PrepPaperQuestion {
   label: string
   text: string
@@ -535,6 +550,9 @@ export interface PrepPaperSource {
 
 export interface PrepPaper {
   id: string
+  contentType?: 'structured' | 'source_pdf'
+  isPYQ?: boolean
+  sourceFile?: { fileName: string; url: string; folderPath?: string; driveFileId?: string }
   program: string
   programLabel: string
   legacyProgram?: string | null
@@ -558,7 +576,7 @@ export interface PrepPaper {
   prepSubjectId?: string | null
   tags: string[]
   source: PrepPaperSource
-  language: 'en'
+  language: 'en' | 'kn' | 'mixed' | 'und'
   status: 'draft' | 'published'
   tier: 'free' | 'premium'
   contentVersion: number

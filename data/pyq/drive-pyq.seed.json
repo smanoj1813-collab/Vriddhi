@@ -1,0 +1,4009 @@
+{
+  "schemaVersion": 1,
+  "seedCode": "pyq-files",
+  "targetCollection": "prep_papers",
+  "mode": "original-pdf-links",
+  "sourceFolderUrl": "https://drive.google.com/drive/folders/1ZzBdDTxrBVB2LjatXDd4dPSZyFKGl0Hl",
+  "recordedOn": "2026-10-02",
+  "coverage": "175 public PDF entries inventoried from BBA, BSW, LANGUAGES and both elective groups. All 46 eligible MA semester folders were checked and exposed no public PDF listings. Three other-language MA programme folders are excluded by the English/Kannada selection. No empty directories or unavailable papers are seeded.",
+  "pendingCollections": [
+    {
+      "folderPath": "MA",
+      "status": "no_public_pdf_listing",
+      "checkedSemesterFolders": 46,
+      "reason": "All eligible semester pages returned an empty-state UI with no public PDF entries. Actual public file links are needed before MA papers can be added; private or unlisted contents are not asserted to be empty."
+    }
+  ],
+  "directoryChecks": [
+    {
+      "folderPath": "MA/A/1ST SEM",
+      "folderId": "1PbJRu36yJUw3bt0suUnhnewQi36bU-0l",
+      "checkedOn": "2026-10-02",
+      "result": "no_public_pdf_listing",
+      "evidence": "Drive returned an empty-state folder page; no public PDF entries were exposed."
+    },
+    {
+      "folderPath": "MA/A/2ND",
+      "folderId": "1Hdqth9uRSuhf-tU3q9cK1TkUuhFIIwXa",
+      "checkedOn": "2026-10-02",
+      "result": "no_public_pdf_listing",
+      "evidence": "Drive returned an empty-state folder page; no public PDF entries were exposed."
+    },
+    {
+      "folderPath": "MA/A/3RD",
+      "folderId": "1SL4zd9cwQMLA4KZiz9qdYUmtavAi14sc",
+      "checkedOn": "2026-10-02",
+      "result": "no_public_pdf_listing",
+      "evidence": "Drive returned an empty-state folder page; no public PDF entries were exposed."
+    },
+    {
+      "folderPath": "MA/A/4TH",
+      "folderId": "12IAH-f8Hsx4xjrMkEUeBylR4tDAduicE",
+      "checkedOn": "2026-10-02",
+      "result": "no_public_pdf_listing",
+      "evidence": "Drive returned an empty-state folder page; no public PDF entries were exposed."
+    },
+    {
+      "folderPath": "MA/ECONOMICS/1ST SEM",
+      "folderId": "1Wv6LRXZz6RDXB7xm_GlOuyITCrXsGwAJ",
+      "checkedOn": "2026-10-02",
+      "result": "no_public_pdf_listing",
+      "evidence": "Drive returned an empty-state folder page; no public PDF entries were exposed."
+    },
+    {
+      "folderPath": "MA/ECONOMICS/2ND SEM",
+      "folderId": "13z8mRtkryUOsE5YnTmJLg8savXGjy_2X",
+      "checkedOn": "2026-10-02",
+      "result": "no_public_pdf_listing",
+      "evidence": "Drive returned an empty-state folder page; no public PDF entries were exposed."
+    },
+    {
+      "folderPath": "MA/ECONOMICS/3RD SEM",
+      "folderId": "18vkDIBNv0RcoK5KV-3d0D9Q0kSCSBaxq",
+      "checkedOn": "2026-10-02",
+      "result": "no_public_pdf_listing",
+      "evidence": "Drive returned an empty-state folder page; no public PDF entries were exposed."
+    },
+    {
+      "folderPath": "MA/ECONOMICS/4TH SEM",
+      "folderId": "1461d4vdSZCrFW4pgiO1Op9QFu0IGdh1C",
+      "checkedOn": "2026-10-02",
+      "result": "no_public_pdf_listing",
+      "evidence": "Drive returned an empty-state folder page; no public PDF entries were exposed."
+    },
+    {
+      "folderPath": "MA/ENGLISH/1ST",
+      "folderId": "1l6kWFtEIjCOWv2SwXaB6R04CMGwlCScA",
+      "checkedOn": "2026-10-02",
+      "result": "no_public_pdf_listing",
+      "evidence": "Drive returned an empty-state folder page; no public PDF entries were exposed."
+    },
+    {
+      "folderPath": "MA/ENGLISH/2ND",
+      "folderId": "1yLLpqJ7XTAB1j8gp4D4pm6U1LeC7q48n",
+      "checkedOn": "2026-10-02",
+      "result": "no_public_pdf_listing",
+      "evidence": "Drive returned an empty-state folder page; no public PDF entries were exposed."
+    },
+    {
+      "folderPath": "MA/ENGLISH/3RD",
+      "folderId": "1i62CVCBOtAagTClabrfpSPLohKUqqNWS",
+      "checkedOn": "2026-10-02",
+      "result": "no_public_pdf_listing",
+      "evidence": "Drive returned an empty-state folder page; no public PDF entries were exposed."
+    },
+    {
+      "folderPath": "MA/ENGLISH/4TH",
+      "folderId": "1ChzmDrGe3ssR-B7WgI6Blx1QauGTscRh",
+      "checkedOn": "2026-10-02",
+      "result": "no_public_pdf_listing",
+      "evidence": "Drive returned an empty-state folder page; no public PDF entries were exposed."
+    },
+    {
+      "folderPath": "MA/HISTORY/1ST SEM",
+      "folderId": "15OxkPZ5f6O896b9UQiOAquQHg2VPJGoi",
+      "checkedOn": "2026-10-02",
+      "result": "no_public_pdf_listing",
+      "evidence": "Drive returned an empty-state folder page; no public PDF entries were exposed."
+    },
+    {
+      "folderPath": "MA/HISTORY/2ND",
+      "folderId": "1DHMaSwctEEqueO6bjSNSznA58GA8DLBI",
+      "checkedOn": "2026-10-02",
+      "result": "no_public_pdf_listing",
+      "evidence": "Drive returned an empty-state folder page; no public PDF entries were exposed."
+    },
+    {
+      "folderPath": "MA/HISTORY/3RD",
+      "folderId": "1TzT6k2BvH_4G2gvypfBkFzMfxNS7EIAk",
+      "checkedOn": "2026-10-02",
+      "result": "no_public_pdf_listing",
+      "evidence": "Drive returned an empty-state folder page; no public PDF entries were exposed."
+    },
+    {
+      "folderPath": "MA/HISTORY/4TH",
+      "folderId": "1J-RvkFEmaWqh4f2BGRbjVKsK5vFkm4jm",
+      "checkedOn": "2026-10-02",
+      "result": "no_public_pdf_listing",
+      "evidence": "Drive returned an empty-state folder page; no public PDF entries were exposed."
+    },
+    {
+      "folderPath": "MA/JM&c/1ST SEM",
+      "folderId": "1LOJRzh1Ltl7JpZLxUD9KzfzYh8c4uv_e",
+      "checkedOn": "2026-10-02",
+      "result": "no_public_pdf_listing",
+      "evidence": "Drive returned an empty-state folder page; no public PDF entries were exposed."
+    },
+    {
+      "folderPath": "MA/JM&c/2ND",
+      "folderId": "1NdhPBvBOhHE4S7XLHsehRHLQaT49kjNT",
+      "checkedOn": "2026-10-02",
+      "result": "no_public_pdf_listing",
+      "evidence": "Drive returned an empty-state folder page; no public PDF entries were exposed."
+    },
+    {
+      "folderPath": "MA/JM&c/3RD",
+      "folderId": "1xgiKc3djl8jh7uFwIq0IdtHE60qH_Qr7",
+      "checkedOn": "2026-10-02",
+      "result": "no_public_pdf_listing",
+      "evidence": "Drive returned an empty-state folder page; no public PDF entries were exposed."
+    },
+    {
+      "folderPath": "MA/JM&c/4TH",
+      "folderId": "1sfQYJEbOv0nYQbdNUIL3EeZ6tU-emMpP",
+      "checkedOn": "2026-10-02",
+      "result": "no_public_pdf_listing",
+      "evidence": "Drive returned an empty-state folder page; no public PDF entries were exposed."
+    },
+    {
+      "folderPath": "MA/KANNADA/1ST",
+      "folderId": "1ZsdM0uwaExg7PSn8UXmndChIg4oP7EFr",
+      "checkedOn": "2026-10-02",
+      "result": "no_public_pdf_listing",
+      "evidence": "Drive returned an empty-state folder page; no public PDF entries were exposed."
+    },
+    {
+      "folderPath": "MA/KANNADA/2ND",
+      "folderId": "1dmeYYTjxG_uvX4bh6cJ6i3tVMNtQRXpE",
+      "checkedOn": "2026-10-02",
+      "result": "no_public_pdf_listing",
+      "evidence": "Drive returned an empty-state folder page; no public PDF entries were exposed."
+    },
+    {
+      "folderPath": "MA/KANNADA/3RD",
+      "folderId": "1e15cMkhfcjWvJr_sf5OIYcavSkW0BotT",
+      "checkedOn": "2026-10-02",
+      "result": "no_public_pdf_listing",
+      "evidence": "Drive returned an empty-state folder page; no public PDF entries were exposed."
+    },
+    {
+      "folderPath": "MA/KANNADA/4TH",
+      "folderId": "1Q5FOaLknH5As1uuqDPZOyosqb182sqFG",
+      "checkedOn": "2026-10-02",
+      "result": "no_public_pdf_listing",
+      "evidence": "Drive returned an empty-state folder page; no public PDF entries were exposed."
+    },
+    {
+      "folderPath": "MA/M.ED/1ST SEM",
+      "folderId": "1PaBRMVCVY3nZN0QBDZPDE-x2mLxSCRUz",
+      "checkedOn": "2026-10-02",
+      "result": "no_public_pdf_listing",
+      "evidence": "Drive returned an empty-state folder page; no public PDF entries were exposed."
+    },
+    {
+      "folderPath": "MA/M.ED/2ND",
+      "folderId": "1_cAhvuBYvVU3fMbpKVosZmnpn4aebSap",
+      "checkedOn": "2026-10-02",
+      "result": "no_public_pdf_listing",
+      "evidence": "Drive returned an empty-state folder page; no public PDF entries were exposed."
+    },
+    {
+      "folderPath": "MA/M.ED/3RD",
+      "folderId": "1AAkIxRtEo0sAisPDhOam9khs_b4IJmxe",
+      "checkedOn": "2026-10-02",
+      "result": "no_public_pdf_listing",
+      "evidence": "Drive returned an empty-state folder page; no public PDF entries were exposed."
+    },
+    {
+      "folderPath": "MA/M.ED/4TH",
+      "folderId": "1dCe0ZcwsmFX2K3zqrzdJCz2Csw94PXz4",
+      "checkedOn": "2026-10-02",
+      "result": "no_public_pdf_listing",
+      "evidence": "Drive returned an empty-state folder page; no public PDF entries were exposed."
+    },
+    {
+      "folderPath": "MA/MLIB/1ST SEM",
+      "folderId": "1coiBw89rqYhesJbSuRTjrzReKVSkszP9",
+      "checkedOn": "2026-10-02",
+      "result": "no_public_pdf_listing",
+      "evidence": "Drive returned an empty-state folder page; no public PDF entries were exposed."
+    },
+    {
+      "folderPath": "MA/MLIB/2ND SEM",
+      "folderId": "1YQ3Vbf0gzaOArVWJ1Ukd1C95F3xyvBRa",
+      "checkedOn": "2026-10-02",
+      "result": "no_public_pdf_listing",
+      "evidence": "Drive returned an empty-state folder page; no public PDF entries were exposed."
+    },
+    {
+      "folderPath": "MA/MSW/1ST SEM",
+      "folderId": "1l5aQsUBoA_TFirnhj4Z8AhuRahOmL_G1",
+      "checkedOn": "2026-10-02",
+      "result": "no_public_pdf_listing",
+      "evidence": "Drive returned an empty-state folder page; no public PDF entries were exposed."
+    },
+    {
+      "folderPath": "MA/MSW/2ND SEM",
+      "folderId": "1YBPyF9OhIeGJHwEGb0yJwBoY18QcPaMP",
+      "checkedOn": "2026-10-02",
+      "result": "no_public_pdf_listing",
+      "evidence": "Drive returned an empty-state folder page; no public PDF entries were exposed."
+    },
+    {
+      "folderPath": "MA/MSW/3RD SEM",
+      "folderId": "1u6EtB_78UycA3B98M-3lqvUhvtC9Z9BD",
+      "checkedOn": "2026-10-02",
+      "result": "no_public_pdf_listing",
+      "evidence": "Drive returned an empty-state folder page; no public PDF entries were exposed."
+    },
+    {
+      "folderPath": "MA/MSW/4TH SEM",
+      "folderId": "11bOqBA_HhbHSoYBPwPtS-i0sIN-8N4LY",
+      "checkedOn": "2026-10-02",
+      "result": "no_public_pdf_listing",
+      "evidence": "Drive returned an empty-state folder page; no public PDF entries were exposed."
+    },
+    {
+      "folderPath": "MA/POLITICAL SCIENCE/1ST",
+      "folderId": "1IRP76z4c0EBHBFYGgn-MgdOarkVQVjh_",
+      "checkedOn": "2026-10-02",
+      "result": "no_public_pdf_listing",
+      "evidence": "Drive returned an empty-state folder page; no public PDF entries were exposed."
+    },
+    {
+      "folderPath": "MA/POLITICAL SCIENCE/2ND",
+      "folderId": "1by3bCZR8s0iU9Vcd2EliOy13azAoXCSo",
+      "checkedOn": "2026-10-02",
+      "result": "no_public_pdf_listing",
+      "evidence": "Drive returned an empty-state folder page; no public PDF entries were exposed."
+    },
+    {
+      "folderPath": "MA/POLITICAL SCIENCE/3RD",
+      "folderId": "1WIqA8ZQxCcF7Pbme-P6ZTVXC1yOF5tSq",
+      "checkedOn": "2026-10-02",
+      "result": "no_public_pdf_listing",
+      "evidence": "Drive returned an empty-state folder page; no public PDF entries were exposed."
+    },
+    {
+      "folderPath": "MA/POLITICAL SCIENCE/4TH",
+      "folderId": "1o7x2b-uIZAk-hVVEX5ijnxcz3i0--Bl4",
+      "checkedOn": "2026-10-02",
+      "result": "no_public_pdf_listing",
+      "evidence": "Drive returned an empty-state folder page; no public PDF entries were exposed."
+    },
+    {
+      "folderPath": "MA/PUBLIC/1ST SEM",
+      "folderId": "1PlhDRZlAL6e-DGMymv_HtONowdp698n6",
+      "checkedOn": "2026-10-02",
+      "result": "no_public_pdf_listing",
+      "evidence": "Drive returned an empty-state folder page; no public PDF entries were exposed."
+    },
+    {
+      "folderPath": "MA/PUBLIC/2ND",
+      "folderId": "1F5TmWfjv37d03FEvf6NrAfzNP4wPSBsw",
+      "checkedOn": "2026-10-02",
+      "result": "no_public_pdf_listing",
+      "evidence": "Drive returned an empty-state folder page; no public PDF entries were exposed."
+    },
+    {
+      "folderPath": "MA/PUBLIC/3RD",
+      "folderId": "1f15pne0KPIlw0IO4at5va-CcZG9Tw2fD",
+      "checkedOn": "2026-10-02",
+      "result": "no_public_pdf_listing",
+      "evidence": "Drive returned an empty-state folder page; no public PDF entries were exposed."
+    },
+    {
+      "folderPath": "MA/PUBLIC/4TH",
+      "folderId": "1nbgFjuTew1N_17TBpIUdk3A1aD_IvxRV",
+      "checkedOn": "2026-10-02",
+      "result": "no_public_pdf_listing",
+      "evidence": "Drive returned an empty-state folder page; no public PDF entries were exposed."
+    },
+    {
+      "folderPath": "MA/SOCIOLOGY/1ST SEM",
+      "folderId": "1JapolobKMk2wIsk5uqOwOU4nMXEU41vt",
+      "checkedOn": "2026-10-02",
+      "result": "no_public_pdf_listing",
+      "evidence": "Drive returned an empty-state folder page; no public PDF entries were exposed."
+    },
+    {
+      "folderPath": "MA/SOCIOLOGY/2ND",
+      "folderId": "1-1OJeuGFAZK9zeS1bo1eRfJF0Ahjirq_",
+      "checkedOn": "2026-10-02",
+      "result": "no_public_pdf_listing",
+      "evidence": "Drive returned an empty-state folder page; no public PDF entries were exposed."
+    },
+    {
+      "folderPath": "MA/SOCIOLOGY/3RD",
+      "folderId": "1LhAP9qNMd2HF2YCVRJbzCCylgam_1UNH",
+      "checkedOn": "2026-10-02",
+      "result": "no_public_pdf_listing",
+      "evidence": "Drive returned an empty-state folder page; no public PDF entries were exposed."
+    },
+    {
+      "folderPath": "MA/SOCIOLOGY/4TH",
+      "folderId": "1d5eLJsalDwueYo1NSefr-WDfYjm6DyA0",
+      "checkedOn": "2026-10-02",
+      "result": "no_public_pdf_listing",
+      "evidence": "Drive returned an empty-state folder page; no public PDF entries were exposed."
+    }
+  ],
+  "excludedFolders": [
+    {
+      "folderPath": "MA/HINDI",
+      "folderId": "15Bw9Ybw74QMlzIPm28NRt1wwl8rUg1uZ",
+      "reason": "Language subject other than English or Kannada"
+    },
+    {
+      "folderPath": "MA/TELUGU",
+      "folderId": "1t6UrZcdAWR_kxwKx2zRrYX2WjAKS_L6i",
+      "reason": "Language subject other than English or Kannada"
+    },
+    {
+      "folderPath": "MA/URDU",
+      "folderId": "1mWPvUy5tGKvtU5T2xutQsG82SS0FnXi1",
+      "reason": "Language subject other than English or Kannada"
+    }
+  ],
+  "counts": {
+    "included": 153,
+    "excluded": 22,
+    "duplicateFileIds": 0,
+    "programs": {
+      "bba": 27,
+      "languages": 10,
+      "bsw": 26,
+      "ug-open-elective": 26,
+      "open-electives": 64
+    },
+    "checkedMaSemesterFolders": 46,
+    "excludedMaProgrammeFolders": 3,
+    "languageSubjects": {
+      "english": 4,
+      "kannada": 6
+    }
+  },
+  "papers": [
+    {
+      "id": "pyq-file-1dead8bff9f4cab6f5162fa4",
+      "contentType": "source_pdf",
+      "isPYQ": true,
+      "program": "bba",
+      "semester": 1,
+      "subject": "AMC-106A OE-221",
+      "language": "und",
+      "sourceFile": {
+        "fileName": "AMC-106A OE-221.pdf",
+        "url": "https://drive.google.com/file/d/1uheT3DwdtDNuuGSqjtAEgblFep8Tun6_/view",
+        "folderPath": "BBA/1ST SEM",
+        "driveFileId": "1uheT3DwdtDNuuGSqjtAEgblFep8Tun6_"
+      },
+      "source": {
+        "title": "AMC-106A OE-221.pdf",
+        "url": "https://drive.google.com/file/d/1uheT3DwdtDNuuGSqjtAEgblFep8Tun6_/view",
+        "publisher": "User-provided PYQ collection",
+        "retrievedOn": "2026-10-02",
+        "note": "Original PDF link. University not assigned; question text and exam metadata have not been transcribed or inferred."
+      },
+      "status": "published"
+    },
+    {
+      "id": "pyq-file-15368a02863ea024c488642b",
+      "contentType": "source_pdf",
+      "isPYQ": true,
+      "program": "bba",
+      "semester": 1,
+      "subject": "BBHC-103 OE-236",
+      "language": "und",
+      "sourceFile": {
+        "fileName": "BBHC-103 OE-236.pdf",
+        "url": "https://drive.google.com/file/d/1LX1xJcj3jm06AjHYUsK79_M-lhPf8-O_/view",
+        "folderPath": "BBA/1ST SEM",
+        "driveFileId": "1LX1xJcj3jm06AjHYUsK79_M-lhPf8-O_"
+      },
+      "source": {
+        "title": "BBHC-103 OE-236.pdf",
+        "url": "https://drive.google.com/file/d/1LX1xJcj3jm06AjHYUsK79_M-lhPf8-O_/view",
+        "publisher": "User-provided PYQ collection",
+        "retrievedOn": "2026-10-02",
+        "note": "Original PDF link. University not assigned; question text and exam metadata have not been transcribed or inferred."
+      },
+      "status": "published"
+    },
+    {
+      "id": "pyq-file-f70e8a9126a0febebafe6e18",
+      "contentType": "source_pdf",
+      "isPYQ": true,
+      "program": "bba",
+      "semester": 1,
+      "subject": "BBHC-104 OE-237",
+      "language": "und",
+      "sourceFile": {
+        "fileName": "BBHC-104 OE-237.pdf",
+        "url": "https://drive.google.com/file/d/1EdCNbTqoXM-p6WvS0t0u9kzf0KYJ_Zv3/view",
+        "folderPath": "BBA/1ST SEM",
+        "driveFileId": "1EdCNbTqoXM-p6WvS0t0u9kzf0KYJ_Zv3"
+      },
+      "source": {
+        "title": "BBHC-104 OE-237.pdf",
+        "url": "https://drive.google.com/file/d/1EdCNbTqoXM-p6WvS0t0u9kzf0KYJ_Zv3/view",
+        "publisher": "User-provided PYQ collection",
+        "retrievedOn": "2026-10-02",
+        "note": "Original PDF link. University not assigned; question text and exam metadata have not been transcribed or inferred."
+      },
+      "status": "published"
+    },
+    {
+      "id": "pyq-file-619f14c6a2474752eda0d55f",
+      "contentType": "source_pdf",
+      "isPYQ": true,
+      "program": "bba",
+      "semester": 1,
+      "subject": "BBHC-105 [OE-238]",
+      "language": "und",
+      "sourceFile": {
+        "fileName": "BBHC-105 [OE-238].pdf",
+        "url": "https://drive.google.com/file/d/1fAc9uGtCWL4ctNsmztDQXv_golk44PrC/view",
+        "folderPath": "BBA/1ST SEM",
+        "driveFileId": "1fAc9uGtCWL4ctNsmztDQXv_golk44PrC"
+      },
+      "source": {
+        "title": "BBHC-105 [OE-238].pdf",
+        "url": "https://drive.google.com/file/d/1fAc9uGtCWL4ctNsmztDQXv_golk44PrC/view",
+        "publisher": "User-provided PYQ collection",
+        "retrievedOn": "2026-10-02",
+        "note": "Original PDF link. University not assigned; question text and exam metadata have not been transcribed or inferred."
+      },
+      "status": "published"
+    },
+    {
+      "id": "pyq-file-2c0831186b64024d7742eb47",
+      "contentType": "source_pdf",
+      "isPYQ": true,
+      "program": "bba",
+      "semester": 2,
+      "subject": "BBHC-203 OE-280",
+      "language": "und",
+      "sourceFile": {
+        "fileName": "BBHC-203 OE-280.pdf",
+        "url": "https://drive.google.com/file/d/1VcngTxw3-5H_J1Iydgu8pBvUEJGFSVy5/view",
+        "folderPath": "BBA/2ND SEM",
+        "driveFileId": "1VcngTxw3-5H_J1Iydgu8pBvUEJGFSVy5"
+      },
+      "source": {
+        "title": "BBHC-203 OE-280.pdf",
+        "url": "https://drive.google.com/file/d/1VcngTxw3-5H_J1Iydgu8pBvUEJGFSVy5/view",
+        "publisher": "User-provided PYQ collection",
+        "retrievedOn": "2026-10-02",
+        "note": "Original PDF link. University not assigned; question text and exam metadata have not been transcribed or inferred."
+      },
+      "status": "published"
+    },
+    {
+      "id": "pyq-file-f96737495f5d1584779fa199",
+      "contentType": "source_pdf",
+      "isPYQ": true,
+      "program": "bba",
+      "semester": 2,
+      "subject": "BBHC-204 OE-281",
+      "language": "und",
+      "sourceFile": {
+        "fileName": "BBHC-204 OE-281.pdf",
+        "url": "https://drive.google.com/file/d/1I5Gpb3jUQC6dB5vqpxJNkvreFAo-aTUL/view",
+        "folderPath": "BBA/2ND SEM",
+        "driveFileId": "1I5Gpb3jUQC6dB5vqpxJNkvreFAo-aTUL"
+      },
+      "source": {
+        "title": "BBHC-204 OE-281.pdf",
+        "url": "https://drive.google.com/file/d/1I5Gpb3jUQC6dB5vqpxJNkvreFAo-aTUL/view",
+        "publisher": "User-provided PYQ collection",
+        "retrievedOn": "2026-10-02",
+        "note": "Original PDF link. University not assigned; question text and exam metadata have not been transcribed or inferred."
+      },
+      "status": "published"
+    },
+    {
+      "id": "pyq-file-e050827b1b5c7aead0f6a50f",
+      "contentType": "source_pdf",
+      "isPYQ": true,
+      "program": "bba",
+      "semester": 2,
+      "subject": "BBHC-205 [OE-282]",
+      "language": "und",
+      "sourceFile": {
+        "fileName": "BBHC-205 [OE-282].pdf",
+        "url": "https://drive.google.com/file/d/1fJflFHidXbtY9HXr_pznI43RWpkOvVWa/view",
+        "folderPath": "BBA/2ND SEM",
+        "driveFileId": "1fJflFHidXbtY9HXr_pznI43RWpkOvVWa"
+      },
+      "source": {
+        "title": "BBHC-205 [OE-282].pdf",
+        "url": "https://drive.google.com/file/d/1fJflFHidXbtY9HXr_pznI43RWpkOvVWa/view",
+        "publisher": "User-provided PYQ collection",
+        "retrievedOn": "2026-10-02",
+        "note": "Original PDF link. University not assigned; question text and exam metadata have not been transcribed or inferred."
+      },
+      "status": "published"
+    },
+    {
+      "id": "pyq-file-8d7b5ca23cb821da5c105c32",
+      "contentType": "source_pdf",
+      "isPYQ": true,
+      "program": "bba",
+      "semester": 3,
+      "subject": "BBHC-303 OE-331",
+      "language": "und",
+      "sourceFile": {
+        "fileName": "BBHC-303 OE-331.pdf",
+        "url": "https://drive.google.com/file/d/1hkAF07yRQNBcFWtUR6o0j6ANxi2IGaCh/view",
+        "folderPath": "BBA/3RD SEM",
+        "driveFileId": "1hkAF07yRQNBcFWtUR6o0j6ANxi2IGaCh"
+      },
+      "source": {
+        "title": "BBHC-303 OE-331.pdf",
+        "url": "https://drive.google.com/file/d/1hkAF07yRQNBcFWtUR6o0j6ANxi2IGaCh/view",
+        "publisher": "User-provided PYQ collection",
+        "retrievedOn": "2026-10-02",
+        "note": "Original PDF link. University not assigned; question text and exam metadata have not been transcribed or inferred."
+      },
+      "status": "published"
+    },
+    {
+      "id": "pyq-file-50e1204d52a01eaa429b947d",
+      "contentType": "source_pdf",
+      "isPYQ": true,
+      "program": "bba",
+      "semester": 3,
+      "subject": "BBHC-304 OE-332",
+      "language": "und",
+      "sourceFile": {
+        "fileName": "BBHC-304 OE-332.pdf",
+        "url": "https://drive.google.com/file/d/1khLa-X95GZSpTmr7p46IaCHVPVwB6CLL/view",
+        "folderPath": "BBA/3RD SEM",
+        "driveFileId": "1khLa-X95GZSpTmr7p46IaCHVPVwB6CLL"
+      },
+      "source": {
+        "title": "BBHC-304 OE-332.pdf",
+        "url": "https://drive.google.com/file/d/1khLa-X95GZSpTmr7p46IaCHVPVwB6CLL/view",
+        "publisher": "User-provided PYQ collection",
+        "retrievedOn": "2026-10-02",
+        "note": "Original PDF link. University not assigned; question text and exam metadata have not been transcribed or inferred."
+      },
+      "status": "published"
+    },
+    {
+      "id": "pyq-file-feab857e1541de780fce8c06",
+      "contentType": "source_pdf",
+      "isPYQ": true,
+      "program": "bba",
+      "semester": 3,
+      "subject": "BBHC-305 [OE-333]",
+      "language": "und",
+      "sourceFile": {
+        "fileName": "BBHC-305 [OE-333].pdf",
+        "url": "https://drive.google.com/file/d/1CWFAbMZCJPsdwGiAT3uX9j-s95L8ETqH/view",
+        "folderPath": "BBA/3RD SEM",
+        "driveFileId": "1CWFAbMZCJPsdwGiAT3uX9j-s95L8ETqH"
+      },
+      "source": {
+        "title": "BBHC-305 [OE-333].pdf",
+        "url": "https://drive.google.com/file/d/1CWFAbMZCJPsdwGiAT3uX9j-s95L8ETqH/view",
+        "publisher": "User-provided PYQ collection",
+        "retrievedOn": "2026-10-02",
+        "note": "Original PDF link. University not assigned; question text and exam metadata have not been transcribed or inferred."
+      },
+      "status": "published"
+    },
+    {
+      "id": "pyq-file-180708e748877e57e3dd4cda",
+      "contentType": "source_pdf",
+      "isPYQ": true,
+      "program": "bba",
+      "semester": 3,
+      "subject": "BEN-06 [OE-329]",
+      "language": "en",
+      "sourceFile": {
+        "fileName": "BEN-06 [OE-329].pdf",
+        "url": "https://drive.google.com/file/d/1TnqIMwvthTPBkSDpRwVAaKqox3dip6wi/view",
+        "folderPath": "BBA/3RD SEM",
+        "driveFileId": "1TnqIMwvthTPBkSDpRwVAaKqox3dip6wi"
+      },
+      "source": {
+        "title": "BEN-06 [OE-329].pdf",
+        "url": "https://drive.google.com/file/d/1TnqIMwvthTPBkSDpRwVAaKqox3dip6wi/view",
+        "publisher": "User-provided PYQ collection",
+        "retrievedOn": "2026-10-02",
+        "note": "Original PDF link. University not assigned; question text and exam metadata have not been transcribed or inferred."
+      },
+      "status": "published"
+    },
+    {
+      "id": "pyq-file-3de9a7f26f912afb9e7bd13b",
+      "contentType": "source_pdf",
+      "isPYQ": true,
+      "program": "bba",
+      "semester": 4,
+      "subject": "BBHC-403 OE-370",
+      "language": "und",
+      "sourceFile": {
+        "fileName": "BBHC-403 OE-370.pdf",
+        "url": "https://drive.google.com/file/d/1NfBR_ZHIlAi_jG1R3KGOneDl8UYtTCy9/view",
+        "folderPath": "BBA/4TH SEM",
+        "driveFileId": "1NfBR_ZHIlAi_jG1R3KGOneDl8UYtTCy9"
+      },
+      "source": {
+        "title": "BBHC-403 OE-370.pdf",
+        "url": "https://drive.google.com/file/d/1NfBR_ZHIlAi_jG1R3KGOneDl8UYtTCy9/view",
+        "publisher": "User-provided PYQ collection",
+        "retrievedOn": "2026-10-02",
+        "note": "Original PDF link. University not assigned; question text and exam metadata have not been transcribed or inferred."
+      },
+      "status": "published"
+    },
+    {
+      "id": "pyq-file-a0c161c9cdca7fa8d2112fab",
+      "contentType": "source_pdf",
+      "isPYQ": true,
+      "program": "bba",
+      "semester": 4,
+      "subject": "BBHC-404 [OE-371]",
+      "language": "und",
+      "sourceFile": {
+        "fileName": "BBHC-404 [OE-371].pdf",
+        "url": "https://drive.google.com/file/d/1Aow76_U2BrbTb40QJWkdDe2VExP6k6G8/view",
+        "folderPath": "BBA/4TH SEM",
+        "driveFileId": "1Aow76_U2BrbTb40QJWkdDe2VExP6k6G8"
+      },
+      "source": {
+        "title": "BBHC-404 [OE-371].pdf",
+        "url": "https://drive.google.com/file/d/1Aow76_U2BrbTb40QJWkdDe2VExP6k6G8/view",
+        "publisher": "User-provided PYQ collection",
+        "retrievedOn": "2026-10-02",
+        "note": "Original PDF link. University not assigned; question text and exam metadata have not been transcribed or inferred."
+      },
+      "status": "published"
+    },
+    {
+      "id": "pyq-file-32c5cf111f069643989e83f1",
+      "contentType": "source_pdf",
+      "isPYQ": true,
+      "program": "bba",
+      "semester": 4,
+      "subject": "BBHC-405 OE-372",
+      "language": "und",
+      "sourceFile": {
+        "fileName": "BBHC-405 OE-372.pdf",
+        "url": "https://drive.google.com/file/d/1AKZR29zw9hsRIEHbA7N_OLMt73uRQNoL/view",
+        "folderPath": "BBA/4TH SEM",
+        "driveFileId": "1AKZR29zw9hsRIEHbA7N_OLMt73uRQNoL"
+      },
+      "source": {
+        "title": "BBHC-405 OE-372.pdf",
+        "url": "https://drive.google.com/file/d/1AKZR29zw9hsRIEHbA7N_OLMt73uRQNoL/view",
+        "publisher": "User-provided PYQ collection",
+        "retrievedOn": "2026-10-02",
+        "note": "Original PDF link. University not assigned; question text and exam metadata have not been transcribed or inferred."
+      },
+      "status": "published"
+    },
+    {
+      "id": "pyq-file-247476f05b8fc8245ba518f0",
+      "contentType": "source_pdf",
+      "isPYQ": true,
+      "program": "bba",
+      "semester": 4,
+      "subject": "BEN-07 [OE-367]",
+      "language": "en",
+      "sourceFile": {
+        "fileName": "BEN-07 [OE-367].pdf",
+        "url": "https://drive.google.com/file/d/1bD9PugO7K83je1pPBL3nVMUl8UBsbc-h/view",
+        "folderPath": "BBA/4TH SEM",
+        "driveFileId": "1bD9PugO7K83je1pPBL3nVMUl8UBsbc-h"
+      },
+      "source": {
+        "title": "BEN-07 [OE-367].pdf",
+        "url": "https://drive.google.com/file/d/1bD9PugO7K83je1pPBL3nVMUl8UBsbc-h/view",
+        "publisher": "User-provided PYQ collection",
+        "retrievedOn": "2026-10-02",
+        "note": "Original PDF link. University not assigned; question text and exam metadata have not been transcribed or inferred."
+      },
+      "status": "published"
+    },
+    {
+      "id": "pyq-file-0d4317cebde2a796580c3b1e",
+      "contentType": "source_pdf",
+      "isPYQ": true,
+      "program": "bba",
+      "semester": 5,
+      "subject": "BBHC-501 OE-424",
+      "language": "und",
+      "sourceFile": {
+        "fileName": "BBHC-501 OE-424.pdf",
+        "url": "https://drive.google.com/file/d/1FLCwm-wl958v39QUADRaccGdLdeYYCEI/view",
+        "folderPath": "BBA/5TH SEM",
+        "driveFileId": "1FLCwm-wl958v39QUADRaccGdLdeYYCEI"
+      },
+      "source": {
+        "title": "BBHC-501 OE-424.pdf",
+        "url": "https://drive.google.com/file/d/1FLCwm-wl958v39QUADRaccGdLdeYYCEI/view",
+        "publisher": "User-provided PYQ collection",
+        "retrievedOn": "2026-10-02",
+        "note": "Original PDF link. University not assigned; question text and exam metadata have not been transcribed or inferred."
+      },
+      "status": "published"
+    },
+    {
+      "id": "pyq-file-a04cd1ae606ea8db8221803f",
+      "contentType": "source_pdf",
+      "isPYQ": true,
+      "program": "bba",
+      "semester": 5,
+      "subject": "BBHC-502 OE-425",
+      "language": "und",
+      "sourceFile": {
+        "fileName": "BBHC-502 OE-425.pdf",
+        "url": "https://drive.google.com/file/d/19YFX6GxRUw6T-QkFAC6Rtn0H6xSdFrWw/view",
+        "folderPath": "BBA/5TH SEM",
+        "driveFileId": "19YFX6GxRUw6T-QkFAC6Rtn0H6xSdFrWw"
+      },
+      "source": {
+        "title": "BBHC-502 OE-425.pdf",
+        "url": "https://drive.google.com/file/d/19YFX6GxRUw6T-QkFAC6Rtn0H6xSdFrWw/view",
+        "publisher": "User-provided PYQ collection",
+        "retrievedOn": "2026-10-02",
+        "note": "Original PDF link. University not assigned; question text and exam metadata have not been transcribed or inferred."
+      },
+      "status": "published"
+    },
+    {
+      "id": "pyq-file-d1ba6456fa2c43aac5bcfc81",
+      "contentType": "source_pdf",
+      "isPYQ": true,
+      "program": "bba",
+      "semester": 5,
+      "subject": "BBHC-503 OE-426",
+      "language": "und",
+      "sourceFile": {
+        "fileName": "BBHC-503 OE-426.pdf",
+        "url": "https://drive.google.com/file/d/1m6zw6aDEddwi4_0iT8k9Ol5bcRBmQRcK/view",
+        "folderPath": "BBA/5TH SEM",
+        "driveFileId": "1m6zw6aDEddwi4_0iT8k9Ol5bcRBmQRcK"
+      },
+      "source": {
+        "title": "BBHC-503 OE-426.pdf",
+        "url": "https://drive.google.com/file/d/1m6zw6aDEddwi4_0iT8k9Ol5bcRBmQRcK/view",
+        "publisher": "User-provided PYQ collection",
+        "retrievedOn": "2026-10-02",
+        "note": "Original PDF link. University not assigned; question text and exam metadata have not been transcribed or inferred."
+      },
+      "status": "published"
+    },
+    {
+      "id": "pyq-file-c63025d4e861269ee674fd90",
+      "contentType": "source_pdf",
+      "isPYQ": true,
+      "program": "bba",
+      "semester": 5,
+      "subject": "BBHC-504 [OE-427]",
+      "language": "und",
+      "sourceFile": {
+        "fileName": "BBHC-504 [OE-427].pdf",
+        "url": "https://drive.google.com/file/d/1eQchED_9g0r56je6A3N4N9ojqOJPwtIx/view",
+        "folderPath": "BBA/5TH SEM",
+        "driveFileId": "1eQchED_9g0r56je6A3N4N9ojqOJPwtIx"
+      },
+      "source": {
+        "title": "BBHC-504 [OE-427].pdf",
+        "url": "https://drive.google.com/file/d/1eQchED_9g0r56je6A3N4N9ojqOJPwtIx/view",
+        "publisher": "User-provided PYQ collection",
+        "retrievedOn": "2026-10-02",
+        "note": "Original PDF link. University not assigned; question text and exam metadata have not been transcribed or inferred."
+      },
+      "status": "published"
+    },
+    {
+      "id": "pyq-file-eba9f937205ab0c3b0b49500",
+      "contentType": "source_pdf",
+      "isPYQ": true,
+      "program": "bba",
+      "semester": 5,
+      "subject": "BBSC-505F OE-428",
+      "language": "und",
+      "sourceFile": {
+        "fileName": "BBSC-505F OE-428.pdf",
+        "url": "https://drive.google.com/file/d/1IuR8i4VJHJO7Hlo6ylYpmnMM6SSE5Ier/view",
+        "folderPath": "BBA/5TH SEM",
+        "driveFileId": "1IuR8i4VJHJO7Hlo6ylYpmnMM6SSE5Ier"
+      },
+      "source": {
+        "title": "BBSC-505F OE-428.pdf",
+        "url": "https://drive.google.com/file/d/1IuR8i4VJHJO7Hlo6ylYpmnMM6SSE5Ier/view",
+        "publisher": "User-provided PYQ collection",
+        "retrievedOn": "2026-10-02",
+        "note": "Original PDF link. University not assigned; question text and exam metadata have not been transcribed or inferred."
+      },
+      "status": "published"
+    },
+    {
+      "id": "pyq-file-771ee56707c6064b43fcac90",
+      "contentType": "source_pdf",
+      "isPYQ": true,
+      "program": "bba",
+      "semester": 5,
+      "subject": "BBSC-505M OE-429",
+      "language": "und",
+      "sourceFile": {
+        "fileName": "BBSC-505M OE-429.pdf",
+        "url": "https://drive.google.com/file/d/1c9CNg66kkVIr3gcn2ytKITVx_DHm6mfM/view",
+        "folderPath": "BBA/5TH SEM",
+        "driveFileId": "1c9CNg66kkVIr3gcn2ytKITVx_DHm6mfM"
+      },
+      "source": {
+        "title": "BBSC-505M OE-429.pdf",
+        "url": "https://drive.google.com/file/d/1c9CNg66kkVIr3gcn2ytKITVx_DHm6mfM/view",
+        "publisher": "User-provided PYQ collection",
+        "retrievedOn": "2026-10-02",
+        "note": "Original PDF link. University not assigned; question text and exam metadata have not been transcribed or inferred."
+      },
+      "status": "published"
+    },
+    {
+      "id": "pyq-file-2def98ad75b8983f1dc0c520",
+      "contentType": "source_pdf",
+      "isPYQ": true,
+      "program": "bba",
+      "semester": 5,
+      "subject": "BBSC-506H OE-430",
+      "language": "und",
+      "sourceFile": {
+        "fileName": "BBSC-506H OE-430.pdf",
+        "url": "https://drive.google.com/file/d/14RsQinrpfOpOzq8rXBO2HjbDRvBRFgO_/view",
+        "folderPath": "BBA/5TH SEM",
+        "driveFileId": "14RsQinrpfOpOzq8rXBO2HjbDRvBRFgO_"
+      },
+      "source": {
+        "title": "BBSC-506H OE-430.pdf",
+        "url": "https://drive.google.com/file/d/14RsQinrpfOpOzq8rXBO2HjbDRvBRFgO_/view",
+        "publisher": "User-provided PYQ collection",
+        "retrievedOn": "2026-10-02",
+        "note": "Original PDF link. University not assigned; question text and exam metadata have not been transcribed or inferred."
+      },
+      "status": "published"
+    },
+    {
+      "id": "pyq-file-e7115e84e6f67d40525f5c88",
+      "contentType": "source_pdf",
+      "isPYQ": true,
+      "program": "bba",
+      "semester": 6,
+      "subject": "BBHC-601 OE-482",
+      "language": "und",
+      "sourceFile": {
+        "fileName": "BBHC-601 OE-482.pdf",
+        "url": "https://drive.google.com/file/d/13p217EdPK63XyYwoHJWe5RT0723cDvTI/view",
+        "folderPath": "BBA/6TH SEM",
+        "driveFileId": "13p217EdPK63XyYwoHJWe5RT0723cDvTI"
+      },
+      "source": {
+        "title": "BBHC-601 OE-482.pdf",
+        "url": "https://drive.google.com/file/d/13p217EdPK63XyYwoHJWe5RT0723cDvTI/view",
+        "publisher": "User-provided PYQ collection",
+        "retrievedOn": "2026-10-02",
+        "note": "Original PDF link. University not assigned; question text and exam metadata have not been transcribed or inferred."
+      },
+      "status": "published"
+    },
+    {
+      "id": "pyq-file-f3e44b6cc6c862fea54dfc6b",
+      "contentType": "source_pdf",
+      "isPYQ": true,
+      "program": "bba",
+      "semester": 6,
+      "subject": "BBHC-602 OE-483",
+      "language": "und",
+      "sourceFile": {
+        "fileName": "BBHC-602 OE-483.pdf",
+        "url": "https://drive.google.com/file/d/173e6_-hf6EzUGuI2RTilA-BE6gnyWYGh/view",
+        "folderPath": "BBA/6TH SEM",
+        "driveFileId": "173e6_-hf6EzUGuI2RTilA-BE6gnyWYGh"
+      },
+      "source": {
+        "title": "BBHC-602 OE-483.pdf",
+        "url": "https://drive.google.com/file/d/173e6_-hf6EzUGuI2RTilA-BE6gnyWYGh/view",
+        "publisher": "User-provided PYQ collection",
+        "retrievedOn": "2026-10-02",
+        "note": "Original PDF link. University not assigned; question text and exam metadata have not been transcribed or inferred."
+      },
+      "status": "published"
+    },
+    {
+      "id": "pyq-file-a3d0d07dee5cf6669f8d5480",
+      "contentType": "source_pdf",
+      "isPYQ": true,
+      "program": "bba",
+      "semester": 6,
+      "subject": "BBHC-603 OE-484",
+      "language": "und",
+      "sourceFile": {
+        "fileName": "BBHC-603 OE-484.pdf",
+        "url": "https://drive.google.com/file/d/1Neq3YpxgYOaFpKrIc0-GofgUFh09hTMK/view",
+        "folderPath": "BBA/6TH SEM",
+        "driveFileId": "1Neq3YpxgYOaFpKrIc0-GofgUFh09hTMK"
+      },
+      "source": {
+        "title": "BBHC-603 OE-484.pdf",
+        "url": "https://drive.google.com/file/d/1Neq3YpxgYOaFpKrIc0-GofgUFh09hTMK/view",
+        "publisher": "User-provided PYQ collection",
+        "retrievedOn": "2026-10-02",
+        "note": "Original PDF link. University not assigned; question text and exam metadata have not been transcribed or inferred."
+      },
+      "status": "published"
+    },
+    {
+      "id": "pyq-file-c20dfad6a4f58325df6d1336",
+      "contentType": "source_pdf",
+      "isPYQ": true,
+      "program": "bba",
+      "semester": 6,
+      "subject": "BBHC-604 OE-485",
+      "language": "und",
+      "sourceFile": {
+        "fileName": "BBHC-604 OE-485.pdf",
+        "url": "https://drive.google.com/file/d/1ByOP_VF5y4iwwQSZ9dTZJgE2sUCK9K2b/view",
+        "folderPath": "BBA/6TH SEM",
+        "driveFileId": "1ByOP_VF5y4iwwQSZ9dTZJgE2sUCK9K2b"
+      },
+      "source": {
+        "title": "BBHC-604 OE-485.pdf",
+        "url": "https://drive.google.com/file/d/1ByOP_VF5y4iwwQSZ9dTZJgE2sUCK9K2b/view",
+        "publisher": "User-provided PYQ collection",
+        "retrievedOn": "2026-10-02",
+        "note": "Original PDF link. University not assigned; question text and exam metadata have not been transcribed or inferred."
+      },
+      "status": "published"
+    },
+    {
+      "id": "pyq-file-3823075ab57db416202dbcd1",
+      "contentType": "source_pdf",
+      "isPYQ": true,
+      "program": "bba",
+      "semester": 6,
+      "subject": "BBHC-604F [OE-486]",
+      "language": "und",
+      "sourceFile": {
+        "fileName": "BBHC-604F [OE-486].pdf",
+        "url": "https://drive.google.com/file/d/1lm5gRsRlR4WALC2p-FkCcTztuxKDcxQn/view",
+        "folderPath": "BBA/6TH SEM",
+        "driveFileId": "1lm5gRsRlR4WALC2p-FkCcTztuxKDcxQn"
+      },
+      "source": {
+        "title": "BBHC-604F [OE-486].pdf",
+        "url": "https://drive.google.com/file/d/1lm5gRsRlR4WALC2p-FkCcTztuxKDcxQn/view",
+        "publisher": "User-provided PYQ collection",
+        "retrievedOn": "2026-10-02",
+        "note": "Original PDF link. University not assigned; question text and exam metadata have not been transcribed or inferred."
+      },
+      "status": "published"
+    },
+    {
+      "id": "pyq-file-0be259c2c4501ad5b184bc45",
+      "contentType": "source_pdf",
+      "isPYQ": true,
+      "program": "languages",
+      "semester": 1,
+      "subject": "English — BEN-04 [OE-216]",
+      "language": "en",
+      "sourceFile": {
+        "fileName": "BEN-04 [OE-216].pdf",
+        "url": "https://drive.google.com/file/d/1iD9exTLqcBmMbdgFZpZ0V9r9RmW-cOtM/view",
+        "folderPath": "LANGUAGES/1ST SEM",
+        "driveFileId": "1iD9exTLqcBmMbdgFZpZ0V9r9RmW-cOtM"
+      },
+      "source": {
+        "title": "BEN-04 [OE-216].pdf",
+        "url": "https://drive.google.com/file/d/1iD9exTLqcBmMbdgFZpZ0V9r9RmW-cOtM/view",
+        "publisher": "User-provided PYQ collection",
+        "retrievedOn": "2026-10-02",
+        "note": "Original PDF link. University not assigned; question text and exam metadata have not been transcribed or inferred."
+      },
+      "status": "published"
+    },
+    {
+      "id": "pyq-file-038e8353648086513d81a450",
+      "contentType": "source_pdf",
+      "isPYQ": true,
+      "program": "languages",
+      "semester": 1,
+      "subject": "Kannada — BKN-04 OE-215",
+      "language": "kn",
+      "sourceFile": {
+        "fileName": "BKN-04 OE-215.pdf",
+        "url": "https://drive.google.com/file/d/1VuHCgKswoHF9PlXI-HmAHqKS328StAA3/view",
+        "folderPath": "LANGUAGES/1ST SEM",
+        "driveFileId": "1VuHCgKswoHF9PlXI-HmAHqKS328StAA3"
+      },
+      "source": {
+        "title": "BKN-04 OE-215.pdf",
+        "url": "https://drive.google.com/file/d/1VuHCgKswoHF9PlXI-HmAHqKS328StAA3/view",
+        "publisher": "User-provided PYQ collection",
+        "retrievedOn": "2026-10-02",
+        "note": "Original PDF link. University not assigned; question text and exam metadata have not been transcribed or inferred."
+      },
+      "status": "published"
+    },
+    {
+      "id": "pyq-file-161e9b16c9e66c54a815c30d",
+      "contentType": "source_pdf",
+      "isPYQ": true,
+      "program": "languages",
+      "semester": 2,
+      "subject": "English — BEN-05 [OE-260]",
+      "language": "en",
+      "sourceFile": {
+        "fileName": "BEN-05 [OE-260].pdf",
+        "url": "https://drive.google.com/file/d/1kapleCqMvaKUwr2FKoWSCfAI-ANd1UJI/view",
+        "folderPath": "LANGUAGES/2ND SEM",
+        "driveFileId": "1kapleCqMvaKUwr2FKoWSCfAI-ANd1UJI"
+      },
+      "source": {
+        "title": "BEN-05 [OE-260].pdf",
+        "url": "https://drive.google.com/file/d/1kapleCqMvaKUwr2FKoWSCfAI-ANd1UJI/view",
+        "publisher": "User-provided PYQ collection",
+        "retrievedOn": "2026-10-02",
+        "note": "Original PDF link. University not assigned; question text and exam metadata have not been transcribed or inferred."
+      },
+      "status": "published"
+    },
+    {
+      "id": "pyq-file-686753692e70acfe06add73a",
+      "contentType": "source_pdf",
+      "isPYQ": true,
+      "program": "languages",
+      "semester": 2,
+      "subject": "Kannada — BKN-05 OE-259",
+      "language": "kn",
+      "sourceFile": {
+        "fileName": "BKN-05 OE-259.pdf",
+        "url": "https://drive.google.com/file/d/1U07bL1Bdzfn1ajE1E2i1GPO2OaDVdTTy/view",
+        "folderPath": "LANGUAGES/2ND SEM",
+        "driveFileId": "1U07bL1Bdzfn1ajE1E2i1GPO2OaDVdTTy"
+      },
+      "source": {
+        "title": "BKN-05 OE-259.pdf",
+        "url": "https://drive.google.com/file/d/1U07bL1Bdzfn1ajE1E2i1GPO2OaDVdTTy/view",
+        "publisher": "User-provided PYQ collection",
+        "retrievedOn": "2026-10-02",
+        "note": "Original PDF link. University not assigned; question text and exam metadata have not been transcribed or inferred."
+      },
+      "status": "published"
+    },
+    {
+      "id": "pyq-file-05550666cc07aff4fdcbd683",
+      "contentType": "source_pdf",
+      "isPYQ": true,
+      "program": "languages",
+      "semester": 3,
+      "subject": "English — BEN-06 OE-304",
+      "language": "en",
+      "sourceFile": {
+        "fileName": "BEN-06 OE-304.pdf",
+        "url": "https://drive.google.com/file/d/12UU3_Yij8ef64fIWgTfoM38X8NE01haR/view",
+        "folderPath": "LANGUAGES/3RD SEM",
+        "driveFileId": "12UU3_Yij8ef64fIWgTfoM38X8NE01haR"
+      },
+      "source": {
+        "title": "BEN-06 OE-304.pdf",
+        "url": "https://drive.google.com/file/d/12UU3_Yij8ef64fIWgTfoM38X8NE01haR/view",
+        "publisher": "User-provided PYQ collection",
+        "retrievedOn": "2026-10-02",
+        "note": "Original PDF link. University not assigned; question text and exam metadata have not been transcribed or inferred."
+      },
+      "status": "published"
+    },
+    {
+      "id": "pyq-file-6e147abb7ebc95cc09a3f587",
+      "contentType": "source_pdf",
+      "isPYQ": true,
+      "program": "languages",
+      "semester": 3,
+      "subject": "Kannada — BKN-06 OE-303",
+      "language": "kn",
+      "sourceFile": {
+        "fileName": "BKN-06 OE-303.pdf",
+        "url": "https://drive.google.com/file/d/1N__CvhyBzEBnHMQFxBMeKQx0I4IWMcT3/view",
+        "folderPath": "LANGUAGES/3RD SEM",
+        "driveFileId": "1N__CvhyBzEBnHMQFxBMeKQx0I4IWMcT3"
+      },
+      "source": {
+        "title": "BKN-06 OE-303.pdf",
+        "url": "https://drive.google.com/file/d/1N__CvhyBzEBnHMQFxBMeKQx0I4IWMcT3/view",
+        "publisher": "User-provided PYQ collection",
+        "retrievedOn": "2026-10-02",
+        "note": "Original PDF link. University not assigned; question text and exam metadata have not been transcribed or inferred."
+      },
+      "status": "published"
+    },
+    {
+      "id": "pyq-file-e46d9632a6e17d2c92615358",
+      "contentType": "source_pdf",
+      "isPYQ": true,
+      "program": "languages",
+      "semester": 3,
+      "subject": "Kannada — BKN-06 OE-328",
+      "language": "kn",
+      "sourceFile": {
+        "fileName": "BKN-06 OE-328.pdf",
+        "url": "https://drive.google.com/file/d/1ZrpCo8es2dfFSsudwYpX0jmx5Gqwm5qR/view",
+        "folderPath": "LANGUAGES/3RD SEM",
+        "driveFileId": "1ZrpCo8es2dfFSsudwYpX0jmx5Gqwm5qR"
+      },
+      "source": {
+        "title": "BKN-06 OE-328.pdf",
+        "url": "https://drive.google.com/file/d/1ZrpCo8es2dfFSsudwYpX0jmx5Gqwm5qR/view",
+        "publisher": "User-provided PYQ collection",
+        "retrievedOn": "2026-10-02",
+        "note": "Original PDF link. University not assigned; question text and exam metadata have not been transcribed or inferred."
+      },
+      "status": "published"
+    },
+    {
+      "id": "pyq-file-cd3df173f8c5639f8981c48c",
+      "contentType": "source_pdf",
+      "isPYQ": true,
+      "program": "languages",
+      "semester": 4,
+      "subject": "English — BEN-07 [OE-344]",
+      "language": "en",
+      "sourceFile": {
+        "fileName": "BEN-07 [OE-344].pdf",
+        "url": "https://drive.google.com/file/d/1S2KAe1SdKaV6I-LvrwjHuugT3Epmy9br/view",
+        "folderPath": "LANGUAGES/4TH SEM",
+        "driveFileId": "1S2KAe1SdKaV6I-LvrwjHuugT3Epmy9br"
+      },
+      "source": {
+        "title": "BEN-07 [OE-344].pdf",
+        "url": "https://drive.google.com/file/d/1S2KAe1SdKaV6I-LvrwjHuugT3Epmy9br/view",
+        "publisher": "User-provided PYQ collection",
+        "retrievedOn": "2026-10-02",
+        "note": "Original PDF link. University not assigned; question text and exam metadata have not been transcribed or inferred."
+      },
+      "status": "published"
+    },
+    {
+      "id": "pyq-file-64a46ca689ef119f1ea09c24",
+      "contentType": "source_pdf",
+      "isPYQ": true,
+      "program": "languages",
+      "semester": 4,
+      "subject": "Kannada — BKN-07 OE-343",
+      "language": "kn",
+      "sourceFile": {
+        "fileName": "BKN-07 OE-343.pdf",
+        "url": "https://drive.google.com/file/d/1dnDrxz0Y2uFdwhWn5HssTdV9V-wEeg1d/view",
+        "folderPath": "LANGUAGES/4TH SEM",
+        "driveFileId": "1dnDrxz0Y2uFdwhWn5HssTdV9V-wEeg1d"
+      },
+      "source": {
+        "title": "BKN-07 OE-343.pdf",
+        "url": "https://drive.google.com/file/d/1dnDrxz0Y2uFdwhWn5HssTdV9V-wEeg1d/view",
+        "publisher": "User-provided PYQ collection",
+        "retrievedOn": "2026-10-02",
+        "note": "Original PDF link. University not assigned; question text and exam metadata have not been transcribed or inferred."
+      },
+      "status": "published"
+    },
+    {
+      "id": "pyq-file-3bfb4cad59d2000c66a9be16",
+      "contentType": "source_pdf",
+      "isPYQ": true,
+      "program": "languages",
+      "semester": 4,
+      "subject": "Kannada — BKN-07 OE-366",
+      "language": "kn",
+      "sourceFile": {
+        "fileName": "BKN-07 OE-366.pdf",
+        "url": "https://drive.google.com/file/d/1jvXv6fDEaC3QT3EFeXqre814k2jkgq7g/view",
+        "folderPath": "LANGUAGES/4TH SEM",
+        "driveFileId": "1jvXv6fDEaC3QT3EFeXqre814k2jkgq7g"
+      },
+      "source": {
+        "title": "BKN-07 OE-366.pdf",
+        "url": "https://drive.google.com/file/d/1jvXv6fDEaC3QT3EFeXqre814k2jkgq7g/view",
+        "publisher": "User-provided PYQ collection",
+        "retrievedOn": "2026-10-02",
+        "note": "Original PDF link. University not assigned; question text and exam metadata have not been transcribed or inferred."
+      },
+      "status": "published"
+    },
+    {
+      "id": "pyq-file-d68bee4a9c9320a53b413f8b",
+      "contentType": "source_pdf",
+      "isPYQ": true,
+      "program": "bsw",
+      "semester": 1,
+      "subject": "AMC-106A OE-221",
+      "language": "und",
+      "sourceFile": {
+        "fileName": "AMC-106A OE-221.pdf",
+        "url": "https://drive.google.com/file/d/1AIbfzh8UDjzPOXw4LSlxBpfPwg2ABqr3/view",
+        "folderPath": "BSW/1ST SEM",
+        "driveFileId": "1AIbfzh8UDjzPOXw4LSlxBpfPwg2ABqr3"
+      },
+      "source": {
+        "title": "AMC-106A OE-221.pdf",
+        "url": "https://drive.google.com/file/d/1AIbfzh8UDjzPOXw4LSlxBpfPwg2ABqr3/view",
+        "publisher": "User-provided PYQ collection",
+        "retrievedOn": "2026-10-02",
+        "note": "Original PDF link. University not assigned; question text and exam metadata have not been transcribed or inferred."
+      },
+      "status": "published"
+    },
+    {
+      "id": "pyq-file-809604afa032c7b5fed536b4",
+      "contentType": "source_pdf",
+      "isPYQ": true,
+      "program": "bsw",
+      "semester": 1,
+      "subject": "BSWCP-3 OE-241",
+      "language": "und",
+      "sourceFile": {
+        "fileName": "BSWCP-3 OE-241.pdf",
+        "url": "https://drive.google.com/file/d/17LbVGq-Ba70edM5ED_Hp7eSaQ_d3CRAB/view",
+        "folderPath": "BSW/1ST SEM",
+        "driveFileId": "17LbVGq-Ba70edM5ED_Hp7eSaQ_d3CRAB"
+      },
+      "source": {
+        "title": "BSWCP-3 OE-241.pdf",
+        "url": "https://drive.google.com/file/d/17LbVGq-Ba70edM5ED_Hp7eSaQ_d3CRAB/view",
+        "publisher": "User-provided PYQ collection",
+        "retrievedOn": "2026-10-02",
+        "note": "Original PDF link. University not assigned; question text and exam metadata have not been transcribed or inferred."
+      },
+      "status": "published"
+    },
+    {
+      "id": "pyq-file-c6a4e5accd07564f7134d920",
+      "contentType": "source_pdf",
+      "isPYQ": true,
+      "program": "bsw",
+      "semester": 1,
+      "subject": "BSWDSC-1.1 OE-242",
+      "language": "und",
+      "sourceFile": {
+        "fileName": "BSWDSC-1.1 OE-242.pdf",
+        "url": "https://drive.google.com/file/d/1-oViVzp86-s24rcCr5r22_7hmH9TwP8E/view",
+        "folderPath": "BSW/1ST SEM",
+        "driveFileId": "1-oViVzp86-s24rcCr5r22_7hmH9TwP8E"
+      },
+      "source": {
+        "title": "BSWDSC-1.1 OE-242.pdf",
+        "url": "https://drive.google.com/file/d/1-oViVzp86-s24rcCr5r22_7hmH9TwP8E/view",
+        "publisher": "User-provided PYQ collection",
+        "retrievedOn": "2026-10-02",
+        "note": "Original PDF link. University not assigned; question text and exam metadata have not been transcribed or inferred."
+      },
+      "status": "published"
+    },
+    {
+      "id": "pyq-file-5f6fbadda4ce8bfbdebd863c",
+      "contentType": "source_pdf",
+      "isPYQ": true,
+      "program": "bsw",
+      "semester": 1,
+      "subject": "BSWDSC-1.2 OE-243",
+      "language": "und",
+      "sourceFile": {
+        "fileName": "BSWDSC-1.2 OE-243.pdf",
+        "url": "https://drive.google.com/file/d/12aC9wXsO7Tt2MxPAuGjElGxZyCIu2-d7/view",
+        "folderPath": "BSW/1ST SEM",
+        "driveFileId": "12aC9wXsO7Tt2MxPAuGjElGxZyCIu2-d7"
+      },
+      "source": {
+        "title": "BSWDSC-1.2 OE-243.pdf",
+        "url": "https://drive.google.com/file/d/12aC9wXsO7Tt2MxPAuGjElGxZyCIu2-d7/view",
+        "publisher": "User-provided PYQ collection",
+        "retrievedOn": "2026-10-02",
+        "note": "Original PDF link. University not assigned; question text and exam metadata have not been transcribed or inferred."
+      },
+      "status": "published"
+    },
+    {
+      "id": "pyq-file-dc00dc48584575bdc448b89f",
+      "contentType": "source_pdf",
+      "isPYQ": true,
+      "program": "bsw",
+      "semester": 1,
+      "subject": "BSWDSE-1.3A OE-244",
+      "language": "und",
+      "sourceFile": {
+        "fileName": "BSWDSE-1.3A OE-244.pdf",
+        "url": "https://drive.google.com/file/d/1gwsJM7InzXq8Ia9J035GLBldv2pP1K6K/view",
+        "folderPath": "BSW/1ST SEM",
+        "driveFileId": "1gwsJM7InzXq8Ia9J035GLBldv2pP1K6K"
+      },
+      "source": {
+        "title": "BSWDSE-1.3A OE-244.pdf",
+        "url": "https://drive.google.com/file/d/1gwsJM7InzXq8Ia9J035GLBldv2pP1K6K/view",
+        "publisher": "User-provided PYQ collection",
+        "retrievedOn": "2026-10-02",
+        "note": "Original PDF link. University not assigned; question text and exam metadata have not been transcribed or inferred."
+      },
+      "status": "published"
+    },
+    {
+      "id": "pyq-file-235816725c27a7c501164a28",
+      "contentType": "source_pdf",
+      "isPYQ": true,
+      "program": "bsw",
+      "semester": 1,
+      "subject": "BSWDSE-1.3B OE-245",
+      "language": "und",
+      "sourceFile": {
+        "fileName": "BSWDSE-1.3B OE-245.pdf",
+        "url": "https://drive.google.com/file/d/18v3MaDDGFForgrbTU7vLebsOnkD-0Hdb/view",
+        "folderPath": "BSW/1ST SEM",
+        "driveFileId": "18v3MaDDGFForgrbTU7vLebsOnkD-0Hdb"
+      },
+      "source": {
+        "title": "BSWDSE-1.3B OE-245.pdf",
+        "url": "https://drive.google.com/file/d/18v3MaDDGFForgrbTU7vLebsOnkD-0Hdb/view",
+        "publisher": "User-provided PYQ collection",
+        "retrievedOn": "2026-10-02",
+        "note": "Original PDF link. University not assigned; question text and exam metadata have not been transcribed or inferred."
+      },
+      "status": "published"
+    },
+    {
+      "id": "pyq-file-cff6e7082f99fb729a5e0946",
+      "contentType": "source_pdf",
+      "isPYQ": true,
+      "program": "bsw",
+      "semester": 2,
+      "subject": "BSWDSC-2.1 OE-285",
+      "language": "und",
+      "sourceFile": {
+        "fileName": "BSWDSC-2.1 OE-285.pdf",
+        "url": "https://drive.google.com/file/d/1nRGN7cqG-CN7kDCn6824sLeEHqK-miDk/view",
+        "folderPath": "BSW/2ND SEM",
+        "driveFileId": "1nRGN7cqG-CN7kDCn6824sLeEHqK-miDk"
+      },
+      "source": {
+        "title": "BSWDSC-2.1 OE-285.pdf",
+        "url": "https://drive.google.com/file/d/1nRGN7cqG-CN7kDCn6824sLeEHqK-miDk/view",
+        "publisher": "User-provided PYQ collection",
+        "retrievedOn": "2026-10-02",
+        "note": "Original PDF link. University not assigned; question text and exam metadata have not been transcribed or inferred."
+      },
+      "status": "published"
+    },
+    {
+      "id": "pyq-file-7f8274182386c5afe1971983",
+      "contentType": "source_pdf",
+      "isPYQ": true,
+      "program": "bsw",
+      "semester": 2,
+      "subject": "BSWDSC-2.2 OE-286",
+      "language": "und",
+      "sourceFile": {
+        "fileName": "BSWDSC-2.2 OE-286.pdf",
+        "url": "https://drive.google.com/file/d/1EBcmJQcS-7zuDC1YB7ImgzTzE8gDFw-d/view",
+        "folderPath": "BSW/2ND SEM",
+        "driveFileId": "1EBcmJQcS-7zuDC1YB7ImgzTzE8gDFw-d"
+      },
+      "source": {
+        "title": "BSWDSC-2.2 OE-286.pdf",
+        "url": "https://drive.google.com/file/d/1EBcmJQcS-7zuDC1YB7ImgzTzE8gDFw-d/view",
+        "publisher": "User-provided PYQ collection",
+        "retrievedOn": "2026-10-02",
+        "note": "Original PDF link. University not assigned; question text and exam metadata have not been transcribed or inferred."
+      },
+      "status": "published"
+    },
+    {
+      "id": "pyq-file-bea32d626751048cd3c2baaf",
+      "contentType": "source_pdf",
+      "isPYQ": true,
+      "program": "bsw",
+      "semester": 2,
+      "subject": "BSWDSC-2.5 (OE-289)",
+      "language": "und",
+      "sourceFile": {
+        "fileName": "BSWDSC-2.5 (OE-289).pdf",
+        "url": "https://drive.google.com/file/d/1fOfbjNYfGHT89mED-VrqYwuqGWXX7aID/view",
+        "folderPath": "BSW/2ND SEM",
+        "driveFileId": "1fOfbjNYfGHT89mED-VrqYwuqGWXX7aID"
+      },
+      "source": {
+        "title": "BSWDSC-2.5 (OE-289).pdf",
+        "url": "https://drive.google.com/file/d/1fOfbjNYfGHT89mED-VrqYwuqGWXX7aID/view",
+        "publisher": "User-provided PYQ collection",
+        "retrievedOn": "2026-10-02",
+        "note": "Original PDF link. University not assigned; question text and exam metadata have not been transcribed or inferred."
+      },
+      "status": "published"
+    },
+    {
+      "id": "pyq-file-9b0ba7d1fccb1e80e23e0496",
+      "contentType": "source_pdf",
+      "isPYQ": true,
+      "program": "bsw",
+      "semester": 2,
+      "subject": "BSWDSC-2.5 OE-289",
+      "language": "und",
+      "sourceFile": {
+        "fileName": "BSWDSC-2.5 OE-289.pdf",
+        "url": "https://drive.google.com/file/d/1eMvraTxgEqGNW_MhFxplx0wzAFTdhtui/view",
+        "folderPath": "BSW/2ND SEM",
+        "driveFileId": "1eMvraTxgEqGNW_MhFxplx0wzAFTdhtui"
+      },
+      "source": {
+        "title": "BSWDSC-2.5 OE-289.pdf",
+        "url": "https://drive.google.com/file/d/1eMvraTxgEqGNW_MhFxplx0wzAFTdhtui/view",
+        "publisher": "User-provided PYQ collection",
+        "retrievedOn": "2026-10-02",
+        "note": "Original PDF link. University not assigned; question text and exam metadata have not been transcribed or inferred."
+      },
+      "status": "published"
+    },
+    {
+      "id": "pyq-file-bd76f3515d3de817e1179690",
+      "contentType": "source_pdf",
+      "isPYQ": true,
+      "program": "bsw",
+      "semester": 2,
+      "subject": "BSWDSE-2.3(A) OE-287",
+      "language": "und",
+      "sourceFile": {
+        "fileName": "BSWDSE-2.3(A) OE-287.pdf",
+        "url": "https://drive.google.com/file/d/1hrq89KjWnCudEalJGJ4CbBZeOqRmpxgJ/view",
+        "folderPath": "BSW/2ND SEM",
+        "driveFileId": "1hrq89KjWnCudEalJGJ4CbBZeOqRmpxgJ"
+      },
+      "source": {
+        "title": "BSWDSE-2.3(A) OE-287.pdf",
+        "url": "https://drive.google.com/file/d/1hrq89KjWnCudEalJGJ4CbBZeOqRmpxgJ/view",
+        "publisher": "User-provided PYQ collection",
+        "retrievedOn": "2026-10-02",
+        "note": "Original PDF link. University not assigned; question text and exam metadata have not been transcribed or inferred."
+      },
+      "status": "published"
+    },
+    {
+      "id": "pyq-file-6d763a75a7299ecbc56db23c",
+      "contentType": "source_pdf",
+      "isPYQ": true,
+      "program": "bsw",
+      "semester": 2,
+      "subject": "BSWDSE-2.3(B) OE-288",
+      "language": "und",
+      "sourceFile": {
+        "fileName": "BSWDSE-2.3(B) OE-288.pdf",
+        "url": "https://drive.google.com/file/d/1O8rxERXBf6C9GRi59fT9WbtjNgulKMYT/view",
+        "folderPath": "BSW/2ND SEM",
+        "driveFileId": "1O8rxERXBf6C9GRi59fT9WbtjNgulKMYT"
+      },
+      "source": {
+        "title": "BSWDSE-2.3(B) OE-288.pdf",
+        "url": "https://drive.google.com/file/d/1O8rxERXBf6C9GRi59fT9WbtjNgulKMYT/view",
+        "publisher": "User-provided PYQ collection",
+        "retrievedOn": "2026-10-02",
+        "note": "Original PDF link. University not assigned; question text and exam metadata have not been transcribed or inferred."
+      },
+      "status": "published"
+    },
+    {
+      "id": "pyq-file-ab3206df2cc26f0e612cf779",
+      "contentType": "source_pdf",
+      "isPYQ": true,
+      "program": "bsw",
+      "semester": 3,
+      "subject": "BSWDSC-3.1 OE-342",
+      "language": "und",
+      "sourceFile": {
+        "fileName": "BSWDSC-3.1 OE-342.pdf",
+        "url": "https://drive.google.com/file/d/1wZ47swwREjVM7xXCkmIHyZyTgeFPBNuq/view",
+        "folderPath": "BSW/3RD SEM",
+        "driveFileId": "1wZ47swwREjVM7xXCkmIHyZyTgeFPBNuq"
+      },
+      "source": {
+        "title": "BSWDSC-3.1 OE-342.pdf",
+        "url": "https://drive.google.com/file/d/1wZ47swwREjVM7xXCkmIHyZyTgeFPBNuq/view",
+        "publisher": "User-provided PYQ collection",
+        "retrievedOn": "2026-10-02",
+        "note": "Original PDF link. University not assigned; question text and exam metadata have not been transcribed or inferred."
+      },
+      "status": "published"
+    },
+    {
+      "id": "pyq-file-fc7a63408ae974e9b158a317",
+      "contentType": "source_pdf",
+      "isPYQ": true,
+      "program": "bsw",
+      "semester": 3,
+      "subject": "BSWDSC-3.2 OE-338",
+      "language": "und",
+      "sourceFile": {
+        "fileName": "BSWDSC-3.2 OE-338.pdf",
+        "url": "https://drive.google.com/file/d/1owWWvpwAfoTBnIg1mJQX_-p8uIhoUVzr/view",
+        "folderPath": "BSW/3RD SEM",
+        "driveFileId": "1owWWvpwAfoTBnIg1mJQX_-p8uIhoUVzr"
+      },
+      "source": {
+        "title": "BSWDSC-3.2 OE-338.pdf",
+        "url": "https://drive.google.com/file/d/1owWWvpwAfoTBnIg1mJQX_-p8uIhoUVzr/view",
+        "publisher": "User-provided PYQ collection",
+        "retrievedOn": "2026-10-02",
+        "note": "Original PDF link. University not assigned; question text and exam metadata have not been transcribed or inferred."
+      },
+      "status": "published"
+    },
+    {
+      "id": "pyq-file-f9e8f7849e16fdbbd8c28b59",
+      "contentType": "source_pdf",
+      "isPYQ": true,
+      "program": "bsw",
+      "semester": 3,
+      "subject": "BSWDSC-3.3 OE-339",
+      "language": "und",
+      "sourceFile": {
+        "fileName": "BSWDSC-3.3 OE-339.pdf",
+        "url": "https://drive.google.com/file/d/135NkhMRInjFQwfcqTV4RZxIBSHyusfWP/view",
+        "folderPath": "BSW/3RD SEM",
+        "driveFileId": "135NkhMRInjFQwfcqTV4RZxIBSHyusfWP"
+      },
+      "source": {
+        "title": "BSWDSC-3.3 OE-339.pdf",
+        "url": "https://drive.google.com/file/d/135NkhMRInjFQwfcqTV4RZxIBSHyusfWP/view",
+        "publisher": "User-provided PYQ collection",
+        "retrievedOn": "2026-10-02",
+        "note": "Original PDF link. University not assigned; question text and exam metadata have not been transcribed or inferred."
+      },
+      "status": "published"
+    },
+    {
+      "id": "pyq-file-298fe8fa012a23cbb32b4e1a",
+      "contentType": "source_pdf",
+      "isPYQ": true,
+      "program": "bsw",
+      "semester": 3,
+      "subject": "BSWDSC-3.4(A) OE-340",
+      "language": "und",
+      "sourceFile": {
+        "fileName": "BSWDSC-3.4(A) OE-340.pdf",
+        "url": "https://drive.google.com/file/d/1aFNz4gJb5h17lr3Yf00NAlpcUe9l6Q3Q/view",
+        "folderPath": "BSW/3RD SEM",
+        "driveFileId": "1aFNz4gJb5h17lr3Yf00NAlpcUe9l6Q3Q"
+      },
+      "source": {
+        "title": "BSWDSC-3.4(A) OE-340.pdf",
+        "url": "https://drive.google.com/file/d/1aFNz4gJb5h17lr3Yf00NAlpcUe9l6Q3Q/view",
+        "publisher": "User-provided PYQ collection",
+        "retrievedOn": "2026-10-02",
+        "note": "Original PDF link. University not assigned; question text and exam metadata have not been transcribed or inferred."
+      },
+      "status": "published"
+    },
+    {
+      "id": "pyq-file-374aaaf24b71a79ab3e01e00",
+      "contentType": "source_pdf",
+      "isPYQ": true,
+      "program": "bsw",
+      "semester": 3,
+      "subject": "BSWDSC-3.5(B) OE-341",
+      "language": "und",
+      "sourceFile": {
+        "fileName": "BSWDSC-3.5(B) OE-341.pdf",
+        "url": "https://drive.google.com/file/d/1MgoHZmjfVAwYyFDp2TL7K4nZlZD26xdq/view",
+        "folderPath": "BSW/3RD SEM",
+        "driveFileId": "1MgoHZmjfVAwYyFDp2TL7K4nZlZD26xdq"
+      },
+      "source": {
+        "title": "BSWDSC-3.5(B) OE-341.pdf",
+        "url": "https://drive.google.com/file/d/1MgoHZmjfVAwYyFDp2TL7K4nZlZD26xdq/view",
+        "publisher": "User-provided PYQ collection",
+        "retrievedOn": "2026-10-02",
+        "note": "Original PDF link. University not assigned; question text and exam metadata have not been transcribed or inferred."
+      },
+      "status": "published"
+    },
+    {
+      "id": "pyq-file-21fb666046d8c23af33cd161",
+      "contentType": "source_pdf",
+      "isPYQ": true,
+      "program": "bsw",
+      "semester": 4,
+      "subject": "BSWDSC-4.1 OE-377",
+      "language": "und",
+      "sourceFile": {
+        "fileName": "BSWDSC-4.1 OE-377.pdf",
+        "url": "https://drive.google.com/file/d/1DgWV40guWxcim2stcehcR6m0FrIC1kHb/view",
+        "folderPath": "BSW/4TH SEM",
+        "driveFileId": "1DgWV40guWxcim2stcehcR6m0FrIC1kHb"
+      },
+      "source": {
+        "title": "BSWDSC-4.1 OE-377.pdf",
+        "url": "https://drive.google.com/file/d/1DgWV40guWxcim2stcehcR6m0FrIC1kHb/view",
+        "publisher": "User-provided PYQ collection",
+        "retrievedOn": "2026-10-02",
+        "note": "Original PDF link. University not assigned; question text and exam metadata have not been transcribed or inferred."
+      },
+      "status": "published"
+    },
+    {
+      "id": "pyq-file-358471bfc24e880d0938f509",
+      "contentType": "source_pdf",
+      "isPYQ": true,
+      "program": "bsw",
+      "semester": 4,
+      "subject": "BSWDSC-4.2 OE-378",
+      "language": "und",
+      "sourceFile": {
+        "fileName": "BSWDSC-4.2 OE-378.pdf",
+        "url": "https://drive.google.com/file/d/12SUSfSWmPixJEhrxwdUvmzc7OUzNSkbR/view",
+        "folderPath": "BSW/4TH SEM",
+        "driveFileId": "12SUSfSWmPixJEhrxwdUvmzc7OUzNSkbR"
+      },
+      "source": {
+        "title": "BSWDSC-4.2 OE-378.pdf",
+        "url": "https://drive.google.com/file/d/12SUSfSWmPixJEhrxwdUvmzc7OUzNSkbR/view",
+        "publisher": "User-provided PYQ collection",
+        "retrievedOn": "2026-10-02",
+        "note": "Original PDF link. University not assigned; question text and exam metadata have not been transcribed or inferred."
+      },
+      "status": "published"
+    },
+    {
+      "id": "pyq-file-51f9047f9452fb56f88b438c",
+      "contentType": "source_pdf",
+      "isPYQ": true,
+      "program": "bsw",
+      "semester": 4,
+      "subject": "BSWDSC-4.3 OE-379",
+      "language": "und",
+      "sourceFile": {
+        "fileName": "BSWDSC-4.3 OE-379.pdf",
+        "url": "https://drive.google.com/file/d/1_eM56BNC0rGVxFIR9aJTteBB5-0_14-C/view",
+        "folderPath": "BSW/4TH SEM",
+        "driveFileId": "1_eM56BNC0rGVxFIR9aJTteBB5-0_14-C"
+      },
+      "source": {
+        "title": "BSWDSC-4.3 OE-379.pdf",
+        "url": "https://drive.google.com/file/d/1_eM56BNC0rGVxFIR9aJTteBB5-0_14-C/view",
+        "publisher": "User-provided PYQ collection",
+        "retrievedOn": "2026-10-02",
+        "note": "Original PDF link. University not assigned; question text and exam metadata have not been transcribed or inferred."
+      },
+      "status": "published"
+    },
+    {
+      "id": "pyq-file-ba05c69751d165b846fb9d46",
+      "contentType": "source_pdf",
+      "isPYQ": true,
+      "program": "bsw",
+      "semester": 4,
+      "subject": "BSWDSC-4.4 OE-380",
+      "language": "und",
+      "sourceFile": {
+        "fileName": "BSWDSC-4.4 OE-380.pdf",
+        "url": "https://drive.google.com/file/d/1S94udheiriwK9gYyy-fvhxcaow42Yy0i/view",
+        "folderPath": "BSW/4TH SEM",
+        "driveFileId": "1S94udheiriwK9gYyy-fvhxcaow42Yy0i"
+      },
+      "source": {
+        "title": "BSWDSC-4.4 OE-380.pdf",
+        "url": "https://drive.google.com/file/d/1S94udheiriwK9gYyy-fvhxcaow42Yy0i/view",
+        "publisher": "User-provided PYQ collection",
+        "retrievedOn": "2026-10-02",
+        "note": "Original PDF link. University not assigned; question text and exam metadata have not been transcribed or inferred."
+      },
+      "status": "published"
+    },
+    {
+      "id": "pyq-file-e1edd526aa05e5e22bfd40c0",
+      "contentType": "source_pdf",
+      "isPYQ": true,
+      "program": "bsw",
+      "semester": 5,
+      "subject": "BSWDSC-5.1 OE-437",
+      "language": "und",
+      "sourceFile": {
+        "fileName": "BSWDSC-5.1 OE-437.pdf",
+        "url": "https://drive.google.com/file/d/1tx0nfp8_-ruakh9Y9v3mbqoyzUAZlNmo/view",
+        "folderPath": "BSW/5TH SEM",
+        "driveFileId": "1tx0nfp8_-ruakh9Y9v3mbqoyzUAZlNmo"
+      },
+      "source": {
+        "title": "BSWDSC-5.1 OE-437.pdf",
+        "url": "https://drive.google.com/file/d/1tx0nfp8_-ruakh9Y9v3mbqoyzUAZlNmo/view",
+        "publisher": "User-provided PYQ collection",
+        "retrievedOn": "2026-10-02",
+        "note": "Original PDF link. University not assigned; question text and exam metadata have not been transcribed or inferred."
+      },
+      "status": "published"
+    },
+    {
+      "id": "pyq-file-b6c46a50fbbffdea9cbf5059",
+      "contentType": "source_pdf",
+      "isPYQ": true,
+      "program": "bsw",
+      "semester": 5,
+      "subject": "BSWDSC-5.2 OE-438",
+      "language": "und",
+      "sourceFile": {
+        "fileName": "BSWDSC-5.2 OE-438.pdf",
+        "url": "https://drive.google.com/file/d/1AIlDjmsn2XONXUrKRX0Hpd4wtku8EdZ1/view",
+        "folderPath": "BSW/5TH SEM",
+        "driveFileId": "1AIlDjmsn2XONXUrKRX0Hpd4wtku8EdZ1"
+      },
+      "source": {
+        "title": "BSWDSC-5.2 OE-438.pdf",
+        "url": "https://drive.google.com/file/d/1AIlDjmsn2XONXUrKRX0Hpd4wtku8EdZ1/view",
+        "publisher": "User-provided PYQ collection",
+        "retrievedOn": "2026-10-02",
+        "note": "Original PDF link. University not assigned; question text and exam metadata have not been transcribed or inferred."
+      },
+      "status": "published"
+    },
+    {
+      "id": "pyq-file-cf8a577daa973c756a47021b",
+      "contentType": "source_pdf",
+      "isPYQ": true,
+      "program": "bsw",
+      "semester": 5,
+      "subject": "BSWDSC-5.3 OE-439",
+      "language": "und",
+      "sourceFile": {
+        "fileName": "BSWDSC-5.3 OE-439.pdf",
+        "url": "https://drive.google.com/file/d/1Dw9CR6SOaKdzltMVmRpir1ia0Wn1hZN0/view",
+        "folderPath": "BSW/5TH SEM",
+        "driveFileId": "1Dw9CR6SOaKdzltMVmRpir1ia0Wn1hZN0"
+      },
+      "source": {
+        "title": "BSWDSC-5.3 OE-439.pdf",
+        "url": "https://drive.google.com/file/d/1Dw9CR6SOaKdzltMVmRpir1ia0Wn1hZN0/view",
+        "publisher": "User-provided PYQ collection",
+        "retrievedOn": "2026-10-02",
+        "note": "Original PDF link. University not assigned; question text and exam metadata have not been transcribed or inferred."
+      },
+      "status": "published"
+    },
+    {
+      "id": "pyq-file-e8adc4e6325e5101a768eacf",
+      "contentType": "source_pdf",
+      "isPYQ": true,
+      "program": "bsw",
+      "semester": 5,
+      "subject": "BSWDSC-5.4 OE-440",
+      "language": "und",
+      "sourceFile": {
+        "fileName": "BSWDSC-5.4 OE-440.pdf",
+        "url": "https://drive.google.com/file/d/16kAXdGxSv7PqDSM9fkOwNaI5aKXsJkIN/view",
+        "folderPath": "BSW/5TH SEM",
+        "driveFileId": "16kAXdGxSv7PqDSM9fkOwNaI5aKXsJkIN"
+      },
+      "source": {
+        "title": "BSWDSC-5.4 OE-440.pdf",
+        "url": "https://drive.google.com/file/d/16kAXdGxSv7PqDSM9fkOwNaI5aKXsJkIN/view",
+        "publisher": "User-provided PYQ collection",
+        "retrievedOn": "2026-10-02",
+        "note": "Original PDF link. University not assigned; question text and exam metadata have not been transcribed or inferred."
+      },
+      "status": "published"
+    },
+    {
+      "id": "pyq-file-2f4260d312006e2e2286134b",
+      "contentType": "source_pdf",
+      "isPYQ": true,
+      "program": "bsw",
+      "semester": 5,
+      "subject": "BSWDSE-5.5(A) OE-441",
+      "language": "und",
+      "sourceFile": {
+        "fileName": "BSWDSE-5.5(A) OE-441.pdf",
+        "url": "https://drive.google.com/file/d/1WcbTNovUypzmxsb89LHiNY_tBKD3X_39/view",
+        "folderPath": "BSW/5TH SEM",
+        "driveFileId": "1WcbTNovUypzmxsb89LHiNY_tBKD3X_39"
+      },
+      "source": {
+        "title": "BSWDSE-5.5(A) OE-441.pdf",
+        "url": "https://drive.google.com/file/d/1WcbTNovUypzmxsb89LHiNY_tBKD3X_39/view",
+        "publisher": "User-provided PYQ collection",
+        "retrievedOn": "2026-10-02",
+        "note": "Original PDF link. University not assigned; question text and exam metadata have not been transcribed or inferred."
+      },
+      "status": "published"
+    },
+    {
+      "id": "pyq-file-cdc0f0b68fe36fff968a9f52",
+      "contentType": "source_pdf",
+      "isPYQ": true,
+      "program": "ug-open-elective",
+      "semester": 1,
+      "subject": "BBOTGE-1 [OE-256]",
+      "language": "und",
+      "sourceFile": {
+        "fileName": "BBOTGE-1 [OE-256].pdf",
+        "url": "https://drive.google.com/file/d/1WReIdNvgxtwh5WR76BkTc3iZ8hc2SvtX/view",
+        "folderPath": "UG- OPEN ELECTIVE/1ST SEM",
+        "driveFileId": "1WReIdNvgxtwh5WR76BkTc3iZ8hc2SvtX"
+      },
+      "source": {
+        "title": "BBOTGE-1 [OE-256].pdf",
+        "url": "https://drive.google.com/file/d/1WReIdNvgxtwh5WR76BkTc3iZ8hc2SvtX/view",
+        "publisher": "User-provided PYQ collection",
+        "retrievedOn": "2026-10-02",
+        "note": "Original PDF link. University not assigned; question text and exam metadata have not been transcribed or inferred."
+      },
+      "status": "published"
+    },
+    {
+      "id": "pyq-file-ea1c54c7faad3e734c90040d",
+      "contentType": "source_pdf",
+      "isPYQ": true,
+      "program": "ug-open-elective",
+      "semester": 1,
+      "subject": "BCAGE-1 [OE-250]",
+      "language": "und",
+      "sourceFile": {
+        "fileName": "BCAGE-1 [OE-250].pdf",
+        "url": "https://drive.google.com/file/d/11srUi6zauCRIlo56mFjqXtS2PZLdbCl7/view",
+        "folderPath": "UG- OPEN ELECTIVE/1ST SEM",
+        "driveFileId": "11srUi6zauCRIlo56mFjqXtS2PZLdbCl7"
+      },
+      "source": {
+        "title": "BCAGE-1 [OE-250].pdf",
+        "url": "https://drive.google.com/file/d/11srUi6zauCRIlo56mFjqXtS2PZLdbCl7/view",
+        "publisher": "User-provided PYQ collection",
+        "retrievedOn": "2026-10-02",
+        "note": "Original PDF link. University not assigned; question text and exam metadata have not been transcribed or inferred."
+      },
+      "status": "published"
+    },
+    {
+      "id": "pyq-file-c8a95f6e3458566bf001dd17",
+      "contentType": "source_pdf",
+      "isPYQ": true,
+      "program": "ug-open-elective",
+      "semester": 1,
+      "subject": "BCMGE-1 [OE-247]",
+      "language": "und",
+      "sourceFile": {
+        "fileName": "BCMGE-1 [OE-247].pdf",
+        "url": "https://drive.google.com/file/d/19DgVetmjFY6nXPa6afGTaAOSYOCgZ-yn/view",
+        "folderPath": "UG- OPEN ELECTIVE/1ST SEM",
+        "driveFileId": "19DgVetmjFY6nXPa6afGTaAOSYOCgZ-yn"
+      },
+      "source": {
+        "title": "BCMGE-1 [OE-247].pdf",
+        "url": "https://drive.google.com/file/d/19DgVetmjFY6nXPa6afGTaAOSYOCgZ-yn/view",
+        "publisher": "User-provided PYQ collection",
+        "retrievedOn": "2026-10-02",
+        "note": "Original PDF link. University not assigned; question text and exam metadata have not been transcribed or inferred."
+      },
+      "status": "published"
+    },
+    {
+      "id": "pyq-file-ec5118831811b8de6c52ce47",
+      "contentType": "source_pdf",
+      "isPYQ": true,
+      "program": "ug-open-elective",
+      "semester": 1,
+      "subject": "BECSWC-1 OE-257",
+      "language": "und",
+      "sourceFile": {
+        "fileName": "BECSWC-1 OE-257.pdf",
+        "url": "https://drive.google.com/file/d/1pFp__McjHrQrDBTb7Fe9UqcI-KA421qq/view",
+        "folderPath": "UG- OPEN ELECTIVE/1ST SEM",
+        "driveFileId": "1pFp__McjHrQrDBTb7Fe9UqcI-KA421qq"
+      },
+      "source": {
+        "title": "BECSWC-1 OE-257.pdf",
+        "url": "https://drive.google.com/file/d/1pFp__McjHrQrDBTb7Fe9UqcI-KA421qq/view",
+        "publisher": "User-provided PYQ collection",
+        "retrievedOn": "2026-10-02",
+        "note": "Original PDF link. University not assigned; question text and exam metadata have not been transcribed or inferred."
+      },
+      "status": "published"
+    },
+    {
+      "id": "pyq-file-df1ae5894bc2368eecafa8fd",
+      "contentType": "source_pdf",
+      "isPYQ": true,
+      "program": "ug-open-elective",
+      "semester": 1,
+      "subject": "BFSNGE-1 [OE-246]",
+      "language": "und",
+      "sourceFile": {
+        "fileName": "BFSNGE-1 [OE-246].pdf",
+        "url": "https://drive.google.com/file/d/1buZc9-Sd97Aw96BC6X1RUJiu2uTDQBeh/view",
+        "folderPath": "UG- OPEN ELECTIVE/1ST SEM",
+        "driveFileId": "1buZc9-Sd97Aw96BC6X1RUJiu2uTDQBeh"
+      },
+      "source": {
+        "title": "BFSNGE-1 [OE-246].pdf",
+        "url": "https://drive.google.com/file/d/1buZc9-Sd97Aw96BC6X1RUJiu2uTDQBeh/view",
+        "publisher": "User-provided PYQ collection",
+        "retrievedOn": "2026-10-02",
+        "note": "Original PDF link. University not assigned; question text and exam metadata have not been transcribed or inferred."
+      },
+      "status": "published"
+    },
+    {
+      "id": "pyq-file-ba8da37ed8c20f6cbde27c7b",
+      "contentType": "source_pdf",
+      "isPYQ": true,
+      "program": "ug-open-elective",
+      "semester": 1,
+      "subject": "BITGE-1 [OE-248]",
+      "language": "und",
+      "sourceFile": {
+        "fileName": "BITGE-1 [OE-248].pdf",
+        "url": "https://drive.google.com/file/d/1P3_HZA8oScv3d1YB-wH6BnYNWDqkF1D0/view",
+        "folderPath": "UG- OPEN ELECTIVE/1ST SEM",
+        "driveFileId": "1P3_HZA8oScv3d1YB-wH6BnYNWDqkF1D0"
+      },
+      "source": {
+        "title": "BITGE-1 [OE-248].pdf",
+        "url": "https://drive.google.com/file/d/1P3_HZA8oScv3d1YB-wH6BnYNWDqkF1D0/view",
+        "publisher": "User-provided PYQ collection",
+        "retrievedOn": "2026-10-02",
+        "note": "Original PDF link. University not assigned; question text and exam metadata have not been transcribed or inferred."
+      },
+      "status": "published"
+    },
+    {
+      "id": "pyq-file-07cb22fd18634cdc42bfbc58",
+      "contentType": "source_pdf",
+      "isPYQ": true,
+      "program": "ug-open-elective",
+      "semester": 1,
+      "subject": "BLIGE-1 [OE-254]",
+      "language": "und",
+      "sourceFile": {
+        "fileName": "BLIGE-1 [OE-254].pdf",
+        "url": "https://drive.google.com/file/d/1AAVqpkEOnJhTZ4Xh4MxlNPirLQp6vvLv/view",
+        "folderPath": "UG- OPEN ELECTIVE/1ST SEM",
+        "driveFileId": "1AAVqpkEOnJhTZ4Xh4MxlNPirLQp6vvLv"
+      },
+      "source": {
+        "title": "BLIGE-1 [OE-254].pdf",
+        "url": "https://drive.google.com/file/d/1AAVqpkEOnJhTZ4Xh4MxlNPirLQp6vvLv/view",
+        "publisher": "User-provided PYQ collection",
+        "retrievedOn": "2026-10-02",
+        "note": "Original PDF link. University not assigned; question text and exam metadata have not been transcribed or inferred."
+      },
+      "status": "published"
+    },
+    {
+      "id": "pyq-file-39c3c765cca6b9d3385e67dd",
+      "contentType": "source_pdf",
+      "isPYQ": true,
+      "program": "ug-open-elective",
+      "semester": 1,
+      "subject": "BMATGE-1 [OE-251]",
+      "language": "und",
+      "sourceFile": {
+        "fileName": "BMATGE-1 [OE-251].pdf",
+        "url": "https://drive.google.com/file/d/1L2hpD-GEtBe6tV1Ya1U-u0LHE8bP7ECP/view",
+        "folderPath": "UG- OPEN ELECTIVE/1ST SEM",
+        "driveFileId": "1L2hpD-GEtBe6tV1Ya1U-u0LHE8bP7ECP"
+      },
+      "source": {
+        "title": "BMATGE-1 [OE-251].pdf",
+        "url": "https://drive.google.com/file/d/1L2hpD-GEtBe6tV1Ya1U-u0LHE8bP7ECP/view",
+        "publisher": "User-provided PYQ collection",
+        "retrievedOn": "2026-10-02",
+        "note": "Original PDF link. University not assigned; question text and exam metadata have not been transcribed or inferred."
+      },
+      "status": "published"
+    },
+    {
+      "id": "pyq-file-d8e9bcd6916964b6fd1843a2",
+      "contentType": "source_pdf",
+      "isPYQ": true,
+      "program": "ug-open-elective",
+      "semester": 1,
+      "subject": "BMBGE-1 [OE-255]",
+      "language": "und",
+      "sourceFile": {
+        "fileName": "BMBGE-1 [OE-255].pdf",
+        "url": "https://drive.google.com/file/d/1n_Frm4OLaofy9Y42qTAQBB8IljE717Tz/view",
+        "folderPath": "UG- OPEN ELECTIVE/1ST SEM",
+        "driveFileId": "1n_Frm4OLaofy9Y42qTAQBB8IljE717Tz"
+      },
+      "source": {
+        "title": "BMBGE-1 [OE-255].pdf",
+        "url": "https://drive.google.com/file/d/1n_Frm4OLaofy9Y42qTAQBB8IljE717Tz/view",
+        "publisher": "User-provided PYQ collection",
+        "retrievedOn": "2026-10-02",
+        "note": "Original PDF link. University not assigned; question text and exam metadata have not been transcribed or inferred."
+      },
+      "status": "published"
+    },
+    {
+      "id": "pyq-file-a2269b35c5a9179540a88ffc",
+      "contentType": "source_pdf",
+      "isPYQ": true,
+      "program": "ug-open-elective",
+      "semester": 1,
+      "subject": "BMG-01 OE-253",
+      "language": "und",
+      "sourceFile": {
+        "fileName": "BMG-01 OE-253.pdf",
+        "url": "https://drive.google.com/file/d/1XbWAiwaEMbZ16rpS5Biahe8udLrT5fa2/view",
+        "folderPath": "UG- OPEN ELECTIVE/1ST SEM",
+        "driveFileId": "1XbWAiwaEMbZ16rpS5Biahe8udLrT5fa2"
+      },
+      "source": {
+        "title": "BMG-01 OE-253.pdf",
+        "url": "https://drive.google.com/file/d/1XbWAiwaEMbZ16rpS5Biahe8udLrT5fa2/view",
+        "publisher": "User-provided PYQ collection",
+        "retrievedOn": "2026-10-02",
+        "note": "Original PDF link. University not assigned; question text and exam metadata have not been transcribed or inferred."
+      },
+      "status": "published"
+    },
+    {
+      "id": "pyq-file-7007d99a1fad3663e4e69dff",
+      "contentType": "source_pdf",
+      "isPYQ": true,
+      "program": "ug-open-elective",
+      "semester": 1,
+      "subject": "BPAGE-1 OE-249",
+      "language": "und",
+      "sourceFile": {
+        "fileName": "BPAGE-1 OE-249.pdf",
+        "url": "https://drive.google.com/file/d/1O5TsM2SVuU0iSGKBxWF5luXM0blVSzZu/view",
+        "folderPath": "UG- OPEN ELECTIVE/1ST SEM",
+        "driveFileId": "1O5TsM2SVuU0iSGKBxWF5luXM0blVSzZu"
+      },
+      "source": {
+        "title": "BPAGE-1 OE-249.pdf",
+        "url": "https://drive.google.com/file/d/1O5TsM2SVuU0iSGKBxWF5luXM0blVSzZu/view",
+        "publisher": "User-provided PYQ collection",
+        "retrievedOn": "2026-10-02",
+        "note": "Original PDF link. University not assigned; question text and exam metadata have not been transcribed or inferred."
+      },
+      "status": "published"
+    },
+    {
+      "id": "pyq-file-d208b142c7486cd9f4f8ced4",
+      "contentType": "source_pdf",
+      "isPYQ": true,
+      "program": "ug-open-elective",
+      "semester": 1,
+      "subject": "BPHYGE-1 [OE-252]",
+      "language": "und",
+      "sourceFile": {
+        "fileName": "BPHYGE-1 [OE-252].pdf",
+        "url": "https://drive.google.com/file/d/1R86rWwwlLzEBnk3MKWPW73RBy2a7fOUK/view",
+        "folderPath": "UG- OPEN ELECTIVE/1ST SEM",
+        "driveFileId": "1R86rWwwlLzEBnk3MKWPW73RBy2a7fOUK"
+      },
+      "source": {
+        "title": "BPHYGE-1 [OE-252].pdf",
+        "url": "https://drive.google.com/file/d/1R86rWwwlLzEBnk3MKWPW73RBy2a7fOUK/view",
+        "publisher": "User-provided PYQ collection",
+        "retrievedOn": "2026-10-02",
+        "note": "Original PDF link. University not assigned; question text and exam metadata have not been transcribed or inferred."
+      },
+      "status": "published"
+    },
+    {
+      "id": "pyq-file-789aa974ca8c5c535c52b905",
+      "contentType": "source_pdf",
+      "isPYQ": true,
+      "program": "ug-open-elective",
+      "semester": 2,
+      "subject": "BBOTGE-2 OE-300",
+      "language": "und",
+      "sourceFile": {
+        "fileName": "BBOTGE-2 OE-300.pdf",
+        "url": "https://drive.google.com/file/d/1v0JY74FrDTRR9fxJLnXvljtsmy0AsBBM/view",
+        "folderPath": "UG- OPEN ELECTIVE/2ND SEM",
+        "driveFileId": "1v0JY74FrDTRR9fxJLnXvljtsmy0AsBBM"
+      },
+      "source": {
+        "title": "BBOTGE-2 OE-300.pdf",
+        "url": "https://drive.google.com/file/d/1v0JY74FrDTRR9fxJLnXvljtsmy0AsBBM/view",
+        "publisher": "User-provided PYQ collection",
+        "retrievedOn": "2026-10-02",
+        "note": "Original PDF link. University not assigned; question text and exam metadata have not been transcribed or inferred."
+      },
+      "status": "published"
+    },
+    {
+      "id": "pyq-file-4902d09aa4e5b586c8ed90ba",
+      "contentType": "source_pdf",
+      "isPYQ": true,
+      "program": "ug-open-elective",
+      "semester": 2,
+      "subject": "BCAGE-2 [OE-294]",
+      "language": "und",
+      "sourceFile": {
+        "fileName": "BCAGE-2 [OE-294].pdf",
+        "url": "https://drive.google.com/file/d/1fQI9B4aKJOaWTzIE9BIz8sYdzdwImEud/view",
+        "folderPath": "UG- OPEN ELECTIVE/2ND SEM",
+        "driveFileId": "1fQI9B4aKJOaWTzIE9BIz8sYdzdwImEud"
+      },
+      "source": {
+        "title": "BCAGE-2 [OE-294].pdf",
+        "url": "https://drive.google.com/file/d/1fQI9B4aKJOaWTzIE9BIz8sYdzdwImEud/view",
+        "publisher": "User-provided PYQ collection",
+        "retrievedOn": "2026-10-02",
+        "note": "Original PDF link. University not assigned; question text and exam metadata have not been transcribed or inferred."
+      },
+      "status": "published"
+    },
+    {
+      "id": "pyq-file-7c05093bcd5484817eec7b75",
+      "contentType": "source_pdf",
+      "isPYQ": true,
+      "program": "ug-open-elective",
+      "semester": 2,
+      "subject": "BCAGE-2 [OE-294]",
+      "language": "und",
+      "sourceFile": {
+        "fileName": "BCAGE-2 [OE-294].pdf",
+        "url": "https://drive.google.com/file/d/1ttV4NjNjuVh48J1NQzgjjoqEdPmZ6dkH/view",
+        "folderPath": "UG- OPEN ELECTIVE/2ND SEM",
+        "driveFileId": "1ttV4NjNjuVh48J1NQzgjjoqEdPmZ6dkH"
+      },
+      "source": {
+        "title": "BCAGE-2 [OE-294].pdf",
+        "url": "https://drive.google.com/file/d/1ttV4NjNjuVh48J1NQzgjjoqEdPmZ6dkH/view",
+        "publisher": "User-provided PYQ collection",
+        "retrievedOn": "2026-10-02",
+        "note": "Original PDF link. University not assigned; question text and exam metadata have not been transcribed or inferred."
+      },
+      "status": "published"
+    },
+    {
+      "id": "pyq-file-240abae854cbca04627aae8e",
+      "contentType": "source_pdf",
+      "isPYQ": true,
+      "program": "ug-open-elective",
+      "semester": 2,
+      "subject": "BCMGE-2 OE-291",
+      "language": "und",
+      "sourceFile": {
+        "fileName": "BCMGE-2 OE-291.pdf",
+        "url": "https://drive.google.com/file/d/1PFXOTFwqVCMHGjzO6_IgOUXmqSxfz8A5/view",
+        "folderPath": "UG- OPEN ELECTIVE/2ND SEM",
+        "driveFileId": "1PFXOTFwqVCMHGjzO6_IgOUXmqSxfz8A5"
+      },
+      "source": {
+        "title": "BCMGE-2 OE-291.pdf",
+        "url": "https://drive.google.com/file/d/1PFXOTFwqVCMHGjzO6_IgOUXmqSxfz8A5/view",
+        "publisher": "User-provided PYQ collection",
+        "retrievedOn": "2026-10-02",
+        "note": "Original PDF link. University not assigned; question text and exam metadata have not been transcribed or inferred."
+      },
+      "status": "published"
+    },
+    {
+      "id": "pyq-file-5bf22191e3b8d02ae0ae4c41",
+      "contentType": "source_pdf",
+      "isPYQ": true,
+      "program": "ug-open-elective",
+      "semester": 2,
+      "subject": "BFSNGE-2 OE-290",
+      "language": "und",
+      "sourceFile": {
+        "fileName": "BFSNGE-2 OE-290.pdf",
+        "url": "https://drive.google.com/file/d/1O1XFiD5RD4pyhY_zd6MT9qH9lW2JNJmX/view",
+        "folderPath": "UG- OPEN ELECTIVE/2ND SEM",
+        "driveFileId": "1O1XFiD5RD4pyhY_zd6MT9qH9lW2JNJmX"
+      },
+      "source": {
+        "title": "BFSNGE-2 OE-290.pdf",
+        "url": "https://drive.google.com/file/d/1O1XFiD5RD4pyhY_zd6MT9qH9lW2JNJmX/view",
+        "publisher": "User-provided PYQ collection",
+        "retrievedOn": "2026-10-02",
+        "note": "Original PDF link. University not assigned; question text and exam metadata have not been transcribed or inferred."
+      },
+      "status": "published"
+    },
+    {
+      "id": "pyq-file-5546a83d6577d69c17c38648",
+      "contentType": "source_pdf",
+      "isPYQ": true,
+      "program": "ug-open-elective",
+      "semester": 2,
+      "subject": "BITGE-2 [OE-292]",
+      "language": "und",
+      "sourceFile": {
+        "fileName": "BITGE-2 [OE-292].pdf",
+        "url": "https://drive.google.com/file/d/1Dq6veSIHVkZ66RYKpfR8dNN1-791lk-R/view",
+        "folderPath": "UG- OPEN ELECTIVE/2ND SEM",
+        "driveFileId": "1Dq6veSIHVkZ66RYKpfR8dNN1-791lk-R"
+      },
+      "source": {
+        "title": "BITGE-2 [OE-292].pdf",
+        "url": "https://drive.google.com/file/d/1Dq6veSIHVkZ66RYKpfR8dNN1-791lk-R/view",
+        "publisher": "User-provided PYQ collection",
+        "retrievedOn": "2026-10-02",
+        "note": "Original PDF link. University not assigned; question text and exam metadata have not been transcribed or inferred."
+      },
+      "status": "published"
+    },
+    {
+      "id": "pyq-file-bb88d84079861c6b12b234ea",
+      "contentType": "source_pdf",
+      "isPYQ": true,
+      "program": "ug-open-elective",
+      "semester": 2,
+      "subject": "BLIGE-2 OE-298",
+      "language": "und",
+      "sourceFile": {
+        "fileName": "BLIGE-2 OE-298.pdf",
+        "url": "https://drive.google.com/file/d/1xzgjG88CZJRpkqcjhMHuWcDx1FLv3xFb/view",
+        "folderPath": "UG- OPEN ELECTIVE/2ND SEM",
+        "driveFileId": "1xzgjG88CZJRpkqcjhMHuWcDx1FLv3xFb"
+      },
+      "source": {
+        "title": "BLIGE-2 OE-298.pdf",
+        "url": "https://drive.google.com/file/d/1xzgjG88CZJRpkqcjhMHuWcDx1FLv3xFb/view",
+        "publisher": "User-provided PYQ collection",
+        "retrievedOn": "2026-10-02",
+        "note": "Original PDF link. University not assigned; question text and exam metadata have not been transcribed or inferred."
+      },
+      "status": "published"
+    },
+    {
+      "id": "pyq-file-61b391a26f3fabff03bb51f5",
+      "contentType": "source_pdf",
+      "isPYQ": true,
+      "program": "ug-open-elective",
+      "semester": 2,
+      "subject": "BMATGE-2 OE-295",
+      "language": "und",
+      "sourceFile": {
+        "fileName": "BMATGE-2 OE-295.pdf",
+        "url": "https://drive.google.com/file/d/1sFqHoTgJSkAvkoPddErL5GYVVb71CJip/view",
+        "folderPath": "UG- OPEN ELECTIVE/2ND SEM",
+        "driveFileId": "1sFqHoTgJSkAvkoPddErL5GYVVb71CJip"
+      },
+      "source": {
+        "title": "BMATGE-2 OE-295.pdf",
+        "url": "https://drive.google.com/file/d/1sFqHoTgJSkAvkoPddErL5GYVVb71CJip/view",
+        "publisher": "User-provided PYQ collection",
+        "retrievedOn": "2026-10-02",
+        "note": "Original PDF link. University not assigned; question text and exam metadata have not been transcribed or inferred."
+      },
+      "status": "published"
+    },
+    {
+      "id": "pyq-file-870dba4c7f9ff66f2d759820",
+      "contentType": "source_pdf",
+      "isPYQ": true,
+      "program": "ug-open-elective",
+      "semester": 2,
+      "subject": "BMBGE-2 OE-299",
+      "language": "und",
+      "sourceFile": {
+        "fileName": "BMBGE-2 OE-299.pdf",
+        "url": "https://drive.google.com/file/d/14FY3sCxmNVZVFeyYG8PCQAP__xIGK18l/view",
+        "folderPath": "UG- OPEN ELECTIVE/2ND SEM",
+        "driveFileId": "14FY3sCxmNVZVFeyYG8PCQAP__xIGK18l"
+      },
+      "source": {
+        "title": "BMBGE-2 OE-299.pdf",
+        "url": "https://drive.google.com/file/d/14FY3sCxmNVZVFeyYG8PCQAP__xIGK18l/view",
+        "publisher": "User-provided PYQ collection",
+        "retrievedOn": "2026-10-02",
+        "note": "Original PDF link. University not assigned; question text and exam metadata have not been transcribed or inferred."
+      },
+      "status": "published"
+    },
+    {
+      "id": "pyq-file-409f077d2fbb8490e49f79d9",
+      "contentType": "source_pdf",
+      "isPYQ": true,
+      "program": "ug-open-elective",
+      "semester": 2,
+      "subject": "BMG-2 OE-297",
+      "language": "und",
+      "sourceFile": {
+        "fileName": "BMG-2 OE-297.pdf",
+        "url": "https://drive.google.com/file/d/1FddJ-nBkRxN5savLa1pnP4kAwRFaBDf-/view",
+        "folderPath": "UG- OPEN ELECTIVE/2ND SEM",
+        "driveFileId": "1FddJ-nBkRxN5savLa1pnP4kAwRFaBDf-"
+      },
+      "source": {
+        "title": "BMG-2 OE-297.pdf",
+        "url": "https://drive.google.com/file/d/1FddJ-nBkRxN5savLa1pnP4kAwRFaBDf-/view",
+        "publisher": "User-provided PYQ collection",
+        "retrievedOn": "2026-10-02",
+        "note": "Original PDF link. University not assigned; question text and exam metadata have not been transcribed or inferred."
+      },
+      "status": "published"
+    },
+    {
+      "id": "pyq-file-2fb4b4e7cd15babc703d7174",
+      "contentType": "source_pdf",
+      "isPYQ": true,
+      "program": "ug-open-elective",
+      "semester": 2,
+      "subject": "BPAGE-2 OE-293",
+      "language": "und",
+      "sourceFile": {
+        "fileName": "BPAGE-2 OE-293.pdf",
+        "url": "https://drive.google.com/file/d/1vXMxn8AjYyaonR9qatqGFicj919vhT4j/view",
+        "folderPath": "UG- OPEN ELECTIVE/2ND SEM",
+        "driveFileId": "1vXMxn8AjYyaonR9qatqGFicj919vhT4j"
+      },
+      "source": {
+        "title": "BPAGE-2 OE-293.pdf",
+        "url": "https://drive.google.com/file/d/1vXMxn8AjYyaonR9qatqGFicj919vhT4j/view",
+        "publisher": "User-provided PYQ collection",
+        "retrievedOn": "2026-10-02",
+        "note": "Original PDF link. University not assigned; question text and exam metadata have not been transcribed or inferred."
+      },
+      "status": "published"
+    },
+    {
+      "id": "pyq-file-1f886892e3d064936380faf6",
+      "contentType": "source_pdf",
+      "isPYQ": true,
+      "program": "ug-open-elective",
+      "semester": 2,
+      "subject": "BSWGE-2 OE-301",
+      "language": "und",
+      "sourceFile": {
+        "fileName": "BSWGE-2 OE-301.pdf",
+        "url": "https://drive.google.com/file/d/1vKsqqG5FrF8EaXMXNG3EuBwiv_yr9hO-/view",
+        "folderPath": "UG- OPEN ELECTIVE/2ND SEM",
+        "driveFileId": "1vKsqqG5FrF8EaXMXNG3EuBwiv_yr9hO-"
+      },
+      "source": {
+        "title": "BSWGE-2 OE-301.pdf",
+        "url": "https://drive.google.com/file/d/1vKsqqG5FrF8EaXMXNG3EuBwiv_yr9hO-/view",
+        "publisher": "User-provided PYQ collection",
+        "retrievedOn": "2026-10-02",
+        "note": "Original PDF link. University not assigned; question text and exam metadata have not been transcribed or inferred."
+      },
+      "status": "published"
+    },
+    {
+      "id": "pyq-file-b0c9d29f2cbb70ef9bd2ee90",
+      "contentType": "source_pdf",
+      "isPYQ": true,
+      "program": "ug-open-elective",
+      "semester": 2,
+      "subject": "BTS-2 OE-302",
+      "language": "und",
+      "sourceFile": {
+        "fileName": "BTS-2 OE-302.pdf",
+        "url": "https://drive.google.com/file/d/1lZaJ8r6lkwK9gZs7Vxzg5ZTIK40S9CNZ/view",
+        "folderPath": "UG- OPEN ELECTIVE/2ND SEM",
+        "driveFileId": "1lZaJ8r6lkwK9gZs7Vxzg5ZTIK40S9CNZ"
+      },
+      "source": {
+        "title": "BTS-2 OE-302.pdf",
+        "url": "https://drive.google.com/file/d/1lZaJ8r6lkwK9gZs7Vxzg5ZTIK40S9CNZ/view",
+        "publisher": "User-provided PYQ collection",
+        "retrievedOn": "2026-10-02",
+        "note": "Original PDF link. University not assigned; question text and exam metadata have not been transcribed or inferred."
+      },
+      "status": "published"
+    },
+    {
+      "id": "pyq-file-9db64a5b4063822786498c08",
+      "contentType": "source_pdf",
+      "isPYQ": true,
+      "program": "ug-open-elective",
+      "semester": 2,
+      "subject": "ELBP-2 [OE-296]",
+      "language": "und",
+      "sourceFile": {
+        "fileName": "ELBP-2 [OE-296].pdf",
+        "url": "https://drive.google.com/file/d/1KF58DJJajMYCCX_Q396_feceCFJuKgBU/view",
+        "folderPath": "UG- OPEN ELECTIVE/2ND SEM",
+        "driveFileId": "1KF58DJJajMYCCX_Q396_feceCFJuKgBU"
+      },
+      "source": {
+        "title": "ELBP-2 [OE-296].pdf",
+        "url": "https://drive.google.com/file/d/1KF58DJJajMYCCX_Q396_feceCFJuKgBU/view",
+        "publisher": "User-provided PYQ collection",
+        "retrievedOn": "2026-10-02",
+        "note": "Original PDF link. University not assigned; question text and exam metadata have not been transcribed or inferred."
+      },
+      "status": "published"
+    },
+    {
+      "id": "pyq-file-51d5865466b674a14ff8dae6",
+      "contentType": "source_pdf",
+      "isPYQ": true,
+      "program": "open-electives",
+      "semester": 1,
+      "subject": "ELC-01",
+      "language": "und",
+      "sourceFile": {
+        "fileName": "ELC-01.pdf",
+        "url": "https://drive.google.com/file/d/1GYon4efLezvsReVkqXMjhJArmbB0ECoU/view",
+        "folderPath": "OPEN ELECTIVES/1ST SEM",
+        "driveFileId": "1GYon4efLezvsReVkqXMjhJArmbB0ECoU"
+      },
+      "source": {
+        "title": "ELC-01.pdf",
+        "url": "https://drive.google.com/file/d/1GYon4efLezvsReVkqXMjhJArmbB0ECoU/view",
+        "publisher": "User-provided PYQ collection",
+        "retrievedOn": "2026-10-02",
+        "note": "Original PDF link. University not assigned; question text and exam metadata have not been transcribed or inferred."
+      },
+      "status": "published"
+    },
+    {
+      "id": "pyq-file-c71d9b8670be9bc599713f25",
+      "contentType": "source_pdf",
+      "isPYQ": true,
+      "program": "open-electives",
+      "semester": 1,
+      "subject": "ELES-01",
+      "language": "und",
+      "sourceFile": {
+        "fileName": "ELES-01.pdf",
+        "url": "https://drive.google.com/file/d/1EBsfmCBu5aS4xa0kG7nGxjpaG_9f_gpt/view",
+        "folderPath": "OPEN ELECTIVES/1ST SEM",
+        "driveFileId": "1EBsfmCBu5aS4xa0kG7nGxjpaG_9f_gpt"
+      },
+      "source": {
+        "title": "ELES-01.pdf",
+        "url": "https://drive.google.com/file/d/1EBsfmCBu5aS4xa0kG7nGxjpaG_9f_gpt/view",
+        "publisher": "User-provided PYQ collection",
+        "retrievedOn": "2026-10-02",
+        "note": "Original PDF link. University not assigned; question text and exam metadata have not been transcribed or inferred."
+      },
+      "status": "published"
+    },
+    {
+      "id": "pyq-file-afe2aafaeedf46146a66ef17",
+      "contentType": "source_pdf",
+      "isPYQ": true,
+      "program": "open-electives",
+      "semester": 1,
+      "subject": "ELM-01",
+      "language": "und",
+      "sourceFile": {
+        "fileName": "ELM-01.pdf",
+        "url": "https://drive.google.com/file/d/1OtwIHuOTgZpcYJtKV0Zf5k3Aav5CICz8/view",
+        "folderPath": "OPEN ELECTIVES/1ST SEM",
+        "driveFileId": "1OtwIHuOTgZpcYJtKV0Zf5k3Aav5CICz8"
+      },
+      "source": {
+        "title": "ELM-01.pdf",
+        "url": "https://drive.google.com/file/d/1OtwIHuOTgZpcYJtKV0Zf5k3Aav5CICz8/view",
+        "publisher": "User-provided PYQ collection",
+        "retrievedOn": "2026-10-02",
+        "note": "Original PDF link. University not assigned; question text and exam metadata have not been transcribed or inferred."
+      },
+      "status": "published"
+    },
+    {
+      "id": "pyq-file-f1401bf39680a9ac36e87a5a",
+      "contentType": "source_pdf",
+      "isPYQ": true,
+      "program": "open-electives",
+      "semester": 1,
+      "subject": "ELMAHA-01",
+      "language": "und",
+      "sourceFile": {
+        "fileName": "ELMAHA-01.pdf",
+        "url": "https://drive.google.com/file/d/1H7hsrkqcXe9fDjBUvciZbwnVW3E62pRA/view",
+        "folderPath": "OPEN ELECTIVES/1ST SEM",
+        "driveFileId": "1H7hsrkqcXe9fDjBUvciZbwnVW3E62pRA"
+      },
+      "source": {
+        "title": "ELMAHA-01.pdf",
+        "url": "https://drive.google.com/file/d/1H7hsrkqcXe9fDjBUvciZbwnVW3E62pRA/view",
+        "publisher": "User-provided PYQ collection",
+        "retrievedOn": "2026-10-02",
+        "note": "Original PDF link. University not assigned; question text and exam metadata have not been transcribed or inferred."
+      },
+      "status": "published"
+    },
+    {
+      "id": "pyq-file-d1bd10c5f54629268af8574b",
+      "contentType": "source_pdf",
+      "isPYQ": true,
+      "program": "open-electives",
+      "semester": 1,
+      "subject": "ELMBC -01",
+      "language": "und",
+      "sourceFile": {
+        "fileName": "ELMBC -01.pdf",
+        "url": "https://drive.google.com/file/d/1QxMfXIXWEZuSc4Ct3C9LlpagStwIVeUG/view",
+        "folderPath": "OPEN ELECTIVES/1ST SEM",
+        "driveFileId": "1QxMfXIXWEZuSc4Ct3C9LlpagStwIVeUG"
+      },
+      "source": {
+        "title": "ELMBC -01.pdf",
+        "url": "https://drive.google.com/file/d/1QxMfXIXWEZuSc4Ct3C9LlpagStwIVeUG/view",
+        "publisher": "User-provided PYQ collection",
+        "retrievedOn": "2026-10-02",
+        "note": "Original PDF link. University not assigned; question text and exam metadata have not been transcribed or inferred."
+      },
+      "status": "published"
+    },
+    {
+      "id": "pyq-file-c59a44c9b069118c0a661637",
+      "contentType": "source_pdf",
+      "isPYQ": true,
+      "program": "open-electives",
+      "semester": 1,
+      "subject": "ELMBOT-01",
+      "language": "und",
+      "sourceFile": {
+        "fileName": "ELMBOT-01.pdf",
+        "url": "https://drive.google.com/file/d/1wjmIa8dYsUX_1gKC9SJKvJ0GalxHYTFv/view",
+        "folderPath": "OPEN ELECTIVES/1ST SEM",
+        "driveFileId": "1wjmIa8dYsUX_1gKC9SJKvJ0GalxHYTFv"
+      },
+      "source": {
+        "title": "ELMBOT-01.pdf",
+        "url": "https://drive.google.com/file/d/1wjmIa8dYsUX_1gKC9SJKvJ0GalxHYTFv/view",
+        "publisher": "User-provided PYQ collection",
+        "retrievedOn": "2026-10-02",
+        "note": "Original PDF link. University not assigned; question text and exam metadata have not been transcribed or inferred."
+      },
+      "status": "published"
+    },
+    {
+      "id": "pyq-file-01dcdcd36321ec06313a1111",
+      "contentType": "source_pdf",
+      "isPYQ": true,
+      "program": "open-electives",
+      "semester": 1,
+      "subject": "ELMBT-01",
+      "language": "und",
+      "sourceFile": {
+        "fileName": "ELMBT-01.pdf",
+        "url": "https://drive.google.com/file/d/1821xeifHfJMo6sWtgyXuACK854_X5Gzw/view",
+        "folderPath": "OPEN ELECTIVES/1ST SEM",
+        "driveFileId": "1821xeifHfJMo6sWtgyXuACK854_X5Gzw"
+      },
+      "source": {
+        "title": "ELMBT-01.pdf",
+        "url": "https://drive.google.com/file/d/1821xeifHfJMo6sWtgyXuACK854_X5Gzw/view",
+        "publisher": "User-provided PYQ collection",
+        "retrievedOn": "2026-10-02",
+        "note": "Original PDF link. University not assigned; question text and exam metadata have not been transcribed or inferred."
+      },
+      "status": "published"
+    },
+    {
+      "id": "pyq-file-6f16a15091bfc5d5530bd325",
+      "contentType": "source_pdf",
+      "isPYQ": true,
+      "program": "open-electives",
+      "semester": 1,
+      "subject": "ELMCA-01",
+      "language": "und",
+      "sourceFile": {
+        "fileName": "ELMCA-01.pdf",
+        "url": "https://drive.google.com/file/d/1x5aV28XSjRyM7SmNajUBME0ZZ0G1POQx/view",
+        "folderPath": "OPEN ELECTIVES/1ST SEM",
+        "driveFileId": "1x5aV28XSjRyM7SmNajUBME0ZZ0G1POQx"
+      },
+      "source": {
+        "title": "ELMCA-01.pdf",
+        "url": "https://drive.google.com/file/d/1x5aV28XSjRyM7SmNajUBME0ZZ0G1POQx/view",
+        "publisher": "User-provided PYQ collection",
+        "retrievedOn": "2026-10-02",
+        "note": "Original PDF link. University not assigned; question text and exam metadata have not been transcribed or inferred."
+      },
+      "status": "published"
+    },
+    {
+      "id": "pyq-file-4e2bd34c499ca0dceced876e",
+      "contentType": "source_pdf",
+      "isPYQ": true,
+      "program": "open-electives",
+      "semester": 1,
+      "subject": "ELMCH-01",
+      "language": "und",
+      "sourceFile": {
+        "fileName": "ELMCH-01.pdf",
+        "url": "https://drive.google.com/file/d/1DJgHG3TqOSTXjwjYeuTcO992CfVv1e4L/view",
+        "folderPath": "OPEN ELECTIVES/1ST SEM",
+        "driveFileId": "1DJgHG3TqOSTXjwjYeuTcO992CfVv1e4L"
+      },
+      "source": {
+        "title": "ELMCH-01.pdf",
+        "url": "https://drive.google.com/file/d/1DJgHG3TqOSTXjwjYeuTcO992CfVv1e4L/view",
+        "publisher": "User-provided PYQ collection",
+        "retrievedOn": "2026-10-02",
+        "note": "Original PDF link. University not assigned; question text and exam metadata have not been transcribed or inferred."
+      },
+      "status": "published"
+    },
+    {
+      "id": "pyq-file-4233d2ea9aa3148f1ebbc027",
+      "contentType": "source_pdf",
+      "isPYQ": true,
+      "program": "open-electives",
+      "semester": 1,
+      "subject": "ELMCND-01",
+      "language": "und",
+      "sourceFile": {
+        "fileName": "ELMCND-01.pdf",
+        "url": "https://drive.google.com/file/d/17t801aV4caEKdG_7LcpTLnvIHO0jSZha/view",
+        "folderPath": "OPEN ELECTIVES/1ST SEM",
+        "driveFileId": "17t801aV4caEKdG_7LcpTLnvIHO0jSZha"
+      },
+      "source": {
+        "title": "ELMCND-01.pdf",
+        "url": "https://drive.google.com/file/d/17t801aV4caEKdG_7LcpTLnvIHO0jSZha/view",
+        "publisher": "User-provided PYQ collection",
+        "retrievedOn": "2026-10-02",
+        "note": "Original PDF link. University not assigned; question text and exam metadata have not been transcribed or inferred."
+      },
+      "status": "published"
+    },
+    {
+      "id": "pyq-file-9c2feecbbfc526d16a7577bd",
+      "contentType": "source_pdf",
+      "isPYQ": true,
+      "program": "open-electives",
+      "semester": 1,
+      "subject": "ELMCS-01",
+      "language": "und",
+      "sourceFile": {
+        "fileName": "ELMCS-01.pdf",
+        "url": "https://drive.google.com/file/d/1jati64UaWo6xSu67qNDFiO8EYadXUj10/view",
+        "folderPath": "OPEN ELECTIVES/1ST SEM",
+        "driveFileId": "1jati64UaWo6xSu67qNDFiO8EYadXUj10"
+      },
+      "source": {
+        "title": "ELMCS-01.pdf",
+        "url": "https://drive.google.com/file/d/1jati64UaWo6xSu67qNDFiO8EYadXUj10/view",
+        "publisher": "User-provided PYQ collection",
+        "retrievedOn": "2026-10-02",
+        "note": "Original PDF link. University not assigned; question text and exam metadata have not been transcribed or inferred."
+      },
+      "status": "published"
+    },
+    {
+      "id": "pyq-file-041c5aba6ec413c6d8d9b4a5",
+      "contentType": "source_pdf",
+      "isPYQ": true,
+      "program": "open-electives",
+      "semester": 1,
+      "subject": "ELMEC-01",
+      "language": "und",
+      "sourceFile": {
+        "fileName": "ELMEC-01.pdf",
+        "url": "https://drive.google.com/file/d/1M-T1KuyLgpwqACHZj5CSu-gW2-FwI6kn/view",
+        "folderPath": "OPEN ELECTIVES/1ST SEM",
+        "driveFileId": "1M-T1KuyLgpwqACHZj5CSu-gW2-FwI6kn"
+      },
+      "source": {
+        "title": "ELMEC-01.pdf",
+        "url": "https://drive.google.com/file/d/1M-T1KuyLgpwqACHZj5CSu-gW2-FwI6kn/view",
+        "publisher": "User-provided PYQ collection",
+        "retrievedOn": "2026-10-02",
+        "note": "Original PDF link. University not assigned; question text and exam metadata have not been transcribed or inferred."
+      },
+      "status": "published"
+    },
+    {
+      "id": "pyq-file-380293442a7f518d412c7a0f",
+      "contentType": "source_pdf",
+      "isPYQ": true,
+      "program": "open-electives",
+      "semester": 1,
+      "subject": "ELMECSWC-1",
+      "language": "und",
+      "sourceFile": {
+        "fileName": "ELMECSWC-1.pdf",
+        "url": "https://drive.google.com/file/d/1dqVbIz4dieJSCqYNlVLJzF4qauciSARJ/view",
+        "folderPath": "OPEN ELECTIVES/1ST SEM",
+        "driveFileId": "1dqVbIz4dieJSCqYNlVLJzF4qauciSARJ"
+      },
+      "source": {
+        "title": "ELMECSWC-1.pdf",
+        "url": "https://drive.google.com/file/d/1dqVbIz4dieJSCqYNlVLJzF4qauciSARJ/view",
+        "publisher": "User-provided PYQ collection",
+        "retrievedOn": "2026-10-02",
+        "note": "Original PDF link. University not assigned; question text and exam metadata have not been transcribed or inferred."
+      },
+      "status": "published"
+    },
+    {
+      "id": "pyq-file-4645e444178a995a33bb74a8",
+      "contentType": "source_pdf",
+      "isPYQ": true,
+      "program": "open-electives",
+      "semester": 1,
+      "subject": "ELMED-01",
+      "language": "und",
+      "sourceFile": {
+        "fileName": "ELMED-01.pdf",
+        "url": "https://drive.google.com/file/d/1g3DSUA3BiIZsDGZXdSUiuhC-cH-BrIOC/view",
+        "folderPath": "OPEN ELECTIVES/1ST SEM",
+        "driveFileId": "1g3DSUA3BiIZsDGZXdSUiuhC-cH-BrIOC"
+      },
+      "source": {
+        "title": "ELMED-01.pdf",
+        "url": "https://drive.google.com/file/d/1g3DSUA3BiIZsDGZXdSUiuhC-cH-BrIOC/view",
+        "publisher": "User-provided PYQ collection",
+        "retrievedOn": "2026-10-02",
+        "note": "Original PDF link. University not assigned; question text and exam metadata have not been transcribed or inferred."
+      },
+      "status": "published"
+    },
+    {
+      "id": "pyq-file-30e3727b3bf9bc05091ae9c5",
+      "contentType": "source_pdf",
+      "isPYQ": true,
+      "program": "open-electives",
+      "semester": 1,
+      "subject": "ELMEN-01",
+      "language": "en",
+      "sourceFile": {
+        "fileName": "ELMEN-01.pdf",
+        "url": "https://drive.google.com/file/d/1WGMTaqEhkTO93-1ch5TJGBqeiWImNZAf/view",
+        "folderPath": "OPEN ELECTIVES/1ST SEM",
+        "driveFileId": "1WGMTaqEhkTO93-1ch5TJGBqeiWImNZAf"
+      },
+      "source": {
+        "title": "ELMEN-01.pdf",
+        "url": "https://drive.google.com/file/d/1WGMTaqEhkTO93-1ch5TJGBqeiWImNZAf/view",
+        "publisher": "User-provided PYQ collection",
+        "retrievedOn": "2026-10-02",
+        "note": "Original PDF link. University not assigned; question text and exam metadata have not been transcribed or inferred."
+      },
+      "status": "published"
+    },
+    {
+      "id": "pyq-file-ee39d3f049b6ab36d635ba33",
+      "contentType": "source_pdf",
+      "isPYQ": true,
+      "program": "open-electives",
+      "semester": 1,
+      "subject": "ELMES-01",
+      "language": "und",
+      "sourceFile": {
+        "fileName": "ELMES-01.pdf",
+        "url": "https://drive.google.com/file/d/1OZDHaQ5N40wyX6ezDbZjj9UCGqD2vjZf/view",
+        "folderPath": "OPEN ELECTIVES/1ST SEM",
+        "driveFileId": "1OZDHaQ5N40wyX6ezDbZjj9UCGqD2vjZf"
+      },
+      "source": {
+        "title": "ELMES-01.pdf",
+        "url": "https://drive.google.com/file/d/1OZDHaQ5N40wyX6ezDbZjj9UCGqD2vjZf/view",
+        "publisher": "User-provided PYQ collection",
+        "retrievedOn": "2026-10-02",
+        "note": "Original PDF link. University not assigned; question text and exam metadata have not been transcribed or inferred."
+      },
+      "status": "published"
+    },
+    {
+      "id": "pyq-file-30a4427e523b8c0ecf7345c1",
+      "contentType": "source_pdf",
+      "isPYQ": true,
+      "program": "open-electives",
+      "semester": 1,
+      "subject": "ELMFNS-01",
+      "language": "und",
+      "sourceFile": {
+        "fileName": "ELMFNS-01.pdf",
+        "url": "https://drive.google.com/file/d/1kTPaD0GLhKzaac2d_kqp1B_8HPiIzxtq/view",
+        "folderPath": "OPEN ELECTIVES/1ST SEM",
+        "driveFileId": "1kTPaD0GLhKzaac2d_kqp1B_8HPiIzxtq"
+      },
+      "source": {
+        "title": "ELMFNS-01.pdf",
+        "url": "https://drive.google.com/file/d/1kTPaD0GLhKzaac2d_kqp1B_8HPiIzxtq/view",
+        "publisher": "User-provided PYQ collection",
+        "retrievedOn": "2026-10-02",
+        "note": "Original PDF link. University not assigned; question text and exam metadata have not been transcribed or inferred."
+      },
+      "status": "published"
+    },
+    {
+      "id": "pyq-file-e6feaf4379dc949d522f660b",
+      "contentType": "source_pdf",
+      "isPYQ": true,
+      "program": "open-electives",
+      "semester": 1,
+      "subject": "ELMG-01",
+      "language": "und",
+      "sourceFile": {
+        "fileName": "ELMG-01.pdf",
+        "url": "https://drive.google.com/file/d/1srLhnwZTe12oBv9byGy5D1KWsNwK-ecY/view",
+        "folderPath": "OPEN ELECTIVES/1ST SEM",
+        "driveFileId": "1srLhnwZTe12oBv9byGy5D1KWsNwK-ecY"
+      },
+      "source": {
+        "title": "ELMG-01.pdf",
+        "url": "https://drive.google.com/file/d/1srLhnwZTe12oBv9byGy5D1KWsNwK-ecY/view",
+        "publisher": "User-provided PYQ collection",
+        "retrievedOn": "2026-10-02",
+        "note": "Original PDF link. University not assigned; question text and exam metadata have not been transcribed or inferred."
+      },
+      "status": "published"
+    },
+    {
+      "id": "pyq-file-667fa332d62875e2ae8509f0",
+      "contentType": "source_pdf",
+      "isPYQ": true,
+      "program": "open-electives",
+      "semester": 1,
+      "subject": "ELMHIS-01",
+      "language": "und",
+      "sourceFile": {
+        "fileName": "ELMHIS-01.pdf",
+        "url": "https://drive.google.com/file/d/1wVGOW0zXmnJKckiwvcw-T0V3c6qsdAwG/view",
+        "folderPath": "OPEN ELECTIVES/1ST SEM",
+        "driveFileId": "1wVGOW0zXmnJKckiwvcw-T0V3c6qsdAwG"
+      },
+      "source": {
+        "title": "ELMHIS-01.pdf",
+        "url": "https://drive.google.com/file/d/1wVGOW0zXmnJKckiwvcw-T0V3c6qsdAwG/view",
+        "publisher": "User-provided PYQ collection",
+        "retrievedOn": "2026-10-02",
+        "note": "Original PDF link. University not assigned; question text and exam metadata have not been transcribed or inferred."
+      },
+      "status": "published"
+    },
+    {
+      "id": "pyq-file-43640854464b01af83e270a4",
+      "contentType": "source_pdf",
+      "isPYQ": true,
+      "program": "open-electives",
+      "semester": 1,
+      "subject": "ELMIT-01",
+      "language": "und",
+      "sourceFile": {
+        "fileName": "ELMIT-01.pdf",
+        "url": "https://drive.google.com/file/d/12D-TDyV0Q12QxOB5LO9PUMdDqOiNA9v0/view",
+        "folderPath": "OPEN ELECTIVES/1ST SEM",
+        "driveFileId": "12D-TDyV0Q12QxOB5LO9PUMdDqOiNA9v0"
+      },
+      "source": {
+        "title": "ELMIT-01.pdf",
+        "url": "https://drive.google.com/file/d/12D-TDyV0Q12QxOB5LO9PUMdDqOiNA9v0/view",
+        "publisher": "User-provided PYQ collection",
+        "retrievedOn": "2026-10-02",
+        "note": "Original PDF link. University not assigned; question text and exam metadata have not been transcribed or inferred."
+      },
+      "status": "published"
+    },
+    {
+      "id": "pyq-file-2d662082d74a66ef3ba594c3",
+      "contentType": "source_pdf",
+      "isPYQ": true,
+      "program": "open-electives",
+      "semester": 1,
+      "subject": "ELMJMC-01",
+      "language": "und",
+      "sourceFile": {
+        "fileName": "ELMJMC-01.pdf",
+        "url": "https://drive.google.com/file/d/1EUyVKQvQmTXk_QeCggaVxWAjFq5DBY3Z/view",
+        "folderPath": "OPEN ELECTIVES/1ST SEM",
+        "driveFileId": "1EUyVKQvQmTXk_QeCggaVxWAjFq5DBY3Z"
+      },
+      "source": {
+        "title": "ELMJMC-01.pdf",
+        "url": "https://drive.google.com/file/d/1EUyVKQvQmTXk_QeCggaVxWAjFq5DBY3Z/view",
+        "publisher": "User-provided PYQ collection",
+        "retrievedOn": "2026-10-02",
+        "note": "Original PDF link. University not assigned; question text and exam metadata have not been transcribed or inferred."
+      },
+      "status": "published"
+    },
+    {
+      "id": "pyq-file-1471b1286cbbdc978b147d12",
+      "contentType": "source_pdf",
+      "isPYQ": true,
+      "program": "open-electives",
+      "semester": 1,
+      "subject": "ELMKAN-01",
+      "language": "kn",
+      "sourceFile": {
+        "fileName": "ELMKAN-01.pdf",
+        "url": "https://drive.google.com/file/d/16RJQ4d0TOw1yr3h44r0dB0BVJjSnDbIK/view",
+        "folderPath": "OPEN ELECTIVES/1ST SEM",
+        "driveFileId": "16RJQ4d0TOw1yr3h44r0dB0BVJjSnDbIK"
+      },
+      "source": {
+        "title": "ELMKAN-01.pdf",
+        "url": "https://drive.google.com/file/d/16RJQ4d0TOw1yr3h44r0dB0BVJjSnDbIK/view",
+        "publisher": "User-provided PYQ collection",
+        "retrievedOn": "2026-10-02",
+        "note": "Original PDF link. University not assigned; question text and exam metadata have not been transcribed or inferred."
+      },
+      "status": "published"
+    },
+    {
+      "id": "pyq-file-160a350e851a5fc20a41756c",
+      "contentType": "source_pdf",
+      "isPYQ": true,
+      "program": "open-electives",
+      "semester": 1,
+      "subject": "elmm 01",
+      "language": "und",
+      "sourceFile": {
+        "fileName": "elmm 01.pdf",
+        "url": "https://drive.google.com/file/d/1lzME1A2X_tZWEOTa8E_h1KPvjdtlcM3G/view",
+        "folderPath": "OPEN ELECTIVES/1ST SEM",
+        "driveFileId": "1lzME1A2X_tZWEOTa8E_h1KPvjdtlcM3G"
+      },
+      "source": {
+        "title": "elmm 01.pdf",
+        "url": "https://drive.google.com/file/d/1lzME1A2X_tZWEOTa8E_h1KPvjdtlcM3G/view",
+        "publisher": "User-provided PYQ collection",
+        "retrievedOn": "2026-10-02",
+        "note": "Original PDF link. University not assigned; question text and exam metadata have not been transcribed or inferred."
+      },
+      "status": "published"
+    },
+    {
+      "id": "pyq-file-e24790085e9357cbc3402b34",
+      "contentType": "source_pdf",
+      "isPYQ": true,
+      "program": "open-electives",
+      "semester": 1,
+      "subject": "ELMMB- 01",
+      "language": "und",
+      "sourceFile": {
+        "fileName": "ELMMB- 01.pdf",
+        "url": "https://drive.google.com/file/d/1GetcTgy-wvkHJSWnc894W4kJZesBx5Jf/view",
+        "folderPath": "OPEN ELECTIVES/1ST SEM",
+        "driveFileId": "1GetcTgy-wvkHJSWnc894W4kJZesBx5Jf"
+      },
+      "source": {
+        "title": "ELMMB- 01.pdf",
+        "url": "https://drive.google.com/file/d/1GetcTgy-wvkHJSWnc894W4kJZesBx5Jf/view",
+        "publisher": "User-provided PYQ collection",
+        "retrievedOn": "2026-10-02",
+        "note": "Original PDF link. University not assigned; question text and exam metadata have not been transcribed or inferred."
+      },
+      "status": "published"
+    },
+    {
+      "id": "pyq-file-66bd8aec72476483354c76fc",
+      "contentType": "source_pdf",
+      "isPYQ": true,
+      "program": "open-electives",
+      "semester": 1,
+      "subject": "ELMP-01",
+      "language": "und",
+      "sourceFile": {
+        "fileName": "ELMP-01.pdf",
+        "url": "https://drive.google.com/file/d/1DY0C5WI84IlPT4TniIAdQdasKeE_zzMp/view",
+        "folderPath": "OPEN ELECTIVES/1ST SEM",
+        "driveFileId": "1DY0C5WI84IlPT4TniIAdQdasKeE_zzMp"
+      },
+      "source": {
+        "title": "ELMP-01.pdf",
+        "url": "https://drive.google.com/file/d/1DY0C5WI84IlPT4TniIAdQdasKeE_zzMp/view",
+        "publisher": "User-provided PYQ collection",
+        "retrievedOn": "2026-10-02",
+        "note": "Original PDF link. University not assigned; question text and exam metadata have not been transcribed or inferred."
+      },
+      "status": "published"
+    },
+    {
+      "id": "pyq-file-5acd67aa941e3bd4b462f88f",
+      "contentType": "source_pdf",
+      "isPYQ": true,
+      "program": "open-electives",
+      "semester": 1,
+      "subject": "ELMPA-01",
+      "language": "und",
+      "sourceFile": {
+        "fileName": "ELMPA-01.pdf",
+        "url": "https://drive.google.com/file/d/1N7zwn57ENl3thPGLd4PN2JwfRp7dCady/view",
+        "folderPath": "OPEN ELECTIVES/1ST SEM",
+        "driveFileId": "1N7zwn57ENl3thPGLd4PN2JwfRp7dCady"
+      },
+      "source": {
+        "title": "ELMPA-01.pdf",
+        "url": "https://drive.google.com/file/d/1N7zwn57ENl3thPGLd4PN2JwfRp7dCady/view",
+        "publisher": "User-provided PYQ collection",
+        "retrievedOn": "2026-10-02",
+        "note": "Original PDF link. University not assigned; question text and exam metadata have not been transcribed or inferred."
+      },
+      "status": "published"
+    },
+    {
+      "id": "pyq-file-eaea56d367862aaa78a5ba94",
+      "contentType": "source_pdf",
+      "isPYQ": true,
+      "program": "open-electives",
+      "semester": 1,
+      "subject": "ELMPS-1.1",
+      "language": "und",
+      "sourceFile": {
+        "fileName": "ELMPS-1.1.pdf",
+        "url": "https://drive.google.com/file/d/1I5iVL6tGWO2q_wc7L6lRSQJwyYs_h5Os/view",
+        "folderPath": "OPEN ELECTIVES/1ST SEM",
+        "driveFileId": "1I5iVL6tGWO2q_wc7L6lRSQJwyYs_h5Os"
+      },
+      "source": {
+        "title": "ELMPS-1.1.pdf",
+        "url": "https://drive.google.com/file/d/1I5iVL6tGWO2q_wc7L6lRSQJwyYs_h5Os/view",
+        "publisher": "User-provided PYQ collection",
+        "retrievedOn": "2026-10-02",
+        "note": "Original PDF link. University not assigned; question text and exam metadata have not been transcribed or inferred."
+      },
+      "status": "published"
+    },
+    {
+      "id": "pyq-file-84034824883a64e08a1ed3af",
+      "contentType": "source_pdf",
+      "isPYQ": true,
+      "program": "open-electives",
+      "semester": 1,
+      "subject": "ELMPSY-01",
+      "language": "und",
+      "sourceFile": {
+        "fileName": "ELMPSY-01.pdf",
+        "url": "https://drive.google.com/file/d/1ss_rJWGxlUFc2MVc58egcwN0IR2GTafT/view",
+        "folderPath": "OPEN ELECTIVES/1ST SEM",
+        "driveFileId": "1ss_rJWGxlUFc2MVc58egcwN0IR2GTafT"
+      },
+      "source": {
+        "title": "ELMPSY-01.pdf",
+        "url": "https://drive.google.com/file/d/1ss_rJWGxlUFc2MVc58egcwN0IR2GTafT/view",
+        "publisher": "User-provided PYQ collection",
+        "retrievedOn": "2026-10-02",
+        "note": "Original PDF link. University not assigned; question text and exam metadata have not been transcribed or inferred."
+      },
+      "status": "published"
+    },
+    {
+      "id": "pyq-file-dfba352202d525e0420986b4",
+      "contentType": "source_pdf",
+      "isPYQ": true,
+      "program": "open-electives",
+      "semester": 1,
+      "subject": "ELMSO-01",
+      "language": "und",
+      "sourceFile": {
+        "fileName": "ELMSO-01.pdf",
+        "url": "https://drive.google.com/file/d/1UCZL7nV6cXU7a5DvIB_4HU2uBMK4JMpD/view",
+        "folderPath": "OPEN ELECTIVES/1ST SEM",
+        "driveFileId": "1UCZL7nV6cXU7a5DvIB_4HU2uBMK4JMpD"
+      },
+      "source": {
+        "title": "ELMSO-01.pdf",
+        "url": "https://drive.google.com/file/d/1UCZL7nV6cXU7a5DvIB_4HU2uBMK4JMpD/view",
+        "publisher": "User-provided PYQ collection",
+        "retrievedOn": "2026-10-02",
+        "note": "Original PDF link. University not assigned; question text and exam metadata have not been transcribed or inferred."
+      },
+      "status": "published"
+    },
+    {
+      "id": "pyq-file-6e5ff60d642ed24ccea1262a",
+      "contentType": "source_pdf",
+      "isPYQ": true,
+      "program": "open-electives",
+      "semester": 1,
+      "subject": "ELMTS-01",
+      "language": "und",
+      "sourceFile": {
+        "fileName": "ELMTS-01.pdf",
+        "url": "https://drive.google.com/file/d/1FWoBhTZ6TFhywZhaVdJPAAKX_CxWRVHI/view",
+        "folderPath": "OPEN ELECTIVES/1ST SEM",
+        "driveFileId": "1FWoBhTZ6TFhywZhaVdJPAAKX_CxWRVHI"
+      },
+      "source": {
+        "title": "ELMTS-01.pdf",
+        "url": "https://drive.google.com/file/d/1FWoBhTZ6TFhywZhaVdJPAAKX_CxWRVHI/view",
+        "publisher": "User-provided PYQ collection",
+        "retrievedOn": "2026-10-02",
+        "note": "Original PDF link. University not assigned; question text and exam metadata have not been transcribed or inferred."
+      },
+      "status": "published"
+    },
+    {
+      "id": "pyq-file-326d4efd8b13f9b083092bfd",
+      "contentType": "source_pdf",
+      "isPYQ": true,
+      "program": "open-electives",
+      "semester": 1,
+      "subject": "ELMZ-01",
+      "language": "und",
+      "sourceFile": {
+        "fileName": "ELMZ-01.pdf",
+        "url": "https://drive.google.com/file/d/1LxfQbY5uBmyj8xGiBVh4d7c7MbrrY2fJ/view",
+        "folderPath": "OPEN ELECTIVES/1ST SEM",
+        "driveFileId": "1LxfQbY5uBmyj8xGiBVh4d7c7MbrrY2fJ"
+      },
+      "source": {
+        "title": "ELMZ-01.pdf",
+        "url": "https://drive.google.com/file/d/1LxfQbY5uBmyj8xGiBVh4d7c7MbrrY2fJ/view",
+        "publisher": "User-provided PYQ collection",
+        "retrievedOn": "2026-10-02",
+        "note": "Original PDF link. University not assigned; question text and exam metadata have not been transcribed or inferred."
+      },
+      "status": "published"
+    },
+    {
+      "id": "pyq-file-2f9caaebe2f11edb1b8e0a69",
+      "contentType": "source_pdf",
+      "isPYQ": true,
+      "program": "open-electives",
+      "semester": 1,
+      "subject": "MBCSEC-1 [OE-723]",
+      "language": "und",
+      "sourceFile": {
+        "fileName": "MBCSEC-1 [OE-723].pdf",
+        "url": "https://drive.google.com/file/d/1LN_fd7C3nTZrTFa2JcG8RwjpFxR5Ghep/view",
+        "folderPath": "OPEN ELECTIVES/1ST SEM",
+        "driveFileId": "1LN_fd7C3nTZrTFa2JcG8RwjpFxR5Ghep"
+      },
+      "source": {
+        "title": "MBCSEC-1 [OE-723].pdf",
+        "url": "https://drive.google.com/file/d/1LN_fd7C3nTZrTFa2JcG8RwjpFxR5Ghep/view",
+        "publisher": "User-provided PYQ collection",
+        "retrievedOn": "2026-10-02",
+        "note": "Original PDF link. University not assigned; question text and exam metadata have not been transcribed or inferred."
+      },
+      "status": "published"
+    },
+    {
+      "id": "pyq-file-df25444f71544159100c238f",
+      "contentType": "source_pdf",
+      "isPYQ": true,
+      "program": "open-electives",
+      "semester": 2,
+      "subject": "EL2.1",
+      "language": "und",
+      "sourceFile": {
+        "fileName": "EL2.1.pdf",
+        "url": "https://drive.google.com/file/d/1-clhL3xWgBqhyMT81xfdq6bwYY3byEm3/view",
+        "folderPath": "OPEN ELECTIVES/2ND SEM",
+        "driveFileId": "1-clhL3xWgBqhyMT81xfdq6bwYY3byEm3"
+      },
+      "source": {
+        "title": "EL2.1.pdf",
+        "url": "https://drive.google.com/file/d/1-clhL3xWgBqhyMT81xfdq6bwYY3byEm3/view",
+        "publisher": "User-provided PYQ collection",
+        "retrievedOn": "2026-10-02",
+        "note": "Original PDF link. University not assigned; question text and exam metadata have not been transcribed or inferred."
+      },
+      "status": "published"
+    },
+    {
+      "id": "pyq-file-d7a03b98313c32fe92061093",
+      "contentType": "source_pdf",
+      "isPYQ": true,
+      "program": "open-electives",
+      "semester": 2,
+      "subject": "ELC-02",
+      "language": "und",
+      "sourceFile": {
+        "fileName": "ELC-02.pdf",
+        "url": "https://drive.google.com/file/d/17xO_XIyI6dfP5rVm18fbCqSsq7_xRp6p/view",
+        "folderPath": "OPEN ELECTIVES/2ND SEM",
+        "driveFileId": "17xO_XIyI6dfP5rVm18fbCqSsq7_xRp6p"
+      },
+      "source": {
+        "title": "ELC-02.pdf",
+        "url": "https://drive.google.com/file/d/17xO_XIyI6dfP5rVm18fbCqSsq7_xRp6p/view",
+        "publisher": "User-provided PYQ collection",
+        "retrievedOn": "2026-10-02",
+        "note": "Original PDF link. University not assigned; question text and exam metadata have not been transcribed or inferred."
+      },
+      "status": "published"
+    },
+    {
+      "id": "pyq-file-cc64719c3064d3de6c82b4e3",
+      "contentType": "source_pdf",
+      "isPYQ": true,
+      "program": "open-electives",
+      "semester": 2,
+      "subject": "ELES-02",
+      "language": "und",
+      "sourceFile": {
+        "fileName": "ELES-02.pdf",
+        "url": "https://drive.google.com/file/d/1xu8QK4a6E5xq-L19ttiDjbQINuF5vXEU/view",
+        "folderPath": "OPEN ELECTIVES/2ND SEM",
+        "driveFileId": "1xu8QK4a6E5xq-L19ttiDjbQINuF5vXEU"
+      },
+      "source": {
+        "title": "ELES-02.pdf",
+        "url": "https://drive.google.com/file/d/1xu8QK4a6E5xq-L19ttiDjbQINuF5vXEU/view",
+        "publisher": "User-provided PYQ collection",
+        "retrievedOn": "2026-10-02",
+        "note": "Original PDF link. University not assigned; question text and exam metadata have not been transcribed or inferred."
+      },
+      "status": "published"
+    },
+    {
+      "id": "pyq-file-fb200aae9cfcbcfd72b91181",
+      "contentType": "source_pdf",
+      "isPYQ": true,
+      "program": "open-electives",
+      "semester": 2,
+      "subject": "ELM-02",
+      "language": "und",
+      "sourceFile": {
+        "fileName": "ELM-02.pdf",
+        "url": "https://drive.google.com/file/d/1dDX6nUXSzMFozBbJBT9B3PHNS6ssodHW/view",
+        "folderPath": "OPEN ELECTIVES/2ND SEM",
+        "driveFileId": "1dDX6nUXSzMFozBbJBT9B3PHNS6ssodHW"
+      },
+      "source": {
+        "title": "ELM-02.pdf",
+        "url": "https://drive.google.com/file/d/1dDX6nUXSzMFozBbJBT9B3PHNS6ssodHW/view",
+        "publisher": "User-provided PYQ collection",
+        "retrievedOn": "2026-10-02",
+        "note": "Original PDF link. University not assigned; question text and exam metadata have not been transcribed or inferred."
+      },
+      "status": "published"
+    },
+    {
+      "id": "pyq-file-07448f345054f993076ce26b",
+      "contentType": "source_pdf",
+      "isPYQ": true,
+      "program": "open-electives",
+      "semester": 2,
+      "subject": "ELMAE-02",
+      "language": "und",
+      "sourceFile": {
+        "fileName": "ELMAE-02.pdf",
+        "url": "https://drive.google.com/file/d/1ygGQPFzcME73bAsyqSOjoK9RRHeEJLXG/view",
+        "folderPath": "OPEN ELECTIVES/2ND SEM",
+        "driveFileId": "1ygGQPFzcME73bAsyqSOjoK9RRHeEJLXG"
+      },
+      "source": {
+        "title": "ELMAE-02.pdf",
+        "url": "https://drive.google.com/file/d/1ygGQPFzcME73bAsyqSOjoK9RRHeEJLXG/view",
+        "publisher": "User-provided PYQ collection",
+        "retrievedOn": "2026-10-02",
+        "note": "Original PDF link. University not assigned; question text and exam metadata have not been transcribed or inferred."
+      },
+      "status": "published"
+    },
+    {
+      "id": "pyq-file-5e5b075e55f349cd4e7767e1",
+      "contentType": "source_pdf",
+      "isPYQ": true,
+      "program": "open-electives",
+      "semester": 2,
+      "subject": "ELMAHA-02",
+      "language": "und",
+      "sourceFile": {
+        "fileName": "ELMAHA-02.pdf",
+        "url": "https://drive.google.com/file/d/1Rl3m6z2TaEkxseM6Zxipn9q7dcowa2Nv/view",
+        "folderPath": "OPEN ELECTIVES/2ND SEM",
+        "driveFileId": "1Rl3m6z2TaEkxseM6Zxipn9q7dcowa2Nv"
+      },
+      "source": {
+        "title": "ELMAHA-02.pdf",
+        "url": "https://drive.google.com/file/d/1Rl3m6z2TaEkxseM6Zxipn9q7dcowa2Nv/view",
+        "publisher": "User-provided PYQ collection",
+        "retrievedOn": "2026-10-02",
+        "note": "Original PDF link. University not assigned; question text and exam metadata have not been transcribed or inferred."
+      },
+      "status": "published"
+    },
+    {
+      "id": "pyq-file-c404c763071d7b8bda9aad6b",
+      "contentType": "source_pdf",
+      "isPYQ": true,
+      "program": "open-electives",
+      "semester": 2,
+      "subject": "ELMBC-2",
+      "language": "und",
+      "sourceFile": {
+        "fileName": "ELMBC-2.pdf",
+        "url": "https://drive.google.com/file/d/1PQNCEQiD0hTKfYjwfwIcJ-KrWWDKAyrd/view",
+        "folderPath": "OPEN ELECTIVES/2ND SEM",
+        "driveFileId": "1PQNCEQiD0hTKfYjwfwIcJ-KrWWDKAyrd"
+      },
+      "source": {
+        "title": "ELMBC-2.pdf",
+        "url": "https://drive.google.com/file/d/1PQNCEQiD0hTKfYjwfwIcJ-KrWWDKAyrd/view",
+        "publisher": "User-provided PYQ collection",
+        "retrievedOn": "2026-10-02",
+        "note": "Original PDF link. University not assigned; question text and exam metadata have not been transcribed or inferred."
+      },
+      "status": "published"
+    },
+    {
+      "id": "pyq-file-6d0b206625985a88d2ab8ce8",
+      "contentType": "source_pdf",
+      "isPYQ": true,
+      "program": "open-electives",
+      "semester": 2,
+      "subject": "ELMBOT-2",
+      "language": "und",
+      "sourceFile": {
+        "fileName": "ELMBOT-2.pdf",
+        "url": "https://drive.google.com/file/d/1a5bCiXTforXmchDp5DjeorlSzp6gki_1/view",
+        "folderPath": "OPEN ELECTIVES/2ND SEM",
+        "driveFileId": "1a5bCiXTforXmchDp5DjeorlSzp6gki_1"
+      },
+      "source": {
+        "title": "ELMBOT-2.pdf",
+        "url": "https://drive.google.com/file/d/1a5bCiXTforXmchDp5DjeorlSzp6gki_1/view",
+        "publisher": "User-provided PYQ collection",
+        "retrievedOn": "2026-10-02",
+        "note": "Original PDF link. University not assigned; question text and exam metadata have not been transcribed or inferred."
+      },
+      "status": "published"
+    },
+    {
+      "id": "pyq-file-84ffc27a144a71bf5f87723e",
+      "contentType": "source_pdf",
+      "isPYQ": true,
+      "program": "open-electives",
+      "semester": 2,
+      "subject": "ELMBT-02",
+      "language": "und",
+      "sourceFile": {
+        "fileName": "ELMBT-02.pdf",
+        "url": "https://drive.google.com/file/d/1t-hsIpimgbCBcBgThjGCCPN34cewKE-3/view",
+        "folderPath": "OPEN ELECTIVES/2ND SEM",
+        "driveFileId": "1t-hsIpimgbCBcBgThjGCCPN34cewKE-3"
+      },
+      "source": {
+        "title": "ELMBT-02.pdf",
+        "url": "https://drive.google.com/file/d/1t-hsIpimgbCBcBgThjGCCPN34cewKE-3/view",
+        "publisher": "User-provided PYQ collection",
+        "retrievedOn": "2026-10-02",
+        "note": "Original PDF link. University not assigned; question text and exam metadata have not been transcribed or inferred."
+      },
+      "status": "published"
+    },
+    {
+      "id": "pyq-file-14fafcfa336b087fa9656c89",
+      "contentType": "source_pdf",
+      "isPYQ": true,
+      "program": "open-electives",
+      "semester": 2,
+      "subject": "ELMCH-02",
+      "language": "und",
+      "sourceFile": {
+        "fileName": "ELMCH-02.pdf",
+        "url": "https://drive.google.com/file/d/1LaZiTHNpoHCfBba0d4X0-L63PogSgmya/view",
+        "folderPath": "OPEN ELECTIVES/2ND SEM",
+        "driveFileId": "1LaZiTHNpoHCfBba0d4X0-L63PogSgmya"
+      },
+      "source": {
+        "title": "ELMCH-02.pdf",
+        "url": "https://drive.google.com/file/d/1LaZiTHNpoHCfBba0d4X0-L63PogSgmya/view",
+        "publisher": "User-provided PYQ collection",
+        "retrievedOn": "2026-10-02",
+        "note": "Original PDF link. University not assigned; question text and exam metadata have not been transcribed or inferred."
+      },
+      "status": "published"
+    },
+    {
+      "id": "pyq-file-1df9d96c2ded3e72b9f6f8bb",
+      "contentType": "source_pdf",
+      "isPYQ": true,
+      "program": "open-electives",
+      "semester": 2,
+      "subject": "ELMCND-02",
+      "language": "und",
+      "sourceFile": {
+        "fileName": "ELMCND-02.pdf",
+        "url": "https://drive.google.com/file/d/1eOZI7UG4C9Xj-DwTJIAAWqrq5zy5mh1I/view",
+        "folderPath": "OPEN ELECTIVES/2ND SEM",
+        "driveFileId": "1eOZI7UG4C9Xj-DwTJIAAWqrq5zy5mh1I"
+      },
+      "source": {
+        "title": "ELMCND-02.pdf",
+        "url": "https://drive.google.com/file/d/1eOZI7UG4C9Xj-DwTJIAAWqrq5zy5mh1I/view",
+        "publisher": "User-provided PYQ collection",
+        "retrievedOn": "2026-10-02",
+        "note": "Original PDF link. University not assigned; question text and exam metadata have not been transcribed or inferred."
+      },
+      "status": "published"
+    },
+    {
+      "id": "pyq-file-f3ad70c09204e1c350167967",
+      "contentType": "source_pdf",
+      "isPYQ": true,
+      "program": "open-electives",
+      "semester": 2,
+      "subject": "ELMCS-02",
+      "language": "und",
+      "sourceFile": {
+        "fileName": "ELMCS-02.pdf",
+        "url": "https://drive.google.com/file/d/10WvLNO3Dx876V32_ilafCtOjTchDhbQW/view",
+        "folderPath": "OPEN ELECTIVES/2ND SEM",
+        "driveFileId": "10WvLNO3Dx876V32_ilafCtOjTchDhbQW"
+      },
+      "source": {
+        "title": "ELMCS-02.pdf",
+        "url": "https://drive.google.com/file/d/10WvLNO3Dx876V32_ilafCtOjTchDhbQW/view",
+        "publisher": "User-provided PYQ collection",
+        "retrievedOn": "2026-10-02",
+        "note": "Original PDF link. University not assigned; question text and exam metadata have not been transcribed or inferred."
+      },
+      "status": "published"
+    },
+    {
+      "id": "pyq-file-0efee82488af48f54b884b39",
+      "contentType": "source_pdf",
+      "isPYQ": true,
+      "program": "open-electives",
+      "semester": 2,
+      "subject": "ELMEC-02",
+      "language": "und",
+      "sourceFile": {
+        "fileName": "ELMEC-02.pdf",
+        "url": "https://drive.google.com/file/d/14sQ3O1RhVgxQFki-beMWzC8EHjr2YdL5/view",
+        "folderPath": "OPEN ELECTIVES/2ND SEM",
+        "driveFileId": "14sQ3O1RhVgxQFki-beMWzC8EHjr2YdL5"
+      },
+      "source": {
+        "title": "ELMEC-02.pdf",
+        "url": "https://drive.google.com/file/d/14sQ3O1RhVgxQFki-beMWzC8EHjr2YdL5/view",
+        "publisher": "User-provided PYQ collection",
+        "retrievedOn": "2026-10-02",
+        "note": "Original PDF link. University not assigned; question text and exam metadata have not been transcribed or inferred."
+      },
+      "status": "published"
+    },
+    {
+      "id": "pyq-file-779cd93767495fce8be21f0d",
+      "contentType": "source_pdf",
+      "isPYQ": true,
+      "program": "open-electives",
+      "semester": 2,
+      "subject": "ELMEN-02",
+      "language": "en",
+      "sourceFile": {
+        "fileName": "ELMEN-02.pdf",
+        "url": "https://drive.google.com/file/d/18Jspsx1sOG9c8lTuDz_VXE-AfmlVTfwy/view",
+        "folderPath": "OPEN ELECTIVES/2ND SEM",
+        "driveFileId": "18Jspsx1sOG9c8lTuDz_VXE-AfmlVTfwy"
+      },
+      "source": {
+        "title": "ELMEN-02.pdf",
+        "url": "https://drive.google.com/file/d/18Jspsx1sOG9c8lTuDz_VXE-AfmlVTfwy/view",
+        "publisher": "User-provided PYQ collection",
+        "retrievedOn": "2026-10-02",
+        "note": "Original PDF link. University not assigned; question text and exam metadata have not been transcribed or inferred."
+      },
+      "status": "published"
+    },
+    {
+      "id": "pyq-file-bcba79cd9166a63bed75db3a",
+      "contentType": "source_pdf",
+      "isPYQ": true,
+      "program": "open-electives",
+      "semester": 2,
+      "subject": "ELMES-02",
+      "language": "und",
+      "sourceFile": {
+        "fileName": "ELMES-02.pdf",
+        "url": "https://drive.google.com/file/d/1bevLBWIyWsnozOD_mlJ5_LqE4jhjc3Ad/view",
+        "folderPath": "OPEN ELECTIVES/2ND SEM",
+        "driveFileId": "1bevLBWIyWsnozOD_mlJ5_LqE4jhjc3Ad"
+      },
+      "source": {
+        "title": "ELMES-02.pdf",
+        "url": "https://drive.google.com/file/d/1bevLBWIyWsnozOD_mlJ5_LqE4jhjc3Ad/view",
+        "publisher": "User-provided PYQ collection",
+        "retrievedOn": "2026-10-02",
+        "note": "Original PDF link. University not assigned; question text and exam metadata have not been transcribed or inferred."
+      },
+      "status": "published"
+    },
+    {
+      "id": "pyq-file-4aa0e7e731e9c5807c720131",
+      "contentType": "source_pdf",
+      "isPYQ": true,
+      "program": "open-electives",
+      "semester": 2,
+      "subject": "ELMFNS-02",
+      "language": "und",
+      "sourceFile": {
+        "fileName": "ELMFNS-02.pdf",
+        "url": "https://drive.google.com/file/d/1DoDxCYgHypCOqeAJKW8hY3OvfBZnTNbg/view",
+        "folderPath": "OPEN ELECTIVES/2ND SEM",
+        "driveFileId": "1DoDxCYgHypCOqeAJKW8hY3OvfBZnTNbg"
+      },
+      "source": {
+        "title": "ELMFNS-02.pdf",
+        "url": "https://drive.google.com/file/d/1DoDxCYgHypCOqeAJKW8hY3OvfBZnTNbg/view",
+        "publisher": "User-provided PYQ collection",
+        "retrievedOn": "2026-10-02",
+        "note": "Original PDF link. University not assigned; question text and exam metadata have not been transcribed or inferred."
+      },
+      "status": "published"
+    },
+    {
+      "id": "pyq-file-5baac54ffe91dbe13c602d14",
+      "contentType": "source_pdf",
+      "isPYQ": true,
+      "program": "open-electives",
+      "semester": 2,
+      "subject": "ELMG-02",
+      "language": "und",
+      "sourceFile": {
+        "fileName": "ELMG-02.pdf",
+        "url": "https://drive.google.com/file/d/1z67byG8-eXqoBZuLd2eBuomSjuTg1UeT/view",
+        "folderPath": "OPEN ELECTIVES/2ND SEM",
+        "driveFileId": "1z67byG8-eXqoBZuLd2eBuomSjuTg1UeT"
+      },
+      "source": {
+        "title": "ELMG-02.pdf",
+        "url": "https://drive.google.com/file/d/1z67byG8-eXqoBZuLd2eBuomSjuTg1UeT/view",
+        "publisher": "User-provided PYQ collection",
+        "retrievedOn": "2026-10-02",
+        "note": "Original PDF link. University not assigned; question text and exam metadata have not been transcribed or inferred."
+      },
+      "status": "published"
+    },
+    {
+      "id": "pyq-file-5e15c9001d79108e075245f4",
+      "contentType": "source_pdf",
+      "isPYQ": true,
+      "program": "open-electives",
+      "semester": 2,
+      "subject": "ELMHIS-02",
+      "language": "und",
+      "sourceFile": {
+        "fileName": "ELMHIS-02.pdf",
+        "url": "https://drive.google.com/file/d/1MCs69l4i_Ej_7Ym2LVoaB6EjslZ_bqcc/view",
+        "folderPath": "OPEN ELECTIVES/2ND SEM",
+        "driveFileId": "1MCs69l4i_Ej_7Ym2LVoaB6EjslZ_bqcc"
+      },
+      "source": {
+        "title": "ELMHIS-02.pdf",
+        "url": "https://drive.google.com/file/d/1MCs69l4i_Ej_7Ym2LVoaB6EjslZ_bqcc/view",
+        "publisher": "User-provided PYQ collection",
+        "retrievedOn": "2026-10-02",
+        "note": "Original PDF link. University not assigned; question text and exam metadata have not been transcribed or inferred."
+      },
+      "status": "published"
+    },
+    {
+      "id": "pyq-file-6c50f06ed727f8d71f5411c7",
+      "contentType": "source_pdf",
+      "isPYQ": true,
+      "program": "open-electives",
+      "semester": 2,
+      "subject": "ELMIT-02",
+      "language": "und",
+      "sourceFile": {
+        "fileName": "ELMIT-02.pdf",
+        "url": "https://drive.google.com/file/d/1R_gppqdlYiR839PPVrQeoT97srCO_H0u/view",
+        "folderPath": "OPEN ELECTIVES/2ND SEM",
+        "driveFileId": "1R_gppqdlYiR839PPVrQeoT97srCO_H0u"
+      },
+      "source": {
+        "title": "ELMIT-02.pdf",
+        "url": "https://drive.google.com/file/d/1R_gppqdlYiR839PPVrQeoT97srCO_H0u/view",
+        "publisher": "User-provided PYQ collection",
+        "retrievedOn": "2026-10-02",
+        "note": "Original PDF link. University not assigned; question text and exam metadata have not been transcribed or inferred."
+      },
+      "status": "published"
+    },
+    {
+      "id": "pyq-file-9f114c5508a231ebc6dbc685",
+      "contentType": "source_pdf",
+      "isPYQ": true,
+      "program": "open-electives",
+      "semester": 2,
+      "subject": "ELMJMC-02",
+      "language": "und",
+      "sourceFile": {
+        "fileName": "ELMJMC-02.pdf",
+        "url": "https://drive.google.com/file/d/1MVdENkjwHrDNyr7Q6jwx4FESvAV7BcqI/view",
+        "folderPath": "OPEN ELECTIVES/2ND SEM",
+        "driveFileId": "1MVdENkjwHrDNyr7Q6jwx4FESvAV7BcqI"
+      },
+      "source": {
+        "title": "ELMJMC-02.pdf",
+        "url": "https://drive.google.com/file/d/1MVdENkjwHrDNyr7Q6jwx4FESvAV7BcqI/view",
+        "publisher": "User-provided PYQ collection",
+        "retrievedOn": "2026-10-02",
+        "note": "Original PDF link. University not assigned; question text and exam metadata have not been transcribed or inferred."
+      },
+      "status": "published"
+    },
+    {
+      "id": "pyq-file-b8380c3b6a06a5cbcf22c33f",
+      "contentType": "source_pdf",
+      "isPYQ": true,
+      "program": "open-electives",
+      "semester": 2,
+      "subject": "ELMKAN-02",
+      "language": "kn",
+      "sourceFile": {
+        "fileName": "ELMKAN-02.pdf",
+        "url": "https://drive.google.com/file/d/1QBJU7m4wpfCDX2FAXLha5ez9CiPXU63n/view",
+        "folderPath": "OPEN ELECTIVES/2ND SEM",
+        "driveFileId": "1QBJU7m4wpfCDX2FAXLha5ez9CiPXU63n"
+      },
+      "source": {
+        "title": "ELMKAN-02.pdf",
+        "url": "https://drive.google.com/file/d/1QBJU7m4wpfCDX2FAXLha5ez9CiPXU63n/view",
+        "publisher": "User-provided PYQ collection",
+        "retrievedOn": "2026-10-02",
+        "note": "Original PDF link. University not assigned; question text and exam metadata have not been transcribed or inferred."
+      },
+      "status": "published"
+    },
+    {
+      "id": "pyq-file-f93c2dc725e1953d4842b80d",
+      "contentType": "source_pdf",
+      "isPYQ": true,
+      "program": "open-electives",
+      "semester": 2,
+      "subject": "ELMM-02",
+      "language": "und",
+      "sourceFile": {
+        "fileName": "ELMM-02.pdf",
+        "url": "https://drive.google.com/file/d/1FrTjmTndUNHQmmBTG06rN6mTkPepYhUz/view",
+        "folderPath": "OPEN ELECTIVES/2ND SEM",
+        "driveFileId": "1FrTjmTndUNHQmmBTG06rN6mTkPepYhUz"
+      },
+      "source": {
+        "title": "ELMM-02.pdf",
+        "url": "https://drive.google.com/file/d/1FrTjmTndUNHQmmBTG06rN6mTkPepYhUz/view",
+        "publisher": "User-provided PYQ collection",
+        "retrievedOn": "2026-10-02",
+        "note": "Original PDF link. University not assigned; question text and exam metadata have not been transcribed or inferred."
+      },
+      "status": "published"
+    },
+    {
+      "id": "pyq-file-791d1179446aff2f8e53271c",
+      "contentType": "source_pdf",
+      "isPYQ": true,
+      "program": "open-electives",
+      "semester": 2,
+      "subject": "ELMMB-02",
+      "language": "und",
+      "sourceFile": {
+        "fileName": "ELMMB-02.pdf",
+        "url": "https://drive.google.com/file/d/1t2SBjxRLzvmduBQKUufFMrLsm86Z9KLL/view",
+        "folderPath": "OPEN ELECTIVES/2ND SEM",
+        "driveFileId": "1t2SBjxRLzvmduBQKUufFMrLsm86Z9KLL"
+      },
+      "source": {
+        "title": "ELMMB-02.pdf",
+        "url": "https://drive.google.com/file/d/1t2SBjxRLzvmduBQKUufFMrLsm86Z9KLL/view",
+        "publisher": "User-provided PYQ collection",
+        "retrievedOn": "2026-10-02",
+        "note": "Original PDF link. University not assigned; question text and exam metadata have not been transcribed or inferred."
+      },
+      "status": "published"
+    },
+    {
+      "id": "pyq-file-144c222e3494fa2429fd038d",
+      "contentType": "source_pdf",
+      "isPYQ": true,
+      "program": "open-electives",
+      "semester": 2,
+      "subject": "ELMMCA-02",
+      "language": "und",
+      "sourceFile": {
+        "fileName": "ELMMCA-02.pdf",
+        "url": "https://drive.google.com/file/d/12ZZkFf9YL14teeA9N8RsTAVC7vlzV9Qk/view",
+        "folderPath": "OPEN ELECTIVES/2ND SEM",
+        "driveFileId": "12ZZkFf9YL14teeA9N8RsTAVC7vlzV9Qk"
+      },
+      "source": {
+        "title": "ELMMCA-02.pdf",
+        "url": "https://drive.google.com/file/d/12ZZkFf9YL14teeA9N8RsTAVC7vlzV9Qk/view",
+        "publisher": "User-provided PYQ collection",
+        "retrievedOn": "2026-10-02",
+        "note": "Original PDF link. University not assigned; question text and exam metadata have not been transcribed or inferred."
+      },
+      "status": "published"
+    },
+    {
+      "id": "pyq-file-7155bef04dd6e2b26b753cd1",
+      "contentType": "source_pdf",
+      "isPYQ": true,
+      "program": "open-electives",
+      "semester": 2,
+      "subject": "ELMP-2",
+      "language": "und",
+      "sourceFile": {
+        "fileName": "ELMP-2.pdf",
+        "url": "https://drive.google.com/file/d/1PQcKIb0EHOmxDopIFyzf7IPjL7ep3RaQ/view",
+        "folderPath": "OPEN ELECTIVES/2ND SEM",
+        "driveFileId": "1PQcKIb0EHOmxDopIFyzf7IPjL7ep3RaQ"
+      },
+      "source": {
+        "title": "ELMP-2.pdf",
+        "url": "https://drive.google.com/file/d/1PQcKIb0EHOmxDopIFyzf7IPjL7ep3RaQ/view",
+        "publisher": "User-provided PYQ collection",
+        "retrievedOn": "2026-10-02",
+        "note": "Original PDF link. University not assigned; question text and exam metadata have not been transcribed or inferred."
+      },
+      "status": "published"
+    },
+    {
+      "id": "pyq-file-83e87a6d6ab9435c5f8ba398",
+      "contentType": "source_pdf",
+      "isPYQ": true,
+      "program": "open-electives",
+      "semester": 2,
+      "subject": "ELMPA-02",
+      "language": "und",
+      "sourceFile": {
+        "fileName": "ELMPA-02.pdf",
+        "url": "https://drive.google.com/file/d/1LsmgGbJCtFw5ZAZblr14-phOZAN9rmym/view",
+        "folderPath": "OPEN ELECTIVES/2ND SEM",
+        "driveFileId": "1LsmgGbJCtFw5ZAZblr14-phOZAN9rmym"
+      },
+      "source": {
+        "title": "ELMPA-02.pdf",
+        "url": "https://drive.google.com/file/d/1LsmgGbJCtFw5ZAZblr14-phOZAN9rmym/view",
+        "publisher": "User-provided PYQ collection",
+        "retrievedOn": "2026-10-02",
+        "note": "Original PDF link. University not assigned; question text and exam metadata have not been transcribed or inferred."
+      },
+      "status": "published"
+    },
+    {
+      "id": "pyq-file-f7ab80f961ea7760321ea9b8",
+      "contentType": "source_pdf",
+      "isPYQ": true,
+      "program": "open-electives",
+      "semester": 2,
+      "subject": "ELMPS-2.1",
+      "language": "und",
+      "sourceFile": {
+        "fileName": "ELMPS-2.1.pdf",
+        "url": "https://drive.google.com/file/d/11EDa5XH9WaqKu8Mh7zkqhCDPzP6Flq_0/view",
+        "folderPath": "OPEN ELECTIVES/2ND SEM",
+        "driveFileId": "11EDa5XH9WaqKu8Mh7zkqhCDPzP6Flq_0"
+      },
+      "source": {
+        "title": "ELMPS-2.1.pdf",
+        "url": "https://drive.google.com/file/d/11EDa5XH9WaqKu8Mh7zkqhCDPzP6Flq_0/view",
+        "publisher": "User-provided PYQ collection",
+        "retrievedOn": "2026-10-02",
+        "note": "Original PDF link. University not assigned; question text and exam metadata have not been transcribed or inferred."
+      },
+      "status": "published"
+    },
+    {
+      "id": "pyq-file-535162cde13056e958e4f602",
+      "contentType": "source_pdf",
+      "isPYQ": true,
+      "program": "open-electives",
+      "semester": 2,
+      "subject": "ELMPSY-02",
+      "language": "und",
+      "sourceFile": {
+        "fileName": "ELMPSY-02.pdf",
+        "url": "https://drive.google.com/file/d/16bSFQIZqK8Rshg0N_t_xTKDPNeGNqTzR/view",
+        "folderPath": "OPEN ELECTIVES/2ND SEM",
+        "driveFileId": "16bSFQIZqK8Rshg0N_t_xTKDPNeGNqTzR"
+      },
+      "source": {
+        "title": "ELMPSY-02.pdf",
+        "url": "https://drive.google.com/file/d/16bSFQIZqK8Rshg0N_t_xTKDPNeGNqTzR/view",
+        "publisher": "User-provided PYQ collection",
+        "retrievedOn": "2026-10-02",
+        "note": "Original PDF link. University not assigned; question text and exam metadata have not been transcribed or inferred."
+      },
+      "status": "published"
+    },
+    {
+      "id": "pyq-file-885938a34106f35c1bfbd75b",
+      "contentType": "source_pdf",
+      "isPYQ": true,
+      "program": "open-electives",
+      "semester": 2,
+      "subject": "ELMSO-02",
+      "language": "und",
+      "sourceFile": {
+        "fileName": "ELMSO-02.pdf",
+        "url": "https://drive.google.com/file/d/1RWLdsBFp2UuIiRZtOlINm8vk6VgATuqB/view",
+        "folderPath": "OPEN ELECTIVES/2ND SEM",
+        "driveFileId": "1RWLdsBFp2UuIiRZtOlINm8vk6VgATuqB"
+      },
+      "source": {
+        "title": "ELMSO-02.pdf",
+        "url": "https://drive.google.com/file/d/1RWLdsBFp2UuIiRZtOlINm8vk6VgATuqB/view",
+        "publisher": "User-provided PYQ collection",
+        "retrievedOn": "2026-10-02",
+        "note": "Original PDF link. University not assigned; question text and exam metadata have not been transcribed or inferred."
+      },
+      "status": "published"
+    },
+    {
+      "id": "pyq-file-104681a92bb90e096e164301",
+      "contentType": "source_pdf",
+      "isPYQ": true,
+      "program": "open-electives",
+      "semester": 2,
+      "subject": "ELMT-02",
+      "language": "und",
+      "sourceFile": {
+        "fileName": "ELMT-02.pdf",
+        "url": "https://drive.google.com/file/d/1u6sjjza382ySc18tyaSztrCnNrtUghlT/view",
+        "folderPath": "OPEN ELECTIVES/2ND SEM",
+        "driveFileId": "1u6sjjza382ySc18tyaSztrCnNrtUghlT"
+      },
+      "source": {
+        "title": "ELMT-02.pdf",
+        "url": "https://drive.google.com/file/d/1u6sjjza382ySc18tyaSztrCnNrtUghlT/view",
+        "publisher": "User-provided PYQ collection",
+        "retrievedOn": "2026-10-02",
+        "note": "Original PDF link. University not assigned; question text and exam metadata have not been transcribed or inferred."
+      },
+      "status": "published"
+    },
+    {
+      "id": "pyq-file-0373e66cfcbade62c62d7940",
+      "contentType": "source_pdf",
+      "isPYQ": true,
+      "program": "open-electives",
+      "semester": 2,
+      "subject": "ELMZ-02",
+      "language": "und",
+      "sourceFile": {
+        "fileName": "ELMZ-02.pdf",
+        "url": "https://drive.google.com/file/d/1IsBgwLQmt7r9v-fLp7wKM-cneZnEptA_/view",
+        "folderPath": "OPEN ELECTIVES/2ND SEM",
+        "driveFileId": "1IsBgwLQmt7r9v-fLp7wKM-cneZnEptA_"
+      },
+      "source": {
+        "title": "ELMZ-02.pdf",
+        "url": "https://drive.google.com/file/d/1IsBgwLQmt7r9v-fLp7wKM-cneZnEptA_/view",
+        "publisher": "User-provided PYQ collection",
+        "retrievedOn": "2026-10-02",
+        "note": "Original PDF link. University not assigned; question text and exam metadata have not been transcribed or inferred."
+      },
+      "status": "published"
+    },
+    {
+      "id": "pyq-file-4f8eb64f1adde7096cf6cad0",
+      "contentType": "source_pdf",
+      "isPYQ": true,
+      "program": "open-electives",
+      "semester": 2,
+      "subject": "MECSWC-2",
+      "language": "und",
+      "sourceFile": {
+        "fileName": "MECSWC-2.pdf",
+        "url": "https://drive.google.com/file/d/1Kg92xR0r41mmR_f2DLjBjTizEMnar4W6/view",
+        "folderPath": "OPEN ELECTIVES/2ND SEM",
+        "driveFileId": "1Kg92xR0r41mmR_f2DLjBjTizEMnar4W6"
+      },
+      "source": {
+        "title": "MECSWC-2.pdf",
+        "url": "https://drive.google.com/file/d/1Kg92xR0r41mmR_f2DLjBjTizEMnar4W6/view",
+        "publisher": "User-provided PYQ collection",
+        "retrievedOn": "2026-10-02",
+        "note": "Original PDF link. University not assigned; question text and exam metadata have not been transcribed or inferred."
+      },
+      "status": "published"
+    }
+  ],
+  "excluded": [
+    {
+      "folderPath": "LANGUAGES/1ST SEM",
+      "fileName": "BHN-04 [OE-217].pdf",
+      "reason": "Language subject other than English or Kannada"
+    },
+    {
+      "folderPath": "LANGUAGES/1ST SEM",
+      "fileName": "BSN-04 OE-218.pdf",
+      "reason": "Language subject other than English or Kannada"
+    },
+    {
+      "folderPath": "LANGUAGES/1ST SEM",
+      "fileName": "BTU-04 [OE-220].pdf",
+      "reason": "Language subject other than English or Kannada"
+    },
+    {
+      "folderPath": "LANGUAGES/1ST SEM",
+      "fileName": "BUR-04 [OE-219].pdf",
+      "reason": "Language subject other than English or Kannada"
+    },
+    {
+      "folderPath": "LANGUAGES/2ND SEM",
+      "fileName": "BHN-05 [OE-261] Hindi.pdf",
+      "reason": "Language subject other than English or Kannada"
+    },
+    {
+      "folderPath": "LANGUAGES/2ND SEM",
+      "fileName": "BSN-05 OE-262.pdf",
+      "reason": "Language subject other than English or Kannada"
+    },
+    {
+      "folderPath": "LANGUAGES/2ND SEM",
+      "fileName": "BTU-05 [OE-264].pdf",
+      "reason": "Language subject other than English or Kannada"
+    },
+    {
+      "folderPath": "LANGUAGES/2ND SEM",
+      "fileName": "BUR-05 [OE-263].pdf",
+      "reason": "Language subject other than English or Kannada"
+    },
+    {
+      "folderPath": "LANGUAGES/3RD SEM",
+      "fileName": "BHN-06 OE-305.pdf",
+      "reason": "Language subject other than English or Kannada"
+    },
+    {
+      "folderPath": "LANGUAGES/3RD SEM",
+      "fileName": "BSN-06 OE-306.pdf",
+      "reason": "Language subject other than English or Kannada"
+    },
+    {
+      "folderPath": "LANGUAGES/3RD SEM",
+      "fileName": "BSN-06 OE-330.pdf",
+      "reason": "Language subject other than English or Kannada"
+    },
+    {
+      "folderPath": "LANGUAGES/3RD SEM",
+      "fileName": "BTU-06 OE-308.pdf",
+      "reason": "Language subject other than English or Kannada"
+    },
+    {
+      "folderPath": "LANGUAGES/3RD SEM",
+      "fileName": "BUR-06 OE-307.pdf",
+      "reason": "Language subject other than English or Kannada"
+    },
+    {
+      "folderPath": "LANGUAGES/4TH SEM",
+      "fileName": "BHN-07 [OE-345].pdf",
+      "reason": "Language subject other than English or Kannada"
+    },
+    {
+      "folderPath": "LANGUAGES/4TH SEM",
+      "fileName": "BSN-07 OE-346.pdf",
+      "reason": "Language subject other than English or Kannada"
+    },
+    {
+      "folderPath": "LANGUAGES/4TH SEM",
+      "fileName": "BSN-07 OE-368.pdf",
+      "reason": "Language subject other than English or Kannada"
+    },
+    {
+      "folderPath": "LANGUAGES/4TH SEM",
+      "fileName": "BTU-07 [OE-348].pdf",
+      "reason": "Language subject other than English or Kannada"
+    },
+    {
+      "folderPath": "LANGUAGES/4TH SEM",
+      "fileName": "BUR-07 OE-347.pdf",
+      "reason": "Language subject other than English or Kannada"
+    },
+    {
+      "folderPath": "OPEN ELECTIVES/1ST SEM",
+      "fileName": "ELMHN-01.pdf",
+      "reason": "Language subject other than English or Kannada"
+    },
+    {
+      "folderPath": "OPEN ELECTIVES/1ST SEM",
+      "fileName": "ELMTL-01.pdf",
+      "reason": "Language subject other than English or Kannada"
+    },
+    {
+      "folderPath": "OPEN ELECTIVES/1ST SEM",
+      "fileName": "ELMUR-01.pdf",
+      "reason": "Language subject other than English or Kannada"
+    },
+    {
+      "folderPath": "OPEN ELECTIVES/2ND SEM",
+      "fileName": "ELMHN-02.pdf",
+      "reason": "Language subject other than English or Kannada"
+    }
+  ]
+}

@@ -69,6 +69,7 @@ const SEEDABLE_PROGRAMS: Array<{ code: string; label: string }> = [
   // Previous-year university question papers (prep_papers) — structured
   // text transcribed from openly published Karnataka university papers.
   { code: 'papers', label: 'Previous Year Papers' },
+  { code: 'pyq-files', label: 'Shared PYQ PDFs (English / Kannada languages)' },
 ];
 
 const PAPER_SEED_TEMPLATE = `{
@@ -134,7 +135,7 @@ function PreviousYearPapersSection({ refreshKey }: { refreshKey: number }) {
   for (const p of papers || []) {
     const label = p.legacyProgram ? `${p.programLabel}` : p.programLabel;
     byProgram.set(label, (byProgram.get(label) || 0) + 1);
-    byUniversity.set(p.universityName, (byUniversity.get(p.universityName) || 0) + 1);
+    if (p.universityName) byUniversity.set(p.universityName, (byUniversity.get(p.universityName) || 0) + 1);
   }
   const q = filter.trim().toLowerCase();
   const visible = (papers || []).filter(
@@ -181,7 +182,7 @@ function PreviousYearPapersSection({ refreshKey }: { refreshKey: number }) {
           <FileText className="w-4 h-4 text-amber-600" />
           Previous year question papers
           <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
-            — {papers ? `${papers.length} in prep_papers` : 'BBA · B.Com · B.Sc · BA · BBM, Karnataka universities'}
+            — {papers ? `${papers.length} in prep_papers` : 'Structured papers and original PYQ PDFs'}
           </span>
         </span>
         <ChevronRight className={'w-4 h-4 text-slate-500 dark:text-slate-400 transition-transform ' + (open ? 'rotate-90' : '')} />
@@ -239,10 +240,10 @@ function PreviousYearPapersSection({ refreshKey }: { refreshKey: number }) {
                   >
                     <span className="min-w-0">
                       <span className="font-semibold text-slate-800 dark:text-slate-100">{p.subjectName}</span>
-                      <span className="text-slate-500"> — {p.programLabel} Sem {p.semester} · {p.universityName} · {p.examLabel}{p.paperCode ? ` · ${p.paperCode}` : ''}</span>
+                      <span className="text-slate-500"> — {[p.programLabel, p.semester ? `Sem ${p.semester}` : '', p.universityName, p.examLabel, p.paperCode].filter(Boolean).join(' · ')}</span>
                     </span>
                     <span className="shrink-0 text-slate-500 dark:text-slate-400">
-                      {p.questionCount} Q · {p.maxMarks} marks{p.status !== 'published' ? ' · DRAFT' : ''}
+                      {p.contentType === 'source_pdf' ? 'PYQ · Original PDF' : `${p.questionCount} Q · ${p.maxMarks} marks`}{p.status !== 'published' ? ' · DRAFT' : ''}
                     </span>
                   </a>
                 ))}
@@ -413,10 +414,10 @@ export default function PrepContentStudioTab() {
   // Bumped after every seed pass so the papers panel reloads its counts.
   const [seedPass, setSeedPass] = useState(0);
   // Which programs the operator has ticked for the next seed pass. Defaults
-  // to every seedable program so "Seed All" is one click, and ticking a
-  // single program (e.g. just B.Com) narrows the pass to that catalogue.
+  // to existing bundles. Original-PDF PYQs are off until explicitly selected;
+  // choosing a single bundle narrows the pass to that catalogue.
   const [seedSelection, setSeedSelection] = useState<Record<string, boolean>>(() =>
-    Object.fromEntries(SEEDABLE_PROGRAMS.map((p) => [p.code, true]))
+    Object.fromEntries(SEEDABLE_PROGRAMS.map((p) => [p.code, p.code !== 'pyq-files']))
   );
   const [drafting, setDrafting] = useState(false);
   const [publishing, setPublishing] = useState(false);
@@ -554,6 +555,7 @@ export default function PrepContentStudioTab() {
       return;
     }
     const labels = SEEDABLE_PROGRAMS.filter((p) => codes.includes(p.code)).map((p) => p.label).join(', ');
+    if (codes.includes('pyq-files') && !confirm('Publish the prepared original-PDF PYQ links? Languages include only English and Kannada. No university is assigned; exam details and question text are not inferred. Existing records are preserved; only missing file links are added.')) return;
     if (!confirm(`Seed/refresh the ${codes.length === SEEDABLE_PROGRAMS.length ? 'complete' : 'selected'} catalogue (${labels})? Existing subjects and topics are updated in place.`)) return;
     setSeeding(true);
     try {

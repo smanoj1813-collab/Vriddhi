@@ -13,6 +13,7 @@
 // source of truth — the same convention as prepShared.ts.
 
 import { PREP_PROGRAM_CATALOG, type CatalogIntegrityReport, type CatalogIssue } from './prepShared'
+import { PREP_PAPER_FILE_PROGRAMS, expandPrepPaperFileSeed, isSafePaperUrl, pyqLanguageSelection, type PrepPaperFileReference, type PrepPaperFileSeed, type PrepPaperLanguage } from './prepPaperFiles'
 
 /** Seed code understood by POST /prep/seed-all (alongside program codes, 'aptitude', 'companies'). */
 export const PREP_PAPER_SEED_CODE = 'papers'
@@ -105,6 +106,10 @@ export interface PrepPaperSource {
 
 export interface PrepPaper {
   id: string
+  /** Missing on existing records: a structured, transcribed paper. */
+  contentType?: 'structured' | 'source_pdf'
+  isPYQ?: boolean
+  sourceFile?: PrepPaperFileReference
   /** Prep program the paper is filed under ('bba', 'bcom', 'bsc', 'ba', …). */
   program: string
   /** 'BBA', 'B.Com', 'BBM' … — the name printed on the paper. */
@@ -137,7 +142,7 @@ export interface PrepPaper {
   prepSubjectId?: string | null
   tags: string[]
   source: PrepPaperSource
-  language: 'en'
+  language: PrepPaperLanguage
   status: 'draft' | 'published'
   tier: 'free' | 'premium'
   contentVersion: number
@@ -173,7 +178,8 @@ export interface PrepPaperSeed {
   id: string
   program: string
   legacyProgram?: string
-  university: string
+  university?: string
+  language?: PrepPaperLanguage
   scheme: string
   semester: number
   subject: string
@@ -259,7 +265,7 @@ export function expandPrepPaperSeed(seed: PrepPaperSeed): PrepPaper {
       [
         ...(seed.tags || []),
         program,
-        seed.university.toLowerCase(),
+        String(seed.university || '').toLowerCase(),
         `sem-${seed.semester}`,
         String(seed.examYear),
         ...(seed.legacyProgram ? [seed.legacyProgram.toLowerCase()] : []),
@@ -273,8 +279,8 @@ export function expandPrepPaperSeed(seed: PrepPaperSeed): PrepPaper {
     programLabel: legacy?.label || catalogEntry?.label || program.toUpperCase(),
     legacyProgram: seed.legacyProgram ? seed.legacyProgram.toLowerCase() : null,
     degreeLevel: catalogEntry?.degreeLevel || 'undergraduate',
-    universityCode: seed.university.toLowerCase().trim(),
-    universityName: uni?.name || seed.university,
+    universityCode: String(seed.university || '').toLowerCase().trim(),
+    universityName: uni?.name || seed.university || '',
     scheme: seed.scheme,
     semester: Number(seed.semester),
     subjectName: seed.subject,
@@ -292,7 +298,7 @@ export function expandPrepPaperSeed(seed: PrepPaperSeed): PrepPaper {
     prepSubjectId: seed.prepSubjectId || null,
     tags,
     source: seed.source,
-    language: 'en',
+    language: seed.language || 'en',
     status: 'published',
     tier: 'free',
     contentVersion: 1,
@@ -384,11 +390,13 @@ export function prepPaperFacets(papers: Array<Pick<PrepPaper, 'universityCode' |
   const sems = new Set<number>()
   const programs = new Map<string, number>()
   for (const p of papers) {
-    const u = uni.get(p.universityCode) || { code: p.universityCode, name: p.universityName, count: 0 }
-    u.count += 1
-    uni.set(p.universityCode, u)
-    years.add(Number(p.examYear))
-    sems.add(Number(p.semester))
+    if (p.universityCode && p.universityName) {
+      const u = uni.get(p.universityCode) || { code: p.universityCode, name: p.universityName, count: 0 }
+      u.count += 1
+      uni.set(p.universityCode, u)
+    }
+    if (Number(p.examYear) > 0) years.add(Number(p.examYear))
+    if (Number(p.semester) > 0) sems.add(Number(p.semester))
     programs.set(p.program, (programs.get(p.program) || 0) + 1)
     if (p.legacyProgram) programs.set(p.legacyProgram, (programs.get(p.legacyProgram) || 0) + 1)
   }
@@ -436,29 +444,52 @@ export function validatePrepPapers(
     if (ids.has(p.id)) err('DUPLICATE_PAPER_ID', `Duplicate paper id "${p.id}".`)
     ids.add(p.id)
 
-    if (!programCodes.includes(p.program)) err('PAPER_BAD_PROGRAM', `Paper "${p.id}" program "${p.program}" is not in the prep catalogue.`)
+    const fileOnly = p.contentType === 'source_pdf'
+    if (p.contentType && !['structured', 'source_pdf'].includes(p.contentType)) err('PAPER_BAD_CONTENT_TYPE', `Paper "${p.id}" has an unsupported content type.`)
+    const allowedPrograms = fileOnly ? [...programCodes, ...PREP_PAPER_FILE_PROGRAMS.map((entry) => entry.code)] : programCodes
+    if (!allowedPrograms.includes(p.program)) err('PAPER_BAD_PROGRAM', `Paper "${p.id}" program "${p.program}" is not in the prep catalogue.`)
     if (p.legacyProgram && !PREP_PAPER_LEGACY_PROGRAMS[p.legacyProgram]) {
       err('PAPER_BAD_LEGACY_PROGRAM', `Paper "${p.id}" legacy program "${p.legacyProgram}" is unknown.`)
     }
-    if (!PREP_PAPER_UNIVERSITY_CODES.includes(p.universityCode)) {
+    if (p.universityCode && !PREP_PAPER_UNIVERSITY_CODES.includes(p.universityCode)) {
       err('PAPER_BAD_UNIVERSITY', `Paper "${p.id}" university "${p.universityCode}" is not in the university list.`)
     }
-    if (!p.scheme || !String(p.scheme).trim()) err('PAPER_NO_SCHEME', `Paper "${p.id}" has no scheme label.`)
-    if (!Number.isInteger(p.semester) || p.semester < 1 || p.semester > 10) {
+    if (p.universityName && !p.universityCode) err('PAPER_BAD_UNIVERSITY', `Paper "${p.id}" has a university name without a recognised code.`)
+    if (fileOnly && (p.universityCode || p.universityName)) err('PAPER_FILE_UNIVERSITY', `Original-PDF paper "${p.id}" must not assign a university.`)
+    if (!['en', 'kn', 'mixed', 'und'].includes(p.language)) err('PAPER_BAD_LANGUAGE', `Paper "${p.id}" has an unsupported language.`)
+    if (!fileOnly && (!p.scheme || !String(p.scheme).trim())) err('PAPER_NO_SCHEME', `Paper "${p.id}" has no scheme label.`)
+    if (!Number.isInteger(p.semester) || p.semester < (fileOnly ? 0 : 1) || p.semester > 10) {
       err('PAPER_BAD_SEMESTER', `Paper "${p.id}" semester must be 1–10.`)
     }
     if (!p.subjectName || String(p.subjectName).trim().length < 3) err('PAPER_NO_SUBJECT', `Paper "${p.id}" needs a subject name.`)
-    if (!Number.isInteger(p.examYear) || p.examYear < 2005 || p.examYear > maxYear) {
+    if (!(fileOnly && p.examYear === 0) && (!Number.isInteger(p.examYear) || p.examYear < 2005 || p.examYear > maxYear)) {
       err('PAPER_BAD_YEAR', `Paper "${p.id}" exam year ${p.examYear} is outside 2005–${maxYear}.`)
     }
-    if (!p.examMonth || !String(p.examMonth).trim()) err('PAPER_NO_MONTH', `Paper "${p.id}" needs the exam month printed on the paper.`)
-    if (!(Number(p.durationMinutes) >= 60 && Number(p.durationMinutes) <= 240)) {
+    if (!fileOnly && (!p.examMonth || !String(p.examMonth).trim())) err('PAPER_NO_MONTH', `Paper "${p.id}" needs the exam month printed on the paper.`)
+    if (!(fileOnly && p.durationMinutes === 0) && !(Number(p.durationMinutes) >= 60 && Number(p.durationMinutes) <= 240)) {
       err('PAPER_BAD_DURATION', `Paper "${p.id}" duration ${p.durationMinutes} min is implausible.`)
     }
-    if (!(Number(p.maxMarks) > 0)) err('PAPER_BAD_MAX_MARKS', `Paper "${p.id}" maximum marks must be positive.`)
+    if (!(fileOnly && p.maxMarks === 0) && !(Number(p.maxMarks) > 0)) err('PAPER_BAD_MAX_MARKS', `Paper "${p.id}" maximum marks must be positive.`)
 
     const sections = Array.isArray(p.sections) ? p.sections : []
-    if (sections.length === 0) err('PAPER_NO_SECTIONS', `Paper "${p.id}" has no sections.`)
+    if (fileOnly) {
+      const file = p.sourceFile
+      if (!file?.fileName || !/\.pdf$/i.test(file.fileName) || !isSafePaperUrl(file.url)) {
+        err('PAPER_BAD_FILE', `Original-PDF paper "${p.id}" needs a PDF filename and a safe http(s) source link.`)
+      }
+      if (file?.fileName) {
+        const selection = pyqLanguageSelection(p.program === 'languages' ? `LANGUAGES/${file.folderPath || ''}` : file.folderPath || '', file.fileName)
+        if (!selection.include) err('PAPER_EXCLUDED_LANGUAGE', `Paper "${p.id}" is outside the English/Kannada language selection.`)
+        if (p.program === 'languages' && p.language !== selection.language) err('PAPER_LANGUAGE_MISMATCH', `Paper "${p.id}" language does not match its language subject.`)
+      }
+      if (file?.driveFileId) {
+        const expected = `https://drive.google.com/file/d/${encodeURIComponent(file.driveFileId)}/view`
+        if (!/^[A-Za-z0-9_-]+$/.test(file.driveFileId) || file.url !== expected) err('PAPER_BAD_FILE_ID', `Paper "${p.id}" Drive id does not match its source link.`)
+      }
+      if (sections.length || p.questionCount !== 0) err('PAPER_FILE_HAS_QUESTIONS', `Original-PDF paper "${p.id}" must not contain unverified question text.`)
+      if (p.isPYQ !== true) err('PAPER_FILE_NOT_PYQ', `Original-PDF paper "${p.id}" must be labelled as a PYQ.`)
+    }
+    if (!fileOnly && sections.length === 0) err('PAPER_NO_SECTIONS', `Paper "${p.id}" has no sections.`)
     const labels = new Set<string>()
     const sectionIds = new Set<string>()
     let total = 0
@@ -508,7 +539,7 @@ export function validatePrepPapers(
 
     const src = p.source
     if (!src || !src.title || !src.publisher) err('PAPER_NO_SOURCE', `Paper "${p.id}" must cite the public source it was transcribed from.`)
-    if (!src || !/^https?:\/\/\S+$/i.test(String(src.url || ''))) err('PAPER_BAD_SOURCE_URL', `Paper "${p.id}" source URL must be http(s).`)
+    if (!src || !isSafePaperUrl(src.url)) err('PAPER_BAD_SOURCE_URL', `Paper "${p.id}" source URL must be http(s).`)
     if (!src || !src.retrievedOn || Number.isNaN(Date.parse(src.retrievedOn))) {
       err('PAPER_BAD_RETRIEVED_DATE', `Paper "${p.id}" source.retrievedOn must be an ISO date.`)
     }
@@ -538,6 +569,11 @@ export function validatePrepPapers(
  */
 export function normalisePrepPaperInput(raw: unknown): { paper: PrepPaper | null; report: CatalogIntegrityReport } {
   const obj = (raw && typeof raw === 'object' ? raw : {}) as Record<string, any>
+  if (obj.contentType === 'source_pdf') {
+    const paper = expandPrepPaperFileSeed(obj as PrepPaperFileSeed)
+    const report = validatePrepPapers([paper])
+    return { paper: report.valid ? paper : null, report }
+  }
   const isSeed = !Array.isArray(obj.sections) || obj.sections.some((s: any) => s && !('questions' in s && 'totalMarks' in s))
   let paper: PrepPaper
   if (isSeed) {
@@ -546,6 +582,7 @@ export function normalisePrepPaperInput(raw: unknown): { paper: PrepPaper | null
       program: String(obj.program || ''),
       legacyProgram: obj.legacyProgram ? String(obj.legacyProgram) : undefined,
       university: String(obj.university || obj.universityCode || ''),
+      language: obj.language || 'en',
       scheme: String(obj.scheme || ''),
       semester: Number(obj.semester),
       subject: String(obj.subject || obj.subjectName || ''),
@@ -580,7 +617,7 @@ export function normalisePrepPaperInput(raw: unknown): { paper: PrepPaper | null
       examLabel: `${obj.examMonth} ${obj.examYear}`,
       questionCount: (obj.sections as PrepPaperSection[]).reduce((n, s) => n + (Array.isArray(s.questions) ? s.questions.length : 0), 0),
       tags: Array.isArray(obj.tags) ? obj.tags.map((t: unknown) => String(t).toLowerCase()) : [],
-      language: 'en',
+      language: obj.language || 'en',
       status: obj.status === 'draft' ? 'draft' : 'published',
       tier: obj.tier === 'premium' ? 'premium' : 'free',
       contentVersion: Number(obj.contentVersion) || 1,

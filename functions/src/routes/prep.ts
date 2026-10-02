@@ -88,6 +88,8 @@ import {
 import { APTITUDE_SUBJECTS, SEEDED_APTITUDE_TOPICS, SEEDED_APTITUDE_QUESTIONS } from '../data/aptitudeSeedData'
 import { SEEDED_COMPANIES } from '../data/companySeedData'
 import { SEEDED_PREP_PAPERS } from '../data/prepPapers'
+import { SEEDED_DRIVE_PYQ_FILES } from '../data/prepPapers/drivePyqFiles'
+import { PREP_PAPER_FILE_SEED_CODE, planNewPaperFileSeeds, paperFileSeedResultMessage } from '../prepPaperFiles'
 import {
   UNIVERSAL_ACADEMIC_BUNDLE,
   universalAcademicSupplementFor,
@@ -1025,7 +1027,7 @@ router.post('/companies', verifyAuth, async (req: AuthenticatedRequest, res: Res
 async function loadVisiblePapers(req: AuthenticatedRequest | any): Promise<PrepPaper[]> {
   const snap = await db.collection('prep_papers').get()
   let papers: PrepPaper[] = snap.docs.map((d) => ({ ...(d.data() as PrepPaper), id: d.id }))
-  const isSuperadmin = (req as any).user?.role === 'superadmin'
+  const { isSuperadmin } = await resolvePublicCaller(req)
   if (!isSuperadmin) papers = papers.filter((p) => p.status === 'published')
   return papers
 }
@@ -1116,7 +1118,7 @@ router.get('/papers/:paperId', async (req, res) => {
       return
     }
     const paper = { ...(doc.data() as PrepPaper), id: doc.id }
-    const isSuperadmin = (req as any).user?.role === 'superadmin'
+    const { isSuperadmin } = await resolvePublicCaller(req)
     if (paper.status !== 'published' && !isSuperadmin) {
       res.status(404).json({ error: 'Question paper not found' })
       return
@@ -1190,6 +1192,10 @@ router.post('/papers/answers/generate', verifyAuth, aiGenerationLimiter, async (
       return
     }
     const paper = { ...(doc.data() as PrepPaper), id: doc.id }
+    if (paper.contentType === 'source_pdf') {
+      res.status(400).json({ error: 'Original-PDF PYQs have no verified question text. Review a transcription before generating answers or MCQs.' })
+      return
+    }
     const all = collectPaperQuestions(paper)
     const wanted = Array.isArray(qids) && qids.length > 0 ? all.filter((q) => qids.includes(q.qid)) : all
     if (wanted.length === 0) {
@@ -1349,6 +1355,10 @@ router.post('/papers/mcq-sets/generate', verifyAuth, aiGenerationLimiter, async 
       return
     }
     const paper = { ...(doc.data() as PrepPaper), id: doc.id }
+    if (paper.contentType === 'source_pdf') {
+      res.status(400).json({ error: 'Original-PDF PYQs have no verified question text. Review a transcription before generating answers or MCQs.' })
+      return
+    }
     const all = collectPaperQuestions(paper)
     const wanted = Array.isArray(qids) && qids.length > 0 ? all.filter((q) => qids.includes(q.qid)) : all
     if (wanted.length === 0) {
@@ -1738,12 +1748,13 @@ router.post('/seed-all', verifyAuth, async (req: AuthenticatedRequest, res: Resp
     const seedCompanies = selection.programs.includes(COMPANY_SEED_CODE)
     // Previous-year question papers: prep_papers, also handled separately.
     const seedPapers = selection.programs.includes(PREP_PAPER_SEED_CODE)
+    const seedPaperFiles = selection.programs.includes(PREP_PAPER_FILE_SEED_CODE)
     // Valid program codes that simply have no seed bundle yet.
     const unseedable = selection.programs.filter(
-      (code) => !seedableCodes.includes(code) && code !== COMPANY_SEED_CODE && code !== PREP_PAPER_SEED_CODE
+      (code) => !seedableCodes.includes(code) && code !== COMPANY_SEED_CODE && code !== PREP_PAPER_SEED_CODE && code !== PREP_PAPER_FILE_SEED_CODE
     )
 
-    if (selection.errors.length > 0 && bundles.length === 0 && !seedCompanies && !seedPapers) {
+    if (selection.errors.length > 0 && bundles.length === 0 && !seedCompanies && !seedPapers && !seedPaperFiles) {
       res.status(400).json({
         error: 'No seedable programs matched the request.',
         errors: selection.errors,
@@ -1752,7 +1763,7 @@ router.post('/seed-all', verifyAuth, async (req: AuthenticatedRequest, res: Resp
       return
     }
 
-    if (bundles.length === 0 && !seedCompanies && !seedPapers) {
+    if (bundles.length === 0 && !seedCompanies && !seedPapers && !seedPaperFiles) {
       res.status(400).json({
         error: 'The requested programs have no seed data yet.',
         errors: selection.errors,
@@ -1763,7 +1774,7 @@ router.post('/seed-all', verifyAuth, async (req: AuthenticatedRequest, res: Resp
     }
 
     // Stage every write up front so counts are exact and chunks are uniform.
-    type StagedWrite = { ref: FirebaseFirestore.DocumentReference; data: Record<string, any> }
+    type StagedWrite = { ref: FirebaseFirestore.DocumentReference; data: Record<string, any>; createOnly?: boolean }
     const writes: StagedWrite[] = []
     const perProgram: Array<{
       code: string
@@ -1772,6 +1783,7 @@ router.post('/seed-all', verifyAuth, async (req: AuthenticatedRequest, res: Resp
       topicCount: number
       questionCount: number
       paperCount?: number
+      skippedPaperCount?: number
       valid: boolean
       errorCount: number
       warningCount: number
@@ -1860,11 +1872,45 @@ router.post('/seed-all', verifyAuth, async (req: AuthenticatedRequest, res: Resp
       })
     }
 
+    let addedPaperFileCount = 0
+    let skippedPaperFileCount = 0
+    if (seedPaperFiles) {
+      const report = validatePrepPapers(SEEDED_DRIVE_PYQ_FILES)
+      if (!report.valid) {
+        res.status(400).json({ error: 'Original-PDF PYQ bundle failed validation. No data was written.', issues: report.issues })
+        return
+      }
+      const existingIds: string[] = []
+      // Read by known ID, not the entire corpus; preserve existing source rows,
+      // reviewed transcriptions, draft decisions and metadata corrections.
+      for (const group of chunkArray(SEEDED_DRIVE_PYQ_FILES, 200)) {
+        const existing = await db.getAll(...group.map((paper) => db.collection('prep_papers').doc(paper.id)))
+        existingIds.push(...existing.filter((doc) => doc.exists).map((doc) => doc.id))
+      }
+      const plan = planNewPaperFileSeeds(SEEDED_DRIVE_PYQ_FILES, existingIds)
+      addedPaperFileCount = plan.papers.length
+      skippedPaperFileCount = plan.skipped
+      for (const paper of plan.papers) {
+        writes.push({ ref: db.collection('prep_papers').doc(paper.id), data: paper as any, createOnly: true })
+      }
+      perProgram.push({
+        code: PREP_PAPER_FILE_SEED_CODE,
+        label: 'Shared PYQ PDFs (English / Kannada languages)',
+        subjectCount: 0, topicCount: 0, questionCount: 0,
+        paperCount: addedPaperFileCount, skippedPaperCount: skippedPaperFileCount,
+        valid: report.valid, errorCount: report.errorCount, warningCount: report.warningCount,
+      })
+    }
+    const totalPaperCount = (seedPapers ? SEEDED_PREP_PAPERS.length : 0) + addedPaperFileCount
+
     // Commit in chunks; Firestore rejects batches larger than 500 writes.
     const chunks = chunkArray(writes, FIRESTORE_BATCH_LIMIT)
     for (const chunk of chunks) {
       const batch = db.batch()
-      for (const w of chunk) batch.set(w.ref, w.data, { merge: true })
+      for (const w of chunk) {
+        if (w.createOnly) batch.create(w.ref, w.data)
+        else batch.set(w.ref, w.data, { merge: true })
+      }
       await batch.commit()
     }
 
@@ -1877,10 +1923,14 @@ router.post('/seed-all', verifyAuth, async (req: AuthenticatedRequest, res: Resp
       { subjectCount: 0, topicCount: 0, questionCount: 0 }
     )
 
+    const onlyPaperFiles = seedPaperFiles && !seedPapers && !seedCompanies && bundles.length === 0
+    const preservedFilesNotice = skippedPaperFileCount ? ` ${skippedPaperFileCount} existing original-PDF PYQ records preserved.` : ''
+
     res.json({
       success: true,
-      message: `Seeded ${perProgram.length} bundle(s): ${totals.subjectCount - (seedCompanies ? SEEDED_COMPANIES.length : 0)} subjects, ${totals.topicCount} topics, ${totals.questionCount} universal practice questions${seedCompanies ? `, ${SEEDED_COMPANIES.length} company prep guides` : ''}${seedPapers ? `, ${SEEDED_PREP_PAPERS.length} previous-year question papers` : ''} across ${chunks.length} commit(s).`,
-      paperCount: seedPapers ? SEEDED_PREP_PAPERS.length : 0,
+      message: onlyPaperFiles ? paperFileSeedResultMessage(addedPaperFileCount, skippedPaperFileCount) : `Seeded ${perProgram.length} bundle(s): ${totals.subjectCount - (seedCompanies ? SEEDED_COMPANIES.length : 0)} subjects, ${totals.topicCount} topics, ${totals.questionCount} universal practice questions${seedCompanies ? `, ${SEEDED_COMPANIES.length} company prep guides` : ''}${totalPaperCount ? `, ${totalPaperCount} previous-year question papers` : ''} across ${chunks.length} commit(s).${preservedFilesNotice}`,
+      paperCount: totalPaperCount,
+      skippedPaperFileCount,
       programs: selection.programs,
       errors: selection.errors,
       unseedable,

@@ -42,6 +42,7 @@ import {
   type PrepMcqSet,
   type PrepPaperAnswer,
   PREP_PAPER_LEGACY_LABELS,
+  PREP_PAPER_FILE_PROGRAMS,
   type FrequentQuestion,
   type PrepPaper,
   type PrepPaperFacets,
@@ -50,6 +51,7 @@ import {
 } from '@/shared/services/prepContentService';
 import {
   PROGRAM_LABELS,
+  PROGRAMS,
   PrepPageNav,
   ProgramControl,
   SectionHeader,
@@ -58,11 +60,17 @@ import {
   rememberProgram,
 } from './prepPublicShared';
 
+import { isOriginalPdfPaper, originalPaperUrl, paperLanguageLabel, paperMetadataLine } from '@/shared/utils/prepPaperDisplay';
+
+const PAPER_PROGRAMS = [...PROGRAMS, ...PREP_PAPER_FILE_PROGRAMS.map((p) => ({ code: p.code, label: p.label, level: p.degreeLevel }))];
+const PAPER_PROGRAM_LABELS: Record<string, string> = Object.fromEntries(PAPER_PROGRAMS.map((p) => [p.code, p.label]));
+
 // ─── Small shared helpers ────────────────────────────────────────────────────
 
 const ROMAN = ['', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X'];
 
 export function semesterTitle(semester: number): string {
+  if (!semester) return 'Semester not specified';
   return ROMAN[semester] ? `Semester ${ROMAN[semester]}` : `Semester ${semester}`;
 }
 
@@ -164,7 +172,7 @@ export function PapersBlock({ program }: { program: string }) {
         title="Previous year question papers"
         meta={
           rows
-            ? `${rows.length} ${PROGRAM_LABELS[program] || program} paper${rows.length === 1 ? '' : 's'}${yearSpan ? ` · ${yearSpan}` : ''}${uniCount ? ` · ${uniCount} universit${uniCount === 1 ? 'y' : 'ies'}` : ''}`
+            ? `${rows.length} ${PAPER_PROGRAM_LABELS[program] || program} paper${rows.length === 1 ? '' : 's'}${yearSpan ? ` · ${yearSpan}` : ''}${uniCount ? ` · ${uniCount} universit${uniCount === 1 ? 'y' : 'ies'}` : ''}`
             : 'Loading papers…'
         }
       />
@@ -226,9 +234,7 @@ function PaperRow({
               {paper.subjectName}
             </Typography>
             <Typography variant="caption" color="text.secondary" noWrap sx={{ display: 'block' }}>
-              {uni} · {paper.examLabel} · {semesterTitle(paper.semester)}
-              {paper.paperCode ? ` · ${paper.paperCode}` : ''}
-              {!dense ? ` · ${paper.maxMarks} marks · ${paper.questionCount} questions` : ''}
+              {paperMetadataLine(paper, uni, dense)}
             </Typography>
           </Box>
           <Stack direction="row" spacing={0.5} sx={{ alignItems: 'center', flex: '0 0 auto' }}>
@@ -280,7 +286,7 @@ function FilterChips<T extends string | number>({
 export function PapersLibraryView() {
   const [searchParams, setSearchParams] = useSearchParams();
   const fromUrl = String(searchParams.get('program') || '').toLowerCase();
-  const program = PROGRAM_LABELS[fromUrl] ? fromUrl : readStoredProgram() || 'bba';
+  const program = PAPER_PROGRAM_LABELS[fromUrl] ? fromUrl : readStoredProgram() || 'bba';
   const semester = Number(searchParams.get('sem')) || '';
   const university = String(searchParams.get('uni') || '');
   const year = Number(searchParams.get('year')) || '';
@@ -319,7 +325,7 @@ export function PapersLibraryView() {
   };
 
   const pickProgram = (code: string) => {
-    rememberProgram(code);
+    if (PROGRAM_LABELS[code]) rememberProgram(code);
     // Filters belong to the program they were chosen under.
     setSearchParams({ program: code }, { replace: true });
   };
@@ -354,22 +360,22 @@ export function PapersLibraryView() {
       }));
   }, [filtered]);
 
-  const hubPath = `/prep?program=${program}`;
-  const crumbs = [{ label: 'Prep', to: '/prep' }, { label: PROGRAM_LABELS[program] || program, to: hubPath }, { label: 'Previous year papers' }];
+  const hubPath = PROGRAM_LABELS[program] ? `/prep?program=${program}` : libraryPath(program);
+  const crumbs = [{ label: 'Prep', to: '/prep' }, { label: PAPER_PROGRAM_LABELS[program] || program, to: hubPath }, { label: 'Previous year papers' }];
 
   return (
     <>
-      <ProgramControl active={program} onPick={pickProgram} action={<ShareLinkButton path={libraryPath(program)} compact />} />
+      <ProgramControl programOptions={PAPER_PROGRAMS} active={program} onPick={pickProgram} action={<ShareLinkButton path={libraryPath(program)} compact />} />
       <Container maxWidth="lg" sx={{ py: { xs: 2, md: 3 } }}>
         <Stack spacing={2}>
           <PrepPageNav crumbs={crumbs} sharePath={libraryPath(program, { sem: semester, uni: university, year })} backTo={hubPath} />
           <SectionHeader
             kicker="Exam practice"
-            title={`${PROGRAM_LABELS[program] || program} previous year question papers`}
+            title={`${PAPER_PROGRAM_LABELS[program] || program} previous year question papers`}
             meta={
               loading
                 ? 'Loading papers…'
-                : `${filtered.length} of ${rows.length} paper${rows.length === 1 ? '' : 's'} · transcribed from university exam papers · English text`
+                : `${filtered.length} of ${rows.length} paper${rows.length === 1 ? '' : 's'} · previous-year papers and original PDFs`
             }
           />
 
@@ -431,7 +437,7 @@ export function PapersLibraryView() {
             <Card variant="outlined">
               <Box sx={{ p: { xs: 3, md: 4 }, textAlign: 'center' }}>
                 <Typography variant="h6" sx={{ fontWeight: 800 }} gutterBottom>
-                  No {PROGRAM_LABELS[program] || program} papers published yet
+                  No {PAPER_PROGRAM_LABELS[program] || program} papers published yet
                 </Typography>
                 <Typography variant="body2" color="text.secondary" sx={{ maxWidth: 620, mx: 'auto' }}>
                   Previous-year papers for this program are still being added. Try another program above.
@@ -697,12 +703,16 @@ export function PaperView({ paperId }: { paperId: string }) {
     setLoading(true);
     setError(null);
     fetchPrepPaper(paperId)
-      .then((p) => !cancelled && setPaper(p))
+      .then((p) => {
+        if (cancelled) return;
+        setPaper(p);
+        if (!isOriginalPdfPaper(p)) reloadAnswers().catch(() => {});
+        else { setAnswersByQid({}); setDrafts([]); setMcqSets([]); }
+      })
       .catch((err) => !cancelled && setError(err instanceof Error ? err.message : 'This paper does not exist or is not published.'))
       .finally(() => !cancelled && setLoading(false));
     // Answers load on their own: a paper must still render if the answer
     // endpoints are unavailable (they are an addition, not a dependency).
-    reloadAnswers().catch(() => {});
     return () => {
       cancelled = true;
     };
@@ -717,8 +727,8 @@ export function PaperView({ paperId }: { paperId: string }) {
     );
   }
 
-  const program = PROGRAM_LABELS[urlProgram] ? urlProgram : paper.program;
-  const hubPath = `/prep?program=${program}`;
+  const program = PAPER_PROGRAM_LABELS[urlProgram] ? urlProgram : paper.program;
+  const hubPath = PROGRAM_LABELS[program] ? `/prep?program=${program}` : libraryPath(program);
 
   const runReview = async (ids: string[], action: 'publish' | 'reject' | 'reopen') => {
     const clean = ids.filter(Boolean);
@@ -785,10 +795,10 @@ export function PaperView({ paperId }: { paperId: string }) {
 
   const crumbs = [
     { label: 'Prep', to: '/prep' },
-    { label: PROGRAM_LABELS[program] || program, to: hubPath },
+    { label: PAPER_PROGRAM_LABELS[program] || program, to: hubPath },
     { label: 'Previous year papers', to: libraryPath(program) },
     { label: semesterTitle(paper.semester), to: libraryPath(program, { sem: paper.semester }) },
-    { label: `${paper.subjectName} · ${paper.examLabel}` },
+    { label: [paper.subjectName, paper.examLabel].filter(Boolean).join(' · ') },
   ];
   const legacyLabel = paper.legacyProgram ? PREP_PAPER_LEGACY_LABELS[paper.legacyProgram] || paper.legacyProgram.toUpperCase() : null;
 
@@ -803,22 +813,22 @@ export function PaperView({ paperId }: { paperId: string }) {
         <Card variant="outlined" sx={{ borderRadius: 3 }}>
           <Box sx={{ p: { xs: 2, md: 3 } }}>
             <Typography variant="overline" sx={{ fontWeight: 800, letterSpacing: 1, color: 'text.secondary' }}>
-              {paper.universityName}
-              {paper.paperCode ? ` · ${paper.paperCode}` : ''}
+              {[paper.universityName, paper.paperCode].filter(Boolean).join(' · ') || 'Previous year question paper'}
             </Typography>
             <Typography variant="h5" sx={{ fontWeight: 800, mt: 0.5 }}>
-              {semesterTitle(paper.semester)} {paper.programLabel} Degree Examination, {paper.examLabel}
+              {[paper.semester ? semesterTitle(paper.semester) : '', paper.programLabel, paper.examLabel].filter(Boolean).join(' · ')}
             </Typography>
             <Typography variant="h6" sx={{ fontWeight: 700, color: 'primary.main' }}>
               {paper.subjectName}
               {paper.paperNumber ? ` (Paper ${paper.paperNumber})` : ''}
             </Typography>
             <Stack direction="row" spacing={1} sx={{ mt: 1.25, flexWrap: 'wrap', gap: 1 }} useFlexGap>
-              <Chip size="small" label={paper.scheme} />
+              {paper.scheme ? <Chip size="small" label={paper.scheme} /> : null}
               {paper.subjectArea ? <Chip size="small" variant="outlined" label={paper.subjectArea} /> : null}
-              <Chip size="small" variant="outlined" label={`Time: ${durationLabel(paper.durationMinutes)}`} />
-              <Chip size="small" variant="outlined" label={`Max. marks: ${paper.maxMarks}`} />
-              <Chip size="small" variant="outlined" label={`${paper.questionCount} questions`} />
+              {paper.durationMinutes > 0 ? <Chip size="small" variant="outlined" label={`Time: ${durationLabel(paper.durationMinutes)}`} /> : null}
+              {paper.maxMarks > 0 ? <Chip size="small" variant="outlined" label={`Max. marks: ${paper.maxMarks}`} /> : null}
+              {!isOriginalPdfPaper(paper) ? <Chip size="small" variant="outlined" label={`${paper.questionCount} questions`} /> : <Chip size="small" color="primary" variant="outlined" label="PYQ · Original PDF" />}
+              {paperLanguageLabel(paper.language) ? <Chip size="small" variant="outlined" label={paperLanguageLabel(paper.language)} /> : null}
               {legacyLabel ? <Chip size="small" color="warning" variant="outlined" label={`${legacyLabel} · older scheme`} /> : null}
             </Stack>
             {paper.instructions.length > 0 ? (
@@ -848,7 +858,7 @@ export function PaperView({ paperId }: { paperId: string }) {
                   Open the study pack for this subject
                 </Button>
               ) : null}
-              <Button
+              {!isOriginalPdfPaper(paper) ? <Button
                 size="small"
                 variant="outlined"
                 startIcon={<Print fontSize="small" />}
@@ -856,12 +866,12 @@ export function PaperView({ paperId }: { paperId: string }) {
                 sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 700 }}
               >
                 Print / save as PDF
-              </Button>
+              </Button> : null}
             </Stack>
           </Box>
         </Card>
 
-        {isSuperadmin ? (
+        {isSuperadmin && !isOriginalPdfPaper(paper) ? (
           <PaperAnswerReviewStrip
             paperId={paper.id}
             drafts={drafts}
@@ -873,6 +883,24 @@ export function PaperView({ paperId }: { paperId: string }) {
             onGenerateMcqs={() => void runGenerateMcqs()}
             onReviewMcqs={(ids, action) => void runReviewMcqs(ids, action)}
           />
+        ) : null}
+
+        {isOriginalPdfPaper(paper) ? (
+          <Card variant="outlined" sx={{ borderRadius: 3 }}>
+            <Box sx={{ p: { xs: 2, md: 3 } }}>
+              <Typography variant="h6" sx={{ fontWeight: 800 }}>Original previous-year question paper</Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                This PYQ is kept as its original PDF, without university attribution. Question text, answers and unverified exam details have not been generated.
+              </Typography>
+              {paper.sourceFile?.folderPath ? <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1 }}>{paper.sourceFile.folderPath}</Typography> : null}
+              {originalPaperUrl(paper) ? (
+                <Button component="a" href={originalPaperUrl(paper)!} target="_blank" rel="noopener noreferrer"
+                  variant="contained" startIcon={<OpenInNew />} sx={{ mt: 2, textTransform: 'none' }}>
+                  Open original PDF
+                </Button>
+              ) : <Typography color="error" sx={{ mt: 2 }}>The original PDF link is unavailable.</Typography>}
+            </Box>
+          </Card>
         ) : null}
 
         {/* Sections */}
@@ -931,7 +959,7 @@ export function PaperView({ paperId }: { paperId: string }) {
         {/* Source attribution */}
         <Box sx={{ px: 1 }}>
           <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
-            Transcribed (English text only) from the university examination paper published openly by {paper.source.publisher}
+            {isOriginalPdfPaper(paper) ? 'Original PYQ PDF from ' : 'Question-paper text from '}{paper.source.publisher}
             {' — '}
             <Box
               component="a"
@@ -943,7 +971,7 @@ export function PaperView({ paperId }: { paperId: string }) {
               {paper.source.title}
               <OpenInNew sx={{ fontSize: 12 }} />
             </Box>
-            . Retrieved {paper.source.retrievedOn}. {paper.source.note || ''}
+            . {isOriginalPdfPaper(paper) ? 'Catalogued' : 'Retrieved'} {paper.source.retrievedOn}. {paper.source.note || ''}
             {paper.legacyProgram ? ' BBM was renamed BBA; the syllabus overlaps heavily, so this older paper still makes good practice.' : ''}
           </Typography>
         </Box>
@@ -965,7 +993,7 @@ export function PaperView({ paperId }: { paperId: string }) {
 export function FrequentQuestionsView() {
   const [searchParams, setSearchParams] = useSearchParams();
   const fromUrl = String(searchParams.get('program') || '').toLowerCase();
-  const program = PROGRAM_LABELS[fromUrl] ? fromUrl : readStoredProgram() || 'bba';
+  const program = PAPER_PROGRAM_LABELS[fromUrl] ? fromUrl : readStoredProgram() || 'bba';
   const subject = String(searchParams.get('subject') || '');
 
   const [subjects, setSubjects] = useState<Array<{ subjectName: string; repeated: number }>>([]);
@@ -992,7 +1020,7 @@ export function FrequentQuestionsView() {
   }, [program, subject, attempt]);
 
   const pickProgram = (code: string) => {
-    rememberProgram(code);
+    if (PROGRAM_LABELS[code]) rememberProgram(code);
     // The subject list is per-program, so the chosen subject cannot carry over.
     setSearchParams({ program: code }, { replace: true });
   };
@@ -1004,22 +1032,22 @@ export function FrequentQuestionsView() {
     setSearchParams(next, { replace: true });
   };
 
-  const hubPath = `/prep?program=${program}`;
+  const hubPath = PROGRAM_LABELS[program] ? `/prep?program=${program}` : libraryPath(program);
   const crumbs = [
     { label: 'Prep', to: '/prep' },
-    { label: PROGRAM_LABELS[program] || program, to: hubPath },
+    { label: PAPER_PROGRAM_LABELS[program] || program, to: hubPath },
     { label: 'Most repeated questions' },
   ];
 
   return (
     <>
-      <ProgramControl active={program} onPick={pickProgram} action={<ShareLinkButton path={`/prep/papers/repeats?program=${program}`} compact />} />
+      <ProgramControl programOptions={PAPER_PROGRAMS} active={program} onPick={pickProgram} action={<ShareLinkButton path={`/prep/papers/repeats?program=${program}`} compact />} />
       <Container maxWidth="lg" sx={{ py: { xs: 2, md: 3 } }}>
         <Stack spacing={2}>
           <PrepPageNav crumbs={crumbs} sharePath={`/prep/papers/repeats?program=${program}`} backTo={hubPath} />
           <SectionHeader
             kicker="Exam practice"
-            title={`${PROGRAM_LABELS[program] || program} — questions that keep coming back`}
+            title={`${PAPER_PROGRAM_LABELS[program] || program} — questions that keep coming back`}
             meta={
               loading
                 ? 'Loading…'
