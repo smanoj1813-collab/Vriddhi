@@ -61,6 +61,7 @@ import {
   deleteFacultyAssignmentDraft,
   getAssignmentSubmissionDownload,
 } from './studentPortal'
+import { runStudentCode } from './codeRunner'
 import {
   getMyStudentTests,
   getMyTestInstructions,
@@ -269,6 +270,7 @@ export {
   verifyFeePayment,
   razorpayWebhook,
   updateMyStudentProfile,
+  runStudentCode,
   listMentorDirectory,
   getMyAssignments,
   beginMyAssignmentSubmission,

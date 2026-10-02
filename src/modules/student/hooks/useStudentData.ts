@@ -36,6 +36,8 @@ import {
   isStudentAssessmentActionable,
   withEffectiveStudentAssessmentLifecycle,
 } from '@/shared/utils/assessmentLifecycle';
+import { canStudentUseCodingLab, isBcaStudent } from '../codingLabAccess';
+import { fetchCollegeCodingLabAccess } from '@/shared/services/codingLabAccessService';
 
 export interface UseStudentDataReturn {
   student: StudentProfile | null;
@@ -58,6 +60,8 @@ export interface UseStudentDataReturn {
   /** The resolved Firestore student document id (used by other pages). */
   studentId: string;
   collegeId: string;
+  /** True only when this BCA student belongs to a college assigned the lab. */
+  codingLabEnabled: boolean;
 }
 
 const StudentDataContext = createContext<UseStudentDataReturn | null>(null);
@@ -189,6 +193,7 @@ const useStudentDataSource = (explicitStudentId?: string): UseStudentDataReturn 
   const [studentDocId, setStudentDocId] = useState<string>('');
   const [collegeId, setCollegeId] = useState<string>(user?.collegeId || '');
   const [profile, setProfile] = useState<StudentProfile | null>(null);
+  const [codingLabEnabled, setCodingLabEnabled] = useState(false);
   const [attendance, setAttendance] = useState<AttendanceSummary | null>(null);
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -211,18 +216,21 @@ const useStudentDataSource = (explicitStudentId?: string): UseStudentDataReturn 
   const fetchData = useCallback(async () => {
     const uid = explicitStudentId || user?.uid;
     if (!uid) {
+      setCodingLabEnabled(false);
       setLoading(false);
       return;
     }
 
     try {
       setLoading(true);
+      setCodingLabEnabled(false);
       setError(null);
       setWarnings([]);
 
       const profileData = await fetchProfile(uid, user?.email || undefined);
       if (!profileData) {
         setProfile(null);
+        setCodingLabEnabled(false);
         throw new Error(
           'Your account is not linked to a student profile. Contact your college administrator.'
         );
@@ -255,6 +263,9 @@ const useStudentDataSource = (explicitStudentId?: string): UseStudentDataReturn 
         ),
         fetchNotifications(profileData.id),
         fetchStudentTests(profileData.collegeId || user?.collegeId, profileData.id),
+        isBcaStudent(mappedProfile)
+          ? fetchCollegeCodingLabAccess(profileData.collegeId || user?.collegeId || '')
+          : Promise.resolve(false),
       ] as const);
 
       const serviceNames = [
@@ -264,6 +275,7 @@ const useStudentDataSource = (explicitStudentId?: string): UseStudentDataReturn 
         'timetable',
         'notifications',
         'assessments',
+        'coding lab access',
       ];
       // Saying WHICH service failed is not enough: a Firestore rules denial and a
       // Cloud Function refusing the account look identical on screen, and they need
@@ -288,8 +300,10 @@ const useStudentDataSource = (explicitStudentId?: string): UseStudentDataReturn 
       const scheduleData = results[3].status === 'fulfilled' ? results[3].value : [];
       const notificationData = results[4].status === 'fulfilled' ? results[4].value : [];
       const rawTestData = results[5].status === 'fulfilled' ? results[5].value : [];
+      const codingLabAssigned = results[6].status === 'fulfilled' ? results[6].value : false;
       const testData = rawTestData.map((test) => withEffectiveStudentAssessmentLifecycle(test));
 
+      setCodingLabEnabled(canStudentUseCodingLab(mappedProfile, codingLabAssigned));
       setAttendance(mapAttendance(attendanceData));
       setAssignments(mapAssignments(assignmentData));
       setFeeSummary(feeData ? mapFees(feeData) : null);
@@ -326,6 +340,7 @@ const useStudentDataSource = (explicitStudentId?: string): UseStudentDataReturn 
     } catch (err) {
       console.error('[useStudentData] Fetch error:', err);
       setProfile(null);
+      setCodingLabEnabled(false);
       setStudentDocId('');
       setCollegeId('');
       setAttendance(null);
@@ -366,6 +381,7 @@ const useStudentDataSource = (explicitStudentId?: string): UseStudentDataReturn 
     refresh: () => setRefreshKey((k) => k + 1),
     studentId: studentDocId,
     collegeId,
+    codingLabEnabled,
   };
 };
 

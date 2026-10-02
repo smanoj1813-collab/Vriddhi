@@ -23,10 +23,12 @@ import {
   Sparkles,
   Briefcase,
   Award,
+  Code2,
   IdCard,
   type LucideIcon,
 } from 'lucide-react'
 import type { TranslationKey } from '../../shared/i18n'
+import { isBcaStudent, type StudentProgramIdentity } from './codingLabAccess'
 
 export type StudentNavGroup = 'academics' | 'practice' | 'money' | 'account'
 
@@ -67,6 +69,7 @@ export const STUDENT_NAV_ITEMS: StudentNavItem[] = [
   { id: 'learning', label: 'Learning', path: '/student/learning', icon: Sparkles, group: 'practice', hub: true },
   { id: 'materials', label: 'Materials', path: '/student/materials', icon: Library, group: 'practice', translationKey: 'nav.materials', hint: 'Notes, slides and study material shared by faculty' },
   { id: 'courses', label: 'Courses', path: '/student/courses', icon: Award, group: 'practice', hint: 'Self-paced certificate programmes — lessons, labs, quizzes and projects' },
+  { id: 'coding-lab', label: 'Coding Lab', path: '/student/coding-lab', icon: Code2, group: 'practice', hint: 'Practice C, C++, Java and Python with an in-browser code runner' },
   { id: 'library', label: 'Library', path: '/student/library', icon: GraduationCap, group: 'practice', translationKey: 'nav.library', hint: 'Books, journals and e-resources' },
   { id: 'journey', label: 'My Journey', path: '/student/journey', icon: Milestone, group: 'practice', translationKey: 'nav.journey', hint: 'Your progress across the programme' },
   { id: 'resume', label: 'Resume Builder', path: '/student/resume', icon: Briefcase, group: 'practice', hint: 'ATS-friendly resume templates, live preview and PDF download (Placement Pack)' },
@@ -74,12 +77,24 @@ export const STUDENT_NAV_ITEMS: StudentNavItem[] = [
   { id: 'fees', label: 'Fees', path: '/student/fees', icon: CreditCard, group: 'money', translationKey: 'nav.fees', aliases: ['/student/fee-portal'], hint: 'Dues, payments and receipts' },
   { id: 'challans', label: 'My Challans', path: '/student/challans', icon: Receipt, group: 'money', hint: 'Fee challans issued to you' },
   { id: 'halltickets', label: 'Hall Tickets', path: '/student/hall-tickets', icon: Download, group: 'money', hint: 'Download your exam hall tickets' },
+  { id: 'no-dues', label: 'No-Dues Clearance', path: '/student/no-dues', icon: FileText, group: 'money', hint: 'Submit and track requests to clear campus dues' },
   { id: 'id-card', label: 'My ID Card', path: '/student/id-card', icon: IdCard, group: 'account', hint: 'Digital student ID with library barcode — download as PDF' },
   { id: 'events', label: 'Events', path: '/student/events', icon: CalendarDays, group: 'account', translationKey: 'nav.events', hint: 'Campus events and activities' },
   { id: 'notifications', label: 'Notifications', path: '/student/notifications', icon: Bell, group: 'account', translationKey: 'nav.notifications', badge: 'notifications', hint: 'Announcements and alerts for you' },
   { id: 'install-app', label: 'Install App', path: '/student/install-app', icon: Download, group: 'account', aliases: ['/student/pwa-install'] },
   { id: 'settings', label: 'Settings', path: '/student/settings', icon: Settings, group: 'account', translationKey: 'nav.settings', hint: 'Language, theme and account preferences' },
 ]
+
+/** Apply student-program visibility rules to destinations before rendering navigation. */
+export function studentNavItemsForProfile(
+  profile?: StudentProgramIdentity | null,
+  codingLabEnabled?: boolean,
+): StudentNavItem[] {
+  // Omitted profile is kept for static route-model callers/tests. Real student
+  // surfaces pass the college-checked entitlement from StudentDataProvider.
+  const canUseCodingLab = profile === undefined || (isBcaStudent(profile) && codingLabEnabled === true)
+  return STUDENT_NAV_ITEMS.filter((item) => item.id !== 'coding-lab' || canUseCodingLab)
+}
 
 /**
  * The four destinations a student reaches with a thumb, plus "More": the two
@@ -104,9 +119,13 @@ export function mobileTabItems(): StudentNavItem[] {
  * tab, and not the hubs themselves (a hub is a tab; listing it in More would
  * be a link to the menu the student is standing in).
  */
-export function moreSheetItems(options: { showInstallApp?: boolean } = {}): StudentNavItem[] {
+export function moreSheetItems(options: {
+  showInstallApp?: boolean
+  profile?: StudentProgramIdentity | null
+  codingLabEnabled?: boolean
+} = {}): StudentNavItem[] {
   const showInstallApp = options.showInstallApp !== false
-  return STUDENT_NAV_ITEMS.filter(
+  return studentNavItemsForProfile(options.profile, options.codingLabEnabled).filter(
     (item) =>
       !(MOBILE_TAB_IDS as readonly string[]).includes(item.id)
       && !item.hub
@@ -119,8 +138,12 @@ export function moreSheetItems(options: { showInstallApp?: boolean } = {}): Stud
  * minus anything that already owns a bottom-bar tab (a hub that repeats the
  * tab the student just tapped is a dead end, not a shortcut).
  */
-export function navItemsInGroup(group: StudentNavGroup): StudentNavItem[] {
-  return STUDENT_NAV_ITEMS.filter(
+export function navItemsInGroup(
+  group: StudentNavGroup,
+  profile?: StudentProgramIdentity | null,
+  codingLabEnabled?: boolean,
+): StudentNavItem[] {
+  return studentNavItemsForProfile(profile, codingLabEnabled).filter(
     (item) => item.group === group && !item.hub && !(MOBILE_TAB_IDS as readonly string[]).includes(item.id)
   )
 }

@@ -1,11 +1,11 @@
 // functions/test/prepCatalog.test.ts
 //
-// Data-integrity tests for the seeded Karnataka NEP/CBCS prep catalogues.
+// Data-integrity tests for regional legacy catalogues and the new universal
+// student-first Prep supplement.
 //
 // These run the real `validatePrepCatalog()` from src/prepShared.ts against the
-// real exported seed data for every degree program, so a referential break
-// (orphan topic, missing featured question, unknown subject tag, short
-// explanation, …) fails the build rather than surfacing in production.
+// exported seed data, so a referential break (orphan topic, missing featured
+// question, unknown subject tag, short explanation, …) fails before release.
 //
 // Covered programs: M.Com, B.Sc and BA are held to the full completeness
 // contract (5 modules per subject, 2 questions per module, zero integrity
@@ -35,6 +35,10 @@ import { BSC_SUBJECTS, SEEDED_BSC_TOPICS, SEEDED_BSC_QUESTIONS } from '../src/da
 import { BA_SUBJECTS, SEEDED_BA_TOPICS, SEEDED_BA_QUESTIONS } from '../src/data/baSeedData.ts'
 import { BCOM_SUBJECTS, SEEDED_BCOM_TOPICS, SEEDED_BCOM_QUESTIONS } from '../src/data/bcomSeedData.ts'
 import { APTITUDE_SUBJECTS, SEEDED_APTITUDE_TOPICS, SEEDED_APTITUDE_QUESTIONS } from '../src/data/aptitudeSeedData.ts'
+import {
+  UNIVERSAL_ACADEMIC_BUNDLE,
+  universalAcademicSupplementFor,
+} from '../src/data/universalAcademicSupplement.ts'
 
 interface ProgramFixture {
   programCode: string
@@ -521,6 +525,48 @@ describe('shared placement-aptitude catalogue (QA / LR / Verbal)', () => {
   })
 })
 
+describe('universal academic supplement', () => {
+  it('validates as a complete curriculum-independent pack for all Prep programs', () => {
+    const report = validatePrepCatalog({
+      programCode: 'universal',
+      ...UNIVERSAL_ACADEMIC_BUNDLE,
+    })
+    assert.equal(report.valid, true, report.issues.map((issue) => issue.message).join('\n'))
+    assert.equal(report.subjectCount, 5)
+    assert.equal(report.topicCount, 14)
+    assert.equal(report.questionCount, 14)
+    assert.ok(UNIVERSAL_ACADEMIC_BUNDLE.subjects.every((subject) => !subject.syllabusRef && !subject.universityRegion))
+  })
+
+  it('is included when seeding each requested UG/commerce program', () => {
+    const fixtures = [
+      { code: 'bba', subjects: BBA_SUBJECTS, topics: SEEDED_BBA_TOPICS, questions: SEEDED_UNIVERSAL_QUESTIONS },
+      { code: 'bcom', subjects: BCOM_SUBJECTS, topics: SEEDED_BCOM_TOPICS, questions: SEEDED_BCOM_QUESTIONS },
+      { code: 'bsc', subjects: BSC_SUBJECTS, topics: SEEDED_BSC_TOPICS, questions: SEEDED_BSC_QUESTIONS },
+      { code: 'ba', subjects: BA_SUBJECTS, topics: SEEDED_BA_TOPICS, questions: SEEDED_BA_QUESTIONS },
+    ]
+    for (const fixture of fixtures) {
+      const supplement = universalAcademicSupplementFor(fixture.code)
+      assert.ok(supplement.subjects.some((subject) => subject.id === 'universal-study-toolkit'), `${fixture.code} includes the shared toolkit`)
+      const baseline = validatePrepCatalog({
+        programCode: fixture.code,
+        subjects: fixture.subjects,
+        topics: fixture.topics,
+        questions: fixture.questions,
+      })
+      const report = validatePrepCatalog({
+        programCode: fixture.code,
+        subjects: [...fixture.subjects, ...supplement.subjects],
+        topics: { ...fixture.topics, ...supplement.topics },
+        questions: [...fixture.questions, ...supplement.questions],
+      })
+      // Some legacy BBA rows carry documented completeness quirks. The new
+      // supplement must validate on its own and must not add any new errors.
+      assert.equal(report.errorCount, baseline.errorCount, `${fixture.code}: ${report.issues.map((issue) => issue.message).join('; ')}`)
+    }
+  })
+})
+
 describe('resolveSeedPrograms (master seeder selection)', () => {
   it('defaults to every program when nothing is supplied', () => {
     for (const input of [undefined, null, '', 'all', 'ALL']) {
@@ -576,13 +622,14 @@ describe('resolveSeedPrograms (master seeder selection)', () => {
     assert.deepEqual(r.programs, PREP_SEED_CODES)
   })
 
-  it('accepts the shared aptitude track code alongside program codes', () => {
-    const r = resolveSeedPrograms('aptitude,bba')
-    assert.deepEqual(r.programs, ['aptitude', 'bba'])
+  it('accepts shared tracks alongside program codes', () => {
+    const r = resolveSeedPrograms('aptitude,bba,universal')
+    assert.deepEqual(r.programs, ['aptitude', 'bba', 'universal'])
     assert.deepEqual(r.errors, [])
     // PREP_SEED_CODES is a superset of the program codes.
     for (const code of PREP_PROGRAM_CODES) assert.ok(PREP_SEED_CODES.includes(code))
     assert.ok(PREP_SEED_CODES.includes('aptitude'))
+    assert.ok(PREP_SEED_CODES.includes('universal'))
   })
 })
 

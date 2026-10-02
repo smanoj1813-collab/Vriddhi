@@ -20,10 +20,10 @@
 
 // Vite's `?raw` suffix inlines the file as a string at build time.
 //
-// Only the combined CSV is bundled. `BCom_/BA_/BSc_QuestionBank.csv` are exact
-// subsets of it (same header, same row order, one branch each), so inlining all
-// four would ship ~450 KB of duplicated text in the superadmin chunk; the
-// per-programme datasets are filtered out of the combined one instead.
+// Only the combined CSV is bundled. The programme-specific CSVs are exact
+// subsets of it (same header and rows), so inlining each separately would ship
+// duplicated text in the superadmin chunk; per-programme datasets are filtered
+// from the combined file instead.
 // @ts-ignore — typed by vite/client, but keep the fallback for tsx/node tests
 import allCsv from '../../../../data/question-bank/All_QuestionBank.csv?raw';
 
@@ -48,7 +48,7 @@ export const SEED_CSV_HEADERS = [
   'isPYQ', 'examYear', 'examName',
 ] as const;
 
-export type SeedFileKey = 'all' | 'bcom' | 'ba' | 'bsc';
+export type SeedFileKey = 'all' | 'bcom' | 'ba' | 'bsc' | 'bca';
 
 export interface SeedFile {
   key: SeedFileKey;
@@ -65,7 +65,7 @@ export interface SeedFile {
  * Branch labels in the seed data. `branch` is carried into tags (the universal
  * schema has no branch column) so filters and search still narrow by programme.
  */
-export const SEED_BRANCHES = ['B.Com', 'BA', 'B.Sc'] as const;
+export const SEED_BRANCHES = ['B.Com', 'BA', 'B.Sc', 'BCA'] as const;
 
 /**
  * The combined dataset, exactly as `generate_seed.py` wrote it — with line
@@ -111,9 +111,9 @@ export function filterSeedCsvByBranch(csvText: string, branch: string): string {
 export const SEED_FILES: SeedFile[] = [
   {
     key: 'all',
-    label: 'All programmes (B.Com + BA + B.Sc)',
+    label: 'All programmes (B.Com + BA + B.Sc + BCA)',
     branch: null,
-    expectedRows: 759,
+    expectedRows: 951,
     csv: SEED_ALL_CSV,
   },
   {
@@ -136,6 +136,13 @@ export const SEED_FILES: SeedFile[] = [
     branch: 'B.Sc',
     expectedRows: 259,
     csv: filterSeedCsvByBranch(SEED_ALL_CSV, 'B.Sc'),
+  },
+  {
+    key: 'bca',
+    label: 'BCA — 4 computing subjects × 16 topics × 48 sub-topics',
+    branch: 'BCA',
+    expectedRows: 192,
+    csv: filterSeedCsvByBranch(SEED_ALL_CSV, 'BCA'),
   },
 ];
 

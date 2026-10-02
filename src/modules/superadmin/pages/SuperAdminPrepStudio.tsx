@@ -25,6 +25,7 @@ import { useState } from 'react';
 import { Box, Typography, Alert, Card, CardContent, Button, Stack, TextField } from '@mui/material';
 import { Link as LinkIcon, Check } from '@mui/icons-material';
 import PrepContentStudioTab from '@/modules/admin/components/PrepContentStudioTab';
+import CodingLabCollegeAssignment from '@/modules/superadmin/components/CodingLabCollegeAssignment';
 
 function PublicCatalogLinkCard() {
   const [copied, setCopied] = useState(false);
@@ -94,20 +95,22 @@ export default function SuperAdminPrepStudio() {
     <Box>
       <Box sx={{ mb: 2 }}>
         <Typography variant="h5" sx={{ fontWeight: 800 }}>
-          Prep Content Studio — Platform Curriculum
+          Prep Content Studio — Concept-First Learning
         </Typography>
         <Typography variant="body2" color="text.secondary">
-          Centrally author the Karnataka NEP 2020 / CBCS prep catalog: subjects,
-          module topics (Explanation, Formulas, Tricks, How To Solve), AI draft
-          generation and the draft → in-review → published review workflow.
+          Build clear, advanced-but-accessible explanations, worked problem-solving,
+          formulas, valid shortcuts and answer frameworks that add to a student’s
+          own curriculum without assuming a particular university or scheme.
         </Typography>
         <Alert severity="info" sx={{ mt: 1.5 }}>
-          Platform-wide content authored here is served to every college and to
-          B2C learners on Vriddhi Prep. Changes are cache-backed, so publish
-          deliberately — students ride free cache hits rather than fresh AI calls.
+          Published Prep material is shared across colleges and B2C learners. The
+          Universal Student Learning pack is curriculum-independent; any university-
+          specific past papers remain separately labelled. Publishing updates the
+          shared catalogue, so review content carefully.
         </Alert>
       </Box>
       <PublicCatalogLinkCard />
+      <CodingLabCollegeAssignment />
       <PrepContentStudioTab />
     </Box>
   );

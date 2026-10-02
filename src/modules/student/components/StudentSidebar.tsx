@@ -7,7 +7,7 @@ import LanguageSwitcher from '../../../shared/components/LanguageSwitcher';
 import VriddhiLogo from '../../../shared/components/VriddhiLogo';
 import { isPwaStandalone, requestPwaInstall } from '../../../shared/pwa/install';
 import type { TranslationKey } from '../../../shared/i18n';
-import { STUDENT_NAV_ITEMS, STUDENT_NAV_GROUPS, type StudentNavItem } from '../studentNav';
+import { studentNavItemsForProfile, STUDENT_NAV_GROUPS, type StudentNavItem } from '../studentNav';
 import {
   ChevronRight,
   Sun,
@@ -23,7 +23,7 @@ import {
  * app feel like a squeezed desktop site.
  */
 export default function StudentSidebar({ onSignOut }: { onSignOut: () => void }) {
-  const { profile, unreadNotifications } = useStudentData();
+  const { profile, unreadNotifications, codingLabEnabled } = useStudentData();
   const { resolvedMode, toggleMode } = useThemeMode();
   const { t } = useTranslation();
 
@@ -62,7 +62,7 @@ export default function StudentSidebar({ onSignOut }: { onSignOut: () => void })
   // Install is already a button in the footer, and the hub pages (Academics,
   // Learning) are exactly what the section headings below represent — so on
   // desktop the list is grouped under headings, matching the phone's sections.
-  const navItems = STUDENT_NAV_ITEMS.filter((item) => item.id !== 'install-app' && !item.hub);
+  const navItems = studentNavItemsForProfile(profile, codingLabEnabled).filter((item) => item.id !== 'install-app' && !item.hub);
   const topItems = navItems.filter((item) => item.id === 'dashboard');
   const groupedItems = STUDENT_NAV_GROUPS.map((g) => ({
     ...g,

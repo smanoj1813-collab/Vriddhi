@@ -244,7 +244,7 @@ const SeedQuestionBankDialog: React.FC<SeedQuestionBankDialogProps> = ({
               Seed Platform Question Bank
             </Typography>
             <Typography variant="caption" color="text.secondary">
-              Loads the curated B.Com / BA / B.Sc seed into the universal pool
+              Loads the curated B.Com / BA / B.Sc / BCA seed into the universal pool
               (questionBank_meta + questionBank_content)
             </Typography>
           </Box>

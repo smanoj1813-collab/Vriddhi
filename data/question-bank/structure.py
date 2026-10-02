@@ -443,11 +443,107 @@ B_SC_STRUCTURE = {
     },
 }
 
+# ─────────────────────────────────────────────────────────────────────────────
+# BCA — cross-semester computing foundations (verify local syllabus before use)
+# ─────────────────────────────────────────────────────────────────────────────
+
+BCA_STRUCTURE = {
+    "Programming in C": {
+        "C Fundamentals and Expressions": [
+            ("Program Structure and Data Types", ["entry point", "data type", "header file"]),
+            ("Variables Constants and Operators", ["integer", "operator", "overflow"]),
+            ("Input Output and Type Conversion", ["scanf", "printf", "format specifier"]),
+        ],
+        "Control Flow and Arrays": [
+            ("Selection and Looping", ["condition", "loop", "break"]),
+            ("One-Dimensional Arrays", ["array", "index", "element"]),
+            ("Multidimensional Arrays", ["matrix", "row major", "two dimensional"]),
+        ],
+        "Functions and Pointers": [
+            ("Function Declarations and Scope", ["prototype", "function", "scope"]),
+            ("Recursion and Storage Classes", ["recursive", "recursion", "call stack"]),
+            ("Pointer Basics and Pointer Arithmetic", ["pointer", "address", "dereference"]),
+        ],
+        "Structures and File Handling": [
+            ("Structures and Unions", ["structure", "union", "member"]),
+            ("Strings and Character Arrays", ["string", "character array", "null character"]),
+            ("File Modes and Sequential I O", ["file", "fopen", "append mode"]),
+        ],
+    },
+    "Data Structures": {
+        "Algorithm Analysis and Arrays": [
+            ("Asymptotic Growth and Complexity", ["big o", "complexity", "input size"]),
+            ("Array Operations and Memory", ["array", "contiguous", "inserting"]),
+            ("Linear and Binary Search", ["linear search", "binary search", "target"]),
+        ],
+        "Linked Lists Stacks and Queues": [
+            ("Singly Linked Lists", ["linked list", "node", "next link"]),
+            ("Stacks and LIFO Operations", ["stack", "last in first out", "pop"]),
+            ("Queues and Circular Queues", ["queue", "first in first out", "circular queue"]),
+        ],
+        "Trees and Graphs": [
+            ("Binary Trees and Traversals", ["binary tree", "traversal", "leaf"]),
+            ("Binary Search Trees", ["binary search tree", "inorder", "skewed tree"]),
+            ("Graph Representation and Traversal", ["graph", "adjacency", "breadth first"]),
+        ],
+        "Sorting and Hashing": [
+            ("Comparison Sorting Algorithms", ["bubble sort", "merge sort", "stable sorting"]),
+            ("Hashing and Collision Handling", ["hash", "collision", "chaining"]),
+            ("Choosing Algorithms and Complexity", ["algorithm", "dynamic programming", "input"]),
+        ],
+    },
+    "Database Management Systems": {
+        "Relational Model and Keys": [
+            ("Relations Keys and Integrity", ["primary key", "foreign key", "candidate key"]),
+            ("Entity Relationship Modelling", ["entity", "relationship", "cardinality"]),
+            ("Relational Algebra Basics", ["relational algebra", "selection", "projection"]),
+        ],
+        "SQL Fundamentals": [
+            ("DDL and DML Statements", ["create table", "insert", "update"]),
+            ("Aggregate Functions and Grouping", ["aggregate", "count", "group by"]),
+            ("Joins and Subqueries", ["join", "subquery", "left join"]),
+        ],
+        "Normalization and Transactions": [
+            ("Functional Dependencies and Normal Forms", ["normalization", "normal form", "functional dependency"]),
+            ("ACID Transactions", ["acid", "atomicity", "durability"]),
+            ("Concurrency and Recovery", ["concurrency", "deadlock", "recovery"]),
+        ],
+        "Indexing and Database Design": [
+            ("Indexes and Query Performance", ["index", "query", "lookup"]),
+            ("Views Security and Privileges", ["view", "grant", "privilege"]),
+            ("Schema Design and ER Mapping", ["schema", "junction table", "foreign key"]),
+        ],
+    },
+    "Object-Oriented Programming with Java": {
+        "Java Basics and Objects": [
+            ("Java Program Structure and Types", ["java", "bytecode", "jdk"]),
+            ("Classes Objects and Constructors", ["class", "object", "constructor"]),
+            ("Methods and Overloading", ["method", "overloading", "static"]),
+        ],
+        "Inheritance and Polymorphism": [
+            ("Inheritance and Reuse", ["inheritance", "extends", "superclass"]),
+            ("Overriding and Dynamic Dispatch", ["overriding", "dynamic dispatch", "runtime object"]),
+            ("Abstract Classes and Interfaces", ["abstract class", "interface", "implements"]),
+        ],
+        "Exceptions Collections I O": [
+            ("Exception Handling", ["exception", "catch", "throw"]),
+            ("Collections and Generics", ["collection", "arraylist", "generics"]),
+            ("Streams and File I O", ["stream", "file", "try with resources"]),
+        ],
+        "Multithreading and JDBC": [
+            ("Threads and Synchronization", ["thread", "synchronization", "race condition"]),
+            ("Thread Lifecycle and Runnable", ["runnable", "thread", "start"]),
+            ("JDBC Connections and Statements", ["jdbc", "preparedstatement", "resultset"]),
+        ],
+    },
+}
+
 # branch label → structure
 STRUCTURES = {
     "B.Com": B_COM_STRUCTURE,
     "BA": BA_STRUCTURE,
     "B.Sc": B_SC_STRUCTURE,
+    "BCA": BCA_STRUCTURE,
 }
 
 

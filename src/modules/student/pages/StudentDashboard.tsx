@@ -5,7 +5,7 @@ import StudentAcademicSummary from '../components/StudentAcademicSummary';
 import {
   Calendar, BookOpen, FileText, CreditCard, Clock, CheckCircle, AlertTriangle,
   Bell, ChevronRight, TrendingUp, MapPin, BarChart3, Library, Settings, Receipt,
-  GraduationCap, Sparkles, User, CalendarDays, BookMarked, ShieldCheck
+  GraduationCap, Sparkles, User, CalendarDays, BookMarked, ShieldCheck, Code2
 } from 'lucide-react';
 import type { Assessment, ClassSchedule, StudentProfile } from '../types/student';
 import { deadlineCountdown, linkageBadgeText } from '../utils/deadlineCountdown';
@@ -239,6 +239,7 @@ const QUICK_ACTIONS: Array<{
   { to: '/student/assignments', icon: FileText, label: 'Assignments', labelKey: 'nav.assignments', color: 'amber' },
   { to: '/student/grades', icon: TrendingUp, label: 'Grades', labelKey: 'student.gradesGpa', color: 'emerald' },
   { to: '/student/materials', icon: Library, label: 'Materials', labelKey: 'student.studyNotes', color: 'violet' },
+  { to: '/student/coding-lab', icon: Code2, label: 'Coding Lab', color: 'teal' },
   { to: '/student/timetable', icon: Clock, label: 'Timetable', labelKey: 'nav.timetable', color: 'rose' },
   { to: '/student/curriculum', icon: BookMarked, label: 'Curriculum', labelKey: 'nav.curriculum', color: 'violet' },
   { to: '/student/fees', icon: CreditCard, label: 'Fees', labelKey: 'student.feePortal', color: 'teal' },
@@ -259,6 +260,7 @@ export default function StudentDashboard() {
     warnings,
     refresh,
     profile,
+    codingLabEnabled,
     attendance,
     assessments,
     assignments,
@@ -387,17 +389,16 @@ export default function StudentDashboard() {
           Renders nothing when the backend feature gate is off. */}
       <StudentAcademicSummary />
 
-      {/* Quick Actions — the 13 tiles the desktop rail and the phone "More"
-          sheet also carry, split into their nav groups instead of one wall of
-          icons. On a phone this is four short scannable lists of 2-3 tiles
-          rather than a 3-column grid of thirteen. */}
+      {/* Quick Actions — up to 15 destinations from the shared student nav,
+          split into their nav groups. Programme-specific actions are filtered
+          for this student before they are rendered. */}
       <div>
         <h2 className="text-sm font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-3 flex items-center gap-2">
           <Sparkles className="w-4 h-4 text-teal-600" />
           {t('student.quickNav')} - Karnataka University
         </h2>
         <div className="space-y-4">
-          {groupTilesByNavSection(QUICK_ACTIONS).map((group) => (
+          {groupTilesByNavSection(QUICK_ACTIONS.filter((action) => action.to !== '/student/coding-lab' || codingLabEnabled)).map((group) => (
             <div key={group.id}>
               <p className="mb-2 flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                 <span className="h-1 w-1 rounded-full bg-teal-500" aria-hidden="true" />

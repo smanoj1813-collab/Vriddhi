@@ -9,7 +9,8 @@ Outputs (in this directory):
     BCom_QuestionBank.csv   (262 questions)
     BA_QuestionBank.csv     (238 questions)
     BSc_QuestionBank.csv    (259 questions)
-    All_QuestionBank.csv    (759 questions)
+    BCA_QuestionBank.csv    (192 questions)
+    All_QuestionBank.csv    (951 questions)
 
 Each branch file carries two generations of questions:
 
@@ -49,6 +50,7 @@ from subtopic_questions import (  # noqa: E402
     B_SC_SUBTOPIC_QUESTIONS,
     PER_TOPIC,
 )
+from bca_subtopic_questions import BCA_SUBTOPIC_QUESTIONS  # noqa: E402
 import structure  # noqa: E402
 
 BATCH = "2026-27"
@@ -346,6 +348,7 @@ def main():
         ("B.Com", B_COM, B_COM_SUBTOPIC_QUESTIONS, "BCom_QuestionBank.csv"),
         ("BA", BA, BA_SUBTOPIC_QUESTIONS, "BA_QuestionBank.csv"),
         ("B.Sc", B_SC, B_SC_SUBTOPIC_QUESTIONS, "BSc_QuestionBank.csv"),
+        ("BCA", [], BCA_SUBTOPIC_QUESTIONS, "BCA_QuestionBank.csv"),
     ]
     all_rows = []
     branch_rows = []

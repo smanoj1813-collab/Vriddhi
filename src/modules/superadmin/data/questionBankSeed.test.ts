@@ -51,8 +51,8 @@ const MCQ_LINE =
   'The accounting equation is stated as:,Financial Accounting,mcq,easy,Journal and Accounting Equation,Accounting Equation and Dual Aspect,1,Assets = Liabilities + Capital|Assets + Capital = Liabilities|Capital = Assets + Liabilities|Assets = Capital - Liabilities,A,Assets equal liabilities plus capital.,financial,2026-27,B.Com,false,,'
 
 describe('bundled seed datasets', () => {
-  it('bundles all four CSVs with content', () => {
-    assert.equal(SEED_FILES.length, 4)
+  it('bundles all five CSVs with content', () => {
+    assert.equal(SEED_FILES.length, 5)
     for (const file of SEED_FILES) {
       assert.ok(file.csv.length > 1000, `${file.key} csv looks empty`)
       assert.ok(file.csv.startsWith('text,subject,type,'), `${file.key} csv lost its header`)
@@ -71,33 +71,34 @@ describe('bundled seed datasets', () => {
     }
     // …and the normalisation must be lossless: dropping the CRs is not the
     // same as dropping rows or blanking cells.
-    assert.equal(parseSeedCsv(SEED_ALL_CSV).length, 759)
+    assert.equal(parseSeedCsv(SEED_ALL_CSV).length, 951)
   })
 
-  it('parses the combined dataset with zero invalid rows (759 = 262 + 238 + 259)', () => {
+  it('parses the combined dataset with zero invalid rows (951 = 262 + 238 + 259 + 192)', () => {
     const resolved = resolveSeedRows('all', [])
-    assert.equal(resolved.rows.length, 759)
+    assert.equal(resolved.rows.length, 951)
     assert.equal(resolved.invalid.length, 0, JSON.stringify(resolved.invalid.slice(0, 3)))
     assert.equal(resolved.filteredOut, 0)
     assert.deepEqual(resolved.branches, [
       { name: 'B.Com', count: 262 },
       { name: 'B.Sc', count: 259 },
       { name: 'BA', count: 238 },
+      { name: 'BCA', count: 192 },
     ])
-    assert.equal(resolved.subjects.length, 12)
-    assert.ok(resolved.totalMarks > 759, 'marks should accumulate across rows')
+    assert.equal(resolved.subjects.length, 16)
+    assert.ok(resolved.totalMarks > 951, 'marks should accumulate across rows')
   })
 
   it('every per-branch file matches the combined count for that branch', () => {
     for (const branch of SEED_BRANCHES) {
-      const key = branch === 'B.Com' ? 'bcom' : branch === 'BA' ? 'ba' : 'bsc'
+      const key = branch === 'B.Com' ? 'bcom' : branch === 'BA' ? 'ba' : branch === 'BCA' ? 'bca' : 'bsc'
       const single = resolveSeedRows(key, [])
       const filtered = resolveSeedRows('all', [branch])
-      const expected = branch === 'B.Com' ? 262 : branch === 'BA' ? 238 : 259
+      const expected = branch === 'B.Com' ? 262 : branch === 'BA' ? 238 : branch === 'BCA' ? 192 : 259
       assert.equal(single.rows.length, expected, `${branch} file`)
       assert.equal(single.invalid.length, 0)
       assert.equal(filtered.rows.length, expected, `${branch} filtered out of All`)
-      assert.equal(filtered.filteredOut, 759 - expected)
+      assert.equal(filtered.filteredOut, 951 - expected)
       assert.deepEqual(
         single.rows.map((r) => fingerprintSeedRow(r)).sort(),
         filtered.rows.map((r) => fingerprintSeedRow(r)).sort(),
@@ -612,7 +613,7 @@ describe('resolveSeedRows', () => {
   it('filters by programme and reports what the filter hid', () => {
     const bcomOnly = resolveSeedRows('all', ['B.Com'])
     assert.equal(bcomOnly.rows.length, 262)
-    assert.equal(bcomOnly.filteredOut, 497)
+    assert.equal(bcomOnly.filteredOut, 689)
     assert.ok(bcomOnly.rows.every((r) => r.branch === 'B.Com'))
     assert.deepEqual(bcomOnly.branches, [{ name: 'B.Com', count: 262 }])
   })
@@ -620,7 +621,7 @@ describe('resolveSeedRows', () => {
   it('treats several selected programmes as a union', () => {
     const two = resolveSeedRows('all', ['BA', 'B.Sc'])
     assert.equal(two.rows.length, 497)
-    assert.equal(two.filteredOut, 262)
+    assert.equal(two.filteredOut, 454)
   })
 
   it('is case-insensitive about the branch filter', () => {
@@ -629,7 +630,7 @@ describe('resolveSeedRows', () => {
 
   it('keeps invalid rows out of the seed set but reports them', () => {
     const resolved = resolveSeedRows('all', [])
-    assert.equal(resolved.rows.length + resolved.invalid.length, 759)
+    assert.equal(resolved.rows.length + resolved.invalid.length, 951)
   })
 })
 
@@ -646,15 +647,15 @@ describe('sub-topic tier', () => {
   })
 
   it('covers the whole declared hierarchy: 16 topics and 48 sub-topics per branch', () => {
-    for (const key of ['bcom', 'ba', 'bsc'] as const) {
+    for (const key of ['bcom', 'ba', 'bsc', 'bca'] as const) {
       const resolved = resolveSeedRows(key, [])
       assert.equal(resolved.topicCount, 16, `${key} topics`)
       assert.equal(resolved.subTopicCount, 48, `${key} sub-topics`)
       assert.equal(resolved.rowsWithoutSubTopic, 0, key)
     }
     const all = resolveSeedRows('all', [])
-    assert.equal(all.topicCount, 48, 'topicCount is distinct subject+topic pairs across branches')
-    assert.equal(all.subTopicCount, 144)
+    assert.equal(all.topicCount, 64, 'topicCount is distinct subject+topic pairs across branches')
+    assert.equal(all.subTopicCount, 192)
   })
 
   it('keeps every question inside a sub-topic of its own topic', () => {
@@ -733,7 +734,7 @@ describe('per-programme datasets are derived from the combined CSV', () => {
     }
     const derived = SEED_FILES.filter((f) => f.key !== 'all')
       .reduce((sum, f) => sum + parseSeedCsv(f.csv).length, 0)
-    assert.equal(derived, parseSeedCsv(SEED_ALL_CSV).length, 'the three datasets must add up to the combined one')
+    assert.equal(derived, parseSeedCsv(SEED_ALL_CSV).length, 'the programme datasets must add up to the combined one')
   })
 
   it('matches the branch by header position, not by a hardcoded column index', () => {

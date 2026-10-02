@@ -8,6 +8,7 @@ import TextSizeControl from '../../../shared/components/TextSizeControl'
 import { isPwaStandalone, requestPwaInstall } from '../../../shared/pwa/install'
 import type { TranslationKey } from '../../../shared/i18n'
 import { STUDENT_NAV_GROUPS, moreSheetItems } from '../studentNav'
+import { useStudentData } from '../hooks/useStudentData'
 
 interface StudentMoreSheetProps {
   open: boolean
@@ -35,8 +36,9 @@ export default function StudentMoreSheet({
 }: StudentMoreSheetProps) {
   const { t } = useTranslation()
   const { resolvedMode, toggleMode } = useThemeMode()
+  const { profile, codingLabEnabled } = useStudentData()
   const showInstall = !isPwaStandalone()
-  const sheetItems = moreSheetItems({ showInstallApp: showInstall })
+  const sheetItems = moreSheetItems({ showInstallApp: showInstall, profile, codingLabEnabled })
 
   useEffect(() => {
     if (!open || typeof document === 'undefined') return undefined
