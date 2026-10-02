@@ -10,6 +10,7 @@ import { facultyRoutes } from '@/modules/faculty/routes';
 import { adminRoutes } from '@/modules/admin/routes';
 import { superadminRoutes } from '@/modules/superadmin/routes';
 import { prepRoutes } from '@/modules/prep/routes';
+import { employeeRoutes } from '@/modules/employee/routes';
 import { publicCourseRoutes } from '@/modules/courses/routes';
 
 function RootRedirect() {
@@ -70,6 +71,8 @@ export const appRoutes: RouteObject[] = [
   ...facultyRoutes,
   ...adminRoutes,
   ...superadminRoutes,
+  // Vriddhi platform employees (academic work across assigned colleges).
+  ...employeeRoutes,
   // NO principalRoutes — principal uses adminRoutes
   // Public Prep catalog (shareable, college-free) — must sit before the
   // catch-all so /prep/... links resolve instead of 404-redirecting home.

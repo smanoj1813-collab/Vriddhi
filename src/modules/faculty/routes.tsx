@@ -119,7 +119,7 @@ export const facultyRoutes: RouteObject[] = [
   {
     path: '/faculty',
     element: (
-      <RoleRoute allowedRoles={['faculty', 'hod', 'mentor']}>
+      <RoleRoute allowedRoles={['faculty', 'hod', 'mentor', 'employee']}>
         <Layout />
       </RoleRoute>
     ),

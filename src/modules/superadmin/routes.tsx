@@ -25,6 +25,7 @@ const SystemHealthMonitor = lazy(() => import('./pages/SystemHealthMonitor'));
 const SystemManagement = lazy(() => import('./pages/SystemManagement'));
 const UserImport = lazy(() => import('./pages/UserImport'));
 const AccessControl = lazy(() => import('./pages/AccessControl'));
+const PlatformEmployees = lazy(() => import('./pages/PlatformEmployees'));
 const BulkCredentialResetPage = lazy(() => import('./pages/BulkCredentialResetPage'));
 const SuperAdminQuestionBank = lazy(() => import('./pages/SuperAdminQuestionBank'));
 const SuperAdminPrepStudio = lazy(() => import('./pages/SuperAdminPrepStudio'));
@@ -51,6 +52,9 @@ export const superadminRoutes: RouteObject[] = [
       { index: true, element: <SuperAdminDashboard /> },
       { path: 'dashboard', element: <SuperAdminDashboard /> },
       { path: 'access', element: <AccessControl /> },
+      // Vriddhi employees: academic staff who work across colleges. The
+      // identity is created in Access Control first, then assigned here.
+      { path: 'employees', element: <PlatformEmployees /> },
       { path: 'colleges', element: <SuperAdminColleges /> },
       { path: 'colleges/new', element: <CreateCollege /> },
       { path: 'colleges/:id/edit', element: <EditCollegeRoute /> },

@@ -2241,3 +2241,98 @@ describe('course assignments and course progress', () => {
     )))
   })
 })
+
+// ─── Vriddhi platform employees ─────────────────────────────────────────────
+//
+// `employee` is a platform-wide role, but it is scoped to ONE college at a time
+// by the collegeId claim (the active college). The claim is what every
+// college-scoped rule compares against, so these tests pin the boundary: work
+// freely inside the active college, nothing outside it, and nothing at all when
+// the assignment is suspended — even if a stale college claim is still present.
+describe('vriddhi platform employees (employee role)', () => {
+  const EMPLOYEE_UID = 'employee-a'
+
+  function activeEmployee() {
+    return testEnv
+      .authenticatedContext(EMPLOYEE_UID, {
+        role: 'employee',
+        collegeId: COLLEGE_A,
+        employeeStatus: 'active',
+      })
+      .firestore()
+  }
+
+  function suspendedEmployeeWithStaleClaim() {
+    return testEnv
+      .authenticatedContext(EMPLOYEE_UID, {
+        role: 'employee',
+        collegeId: COLLEGE_A,
+        employeeStatus: 'suspended',
+      })
+      .firestore()
+  }
+
+  function availability(collegeId: string) {
+    return {
+      collegeId,
+      facultyId: EMPLOYEE_UID,
+      slots: [{ day: 'monday', startTime: '09:00', endTime: '10:00' }],
+    }
+  }
+
+  it('works inside the active college like college staff', async () => {
+    const db = activeEmployee()
+    await assertSucceeds(getDoc(doc(db, 'colleges', COLLEGE_A)))
+    await assertSucceeds(setDoc(doc(db, 'colleges', COLLEGE_A, 'facultyAvailability', EMPLOYEE_UID), availability(COLLEGE_A)))
+    // Own faculty row (faculty-mode profile / settings / availability).
+    await assertSucceeds(setDoc(doc(db, 'faculty', EMPLOYEE_UID), {
+      uid: EMPLOYEE_UID,
+      email: 'employee-a@vriddhi.example',
+      name: 'Employee A',
+      collegeId: COLLEGE_A,
+    }))
+  })
+
+  it('is refused in any college that is not the active claim', async () => {
+    const db = activeEmployee()
+    await assertFails(getDoc(doc(db, 'colleges', COLLEGE_B)))
+    await assertFails(setDoc(doc(db, 'colleges', COLLEGE_B, 'facultyAvailability', EMPLOYEE_UID), availability(COLLEGE_B)))
+    await assertFails(setDoc(doc(db, 'faculty', EMPLOYEE_UID), {
+      uid: EMPLOYEE_UID,
+      collegeId: COLLEGE_B,
+    }))
+  })
+
+  it('loses every staff grant while suspended, even with a stale college claim', async () => {
+    const db = suspendedEmployeeWithStaleClaim()
+    // Staff-gated reads and writes are refused.
+    await assertFails(getDoc(doc(db, 'users', 'faculty-a')))
+    await assertFails(getDoc(doc(db, 'faculty', 'legacy-faculty-a')))
+    await assertFails(setDoc(doc(db, 'colleges', COLLEGE_A, 'facultyAvailability', EMPLOYEE_UID), availability(COLLEGE_A)))
+  })
+
+  it('keeps the assignment document server-written and self-readable', async () => {
+    await testEnv.withSecurityRulesDisabled(async (context) => {
+      await setDoc(doc(context.firestore(), 'platform_employees', EMPLOYEE_UID), {
+        uid: EMPLOYEE_UID,
+        email: 'employee-a@vriddhi.example',
+        name: 'Employee A',
+        status: 'active',
+        assignedCollegeIds: [COLLEGE_A],
+        assignedColleges: [{ id: COLLEGE_A, name: 'College A', code: 'CA' }],
+        grants: ['schedule', 'curriculum'],
+        activeCollegeId: COLLEGE_A,
+      })
+    })
+    const db = activeEmployee()
+    await assertSucceeds(getDoc(doc(db, 'platform_employees', EMPLOYEE_UID)))
+    // A compromised session must not be able to widen its own assignment.
+    await assertFails(updateDoc(doc(db, 'platform_employees', EMPLOYEE_UID), {
+      assignedCollegeIds: [COLLEGE_A, COLLEGE_B],
+    }))
+    const otherEmployee = testEnv
+      .authenticatedContext('employee-b', { role: 'employee', collegeId: COLLEGE_A, employeeStatus: 'active' })
+      .firestore()
+    await assertFails(getDoc(doc(otherEmployee, 'platform_employees', EMPLOYEE_UID)))
+  })
+})

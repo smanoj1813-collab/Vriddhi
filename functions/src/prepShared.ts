@@ -602,7 +602,7 @@ export const PREP_PROGRAM_CODES: string[] = PREP_PROGRAM_CATALOG.map((p) => p.co
  * 'universal' is cross-program concept mastery; 'companies' are company
  * placement guides; 'papers' are previous-year university question papers.
  */
-export const PREP_TRACK_SEED_CODES: string[] = ['aptitude', 'companies', 'papers', 'universal']
+export const PREP_TRACK_SEED_CODES: string[] = ['aptitude', 'companies', 'papers', 'universal', 'pyq-files']
 
 /** Everything `/prep/seed-all` understands: program codes + track bundles. */
 export const PREP_SEED_CODES: string[] = [...PREP_PROGRAM_CODES, ...PREP_TRACK_SEED_CODES]

@@ -32,18 +32,18 @@ export const PERMISSION_MATRIX: Readonly<Record<string, readonly UserRole[]>> = 
   'student.grades': ['student', 'parent'],
 
   // ── Faculty / academic operations ─────────────────────────────
-  'faculty.access': ['faculty', 'mentor', 'hod', 'principal', 'admin'],
-  'faculty.attendance': ['faculty', 'mentor', 'hod', 'principal', 'admin'],
-  'faculty.schedule': ['faculty', 'hod', 'principal', 'admin'],
-  'faculty.assessments': ['faculty', 'hod', 'principal', 'admin'],
+  'faculty.access': ['faculty', 'mentor', 'hod', 'principal', 'admin', 'employee'],
+  'faculty.attendance': ['faculty', 'mentor', 'hod', 'principal', 'admin', 'employee'],
+  'faculty.schedule': ['faculty', 'hod', 'principal', 'admin', 'employee'],
+  'faculty.assessments': ['faculty', 'hod', 'principal', 'admin', 'employee'],
 
   // ── Content authoring ─────────────────────────────────────────
-  'question.manage': ['faculty', 'hod', 'principal', 'admin'],
-  'paper.manage': ['faculty', 'hod', 'principal', 'admin'],
+  'question.manage': ['faculty', 'hod', 'principal', 'admin', 'employee'],
+  'paper.manage': ['faculty', 'hod', 'principal', 'admin', 'employee'],
 
   // ── Academic administration (department heads + principal) ────
   'academic.admin': ['admin', 'hod', 'principal'],
-  'grade.manage': ['hod', 'principal', 'admin'],
+  'grade.manage': ['hod', 'principal', 'admin', 'employee'],
   'college.manage': ['admin'],
   'users.manage': ['admin'],
 
@@ -85,7 +85,30 @@ export const KNOWN_PERMISSIONS = Object.keys(PERMISSION_MATRIX) as readonly stri
 export const OFFICE_ROLES: readonly UserRole[] = ['accounts', 'operations'];
 
 /** Roles that may use the academic admin surface (/admin/* academic pages). */
-export const ACADEMIC_ADMIN_ROLES: readonly UserRole[] = ['admin', 'hod', 'principal', 'superadmin'];
+export const ACADEMIC_ADMIN_ROLES: readonly UserRole[] = ['admin', 'hod', 'principal', 'superadmin', 'employee'];
+
+/**
+ * /admin pages that stay OUT of the employee workspace even though they sit on
+ * the academic side of the default rule. Employees work the academic
+ * programme only (admissions, college settings/onboarding, university-exam
+ * compliance and importers are institution jobs). Listed by longest prefix.
+ */
+export const EMPLOYEE_EXCLUDED_ADMIN_PATHS: readonly string[] = [
+  '/admin/admissions',
+  '/admin/settings',
+  '/admin/onboarding',
+  '/admin/exam-management',
+  '/admin/uucms-integration',
+  '/admin/bcu-compliance',
+  '/admin/scheme-packs',
+  '/admin/result-importer',
+  '/admin/ai-agent',
+];
+
+function isEmployeeExcluded(pathname: string): boolean {
+  const path = pathname.replace(/\/+$/, '') || '/admin';
+  return EMPLOYEE_EXCLUDED_ADMIN_PATHS.some((base) => matchesPath(path, base));
+}
 
 /**
  * Legacy per-college access document. `payrollRoles` is retained so older
@@ -175,6 +198,8 @@ export function canAccessAdminPath(
     if (entry.permission === null) return true;
     return roleHasPermission(role, entry.permission, access);
   }
-  // Unlisted /admin page ⇒ academic surface.
+  // Unlisted /admin page ⇒ academic surface. Employees are additionally kept
+  // away from the institution-only pages listed above.
+  if (role === 'employee') return !isEmployeeExcluded(path);
   return (ACADEMIC_ADMIN_ROLES as readonly string[]).includes(role);
 }

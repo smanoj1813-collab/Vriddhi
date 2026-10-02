@@ -84,6 +84,10 @@ function optionalNumber(value: string): number | undefined {
 export default function GradeRecords() {
   const { user } = useAuth();
   const collegeId = user?.collegeId || '';
+  // A platform employee grades inside the active college and leaves DRAFTS;
+  // publishing official grades is the institution's approval step, so the
+  // button stays with the college even though the page is shared.
+  const canPublish = user?.role !== 'employee';
   const [students, setStudents] = useState<StudentOption[]>([]);
   const [records, setRecords] = useState<GradeRecord[]>([]);
   const [selectedStudent, setSelectedStudent] = useState<StudentOption | null>(null);
@@ -247,6 +251,13 @@ export default function GradeRecords() {
         </CardContent>
       </Card>
 
+      {!canPublish && (
+        <Alert severity="info" sx={{ mb: 2 }}>
+          You are grading as Vriddhi platform staff. Marks are saved as drafts and are published by the
+          college HOD after approval.
+        </Alert>
+      )}
+
       <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, alignItems: 'center', mb: 2 }}>
         <FormControl size="small" sx={{ minWidth: 160 }}>
           <InputLabel>Status</InputLabel>
@@ -256,10 +267,16 @@ export default function GradeRecords() {
             <MenuItem value="published">Published</MenuItem>
           </Select>
         </FormControl>
-        <Button variant="contained" color="success" disabled={saving || selectedDrafts.size === 0} onClick={() => void mutateDrafts('publishGradeRecords')}>
+        <Button
+          variant="contained"
+          color="success"
+          disabled={saving || selectedDrafts.size === 0 || !canPublish}
+          title={canPublish ? undefined : 'Publishing is the college HOD’s approval step'}
+          onClick={() => void mutateDrafts('publishGradeRecords')}
+        >
           Publish selected ({selectedDrafts.size})
         </Button>
-        <Button color="error" disabled={saving || selectedDrafts.size === 0} onClick={() => void mutateDrafts('deleteDraftGradeRecords')}>
+        <Button color="error" disabled={saving || selectedDrafts.size === 0 || !canPublish} onClick={() => void mutateDrafts('deleteDraftGradeRecords')}>
           Delete selected drafts
         </Button>
       </Box>

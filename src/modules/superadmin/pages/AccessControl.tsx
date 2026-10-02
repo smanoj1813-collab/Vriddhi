@@ -31,8 +31,8 @@ const REPAIR_SCOPES: Record<
   office: ['officeStaff'],
 }
 
-type Role = 'superadmin' | 'admin' | 'principal' | 'hod' | 'mentor' | 'faculty' | 'student' | 'parent' | 'accounts' | 'operations'
-const roles: Role[] = ['superadmin', 'admin', 'principal', 'hod', 'mentor', 'faculty', 'student', 'parent', 'accounts', 'operations']
+type Role = 'superadmin' | 'admin' | 'principal' | 'hod' | 'mentor' | 'faculty' | 'student' | 'parent' | 'accounts' | 'operations' | 'employee'
+const roles: Role[] = ['superadmin', 'admin', 'principal', 'hod', 'mentor', 'faculty', 'student', 'parent', 'accounts', 'operations', 'employee']
 const grant = httpsCallable<Record<string, string>, any>(functions, 'grantUserRole')
 const diagnose = httpsCallable<{ email: string }, any>(functions, 'diagnoseIdentity')
 const syncClaims = httpsCallable<Record<string, never>, { scanned: number; updated: number; skipped: number; errors: string[] }>(functions, 'syncIdentityClaims')
@@ -60,7 +60,9 @@ export default function AccessControl() {
   // resolved on the fly so a pasted code or id is confirmed before submit.
   const [pickedCollege, setPickedCollege] = useState<CollegeOption | null>(null)
   const resolvedCollege = pickedCollege ?? resolveCollegeInput(form.collegeId, grantColleges)
-  const collegeRequired = form.role !== 'superadmin'
+  // `employee` is platform-wide: its colleges are assigned afterwards on the
+  // Employees screen, so no home college is asked for here.
+  const collegeRequired = form.role !== 'superadmin' && form.role !== 'employee'
   const [repairResult, setRepairResult] = useState<RepairResult | null>(null)
   const [repairBusy, setRepairBusy] = useState(false)
 

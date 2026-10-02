@@ -244,6 +244,15 @@ export const api = onRequest(
 // contract and the one-release overlap with `api`.
 export { pdf } from './routes/pdf'
 
+// Vriddhi platform employees (global academic staff assigned to colleges).
+export {
+  assignEmployeeColleges,
+  setEmployeeActiveCollege,
+  getMyEmployeeAccess,
+  listPlatformEmployees,
+  suspendPlatformEmployee,
+} from './employeeAccess'
+
 // ═══════ Callable functions exports ═══════
 export {
   syncStudentsToAuth,

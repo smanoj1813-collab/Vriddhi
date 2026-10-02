@@ -3,14 +3,14 @@ import { doc, getDoc, collection, query, where, getDocs, limit } from "firebase/
 import { auth, db } from '@/Firebase/config';
 import { detectClaimStaleness } from '@/shared/utils/identityClaims';
 
-export type UserRole = 'superadmin' | 'admin' | 'principal' | 'faculty' | 'student' | 'parent' | 'hod' | 'mentor' | 'accounts' | 'operations';
+export type UserRole = 'superadmin' | 'admin' | 'principal' | 'faculty' | 'student' | 'parent' | 'hod' | 'mentor' | 'accounts' | 'operations' | 'employee';
 
 /**
  * `accounts` (finance office) and `operations` (library, inventory, stores)
  * are college OFFICE roles: they reach only their own modules under /admin and
  * never the academic surface. See src/modules/auth/permissions.ts.
  */
-export const VALID_ROLES: UserRole[] = ['superadmin', 'admin', 'principal', 'faculty', 'student', 'parent', 'hod', 'mentor', 'accounts', 'operations'];
+export const VALID_ROLES: UserRole[] = ['superadmin', 'admin', 'principal', 'faculty', 'student', 'parent', 'hod', 'mentor', 'accounts', 'operations', 'employee'];
 
 export interface FirebaseUserData {
   uid: string;

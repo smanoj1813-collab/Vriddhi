@@ -51,6 +51,51 @@ test('payroll: accounts manages it and principal retains approval access', () =>
   assert.equal(roleHasPermission('principal', 'payroll.approve'), true)
 })
 
+test('vriddhi employees get the academic surface only', () => {
+  // Scheduling, curriculum, assessments, papers, grade records, reports.
+  for (const p of [
+    '/admin/class-schedule',
+    '/admin/curriculum',
+    '/admin/curriculum-progress',
+    '/admin/academic-calendar',
+    '/admin/assessments',
+    '/admin/schedule-tests',
+    '/admin/test-reports',
+    '/admin/grade-records',
+    '/admin/question-bank',
+    '/admin/paper-generator',
+    '/admin/papers/builder',
+    '/admin/students',
+    '/admin/attendance',
+    '/admin/analytics',
+  ]) {
+    assert.equal(canAccessAdminPath('employee', p), true, p)
+  }
+  // Institution-only work is excluded even though it sits on the academic side
+  // of the default /admin rule.
+  for (const p of [
+    '/admin/admissions',
+    '/admin/settings',
+    '/admin/onboarding',
+    '/admin/exam-management',
+    '/admin/uucms-integration',
+    '/admin/bcu-compliance',
+    '/admin/scheme-packs',
+    '/admin/result-importer',
+    '/admin/ai-agent',
+  ]) {
+    assert.equal(canAccessAdminPath('employee', p), false, p)
+  }
+  // Finance / office modules stay with their own roles.
+  for (const p of ['/admin/fee-management', '/admin/payroll', '/admin/library', '/admin/inventory', '/admin/vendor-bills']) {
+    assert.equal(canAccessAdminPath('employee', p), false, p)
+  }
+  assert.equal(roleHasPermission('employee', 'paper.manage'), true)
+  assert.equal(roleHasPermission('employee', 'fees.manage'), false)
+  assert.equal(roleHasPermission('employee', 'payroll.manage'), false)
+  assert.equal(roleHasPermission('employee', 'users.manage'), false)
+})
+
 test('principal oversees everything; superadmin bypasses', () => {
   for (const p of ['/admin/fee-management', '/admin/library', '/admin/inventory', '/admin/dashboard'])
     assert.equal(canAccessAdminPath('principal', p), true, p)

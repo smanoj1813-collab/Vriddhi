@@ -110,8 +110,24 @@ service cloud.firestore {
           && data.collegeId == claimCollege());
     }
 
+    // `employeeStatus` is stamped by the employeeAccess callables: a suspended
+    // Vriddhi employee keeps the role in `users/{uid}` (so their account still
+    // resolves) but must lose every staff grant immediately. The membership
+    // test matters — a token without the claim is every other role, and the
+    // rules DSL does not tolerate reading a key the token does not carry.
+    function employeeSuspended() {
+      return 'employeeStatus' in request.auth.token
+        && request.auth.token.employeeStatus == 'suspended';
+    }
+
     function isStaff() {
-      return isSignedIn() && role() in ['superadmin', 'admin', 'principal', 'hod', 'faculty', 'mentor'];
+      // `employee` is a Vriddhi platform employee: not a member of any one
+      // institution, but scoped to the collegeId claim of the college they
+      // are currently working in, so every collegeId() comparison below
+      // still holds.
+      return isSignedIn()
+        && !employeeSuspended()
+        && role() in ['superadmin', 'admin', 'principal', 'hod', 'faculty', 'mentor', 'employee'];
     }
 
     function isCollegeStaff() {
@@ -135,7 +151,11 @@ service cloud.firestore {
     // check. Purely a reordering of || operands: no condition was added, removed
     // or weakened, and the result is identical for every input.
     function sameCollege(data) {
-      return (collegeId() != null && 'collegeId' in data && data.collegeId == collegeId())
+      // A suspended employee keeps no college scope even if a stale token still
+      // carries one: the claim branch refuses outright, so no same-college read
+      // survives suspension. Other roles have no employeeStatus claim.
+      return (!employeeSuspended()
+          && collegeId() != null && 'collegeId' in data && data.collegeId == collegeId())
         || isSuperadmin();
     }
 
@@ -327,7 +347,7 @@ service cloud.firestore {
       allow create: if isSuperadmin()
         && userId == request.resource.data.uid
         && request.resource.data.role in
-          ['superadmin', 'admin', 'principal', 'hod', 'mentor', 'faculty', 'student', 'parent']
+          ['superadmin', 'admin', 'principal', 'hod', 'mentor', 'faculty', 'student', 'parent', 'employee']
         && noPasswordField();
       allow update: if isOwner(userId)
         && immutableUserFields()
@@ -388,10 +408,14 @@ service cloud.firestore {
         || isOwner(id)
         || resource.data.uid == request.auth.uid
         || ('email' in request.auth.token && resource.data.email == request.auth.token.email));
-      allow create: if canManageCollege(request.resource.data)
+      allow create: if (canManageCollege(request.resource.data)
+          || (claimedRole() == 'employee' && isStaff() && id == request.auth.uid
+            && request.resource.data.collegeId == claimCollege()))
         && noPrivilegedRole(request.resource.data)
         && noPasswordField();
-      allow update: if canManageCollege(resource.data)
+      allow update: if (canManageCollege(resource.data)
+          || (claimedRole() == 'employee' && isStaff() && id == request.auth.uid
+            && request.resource.data.collegeId == claimCollege()))
         && request.resource.data.collegeId == resource.data.collegeId
         && ('uid' in resource.data ? request.resource.data.uid == resource.data.uid : true)
         && noPrivilegedRole(request.resource.data)
@@ -1031,7 +1055,8 @@ service cloud.firestore {
           && (isCollegeStaff() || role() == 'student');
         allow list: if isSignedIn() && isCollegeStaff() && collegeId() == collegeId;
         allow create, update: if isSignedIn() && collegeId() == collegeId
-          && ((role() == 'faculty' && facultyId == request.auth.uid)
+          && ((facultyId == request.auth.uid
+              && (role() == 'faculty' || (role() == 'employee' && isStaff())))
               || claimedRole() in ['admin', 'hod', 'principal'])
           && request.resource.data.facultyId == facultyId;
         allow delete: if isSignedIn() && collegeId() == collegeId
@@ -1659,6 +1684,17 @@ service cloud.firestore {
     // from a client, so a counter can never be forged.
     match /platform/{docId} {
       allow read: if isSuperadmin();
+      allow write: if false;
+    }
+
+    // Vriddhi platform employee assignments (colleges + academic grants).
+    // Written ONLY by the employeeAccess callables with the Admin SDK, because
+    // this document is what decides which colleges an employee may work in.
+    // An employee may read their own assignment; nobody may write it from a
+    // client, so a compromised session cannot widen its own scope.
+    match /platform_employees/{uid} {
+      allow get: if isSignedIn() && (isSuperadmin() || request.auth.uid == uid);
+      allow list: if isSuperadmin();
       allow write: if false;
     }
 

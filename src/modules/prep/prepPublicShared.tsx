@@ -287,12 +287,14 @@ export function ProgramControl({
   onPick,
   action,
   sticky = true,
+  programOptions = PROGRAMS,
 }: {
   active: string;
   onPick: (code: string) => void;
   /** Right-aligned slot — the hub keeps the page's share button here. */
   action?: React.ReactNode;
   sticky?: boolean;
+  programOptions?: typeof PROGRAMS;
 }) {
   return (
     <Box
@@ -321,7 +323,7 @@ export function ProgramControl({
           }}
         >
         {PROGRAM_GROUPS.map((group, groupIdx) => {
-          const programs = PROGRAMS.filter((p) => p.level === group.key);
+          const programs = programOptions.filter((p) => p.level === group.key);
           if (programs.length === 0) return null;
           return (
             <React.Fragment key={group.key}>
