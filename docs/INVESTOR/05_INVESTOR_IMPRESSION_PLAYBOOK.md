@@ -233,7 +233,7 @@ Rehearse twice, click nothing unrehearsed, and never show a screen with an empty
 | −10 | Re-read `04_ELEARNING_INVESTOR_BRIEF.md`; write down your two numbers (colleges in pipeline, students reachable) |
 | −9 | Fix the trust items (CI `|| true`, lint, CORS allow-list). Be able to say "CI can fail today." |
 | −8 | Record the 5-minute demo video on a real college's data; no empty states |
-| −7 | Print the metrics one-pager, the cost model page, and the pilot plan |
+| −7 | Print the metrics one-pager, the cost model page, the pilot plan, and **`Vriddhi_Investor_OnePager.pdf`** (one per attendee, plus spares) |
 | −6 | Prepare the 3 testimonials (faculty/principal quotes, even informal) |
 | −5 | Draft the follow-up email *before* the meeting so sending takes 5 minutes |
 | −4 | Rehearsal 1 with someone who will interrupt rudely |

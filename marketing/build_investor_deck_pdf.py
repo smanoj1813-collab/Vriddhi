@@ -9,12 +9,12 @@ for links and email.
 Fonts — Inter carries the design. It has no ₹, →, ●, ≤ or ✓ glyph, so those runs are
 rendered with DejaVu Sans, which does; a font-run splitter wraps `cell()`/`multi_cell()`
 to switch fonts only for the characters Inter lacks. Kannada (वृद्धि) is drawn as
-vector outlines with Noto Sans Kannada + matplotlib, the same technique as
-`build_kn_booklet.py`, because fpdf2 cannot shape Indic scripts.
+outlines with HarfBuzz (uharfbuzz) + fontTools, because fpdf2 cannot shape Indic
+scripts.
 
 Regenerate:
     python3 -m venv /home/user/.venv
-    /home/user/.venv/bin/pip install fpdf2 fonttools matplotlib
+    /home/user/.venv/bin/pip install fpdf2 fonttools uharfbuzz
     /home/user/.venv/bin/python marketing/build_investor_deck_pdf.py
 """
 import io
@@ -228,8 +228,8 @@ def draw_complex(pdf, text, size_pt, bold, color, x, y_baseline):
 class Deck(FPDF):
     """fpdf2 with the helpers this deck needs, plus the font-fallback splitter."""
 
-    def __init__(self):
-        super().__init__(orientation="L", unit="mm", format=(SH, SW))
+    def __init__(self, orientation="L", page_format=(SH, SW)):
+        super().__init__(orientation=orientation, unit="mm", format=page_format)
         self.set_auto_page_break(False)
         self.set_margins(0, 0, 0)
         self.add_font("Inter", "", os.path.join(FONT_DIR, "Inter-Regular.ttf"))
@@ -346,7 +346,8 @@ class Deck(FPDF):
         for i, ln in enumerate(lines):
             self.text_at(x, y + i * lh, ln, size, bold, color)
         bottom = y + len(lines) * lh + gap
-        self._marks.append((bottom, t[:44]))
+        ink_bottom = y + (len(lines) - 1) * lh + size * 0.42
+        self._marks.append((ink_bottom, t[:44]))
         return bottom
 
     # ---- composite blocks -------------------------------------------------

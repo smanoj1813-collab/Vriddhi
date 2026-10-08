@@ -17,6 +17,7 @@ Every piece exists in **English** and **Kannada (ಕನ್ನಡ)**:
 | `Vriddhi_Brochure_KN.pdf` | Same brochure, fully in Kannada | PDF, print-ready |
 | `Vriddhi_Investor_Deck.pptx` | 19-slide investor deck (English) — market, wedge, unit economics, eLearning layer, the ask | PowerPoint |
 | `Vriddhi_Investor_Deck.pdf` | Same deck as a vector PDF, landscape A4 at a true 16:9 page — for email, printing and screen share | PDF |
+| `Vriddhi_Investor_OnePager.pdf` | **A4 portrait leave-behind** — the whole pitch on one page, for cold intros and after-meeting handovers | PDF |
 | `investor-deck.html` | Same investor deck in a browser: arrow keys to navigate, `Ctrl/⌘+P` → PDF | HTML |
 | `Vriddhi_Investor_Deck_Speaker_Notes.md` | The script for the investor deck, slide by slide | Markdown |
 
@@ -45,6 +46,7 @@ cd marketing
 /home/user/.venv/bin/python build_pitch_deck.py     # EN college deck
 /home/user/.venv/bin/python build_investor_deck.py      # investor deck: PPTX + HTML + notes
 /home/user/.venv/bin/python build_investor_deck_pdf.py  # investor deck: PDF
+/home/user/.venv/bin/python build_investor_onepager.py  # investor one-pager (PDF)
 /home/user/.venv/bin/python build_kn_deck.py        # KN deck
 /home/user/.venv/bin/python build_booklet.py        # EN booklet
 /home/user/.venv/bin/python build_kn_booklet.py     # KN booklet
@@ -60,6 +62,11 @@ cd marketing
   documents live in `docs/INVESTOR/`.
 - `build_investor_deck.py` — renders that list three ways: python-pptx for the PPTX,
   a hand-written HTML/CSS renderer for the browser deck, and the speaker notes.
+- `build_investor_onepager.py` — a **single A4 portrait page** that has to work with no presenter
+  in the room: header, headline, market chips, two balanced columns, the measured unit economics,
+  the ask with its use-of-funds table, what the money buys, and the honest traction line. Reuses
+  the `Deck` renderer from the deck builder with a portrait page; it prints `✓ fits` or
+  `⚠ OVERFLOWS` against the footer rule so it can never silently run onto page two.
 - `build_investor_deck_pdf.py` — renders the same list as a vector PDF with fpdf2.
   Inter has no `₹ → ● ≤ ≈ ✓` glyphs, so those runs are drawn with DejaVu Sans and
   every run pasted between them is auto-levelled to the Latin baseline. Devanagari

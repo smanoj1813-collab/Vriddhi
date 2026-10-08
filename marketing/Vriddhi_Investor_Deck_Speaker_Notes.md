@@ -68,7 +68,7 @@ Say the gap first, without being asked: 'We have not yet collected a rupee. That
 
 ## Slide 13 · Where the money goes, and what it buys
 
-Anchor on Horizon 1 — it is cheap, concrete and directly unblocks sales. Then make the unfair claim: 'Horizon 2 is not a new company. The delivery engine, the assessment engine and the distribution already exist; we are buying content and a marketplace, not infrastructure.'
+Frame the ₹50 L against this: 'Horizon 1 is what the bridge pays for — it is the list of reasons a college says no today. Horizon 2 is not a new company: the delivery engine, the assessment engine and the distribution already exist, so the money buys content and a marketplace, not infrastructure.'
 
 ## Slide 14 · A second business, sitting inside the first
 
@@ -82,9 +82,9 @@ Rank them out loud: 'Data gravity is the real one. Everything else shortens the 
 
 Investors bet on the person, not the product. Be specific about why YOU: your time inside a college, the years you spent watching this pain, and the fact that you built the thing alone. Never say 'we have no competition' or 'we just need funding to scale' in this section.
 
-## Slide 17 · <₹1.5 Cr> for <15 %> — and three specific introductions
+## Slide 17 · ₹50 L for 8–10 % — and three specific introductions
 
-Ask for the specific things, not 'mentorship'. Replace the amount/percentage with the option you chose from docs/INVESTOR/03_EXPANSION_AND_USE_OF_FUNDS.md §6 (A: ₹50 L bridge, B: ₹1.5 Cr seed, C: ₹3 Cr strategic). Then stop talking and let them negotiate.
+Ask for the specific things, not 'mentorship'. This is the ₹50 L bridge (Option A in docs/INVESTOR/03_EXPANSION_AND_USE_OF_FUNDS.md §6): 8–10 % on CCPS or a convertible note with a 20 % discount and a valuation cap, 9 months of runway, and the milestones on this slide. Then stop talking and let them negotiate.
 
 ## Slide 18 · Four windows are open at the same time
 

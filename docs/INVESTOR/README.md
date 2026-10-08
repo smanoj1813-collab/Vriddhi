@@ -10,6 +10,7 @@ Everything you need to raise money, in the order you will actually use it.
 | 3 | [`03_EXPANSION_AND_USE_OF_FUNDS.md`](03_EXPANSION_AND_USE_OF_FUNDS.md) | "What will you do with the money, and what's the plan?" |
 | 4 | [`04_ELEARNING_INVESTOR_BRIEF.md`](04_ELEARNING_INVESTOR_BRIEF.md) | The person who is interested in **eLearning** — this one is written for them |
 | 5 | [`05_INVESTOR_IMPRESSION_PLAYBOOK.md`](05_INVESTOR_IMPRESSION_PLAYBOOK.md) | Rehearsal, the demo, objections, follow-up emails, monthly updates |
+| — | `../../marketing/Vriddhi_Investor_OnePager.pdf` | **The leave-behind** — one A4 page, self-contained, for cold intros and after-meeting handovers |
 | — | `../../marketing/Vriddhi_Investor_Deck.pptx` | The deck you present / send |
 | — | `../../marketing/Vriddhi_Investor_Deck.pdf` | The same deck as a vector PDF (email, print, screen share) |
 | — | `../../marketing/investor-deck.html` | Same deck in a browser (arrow keys to navigate, `Ctrl+P` → PDF) |
@@ -62,6 +63,7 @@ Do not improvise these; write them down and carry them in the deck's appendix.
 4. **Team** — who is full-time, what they did before, whether they are paid.
 5. **The round** — amount, instrument (CCPS / SAFE / convertible note), and use of funds. The
    scenarios in `03_EXPANSION_AND_USE_OF_FUNDS.md` §6 give you three ready-made versions.
+   **Currently set to Option A — the ₹50 L bridge at 8–10 %** across the deck and the one-pager.
 
 > **Honesty rule.** Every claim in these documents is traceable to code, tests or a dated audit
 > in `docs/`. If a feature is partial, the documents say so. Investors forgive gaps; they do not

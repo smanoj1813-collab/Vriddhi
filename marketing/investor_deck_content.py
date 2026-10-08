@@ -265,6 +265,7 @@ SLIDES = [
             "Cost model measured: ₹18 K/year infrastructure, ₹23/student/year AI, 31–45 % gross margin.",
             "Audits written and dated: health, costing, competitive analysis, demo playbook — the boring evidence of a profession.",
             "<colleges in pilot conversation> colleges in active conversation; <n> letters of intent signed.",
+            "Raising ₹50 L to convert that interest into 5 paid pilots within 90 days.",
         ],
         right_title="Not yet — and this is the plan",
         right=[
@@ -284,20 +285,21 @@ SLIDES = [
         kicker="ROADMAP",
         title="Where the money goes, and what it buys",
         cards=[
-            ("Horizon 1 · 0–6 months · ₹35–45 L",
+            ("Horizon 1 · months 0–6 · funded by this round",
              "Fee collection live · WhatsApp/SMS alerts · parent portal · marksheets & transcripts · OBE/NAAC pack. "
              "Unlocks: every procurement checklist."),
-            ("Horizon 2 · 6–18 months · ₹50–70 L",
-             "Course marketplace · 10–14 certificate programmes · corporate L&D · proctored assessment · placement "
+            ("Horizon 2 · months 6–12 · started on this bridge",
+             "Course marketplace · first Kannada programmes · corporate L&D · proctored assessment · placement "
              "pack v2. Unlocks: non-licence revenue at 85 %+ margin."),
-            ("Horizon 3 · 18–36 months · ₹1–2 Cr",
+            ("Horizon 3 · year 2–3 · seed round",
              "University deployments · second-state portal depth · verifiable credentials · proctoring · Gulf/SAARC. "
              "Unlocks: one signature, 30–100 colleges."),
         ],
         notes=(
-            "Anchor on Horizon 1 — it is cheap, concrete and directly unblocks sales. Then make the "
-            "unfair claim: 'Horizon 2 is not a new company. The delivery engine, the assessment engine and "
-            "the distribution already exist; we are buying content and a marketplace, not infrastructure.'"
+            "Frame the ₹50 L against this: 'Horizon 1 is what the bridge pays for — it is the list of "
+            "reasons a college says no today. Horizon 2 is not a new company: the delivery engine, the "
+            "assessment engine and the distribution already exist, so the money buys content and a "
+            "marketplace, not infrastructure.'"
         ),
     ),
     dict(
@@ -378,7 +380,7 @@ SLIDES = [
     dict(
         kind="cards",
         kicker="THE ASK",
-        title="<₹1.5 Cr> for <15 %> — and three specific introductions",
+        title="₹50 L for 8–10 % — and three specific introductions",
         cards=[
             ("Pilot colleges",
              "Warm introductions to principals and chairmen in Karnataka, then Maharashtra and Tamil Nadu. "
@@ -391,14 +393,15 @@ SLIDES = [
              "Hiring is our real constraint, not capital."),
         ],
         bullets=[
-            "Use of funds: 40 % engineering · 18 % content · 25 % sales & implementation · 6 % cloud/AI · 5 % legal & compliance · 6 % contingency.",
-            "18-month milestones: 25 paying colleges, ₹1–1.5 Cr ARR, 10 certificate programmes, 1,000+ paid learners, 1 university agreement.",
-            "Governance we welcome: monthly metrics, quarterly board review, and a named risk register reviewed every quarter.",
+            "Use of funds: 36 % engineering · 18 % implementation & pilots · 16 % content · 10 % sales · 8 % contingency · 6 % cloud/AI · 6 % legal.",
+            "9-month milestones: 5 paid pilots by month 3 · 10 colleges live and ₹25–35 L ARR by month 9 · 8 certificate programmes · then the seed round.",
+            "Governance we welcome: monthly metrics, a quarterly board review, and a named risk register reviewed every quarter.",
         ],
         notes=(
-            "Ask for the specific things, not 'mentorship'. Replace the amount/percentage with the option you "
-            "chose from docs/INVESTOR/03_EXPANSION_AND_USE_OF_FUNDS.md §6 (A: ₹50 L bridge, B: ₹1.5 Cr seed, "
-            "C: ₹3 Cr strategic). Then stop talking and let them negotiate."
+            "Ask for the specific things, not 'mentorship'. This is the ₹50 L bridge (Option A in "
+            "docs/INVESTOR/03_EXPANSION_AND_USE_OF_FUNDS.md §6): 8–10 % on CCPS or a convertible note with a "
+            "20 % discount and a valuation cap, 9 months of runway, and the milestones on this slide. Then stop "
+            "talking and let them negotiate."
         ),
     ),
     dict(
