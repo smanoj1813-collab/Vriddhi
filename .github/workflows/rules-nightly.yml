@@ -1,0 +1,48 @@
+# Nightly run of the FULL Firestore / Storage / RTDB rules suite
+# (functions/test/firestore.rules.test.ts, ~98 tests) against the Firebase
+# emulators. The per-PR CI job only runs the course-security slice
+# (`test:rules:course-security`); this job covers everything else (fees,
+# grades, admissions, office, identity, ...), so a rules regression is caught
+# within a day even if no PR touches the rules.
+name: Rules (nightly)
+
+on:
+  schedule:
+    # 21:00 UTC = 02:30 IST, after the day's merges.
+    - cron: '0 21 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  rules:
+    name: Full rules suite (Node 22, Java 21)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      PUPPETEER_SKIP_DOWNLOAD: "true"
+    steps:
+      - name: Check out the code
+        uses: actions/checkout@v5
+
+      - name: Set up Node.js 22
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: functions/package-lock.json
+
+      - name: Set up Java 21 for Firebase emulators
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Install functions dependencies
+        working-directory: functions
+        run: npm ci
+
+      - name: Full Firestore / Storage / RTDB rules suite
+        working-directory: functions
+        run: npm run test:rules

@@ -26,6 +26,14 @@ jobs:
       - name: Install frontend dependencies
         run: npm ci
 
+      # Production dependency audit. NON-BLOCKING for now: the current tree has
+      # known high-severity findings that need semver-major upgrades (see
+      # docs/OPS_CLOSEOUT_2026-10-10.md). Remove `continue-on-error` once they
+      # are cleared so new high/critical advisories fail the build.
+      - name: Audit frontend production dependencies
+        continue-on-error: true
+        run: npm audit --omit=dev --audit-level=high
+
       - name: Check for dead code in src/
         run: node scripts/check-dead-code.cjs
 
@@ -69,6 +77,13 @@ jobs:
       - name: Install functions dependencies
         working-directory: functions
         run: npm ci
+
+      # Same gate as the frontend. NON-BLOCKING until the firebase-admin 14 /
+      # express stack upgrades land; then drop `continue-on-error`.
+      - name: Audit functions production dependencies
+        working-directory: functions
+        continue-on-error: true
+        run: npm audit --omit=dev --audit-level=high
 
       - name: Build the functions
         working-directory: functions
