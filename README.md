@@ -166,7 +166,6 @@ with your Firebase web app configuration:
 # Firebase web config (from Firebase Console → Project settings → Your apps)
 VITE_FIREBASE_API_KEY=your_api_key
 VITE_FIREBASE_AUTH_DOMAIN=your-project.firebaseapp.com
-VITE_FIREBASE_DATABASE_URL=https://your-project-default-rtdb.asia-south1.firebasedatabase.app
 VITE_FIREBASE_PROJECT_ID=your-project-id
 VITE_FIREBASE_STORAGE_BUCKET=your-project.appspot.com
 VITE_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
