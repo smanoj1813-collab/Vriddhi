@@ -122,7 +122,7 @@ Vriddhi/
 │                               # Python generator that validates them
 ├── scripts/                    # Seed / migration / fixture scripts + the unit & render test harnesses
 ├── firebase.json               # Firebase Hosting, Firestore, RTDB, Functions config
-├── current-firestore.rules     # Firestore security rules
+├── firestore.rules     # Firestore security rules
 ├── database.rules.json         # Realtime Database security rules
 ├── vite.config.ts              # Vite config, @/ alias, manual chunking
 ├── tailwind.config.js          # Tailwind configuration
@@ -235,7 +235,7 @@ plain `node --test` via `tsx`.
    firebase deploy --only firestore:rules,database:rules
    ```
 
-   Rules files: `current-firestore.rules` (Firestore) and `database.rules.json` (Realtime DB).
+   Rules files: `firestore.rules` (Firestore) and `database.rules.json` (Realtime DB).
 
 4. Run emulators locally:
 

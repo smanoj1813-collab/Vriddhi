@@ -18,7 +18,7 @@
 //     console (the "old path stays as fallback" rule).
 //
 // The document is server-only for writes and superadmin-only for reads
-// (current-firestore.rules, `platform/{doc}`).
+// (firestore.rules, `platform/{doc}`).
 
 import { onSchedule } from 'firebase-functions/v2/scheduler'
 import { logger } from 'firebase-functions'
