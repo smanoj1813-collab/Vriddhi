@@ -17,7 +17,7 @@ the `vriddhi-engineering` checkout needs to be re-run there.
 | C3 | `provisionUser` ops path | **Documented (agent)** | Callable exists in `functions/src/userProvisioning.ts`, `region: asia-south1`. No frontend or script caller in this repo. The prior audits flagged it as an unused surface. Contract documented below. | Confirm which operator tool (if any) calls it in production. |
 | C4 | Delete RTDB instance | **Zero code readers here — human action pending** | `getRtdb()` in `functions/src/config/firebase.ts` is defined but has **no callers**. `database.rules.json` is deny-all. `firebase.json` still lists `database`. Frontend `src/Firebase/config.ts` reads `VITE_FIREBASE_DATABASE_URL` only as config. | Human: check the RTDB console for activity, then delete. Code cleanup (remove `getRtdb`, `database` in `firebase.json`, `firebase/database` in `vite.config.ts`) is not done here; handoff says it was retired in PR #6, which is not in this checkout. |
 | P4-14 | Marketing-binary externalization | **Not actionable here** | `041d053` does not exist in this repo. `marketing/` still holds binaries tracked in Git (PDF, PPTX, ZIP). | Human on the connected machine, against the plan in `041d053` in the other checkout. |
-| Deps | Deferred major upgrades | **Assessed** | `npm audit --omit=dev` now: frontend 10 (5 high, 3 moderate, 2 low, 0 critical); functions 23 (11 high, 11 moderate, 1 critical). The 2026-09-21 doc claimed 0 high for both trees, so these have regressed since then. Largest drivers are the `firebase-admin` 12 chain (`@grpc/grpc-js`, `@firebase/firestore`) and `@fastify/busboy`. | Decide per package. See the recommendation below. |
+| Deps | Deferred major upgrades | **Partly done** | Before: `npm audit --omit=dev` frontend 10 (5 high, 3 moderate, 2 low); functions 23 (11 high, 11 moderate, 1 critical). The 2026-09-21 doc claimed 0 high for both trees, so these regressed. **Done:** `axios` 1.19.0 → 1.20.0 (lockfile only, the one non-breaking frontend fix). Frontend now 9 (4 high, 3 moderate, 2 low). Remaining frontend findings need semver-major fixes (`firebase`, `mammoth`). Functions untouched. | Decide per package. See the recommendation below. |
 | Store | ~1 GB Storage cleanup | **Human** | Not verifiable from the repo. | Console: clear `question-paper-imports/` failed-job folders; check bucket size. |
 | Quota | Cloud Run CPU quota | **Human** | Not verifiable from the repo. | Console: confirm whether the asia-south1 increase was filed/approved. |
 | Nightly | Rules-nightly watch | **No such workflow here** | `.github/workflows/` contains only `ci.yml` (push to `main` and PRs). No nightly rules job. The last `main` CI run (PR #100) succeeded. | Confirm the nightly exists in the `vriddhi-engineering` repo. |
@@ -53,8 +53,10 @@ The 2026-09-21 security pass used pinned or patched upgrades, and deferred
 `firebase-admin` 14 because it removes the namespace API (~30 files). The
 current audit regressed because the lockfile drifted. Options, one package at a time:
 
-1. **Frontend `@fastify/busboy` / `@grpc/grpc-js` / `@firebase/firestore`.** Run
-   `npm audit fix` (non-breaking) first, confirm `test:unit` + build, then commit separately.
+1. **Frontend `firebase` / `mammoth` / `@firebase/firestore`.** The fix is semver-major
+   (`firebase` 9 → 12 range, `mammoth` 0.3.x). Do not run `npm audit fix` unscoped: it
+   also moved `re2js` 0.4 → 2.8 and `commander` 8 → 15 (majors) in the lockfile, so it
+   was reverted. `axios` was the only safe bump, and it is done.
 2. **Functions `firebase-admin` 12 → 14.** Breaking. Its own migration PR.
    Do not bundle with feature work.
 3. **Dev-only Vite 5 → 8.** Breaking, build-time only. Its own PR.
@@ -65,3 +67,4 @@ This close-out does not change any dependency. It is a decision record.
 
 - Repo-wide checks: none changed code. Doc-only commit.
 - `npm audit` numbers above were taken on 2026-10-10 from this checkout.
+- After the axios bump: `npm ci` ok; `tsc --noEmit` clean; `npm run test:unit` 670/670 (this checkout has 670 tests; the handoff baseline of 811 is from the vriddhi-engineering repo); `npm run build` exit 0.
