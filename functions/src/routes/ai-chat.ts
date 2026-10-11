@@ -1248,13 +1248,13 @@ router.put('/study-material/controls', verifyAuth, async (req: AuthenticatedRequ
     updatedAt: new Date().toISOString(),
     updatedBy: user.uid,
   }
-  const parseLimit = (value: unknown, name: string): number | null => {
+  const parseLimit = (value: unknown): number | null => {
     const n = Number(value)
     if (!Number.isInteger(n) || n < 0 || n > 100000) return null
     return n
   }
   if (studentDailyGenerationLimit !== undefined) {
-    const n = parseLimit(studentDailyGenerationLimit, 'studentDailyGenerationLimit')
+    const n = parseLimit(studentDailyGenerationLimit)
     if (n === null) {
       res.status(400).json({ error: 'studentDailyGenerationLimit must be an integer between 0 and 100000 (0 disables the cap).' })
       return
@@ -1262,7 +1262,7 @@ router.put('/study-material/controls', verifyAuth, async (req: AuthenticatedRequ
     update.studentDailyGenerationLimit = n
   }
   if (collegeDailyGenerationLimit !== undefined) {
-    const n = parseLimit(collegeDailyGenerationLimit, 'collegeDailyGenerationLimit')
+    const n = parseLimit(collegeDailyGenerationLimit)
     if (n === null) {
       res.status(400).json({ error: 'collegeDailyGenerationLimit must be an integer between 0 and 100000 (0 disables the breaker).' })
       return
@@ -1580,7 +1580,7 @@ Guidelines:
   }
 })
 
-function generateGroundedFallbackResponse(role: string, query: string, contextSummary: string): string {
+function generateGroundedFallbackResponse(role: string, query: string, _contextSummary: string): string {
   const q = query.toLowerCase()
 
   if (q.includes('attendance') || q.includes('defaulter') || q.includes('shortage')) {
