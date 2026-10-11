@@ -4,6 +4,7 @@
 import { onRequest } from 'firebase-functions/v2/https'
 import * as logger from 'firebase-functions/logger'
 import express from 'express'
+import helmet from 'helmet'
 import cors from 'cors'
 
 // ─── Load .env BEFORE anything else ───
@@ -149,6 +150,13 @@ import {
 } from './admissions'
 
 const app = express()
+
+// Security headers for the JSON API. The API is called cross-origin from
+// Firebase Hosting, so the resource policy must allow cross-origin reads
+// (helmet's default 'same-origin' would block those responses).
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: 'cross-origin' },
+}))
 
 // API is protected by Firebase auth tokens, so reflect the caller's origin
 // rather than hard-coding a host list. This keeps the Firebase Hosting app,

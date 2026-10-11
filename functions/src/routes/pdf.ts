@@ -21,6 +21,7 @@
 
 import cors from 'cors'
 import express, { type Request, type Response, type NextFunction } from 'express'
+import helmet from 'helmet'
 import { onRequest } from 'firebase-functions/v2/https'
 import { logger } from 'firebase-functions'
 
@@ -43,6 +44,10 @@ const STUDENT_ROLES = ['student'] as const
 const REPORT_ROLES = ['superadmin', 'admin', 'principal', 'hod', 'faculty', 'mentor'] as const
 
 export const pdfApp = express()
+
+pdfApp.use(helmet({
+  crossOriginResourcePolicy: { policy: 'cross-origin' },
+}))
 
 pdfApp.use(
   cors({
