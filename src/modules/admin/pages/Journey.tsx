@@ -390,6 +390,27 @@ const StudentJourney = () => {
     }
   }, [students, selectedStudentId])
 
+  const suggestions: Suggestion[] = useMemo(() => {
+    if (!studentData) return []
+    const result: Suggestion[] = []
+    if (studentData.assessmentsTaken > 0 && studentData.avgScore >= 80) {
+      result.push({ type: 'strength', title: 'Excellent Academic Performance', description: `Maintaining ${studentData.avgScore}% average across ${studentData.assessmentsTaken} graded assessment${studentData.assessmentsTaken === 1 ? '' : 's'}.`, action: 'Apply for merit scholarships' })
+    }
+    if (studentData.attendance < 75) {
+      result.push({ type: 'warning', title: 'Low Attendance Alert', description: `Current attendance is ${studentData.attendance}%, below the 75% threshold.`, action: 'Meet your mentor immediately' })
+    }
+    if (studentData.currentGPA === null) {
+      result.push({ type: 'opportunity', title: 'No Published Grades Yet', description: 'CGPA cannot be calculated until grade records are published for this student.', action: 'Publish grade records' })
+    }
+    if (studentData.assessmentsTaken === 0) {
+      result.push({ type: 'opportunity', title: 'No Graded Assessments', description: 'This student has no graded assessment attempts on record.', action: 'Schedule an assessment' })
+    }
+    if (result.length === 0) {
+      result.push({ type: 'strength', title: 'On Track', description: 'You are maintaining good academic standing.', action: 'Keep up the good work' })
+    }
+    return result
+  }, [studentData])
+
   if (studentsLoading || loading) {
     return <div className="flex items-center justify-center py-20"><Loader2 className="w-8 h-8 animate-spin text-slate-500" /></div>
   }
@@ -448,26 +469,6 @@ const StudentJourney = () => {
   }
 
   const endGoal = getEndGoal()
-
-  const suggestions: Suggestion[] = useMemo(() => {
-    const result: Suggestion[] = []
-    if (studentData.assessmentsTaken > 0 && studentData.avgScore >= 80) {
-      result.push({ type: 'strength', title: 'Excellent Academic Performance', description: `Maintaining ${studentData.avgScore}% average across ${studentData.assessmentsTaken} graded assessment${studentData.assessmentsTaken === 1 ? '' : 's'}.`, action: 'Apply for merit scholarships' })
-    }
-    if (studentData.attendance < 75) {
-      result.push({ type: 'warning', title: 'Low Attendance Alert', description: `Current attendance is ${studentData.attendance}%, below the 75% threshold.`, action: 'Meet your mentor immediately' })
-    }
-    if (studentData.currentGPA === null) {
-      result.push({ type: 'opportunity', title: 'No Published Grades Yet', description: 'CGPA cannot be calculated until grade records are published for this student.', action: 'Publish grade records' })
-    }
-    if (studentData.assessmentsTaken === 0) {
-      result.push({ type: 'opportunity', title: 'No Graded Assessments', description: 'This student has no graded assessment attempts on record.', action: 'Schedule an assessment' })
-    }
-    if (result.length === 0) {
-      result.push({ type: 'strength', title: 'On Track', description: 'You are maintaining good academic standing.', action: 'Keep up the good work' })
-    }
-    return result
-  }, [studentData])
 
   // Previously this showed a "Projected GPA" of currentGPA * 1.05 with fixed
   // 78% / 82% / 90% "confidence" bars. There is no model behind those numbers

@@ -471,7 +471,7 @@ export interface CreateAssessmentInput {
   curriculumId?: string;
 }
 
-export interface UpdateAssessmentInput extends Partial<CreateAssessmentInput> {}
+export type UpdateAssessmentInput = Partial<CreateAssessmentInput>;
 
 export interface AssessmentFilterOptions {
   collegeId?: string;

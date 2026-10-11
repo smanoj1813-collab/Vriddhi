@@ -108,7 +108,7 @@ export interface CreateUniversityInput {
   affiliatedColleges?: number;
 }
 
-export interface UpdateUniversityInput extends Partial<CreateUniversityInput> {}
+export type UpdateUniversityInput = Partial<CreateUniversityInput>;
 
 export interface CollegeClassification {
   universityId: string;
@@ -120,7 +120,7 @@ export interface CollegeClassification {
   vriddhiStatus?: VriddhiStatus;
 }
 
-export interface UpdateCollegeClassificationInput extends Partial<CollegeClassification> {}
+export type UpdateCollegeClassificationInput = Partial<CollegeClassification>;
 
 export interface UniversityRolloutProgress {
   universityId: string;

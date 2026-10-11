@@ -501,6 +501,8 @@ function paperQid(sectionId: string | undefined, label: string | number | undefi
   const safe = (value: unknown) =>
     String(value ?? '')
       .normalize('NFKC')
+      // Control characters are the point of this pattern.
+      // eslint-disable-next-line no-control-regex
       .replace(/[/\u0000-\u001f\u007f]/g, '-')
       .trim()
       .replace(/\s+/g, '_')

@@ -496,13 +496,15 @@ export async function fetchFees(studentId: string, collegeId?: string): Promise<
     const data = feeDoc.data() as Record<string, any>;
     const totalFees = Number(data.totalFees) || 0;
     const paidFees = Number(data.paidFees) || 0;
-    const pendingFees = Number(data.pendingFees) ?? totalFees - paidFees;
+    // `Number(x) ?? y` never falls back (Number never returns null/undefined),
+    // so a missing field became NaN. Check for absence explicitly.
+    const pendingFees = data.pendingFees != null ? Number(data.pendingFees) || 0 : totalFees - paidFees;
     return {
       totalFees,
       paidFees,
       pendingFees,
       totalPaid: paidFees,
-      totalBalance: Number(data.totalBalance) ?? pendingFees,
+      totalBalance: data.totalBalance != null ? Number(data.totalBalance) || 0 : pendingFees,
       totalOverdue: Number(data.totalOverdue) || 0,
     };
   }

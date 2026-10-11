@@ -103,7 +103,7 @@ export function describeOfficeLinkageFailure(
         `Sign out and sign back in to refresh your token. If it persists, a superadmin must re-issue your ` +
         `role/college claims (Access Control → Admins → your account), and make sure the account row names a college.`
       )
-    case 'permission-denied':
+    case 'permission-denied': {
       // What to do next depends entirely on whether the app has ALREADY tried
       // to re-issue the claims. Telling someone to sign out again when the app
       // has just called syncMyIdentity and it changed nothing sends them in a
@@ -127,6 +127,7 @@ export function describeOfficeLinkageFailure(
           `claims itself — or sign out and back in), or the deployed security rules are older than this app. If ` +
           `a retry does not help, ask a superadmin to redeploy the rules (npm run deploy:rules) and run ` +
           `Access Control → Identity repair for your account.`
+    }
     case 'missing-index':
       return (
         `This ${context.desk} query needs a Firestore index that has not been created yet, so nothing could be ` +

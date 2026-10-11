@@ -24,7 +24,9 @@
 // subsets of it (same header and rows), so inlining each separately would ship
 // duplicated text in the superadmin chunk; per-programme datasets are filtered
 // from the combined file instead.
-// @ts-ignore — typed by vite/client, but keep the fallback for tsx/node tests
+// Typed by vite/client; the fallback keeps tsx/node tests working.
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
 import allCsv from '../../../../data/question-bank/All_QuestionBank.csv?raw';
 
 import type {

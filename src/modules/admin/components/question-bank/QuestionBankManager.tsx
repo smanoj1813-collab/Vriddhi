@@ -424,7 +424,7 @@ const QuestionBankManager: React.FC<QuestionBankManagerProps> = ({
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setPreviewQuestion(null)}>Close</Button>
-          <Button onClick={() => { previewQuestion && handleEdit(previewQuestion); setPreviewQuestion(null) }}>
+          <Button onClick={() => { if (previewQuestion) handleEdit(previewQuestion); setPreviewQuestion(null) }}>
             Edit
           </Button>
         </DialogActions>
