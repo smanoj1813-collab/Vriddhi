@@ -5,6 +5,20 @@
 //   { subjects: PrepSubject[], companies: PrepCompany[], topics?, topic?, questions? }
 // Every call is recorded on `globalThis.__RC_PREP_CALLS` so a test can assert
 // the hub still renders from ONE subjects + ONE companies request.
+// Mirrors PREP_PAPER_FILE_PROGRAMS in src/shared/services/prepContentService.ts.
+// PrepPapersViews builds its program list from this at module load, so the
+// stub must export it or the whole public /prep tree fails to evaluate.
+export const PREP_PAPER_FILE_PROGRAMS = [
+  { code: 'bsw', label: 'BSW', degreeLevel: 'undergraduate' as const },
+  { code: 'ma', label: 'MA', degreeLevel: 'postgraduate' as const },
+  { code: 'med', label: 'M.Ed', degreeLevel: 'postgraduate' as const },
+  { code: 'mlib', label: 'M.Lib', degreeLevel: 'postgraduate' as const },
+  { code: 'msw', label: 'MSW', degreeLevel: 'postgraduate' as const },
+  { code: 'languages', label: 'Languages', degreeLevel: 'undergraduate' as const },
+  { code: 'open-electives', label: 'Open Electives', degreeLevel: 'postgraduate' as const },
+  { code: 'ug-open-elective', label: 'UG Open Elective', degreeLevel: 'undergraduate' as const },
+]
+
 function data(): any {
   return (globalThis as any).__RC_PREP ?? {};
 }
