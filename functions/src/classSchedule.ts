@@ -1514,9 +1514,16 @@ export const cancelWeeklySchedule = onCall(
     // partial failure must not leave half a slot cancelled.
     for (const group of chunk(candidates, MAX_CANCEL_DOCS_PER_TXN)) {
       const applied = await db.runTransaction(async (txn) => {
+        // EVERY read before ANY write. Reading each session inside the write
+        // loop made the second session's read follow the first session's write,
+        // which Firestore refuses — and the Admin SDK raises that as a plain
+        // Error, so cancelling a slot with more than one future class failed at
+        // the callable boundary as a bare "(INTERNAL)". One getAll also costs
+        // one round trip instead of one per session.
+        const freshRows = await txn.getAll(...group.map((snap) => snap.ref))
+
         let count = 0
-        for (const snap of group) {
-          const fresh = await txn.get(snap.ref)
+        freshRows.forEach((fresh, index) => {
           const data = fresh.data()
           // Re-check inside the transaction: anything can change between the
           // query and the write, and a session that was already marked must
@@ -1526,9 +1533,9 @@ export const cancelWeeklySchedule = onCall(
             String(data?.status || 'scheduled') !== 'scheduled' ||
             String(data?.date || '') < from
           ) {
-            continue
+            return
           }
-          txn.update(snap.ref, {
+          txn.update(group[index].ref, {
             status: 'cancelled',
             cancelledAt: now,
             cancelledBy: uid,
@@ -1536,7 +1543,7 @@ export const cancelWeeklySchedule = onCall(
             updatedAt: now,
           })
           count += 1
-        }
+        })
         txn.set(
           slotRef,
           { isActive: false, updatedAt: now, cancelledAt: now, cancelledBy: uid },
@@ -2752,6 +2759,147 @@ export function buildLedgerRow(
 }
 
 /**
+ * The slice of the Admin transaction API a completion uses. Narrowing it to
+ * these three calls is what lets the ordering rule below be unit-tested with a
+ * fake that behaves like the real SDK — see functions/test/classSchedule.test.ts.
+ */
+export interface CompletionTransaction {
+  getAll(...refs: FirebaseFirestore.DocumentReference[]): Promise<FirebaseFirestore.DocumentSnapshot[]>
+  set(ref: FirebaseFirestore.DocumentReference, data: admin.firestore.DocumentData): void
+  update(ref: FirebaseFirestore.DocumentReference, data: admin.firestore.DocumentData): void
+}
+
+export interface CompletionResult {
+  topicIds: string[]
+  topicsCovered: string[]
+  rowsUpdated: number
+  rowsCreated: number
+  alreadyCovered: number
+}
+
+export interface CompletionArgs {
+  sessionRef: FirebaseFirestore.DocumentReference
+  /** Candidate ledger rows, read before the transaction (txns cannot query). */
+  ledgerRows: Array<{ id: string; data: admin.firestore.DocumentData }>
+  topics: CompletionTopicPair[]
+  input: CompleteSessionInput
+  /** The session as read before the transaction — the fallback for row fields. */
+  session: admin.firestore.DocumentData
+  collegeId: string
+  uid: string
+  now: Date
+  /** Mints a `facultyTopics` ref: with an id for an existing row, without one for a new row. */
+  ledgerRef: (docId?: string) => FirebaseFirestore.DocumentReference
+}
+
+/**
+ * The transaction body of completeClassSession.
+ *
+ * ORDERING IS LOAD-BEARING. Firestore refuses a transaction that reads after it
+ * has queued a write — the Admin SDK throws `Firestore transactions require all
+ * reads to be executed before all writes.` as a plain Error, and because it is
+ * not an HttpsError the callable boundary rewrites it to "INTERNAL". A teacher
+ * pressing "Mark complete" on a class whose topics already had planner rows
+ * therefore got a bare "The class session could not be completed. (INTERNAL)" —
+ * the exact bug this shape fixes. So: every read (the session plus each
+ * candidate ledger row) happens in ONE getAll up front, and only then are the
+ * writes issued.
+ *
+ * Ledger writes stay additive-only: an existing row moves forward to covered
+ * and never back, a row that is already covered is left untouched, and a topic
+ * with no row gets one created rather than the update being dropped.
+ */
+export async function applySessionCompletion(
+  txn: CompletionTransaction,
+  args: CompletionArgs
+): Promise<CompletionResult> {
+  const { sessionRef, ledgerRows, topics, input, session, collegeId, uid, now } = args
+  const stamp = now.toISOString()
+
+  // Where each topic lands, decided before any write: an existing row (matched
+  // by topicId, then by title) or a brand-new document.
+  const planned = topics.map((topic) => {
+    const match = matchLedgerRow(ledgerRows, topic)
+    return { topic, rowRef: match ? args.ledgerRef(match.id) : null }
+  })
+  // The same row can be the target of two topics (a topicId match and a title
+  // match); it must be read once, and a transaction cannot read the same ref
+  // twice under two names.
+  const rowRefs = [
+    ...new Map(
+      planned
+        .filter((p) => p.rowRef)
+        .map((p) => [(p.rowRef as FirebaseFirestore.DocumentReference).path, p.rowRef as FirebaseFirestore.DocumentReference])
+    ).values(),
+  ]
+
+  // ── reads ── (all of them, before the first write)
+  const snapshots = await txn.getAll(sessionRef, ...rowRefs)
+  const freshSession = snapshots[0]
+  // A session deleted between the callable's pre-read and this transaction:
+  // saying so beats `update` failing on a missing document mid-write.
+  if (!freshSession?.exists) throw new HttpsError('not-found', 'Class session not found')
+  const current = freshSession.data() || {}
+  const freshRowByPath = new Map<string, FirebaseFirestore.DocumentSnapshot>()
+  rowRefs.forEach((ref, index) => freshRowByPath.set(ref.path, snapshots[index + 1]))
+
+  // ── writes ──
+  const topicIds = mergeUnique(current.topicIds, topics.map((topic) => topic.topicId))
+  const topicsCovered = mergeUnique(
+    current.topicsCovered,
+    topics.map((topic) => topic.title)
+  )
+
+  txn.update(sessionRef, {
+    status: 'completed',
+    topicIds,
+    topicsCovered,
+    completedAt: stamp,
+    completedBy: uid,
+    ...(input.notes ? { notes: input.notes } : {}),
+    updatedAt: stamp,
+  })
+
+  let rowsUpdated = 0
+  let rowsCreated = 0
+  let alreadyCovered = 0
+
+  for (const { topic, rowRef } of planned) {
+    if (!rowRef) {
+      txn.set(args.ledgerRef(), buildLedgerRow(topic, session, input.sessionId, collegeId, now))
+      rowsCreated += 1
+      continue
+    }
+
+    const freshRow = freshRowByPath.get(rowRef.path)
+    if (!freshRow?.exists) {
+      // The row was deleted between the candidate query and this transaction.
+      // Recreate it instead of updating a document that is not there: an
+      // `update` on a missing doc aborts the whole completion.
+      txn.set(rowRef, buildLedgerRow(topic, session, input.sessionId, collegeId, now))
+      rowsCreated += 1
+      continue
+    }
+
+    const rowData = freshRow.data() || {}
+    if (isTopicCovered(rowData.status)) {
+      alreadyCovered += 1
+      continue
+    }
+    txn.update(rowRef, {
+      status: nextTopicStatus(rowData.status, LEDGER_COVERED_STATUS),
+      dateCovered: String(current.date || session.date || ''),
+      coveredAt: stamp,
+      sessionId: input.sessionId,
+      updatedAt: stamp,
+    })
+    rowsUpdated += 1
+  }
+
+  return { topicIds, topicsCovered, rowsUpdated, rowsCreated, alreadyCovered }
+}
+
+/**
  * Mark a session complete and flip the faculty topic ledger for the topics it
  * covered — atomically, so a completed lecture and the ledger cannot disagree.
  *
@@ -2846,60 +2994,23 @@ export const completeClassSession = onCall(
     const ledgerRows = ledgerSnaps.flatMap((snap) => snap.docs.map((doc) => ({ id: doc.id, data: doc.data() })))
 
     const now = new Date()
-    const stamp = now.toISOString()
 
-    const summary = await db.runTransaction(async (txn) => {
-      // Re-read inside the transaction so the union is computed against what is
-      // actually stored, not a snapshot from before.
-      const freshSession = await txn.get(sessionRef)
-      const current = freshSession.data() || {}
-      const topicIds = mergeUnique(current.topicIds, topics.map((topic) => topic.topicId))
-      const topicsCovered = mergeUnique(
-        current.topicsCovered,
-        topics.map((topic) => topic.title)
-      )
-
-      txn.update(sessionRef, {
-        status: 'completed',
-        topicIds,
-        topicsCovered,
-        completedAt: stamp,
-        completedBy: uid,
-        ...(input.notes ? { notes: input.notes } : {}),
-        updatedAt: stamp,
+    // One transaction, reads before writes (see applySessionCompletion — the
+    // read-after-write ordering here is what produced a bare "(INTERNAL)").
+    const summary = await db.runTransaction((txn) =>
+      applySessionCompletion(txn, {
+        sessionRef,
+        ledgerRows,
+        topics,
+        input,
+        session,
+        collegeId: staff.collegeId,
+        uid,
+        now,
+        ledgerRef: (docId) =>
+          docId ? db.collection('facultyTopics').doc(docId) : db.collection('facultyTopics').doc(),
       })
-
-      let rowsUpdated = 0
-      let rowsCreated = 0
-      let alreadyCovered = 0
-
-      for (const topic of topics) {
-        const match = matchLedgerRow(ledgerRows, topic)
-        if (match) {
-          const rowRef = db.collection('facultyTopics').doc(match.id)
-          const freshRow = await txn.get(rowRef)
-          const rowData = freshRow.exists ? freshRow.data() || {} : match.data
-          if (isTopicCovered(rowData.status)) {
-            alreadyCovered += 1
-            continue
-          }
-          txn.update(rowRef, {
-            status: nextTopicStatus(rowData.status, LEDGER_COVERED_STATUS),
-            dateCovered: String(current.date || session.date || ''),
-            coveredAt: stamp,
-            sessionId: input.sessionId,
-            updatedAt: stamp,
-          })
-          rowsUpdated += 1
-        } else {
-          const rowRef = db.collection('facultyTopics').doc()
-          txn.set(rowRef, buildLedgerRow(topic, session, input.sessionId, staff.collegeId, now))
-          rowsCreated += 1
-        }
-      }
-
-      return { topicIds, topicsCovered, rowsUpdated, rowsCreated, alreadyCovered }
-    })
+    )
 
     logger.info('[classSchedule] completeClassSession', {
       collegeId: staff.collegeId,

@@ -53,7 +53,9 @@ describe('session error copy', () => {
   })
 
   it('falls back to the caller-supplied sentence for an unknown code', () => {
-    const err = Object.assign(new Error('boom'), { code: 'functions/internal' })
+    // `functions/cancelled` deliberately has no entry in either table; the
+    // server's sentence still rides along.
+    const err = Object.assign(new Error('boom'), { code: 'functions/cancelled' })
     assert.equal(describeSessionError(err, 'Could not do the thing'), 'Could not do the thing (boom)')
   })
 
@@ -65,10 +67,54 @@ describe('session error copy', () => {
 
   it('survives an error with no message at all', () => {
     assert.equal(
-      describeSessionError({ code: 'functions/internal' }, 'Could not do the thing'),
+      describeSessionError({ code: 'functions/cancelled' }, 'Could not do the thing'),
       'Could not do the thing'
     )
     assert.equal(describeSessionError(null, 'Could not do the thing'), 'Could not do the thing')
+  })
+
+  // ── the crash code a teacher actually met ──────────────────────────────────
+  // A callable that dies on an unhandled error sends no message of its own, so
+  // the SDK surfaces the bare status word and the page rendered:
+  //     "The class session could not be completed. (INTERNAL)"
+  // The fix is two-part: the tables now frame `internal`, and a bare status
+  // token is no longer appended as if it were a reason.
+  it('frames a server crash with something the reader can act on', () => {
+    const err = Object.assign(new Error('INTERNAL'), { code: 'functions/internal' })
+    const message = describeSessionError(
+      err,
+      'The class session could not be completed.',
+      SESSION_WRITER_MESSAGES
+    )
+    assert.equal(message.startsWith('An unexpected server error stopped this.'), true)
+    assert.equal(message.includes('try again in a moment'), true)
+    // …and repeating is safe to advise, because completion merges.
+    assert.equal(message.includes('merged rather than duplicated'), true)
+  })
+
+  it('drops the bare status word instead of repeating it in brackets', () => {
+    for (const [code, token] of [
+      ['functions/internal', 'INTERNAL'],
+      ['functions/unavailable', 'UNAVAILABLE'],
+      ['functions/deadline-exceeded', 'DEADLINE_EXCEEDED'],
+    ] as const) {
+      const err = Object.assign(new Error(`Firebase: ${token} (${code}).`), { code })
+      const message = describeSessionError(err, 'fallback', SESSION_WRITER_MESSAGES)
+      assert.equal(message.includes(`(${token})`), false, `${code}: ${message}`)
+      assert.equal(message.includes(token), false, `${code}: ${message}`)
+      assert.equal(message.includes('(undefined)'), false, `${code}: ${message}`)
+    }
+  })
+
+  it('still appends a real server reason for an unknown code', () => {
+    // The guard for the guard: only the SDK's own status token is dropped.
+    const err = Object.assign(new Error('Firebase: internal error at stage 2 (functions/internal).'), {
+      code: 'functions/internal',
+    })
+    assert.equal(
+      describeSessionError(err, 'fallback', SESSION_WRITER_MESSAGES).includes('(internal error at stage 2)'),
+      true
+    )
   })
 })
 

@@ -1738,3 +1738,253 @@ describe('reschedule bounds', () => {
     assert.equal(MAX_RESCHEDULE_SESSIONS > 0 && MAX_RESCHEDULE_SESSIONS <= 2000, true)
   })
 })
+
+// ─── Completing a class: the transaction must read before it writes ─────────
+//
+// The bug this pins: completeClassSession updated the session and THEN re-read
+// each matched ledger row inside the same transaction. Firestore refuses a
+// transaction that reads after it has queued a write, and the Admin SDK throws
+// that refusal as a PLAIN Error — not an HttpsError — so the callable boundary
+// rewrote it to "INTERNAL". A faculty member saving the topics of a class whose
+// topics already had planner rows got:
+//
+//     The class session could not be completed. (INTERNAL)
+//
+// The fake below reproduces the real SDK's rule (and its exact message, from
+// @google-cloud/firestore's transaction.ts: a read once the write batch is
+// non-empty throws). The old ordering fails here, in one second, with no
+// emulator; the fix reads everything in a single getAll up front.
+
+import {
+  LEDGER_COVERED_STATUS,
+  applySessionCompletion,
+  type CompletionTransaction,
+  type CompletionArgs,
+} from '../src/classSchedule'
+
+/** The message the Admin SDK throws for a read that follows a write. */
+const READ_AFTER_WRITE =
+  'Firestore transactions require all reads to be executed before all writes.'
+
+interface FakeDoc {
+  [key: string]: unknown
+}
+
+/**
+ * A transaction that behaves like the deployed one for the two rules that
+ * matter: reads may not follow writes, and `update` on a missing document is an
+ * error rather than a silent no-op.
+ */
+class FakeTransaction {
+  writes: Array<{ kind: 'set' | 'update'; path: string; data: FakeDoc }> = []
+  reads: string[] = []
+
+  constructor(private store: Map<string, FakeDoc>) {}
+
+  async getAll(...refs: Array<{ path: string }>) {
+    if (this.writes.length > 0) throw new Error(READ_AFTER_WRITE)
+    return refs.map((ref) => {
+      this.reads.push(ref.path)
+      const data = this.store.get(ref.path)
+      return {
+        exists: data !== undefined,
+        id: ref.path.split('/').pop() as string,
+        ref,
+        data: () => (data ? { ...data } : undefined),
+      }
+    })
+  }
+
+  set(ref: { path: string }, data: FakeDoc) {
+    this.writes.push({ kind: 'set', path: ref.path, data })
+    this.store.set(ref.path, { ...data })
+  }
+
+  update(ref: { path: string }, data: FakeDoc) {
+    if (!this.store.has(ref.path)) throw new Error(`No document to update: ${ref.path}`)
+    this.writes.push({ kind: 'update', path: ref.path, data })
+    this.store.set(ref.path, { ...(this.store.get(ref.path) as FakeDoc), ...data })
+  }
+}
+
+const SESSION_PATH = 'classSessions/sess-1'
+const SESSION_DOC: FakeDoc = {
+  date: '2026-10-12',
+  subject: 'Statistics',
+  branch: 'B.Com',
+  facultyId: 'f1',
+  status: 'scheduled',
+  topicIds: ['t-mean'],
+  topicsCovered: ['Mean'],
+}
+
+function ledgerRow(title: string, status: string, topicId: string): { id: string; data: FakeDoc } {
+  return { id: `row-${topicId || title.toLowerCase()}`, data: { title, status, topicId, facultyId: 'f1' } }
+}
+
+function completionArgs(
+  store: Map<string, FakeDoc>,
+  topics: Array<{ topicId: string; title: string }>,
+  ledgerRows: Array<{ id: string; data: FakeDoc }>
+): CompletionArgs {
+  return {
+    sessionRef: { path: SESSION_PATH } as unknown as FirebaseFirestore.DocumentReference,
+    ledgerRows: ledgerRows as unknown as CompletionArgs['ledgerRows'],
+    topics,
+    input: { sessionId: 'sess-1', topicIds: [], topicTitles: [], topics, notes: '' },
+    session: SESSION_DOC as unknown as CompletionArgs['session'],
+    collegeId: 'c1',
+    uid: 'u1',
+    now: new Date('2026-10-12T10:00:00.000Z'),
+    ledgerRef: (docId?: string) => ({ path: `facultyTopics/${docId || `new-${store.size}`}` }) as unknown as FirebaseFirestore.DocumentReference,
+  }
+}
+
+describe('completeClassSession — transaction ordering', () => {
+  it('reads the session and every candidate row before writing anything', async () => {
+    // The regression: topics that already have planner rows are the normal
+    // case (that is what the picker offers), and each one used to trigger a
+    // read after the session write.
+    const store = new Map<string, FakeDoc>([
+      [SESSION_PATH, { ...SESSION_DOC }],
+      ['facultyTopics/row-t-mean', { title: 'Mean', status: 'pending', topicId: 't-mean' }],
+      ['facultyTopics/row-t-median', { title: 'Median', status: LEDGER_COVERED_STATUS, topicId: 't-median' }],
+    ])
+    const txn = new FakeTransaction(store)
+    const topics = [
+      { topicId: 't-mean', title: 'Mean' },
+      { topicId: 't-median', title: 'Median' },
+      { topicId: '', title: 'Mode' },
+    ]
+
+    const result = await applySessionCompletion(
+      txn as unknown as CompletionTransaction,
+      completionArgs(store, topics, [
+        ledgerRow('Mean', 'pending', 't-mean'),
+        ledgerRow('Median', LEDGER_COVERED_STATUS, 't-median'),
+      ])
+    )
+
+    assert.deepEqual(txn.reads, [SESSION_PATH, 'facultyTopics/row-t-mean', 'facultyTopics/row-t-median'])
+    assert.equal(txn.writes.length > 0, true)
+    assert.equal(result.rowsUpdated, 1)
+    assert.equal(result.alreadyCovered, 1)
+    assert.equal(result.rowsCreated, 1)
+  })
+
+  it('moves a planned row forward to covered and never back', async () => {
+    const store = new Map<string, FakeDoc>([
+      [SESSION_PATH, { ...SESSION_DOC }],
+      ['facultyTopics/row-t-mean', { title: 'Mean', status: 'covered', topicId: 't-mean' }],
+    ])
+    const txn = new FakeTransaction(store)
+    const result = await applySessionCompletion(
+      txn as unknown as CompletionTransaction,
+      completionArgs(store, [{ topicId: 't-mean', title: 'Mean' }], [ledgerRow('Mean', 'covered', 't-mean')])
+    )
+
+    assert.equal(result.alreadyCovered, 1)
+    assert.equal(result.rowsUpdated, 0)
+    // Additive writes only: the covered row is not rewritten.
+    assert.equal(txn.writes.some((write) => write.path === 'facultyTopics/row-t-mean'), false)
+  })
+
+  it('links a newly covered topic back to the class that covered it', async () => {
+    const store = new Map<string, FakeDoc>([
+      [SESSION_PATH, { ...SESSION_DOC }],
+      ['facultyTopics/row-t-mode', { title: 'Mode', status: 'pending', topicId: 't-mode' }],
+    ])
+    const txn = new FakeTransaction(store)
+    await applySessionCompletion(
+      txn as unknown as CompletionTransaction,
+      completionArgs(store, [{ topicId: 't-mode', title: 'Mode' }], [ledgerRow('Mode', 'pending', 't-mode')])
+    )
+
+    const row = store.get('facultyTopics/row-t-mode') as FakeDoc
+    assert.equal(row.status, LEDGER_COVERED_STATUS)
+    assert.equal(row.sessionId, 'sess-1')
+    assert.equal(row.dateCovered, '2026-10-12')
+    assert.equal(row.coveredAt, '2026-10-12T10:00:00.000Z')
+  })
+
+  it('creates a row for a topic that has none, stamped with the session context', async () => {
+    const store = new Map<string, FakeDoc>([[SESSION_PATH, { ...SESSION_DOC }]])
+    const txn = new FakeTransaction(store)
+    const result = await applySessionCompletion(
+      txn as unknown as CompletionTransaction,
+      completionArgs(store, [{ topicId: '', title: 'Integration by parts' }], [])
+    )
+
+    assert.equal(result.rowsCreated, 1)
+    const created = [...store.entries()].find(([path]) => path.startsWith('facultyTopics/'))
+    assert.equal(created?.[1].title, 'Integration by parts')
+    assert.equal(created?.[1].status, LEDGER_COVERED_STATUS)
+    assert.equal(created?.[1].collegeId, 'c1')
+    assert.equal(created?.[1].sessionId, 'sess-1')
+  })
+
+  it('merges the session union instead of replacing what is already there', async () => {
+    const store = new Map<string, FakeDoc>([[SESSION_PATH, { ...SESSION_DOC }]])
+    const txn = new FakeTransaction(store)
+    const result = await applySessionCompletion(
+      txn as unknown as CompletionTransaction,
+      completionArgs(store, [{ topicId: 't-median', title: 'Median' }], [])
+    )
+
+    // 'Mean' was on the session before this call and must survive the write.
+    assert.deepEqual(result.topicsCovered, ['Mean', 'Median'])
+    assert.deepEqual(result.topicIds, ['t-mean', 't-median'])
+    const session = store.get(SESSION_PATH) as FakeDoc
+    assert.equal(session.status, 'completed')
+    assert.equal(session.completedBy, 'u1')
+  })
+
+  it('recreates a row that vanished rather than updating a missing document', async () => {
+    const store = new Map<string, FakeDoc>([[SESSION_PATH, { ...SESSION_DOC }]])
+    const txn = new FakeTransaction(store)
+    // The candidate row came from the pre-transaction query but is gone now.
+    const result = await applySessionCompletion(
+      txn as unknown as CompletionTransaction,
+      completionArgs(store, [{ topicId: 't-mean', title: 'Mean' }], [ledgerRow('Mean', 'pending', 't-mean')])
+    )
+
+    assert.equal(result.rowsCreated, 1)
+    assert.equal(result.rowsUpdated, 0)
+    assert.equal((store.get('facultyTopics/row-t-mean') as FakeDoc).status, LEDGER_COVERED_STATUS)
+  })
+
+  it('says the session is gone instead of failing mid-write', async () => {
+    const store = new Map<string, FakeDoc>()
+    const txn = new FakeTransaction(store)
+    await assert.rejects(
+      () =>
+        applySessionCompletion(
+          txn as unknown as CompletionTransaction,
+          completionArgs(store, [{ topicId: '', title: 'Mean' }], [])
+        ),
+      (err: Error & { code?: string }) => err.code === 'not-found'
+    )
+    assert.equal(txn.writes.length, 0)
+  })
+
+  it('reads a shared row once when two topics resolve to it', async () => {
+    const store = new Map<string, FakeDoc>([
+      [SESSION_PATH, { ...SESSION_DOC }],
+      ['facultyTopics/row-t-mean', { title: 'Mean', status: 'pending', topicId: 't-mean' }],
+    ])
+    const txn = new FakeTransaction(store)
+    await applySessionCompletion(
+      txn as unknown as CompletionTransaction,
+      completionArgs(
+        store,
+        [
+          { topicId: 't-mean', title: 'Arithmetic mean' },
+          { topicId: '', title: 'Mean' },
+        ],
+        [ledgerRow('Mean', 'pending', 't-mean')]
+      )
+    )
+
+    assert.deepEqual(txn.reads, [SESSION_PATH, 'facultyTopics/row-t-mean'])
+  })
+})
