@@ -1,0 +1,300 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Vriddhi — Investor Deck 2026</title>
+<style>
+:root{--teal:#14B8A6;--teal-d:#0F766E;--teal3:#5EEAD4;--teal50:#F0FDFA;--slate:#0F172A;
+--slate6:#475569;--slate5:#64748B;--slate4:#94A3B8;--slate3:#CBD5E1;--border:#E2E8F0;
+--bg:#F8FAFC;--dark:#0B1220;--white:#fff}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:#0b1220;
+font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans",sans-serif;color:var(--slate)}
+.deck{height:100vh;overflow-y:auto;scroll-snap-type:y mandatory}
+.slide{width:100%;min-height:100vh;scroll-snap-align:start;display:flex;justify-content:center;
+align-items:center;padding:24px}
+.inner{position:relative;width:min(1280px,96vw);aspect-ratio:16/9;background:var(--bg);border-radius:14px;
+overflow:hidden;box-shadow:0 24px 60px rgba(0,0,0,.45);padding:44px 52px;display:flex;flex-direction:column}
+.inner.dark{background:var(--dark);color:#fff}
+.kicker{color:var(--teal-d);font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase}
+.inner.dark .kicker{color:var(--teal3)}
+.rule{width:44px;height:4px;background:var(--teal);border-radius:2px;margin-bottom:14px}
+h1{font-size:34px;line-height:1.15;margin:6px 0 0;letter-spacing:-.01em}
+.sub{color:var(--slate5);font-size:15px;margin-top:10px}
+.inner.dark .sub{color:var(--slate3)}
+.grid{display:grid;gap:16px;margin-top:22px}
+.g2{grid-template-columns:1fr 1fr}
+.g3{grid-template-columns:repeat(3,1fr)}
+.g4{grid-template-columns:repeat(4,1fr)}
+.g5{grid-template-columns:repeat(5,1fr)}
+.card{background:#fff;border:1px solid var(--border);border-radius:12px;padding:16px 18px}
+.card .t{font-weight:700;font-size:15px;margin-bottom:6px}
+.card .d{color:var(--slate6);font-size:12.5px;line-height:1.4}
+.card .bar{width:26px;height:3px;background:var(--teal);border-radius:2px;margin-bottom:10px}
+.stat{background:#fff;border:1px solid var(--border);border-radius:12px;padding:14px 16px;border-left:4px solid var(--teal)}
+.stat .v{color:var(--teal-d);font-size:26px;font-weight:700;line-height:1.1}
+.stat .l{color:var(--slate6);font-size:11.5px;line-height:1.35;margin-top:6px}
+ul.b{list-style:none;margin:18px 0 0;padding:0}
+ul.b li{position:relative;padding-left:20px;margin-bottom:9px;color:var(--slate6);font-size:13px;line-height:1.4}
+ul.b li:before{content:"";position:absolute;left:0;top:7px;width:7px;height:7px;border-radius:50%;background:var(--teal)}
+.panel{background:#fff;border:1px solid var(--border);border-radius:12px;padding:18px}
+.panel.dark{background:var(--dark);border-color:#1e293b}
+.panel.dark .t{color:var(--teal3)}.panel.dark .d{color:var(--slate3)}
+.panel .t{font-weight:700;color:var(--teal-d);font-size:14px;margin-bottom:4px}
+.panel .d{color:var(--slate6);font-size:12.5px;line-height:1.4;margin-bottom:12px}
+table{width:100%;border-collapse:collapse;margin-top:20px;font-size:12.5px}
+th,td{padding:9px 12px;text-align:center;border-bottom:1px solid var(--border)}
+th:first-child,td:first-child{text-align:left}
+thead th{background:var(--slate);color:#fff;font-size:11.5px;letter-spacing:.03em}
+thead th:last-child{background:var(--dark)}
+tbody tr:nth-child(odd){background:var(--teal50)}
+tbody td:last-child{color:var(--teal-d);font-weight:700}
+.h22{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:22px}
+.titleWrap{margin-top:auto;margin-bottom:auto;max-width:56%}
+.big{font-size:74px;font-weight:800;letter-spacing:-.03em;line-height:1}
+.footer{margin-top:auto;color:var(--slate4);font-size:11px}
+.nav{position:fixed;right:18px;bottom:16px;display:flex;gap:8px;align-items:center;z-index:9;
+background:rgba(11,18,32,.72);border:1px solid #1e293b;border-radius:999px;padding:6px 12px;
+color:var(--slate3);font-size:12px;backdrop-filter:blur(6px)}
+.nav button{background:transparent;border:0;color:var(--teal3);font-size:15px;cursor:pointer;padding:0 4px}
+.hint{position:fixed;left:18px;bottom:16px;color:var(--slate4);font-size:11px;z-index:9}
+@media print{
+  html,body{background:#fff}
+  .nav,.hint{display:none}
+  .deck{overflow:visible;height:auto}
+  .slide{min-height:auto;padding:0;page-break-after:always}
+  .inner{box-shadow:none;border-radius:0;width:100%;height:100vh}
+  @page{size:A4 landscape;margin:0}
+}
+</style></head>
+<body>
+<div class="deck" id="deck">
+<section class="slide" id="s1"><div class="inner dark">
+<div style="width:44px;height:4px;background:var(--teal);border-radius:2px"></div>
+<div class="kicker" style="margin-top:14px">INVESTOR DECK · 2026</div>
+<div class="titleWrap">
+<div class="big">Vriddhi</div>
+<h1 style="color:var(--teal3);font-size:24px;margin-top:18px">The AI-native academic operating system for Indian colleges</h1>
+<p class="sub" style="margin-top:18px">AI question papers · secure online exams · auto-grading · fees · attendance · results · six Indian languages · UUCMS-ready</p>
+</div>
+<div class="footer">Growth through knowledge  ·  Built in Karnataka  ·  &lt;your name&gt; · &lt;email&gt; · &lt;phone&gt;</div>
+</div></section>
+<section class="slide" id="s2"><div class="inner">
+<div class="rule"></div>
+<div class="kicker">THE OPPORTUNITY</div>
+<h1>48,000 colleges are buying software this decade</h1>
+<div class="sub">And they are already paying for far less than what we ship.</div>
+<div class="grid g4">
+<div class="stat"><div class="v">48,246</div><div class="l">colleges + 1,289 universities in India</div></div>
+<div class="stat"><div class="v">4.50 Cr</div><div class="l">students enrolled; GER 30 % and rising</div></div>
+<div class="stat"><div class="v">₹300–1,200</div><div class="l">already spent per student, per year, on ERP licences</div></div>
+<div class="stat"><div class="v">$4.48 B</div><div class="l">India online education in 2026 → $23.9 B by 2034</div></div>
+</div>
+<ul class="b"><li>NEP 2020 and NAAC turned digital evidence into a procurement requirement, not a preference.</li><li>State portals (Karnataka&#x27;s UUCMS) are mandatory for every student — and no mainstream ERP is built around them.</li><li>Incumbent ERPs are 10–20 years old: no AI, English-only, 3–9 month deployments, per-student licences.</li></ul>
+</div></section>
+<section class="slide" id="s3"><div class="inner">
+<div class="rule"></div>
+<div class="kicker">THE PROBLEM</div>
+<h1>A college runs on 9 disconnected tools — and one weekend-eating ritual</h1>
+<div class="grid g2">
+<div class="card"><div class="bar"></div><div class="t">Fragmented records</div><div class="d">Attendance, fees, timetables and results live in separate spreadsheets. Every semester ends with manual re-entry and no single source of truth.</div></div>
+<div class="card"><div class="bar"></div><div class="t">The exam-paper bottleneck</div><div class="d">Faculty hand-build a paper for every subject, every semester — then spend weekends marking scripts. Paper-making, not teaching, consumes the cycle.</div></div>
+<div class="card"><div class="bar"></div><div class="t">Compliance by archaeology</div><div class="d">NAAC, the university and the state portal each demand evidence. Colleges reconstruct it from registers weeks after the fact.</div></div>
+<div class="card"><div class="bar"></div><div class="t">Students get nothing back</div><div class="d">No app, no placements, no visibility. The institution&#x27;s own data never reaches the learner who generated it.</div></div>
+</div>
+</div></section>
+<section class="slide" id="s4"><div class="inner">
+<div class="rule"></div>
+<div class="kicker">THE WEDGE</div>
+<h1>We get in through the exam paper, then own the semester</h1>
+<div class="h22">
+<div><div class="t" style="font-weight:700;color:var(--teal-d);font-size:14px;margin-bottom:6px">Why this door opens first</div><ul class="b" style="margin-top:6px"><li>It is the most painful, most visible, most repeated task in the college — and nobody sells a complete answer to it.</li><li>It produces an artefact the principal can hold: a print-ready paper in the university&#x27;s format, with an approval trail.</li><li>The question bank built here becomes the cold-start for attendance analytics, objective exams and grading.</li><li>Faculty adopt it because the AI drafts and they decide — nothing is published without a human approval.</li></ul></div>
+<div class="panel"><div class="t">Land → expand → monetise</div><div class="t" style="font-size:13px">Land</div><div class="d">Exam cycle: question bank, AI papers, online tests, auto-grading.</div><div class="t" style="font-size:13px">Expand</div><div class="d">Attendance, timetable, curriculum, fees, library, payroll, analytics.</div><div class="t" style="font-size:13px">Monetise</div><div class="d">Certificate programmes and placement prep sold to the same installed base.</div></div>
+</div>
+</div></section>
+<section class="slide" id="s5"><div class="inner">
+<div class="rule"></div>
+<div class="kicker">WHAT IS BUILT</div>
+<h1>Seven role portals. One product. Shipped.</h1>
+<div class="sub">Not a prototype, not a mock-up — verified in the repository at commit 091c6d5.</div>
+<div class="grid g4">
+<div class="stat"><div class="v">7</div><div class="l">role portals: student, faculty, HOD, admin, office, superadmin, employee</div></div>
+<div class="stat"><div class="v">160</div><div class="l">backend functions (144 callable · 6 HTTP · 10 scheduled)</div></div>
+<div class="stat"><div class="v">257K</div><div class="l">lines of TypeScript · 1,827 lines of security rules</div></div>
+<div class="stat"><div class="v">1,540+</div><div class="l">automated tests green · 382 render-mount checks</div></div>
+</div>
+<ul class="b"><li>Academics: curriculum, syllabus parsing, auto faculty-mapping, clash-safe auto-timetable, attendance.</li><li>Assessment: question bank, AI paper generation, secure online exams, AI + manual grading, transcripts.</li><li>College operations: fees, challans, payments, library, inventory, procurement, payroll, no-dues.</li><li>Learning: 4 certificate programmes, placement prep, coding lab, ATS resume builder.</li></ul>
+</div></section>
+<section class="slide" id="s6"><div class="inner">
+<div class="rule"></div>
+<div class="kicker">THE CORE</div>
+<h1>One assessment loop, closed — with a human on every decision</h1>
+<div class="grid g5">
+<div class="card"><div class="bar"></div><div class="t" style="color:var(--teal-d)">1 · Bank</div><div class="d">Curated + imported + AI-generated questions, tagged by topic and difficulty.</div></div>
+<div class="card"><div class="bar"></div><div class="t" style="color:var(--teal-d)">2 · Paper</div><div class="d">Blueprint by unit, marks and difficulty. AI drafts; faculty approve.</div></div>
+<div class="card"><div class="bar"></div><div class="t" style="color:var(--teal-d)">3 · Exam</div><div class="d">Online test with lockdown, section breaks, autosave and expiry recovery.</div></div>
+<div class="card"><div class="bar"></div><div class="t" style="color:var(--teal-d)">4 · Grade</div><div class="d">MCQ auto-grade; AI grading suggestions with confidence scores and rubrics.</div></div>
+<div class="card"><div class="bar"></div><div class="t" style="color:var(--teal-d)">5 · Record</div><div class="d">Grade records → transcripts; university result files imported back in.</div></div>
+</div>
+<ul class="b"><li>No-AI fallback: a deterministic parser reads an uploaded DOCX/PDF paper with no API key at all.</li><li>Multi-provider AI (Gemini / OpenAI / DeepSeek) behind one adapter, with tiers, daily caps, caching and per-college circuit breakers.</li><li>Measured AI cost: ₹23 per student per year at base volume (₹46 budgeted with a 2× buffer).</li></ul>
+</div></section>
+<section class="slide" id="s7"><div class="inner">
+<div class="rule"></div>
+<div class="kicker">INDIA-FIRST</div>
+<h1>Global software cannot be configured into an Indian college</h1>
+<div class="grid g2">
+<div class="card"><div class="bar"></div><div class="t">Six languages, including AI output</div><div class="d">Kannada, Tamil, Telugu, Malayalam, Hindi, English — the interface AND generated questions, options and explanations in native Unicode script.</div></div>
+<div class="card"><div class="bar"></div><div class="t">UUCMS integration</div><div class="d">Karnataka&#x27;s mandatory state portal: candidate ID, USN capture, import matching, status sync and eligibility checks — the workflow every college performs by hand today.</div></div>
+<div class="card"><div class="bar"></div><div class="t">Scheme packs as configuration</div><div class="d">BCU SEP-2024 and KUD NEP-CBAE presets plus per-college custom packs: marks split, internal assessment, attendance slabs, pass rules and grade tables drive the whole system.</div></div>
+<div class="card"><div class="bar"></div><div class="t">Exam office, university-shaped</div><div class="d">Hall tickets with 75 % attendance blocking, room allotment, QR verification, result import for BCU-format files, marksheets and transcripts.</div></div>
+</div>
+</div></section>
+<section class="slide" id="s8"><div class="inner">
+<div class="rule"></div>
+<div class="kicker">THE ELEARNING ENGINE</div>
+<h1>The learning business is already built</h1>
+<div class="sub">Institutions pay for software; learners pay for outcomes. We already have both in one product.</div>
+<div class="grid g4">
+<div class="stat"><div class="v">4</div><div class="l">certificate programmes: GenAI · Digital Marketing · Project Management · HR Analytics</div></div>
+<div class="stat"><div class="v">32/135</div><div class="l">modules / lessons authored to a validated, version-controlled format</div></div>
+<div class="stat"><div class="v">984</div><div class="l">quiz items + projects, capstones, rubrics and facilitator guides</div></div>
+<div class="stat"><div class="v">6</div><div class="l">Indian languages the same engine delivers in</div></div>
+</div>
+<ul class="b"><li>Public shareable catalog for lead generation; students enrol inside the app they already open for attendance and results.</li><li>Also shipped: server-side coding lab, previous-year-paper corpus (English + Kannada), placement prep studio, ATS resume builder.</li><li>Certificate issuance, progress sync per college, offline caching and quiz generation all reuse the assessment engine.</li></ul>
+</div></section>
+<section class="slide" id="s9"><div class="inner">
+<div class="rule"></div>
+<div class="kicker">WHY WE WIN</div>
+<h1>Where every other product stops</h1>
+<table><thead><tr><th>Capability</th><th>Legacy ERP</th><th>SIS + LMS</th><th>AI paper tool</th><th>Vriddhi</th></tr></thead><tbody>
+<tr><td>AI question-paper generation with approval trail</td><td>—</td><td>—</td><td>Yes</td><td>Yes</td></tr>
+<tr><td>Reads an uploaded paper with no AI key (deterministic)</td><td>—</td><td>—</td><td>Partial</td><td>Yes</td></tr>
+<tr><td>Secure online exam: lockdown, autosave, auto-submit</td><td>Partial</td><td>Partial</td><td>—</td><td>Yes</td></tr>
+<tr><td>AI grading with confidence + rubric breakdown</td><td>—</td><td>—</td><td>—</td><td>Yes</td></tr>
+<tr><td>Grade records → transcripts + university result import</td><td>Yes</td><td>Yes</td><td>—</td><td>Yes</td></tr>
+<tr><td>Six Indian languages incl. native-script AI output</td><td>—</td><td>—</td><td>Partial</td><td>Yes</td></tr>
+<tr><td>State portal (UUCMS) + scheme packs as configuration</td><td>—</td><td>—</td><td>—</td><td>Yes</td></tr>
+<tr><td>Certificate programmes &amp; placement prep included</td><td>—</td><td>Partial</td><td>—</td><td>Yes</td></tr>
+<tr><td>Price per student per year</td><td>₹300–1,200</td><td>₹300–1,200</td><td>₹500/20 papers</td><td>₹449 with content</td></tr>
+</tbody></table>
+</div></section>
+<section class="slide" id="s10"><div class="inner">
+<div class="rule"></div>
+<div class="kicker">BUSINESS MODEL</div>
+<h1>Four revenue layers on one platform</h1>
+<div class="grid g2">
+<div class="card"><div class="bar"></div><div class="t">L1 · Campus licence</div><div class="d">₹449 per student per year + ₹2.5 L onboarding. All modules, unlimited users, AI included. A 5,000-student college = ₹22.45 L per year.</div></div>
+<div class="card"><div class="bar"></div><div class="t">L2 · Add-on packs</div><div class="d">₹40–120 per student per year each: Placement Pack (built), Coding Lab, Prep Studio, alerts, library automation, OBE/NAAC reporting.</div></div>
+<div class="card"><div class="bar"></div><div class="t">L3 · Learning programmes</div><div class="d">₹999–2,999 per learner for certificate programmes, or ₹150–400 per student bundled through the college. Content cost is fixed; delivery is near-zero marginal cost.</div></div>
+<div class="card"><div class="bar"></div><div class="t">L4 · Platform &amp; services</div><div class="d">University dashboards, white-label delivery for content partners, corporate L&amp;D and proctored hiring assessments: ₹5–25 L per year contracts.</div></div>
+</div>
+</div></section>
+<section class="slide" id="s11"><div class="inner">
+<div class="rule"></div>
+<div class="kicker">UNIT ECONOMICS</div>
+<h1>A 5,000-student college costs ₹18,123 a year to run</h1>
+<div class="sub">Fully serverless, Mumbai region, no idle servers. Cost model reproducible from the repository.</div>
+<div class="grid g4">
+<div class="stat"><div class="v">₹22.45 L</div><div class="l">revenue per 5,000-student college at ₹449/student/year</div></div>
+<div class="stat"><div class="v">₹18,123</div><div class="l">cloud infrastructure per year (₹27 K budgeted with buffer)</div></div>
+<div class="stat"><div class="v">₹1.16 L</div><div class="l">AI per year at base volume — ₹23 per student</div></div>
+<div class="stat"><div class="v">31–45 %</div><div class="l">gross margin with a shared team, and rising with every college added</div></div>
+</div>
+<ul class="b"><li>Margin is structural: colleges share one deployment and one fixed team cost; infrastructure is 0.08 % of revenue.</li><li>Exam-day peaks are not a cost event: 1,000 simultaneous test starts ≈ ₹15 of usage, auto-scaled.</li><li>Pricing floor measured, not guessed: ₹399 with a 3-year commitment, never below ₹349.</li></ul>
+</div></section>
+<section class="slide" id="s12"><div class="inner">
+<div class="rule"></div>
+<div class="kicker">TRACTION — STATED HONESTLY</div>
+<h1>What is proven today, and what this round proves next</h1>
+<div class="h22">
+<div><div class="t" style="font-weight:700;color:var(--teal-d);font-size:14px;margin-bottom:6px">Proven and verifiable now</div><ul class="b" style="margin-top:6px"><li>Product complete end to end: ~1,540 tests green, tsc clean, 382 render checks, audited security rules.</li><li>Content authored: 4 certificate programmes, ~2,000 curated MCQs, scheme packs, PYQ corpus, Kannada collateral.</li><li>Cost model measured: ₹18 K/year infrastructure, ₹23/student/year AI, 31–45 % gross margin.</li><li>Audits written and dated: health, costing, competitive analysis, demo playbook — the boring evidence of a profession.</li><li>&lt;colleges in pilot conversation&gt; colleges in active conversation; &lt;n&gt; letters of intent signed.</li><li>Raising ₹50 L to convert that interest into 5 paid pilots within 90 days.</li></ul></div>
+<div class="panel dark"><div class="t">Not yet — and this is the plan</div><div class="t" style="font-size:13px">Paying colleges</div><div class="d">0 today → 5 paid pilots in 90 days → 25 colleges by month 18.</div><div class="t" style="font-size:13px">Learning revenue</div><div class="d">0 today → marketplace + certificates in 90 days → 1,000 paid learners.</div><div class="t" style="font-size:13px">Procurement gaps</div><div class="d">Live payment keys, WhatsApp/SMS alerts, parent portal, OBE/NAAC pack — Horizon 1.</div><div class="t" style="font-size:13px">Team</div><div class="d">&lt;n&gt; full-time today → +2 engineering, +2 sales/implementation, +1 content with this round.</div></div>
+</div>
+</div></section>
+<section class="slide" id="s13"><div class="inner">
+<div class="rule"></div>
+<div class="kicker">ROADMAP</div>
+<h1>Where the money goes, and what it buys</h1>
+<div class="grid g2">
+<div class="card"><div class="bar"></div><div class="t">Horizon 1 · months 0–6 · funded by this round</div><div class="d">Fee collection live · WhatsApp/SMS alerts · parent portal · marksheets &amp; transcripts · OBE/NAAC pack. Unlocks: every procurement checklist.</div></div>
+<div class="card"><div class="bar"></div><div class="t">Horizon 2 · months 6–12 · started on this bridge</div><div class="d">Course marketplace · first Kannada programmes · corporate L&amp;D · proctored assessment · placement pack v2. Unlocks: non-licence revenue at 85 %+ margin.</div></div>
+<div class="card"><div class="bar"></div><div class="t">Horizon 3 · year 2–3 · seed round</div><div class="d">University deployments · second-state portal depth · verifiable credentials · proctoring · Gulf/SAARC. Unlocks: one signature, 30–100 colleges.</div></div>
+</div>
+</div></section>
+<section class="slide" id="s14"><div class="inner">
+<div class="rule"></div>
+<div class="kicker">THE ELEARNING OPPORTUNITY</div>
+<h1>A second business, sitting inside the first</h1>
+<div class="h22">
+<div><div class="t" style="font-weight:700;color:var(--teal-d);font-size:14px;margin-bottom:6px">Why the learning layer compounds</div><ul class="b" style="margin-top:6px"><li>India online education: $4.48 B in 2026 → $23.9 B by 2034 (23 % CAGR); higher education is the fastest-growing segment.</li><li>India executive education and upskilling: $12.2 B with 22.7 M paid learners — and a 56.35 % employability rate demanding proof of skills.</li><li>NEP 2020 lets colleges grant credit for external, outcome-mapped learning — a legislated reason to buy.</li><li>Every edtech brand pays ₹1,500–4,000 to acquire a learner. Ours are already logged in, at zero media spend.</li></ul></div>
+<div class="panel"><div class="t">Three ways to monetise the same engine</div><div class="t" style="font-size:13px">Campus bundles</div><div class="d">₹150–400 per student per programme — sold to a buyer already paying us.</div><div class="t" style="font-size:13px">Direct certification</div><div class="d">₹999–2,999 per learner, CAC target ₹400–900, 50,000 students reachable in 25 colleges.</div><div class="t" style="font-size:13px">Corporate &amp; government</div><div class="d">₹1,500–6,000 per seat, or ₹5–25 L platform contracts, for proctored certification.</div></div>
+</div>
+</div></section>
+<section class="slide" id="s15"><div class="inner">
+<div class="rule"></div>
+<div class="kicker">THE MOAT</div>
+<h1>Why this gets harder to displace every semester</h1>
+<div class="grid g3">
+<div class="card"><div class="bar"></div><div class="t">Data gravity</div><div class="d">Questions, attendance, grade records and transcripts accumulate inside the platform. Switching means losing the audit trail accreditors ask for.</div></div>
+<div class="card"><div class="bar"></div><div class="t">Content library</div><div class="d">4 programmes, ~2,000 curated MCQs, scheme packs and a PYQ corpus — 6–12 months of authored work that competitors must buy or build.</div></div>
+<div class="card"><div class="bar"></div><div class="t">University configuration</div><div class="d">Every scheme pack and portal integration turns the next college under that university into a 5-day onboarding, not a 5-week project.</div></div>
+<div class="card"><div class="bar"></div><div class="t">AI cost engineering</div><div class="d">Caching, tiers, caps and a deterministic fallback keep AI at ₹23/student/year — a price war we win against anyone who bolted AI on.</div></div>
+<div class="card"><div class="bar"></div><div class="t">Serverless economics</div><div class="d">₹18 K/year at 5,000 students, no on-premise, no idle servers — margin improves with every college.</div></div>
+<div class="card"><div class="bar"></div><div class="t">Vernacular capability</div><div class="d">Six languages, authored in-script. Shipped as Kannada decks, booklets and question papers, not as a locale dropdown.</div></div>
+</div>
+</div></section>
+<section class="slide" id="s16"><div class="inner">
+<div class="rule"></div>
+<div class="kicker">TEAM</div>
+<h1>Who is building this</h1>
+<div class="h22">
+<div><div class="t" style="font-weight:700;color:var(--teal-d);font-size:14px;margin-bottom:6px">Today</div><ul class="b" style="margin-top:6px"><li>&lt;Founder name&gt; — &lt;one line: what you did before, why you understand this problem&gt;.</li><li>&lt;Co-founder / lead engineer&gt; — &lt;one line&gt;.</li><li>&lt;Advisors: a principal, a university academic, a CA — anyone with standing&gt;.</li><li>Backed by an AI-assisted engineering process that produced 257 K lines with ~1,540 tests in &lt;n&gt; months.</li></ul></div>
+<div class="panel dark"><div class="t">Joining with this round</div><div class="t" style="font-size:13px">Engineering</div><div class="d">2 full-stack engineers — Horizons 1 and 2 features.</div><div class="t" style="font-size:13px">Sales &amp; implementation</div><div class="d">2 people to run the pilot machine and onboard colleges (target: 5 colleges per quarter).</div><div class="t" style="font-size:13px">Content</div><div class="d">1 instructional designer + subject experts on contract for 10 more programmes.</div><div class="t" style="font-size:13px">Advisory</div><div class="d">A senior enterprise-SaaS mentor and a university-relations advisor.</div></div>
+</div>
+</div></section>
+<section class="slide" id="s17"><div class="inner">
+<div class="rule"></div>
+<div class="kicker">THE ASK</div>
+<h1>₹50 L for 8–10 % — and three specific introductions</h1>
+<div class="grid g2">
+<div class="card"><div class="bar"></div><div class="t">Pilot colleges</div><div class="d">Warm introductions to principals and chairmen in Karnataka, then Maharashtra and Tamil Nadu. Three introductions are worth more than ₹10 L of marketing.</div></div>
+<div class="card"><div class="bar"></div><div class="t">University relationships</div><div class="d">A conversation with a university&#x27;s academic or examination wing to co-seed question banks and scheme packs — one win onboards 30–100 affiliated colleges.</div></div>
+<div class="card"><div class="bar"></div><div class="t">Operating help</div><div class="d">A part-time enterprise-sales lead and a content partner for the certificate catalogue. Hiring is our real constraint, not capital.</div></div>
+</div>
+<ul class="b"><li>Use of funds: 36 % engineering · 18 % implementation &amp; pilots · 16 % content · 10 % sales · 8 % contingency · 6 % cloud/AI · 6 % legal.</li><li>9-month milestones: 5 paid pilots by month 3 · 10 colleges live and ₹25–35 L ARR by month 9 · 8 certificate programmes · then the seed round.</li><li>Governance we welcome: monthly metrics, a quarterly board review, and a named risk register reviewed every quarter.</li></ul>
+</div></section>
+<section class="slide" id="s18"><div class="inner">
+<div class="rule"></div>
+<div class="kicker">WHY NOW</div>
+<h1>Four windows are open at the same time</h1>
+<div class="sub">This combination will not be open in 2028.</div>
+<div class="grid g4">
+<div class="stat"><div class="v">NEP + NAAC</div><div class="l">Outcome evidence is now a funding condition, not a nicety</div></div>
+<div class="stat"><div class="v">UUCMS</div><div class="l">Every Karnataka student is already inside a state portal — and no ERP connects to it</div></div>
+<div class="stat"><div class="v">AI economics</div><div class="l">Frontier-quality generation in Indic scripts at ₹23 per student per year</div></div>
+<div class="stat"><div class="v">ERP churn</div><div class="l">Colleges are replacing 10-year-old ERPs, not buying their first one</div></div>
+</div>
+<ul class="b"><li>The question is not whether Indian colleges will run on AI-native software — it is which vendor is already inside them when they decide.</li><li>Our answer is distribution-first: land through the exam paper, expand to the campus, then sell the learning.</li></ul>
+</div></section>
+<section class="slide" id="s19"><div class="inner dark">
+<div class="titleWrap"><h1 style="font-size:56px">Let&#x27;s grow together.</h1><h1 style="color:var(--teal3);font-size:20px;margin-top:20px">Vriddhi (वृद्धि) — growth through knowledge.</h1>
+<p class="sub" style="margin-top:16px">Pilot onboarding for the first cohort of colleges starts in 30 days.</p>
+<p class="sub" style="margin-top:16px">&lt;your name&gt; · &lt;email&gt; · &lt;phone&gt; · www.vriddhi.in</p>
+</div>
+</div></section>
+</div>
+<div class="hint">← → or space to move · Ctrl/⌘+P prints to PDF</div>
+<div class="nav"><button onclick="go(-1)">←</button><span id="pos">1 / 19</span>
+<button onclick="go(1)">→</button></div>
+<script>
+const slides=[...document.querySelectorAll('.slide')];let i=0;
+function go(d){i=Math.max(0,Math.min(slides.length-1,i+d));
+document.getElementById('pos').textContent=(i+1)+' / '+slides.length;
+slides[i].scrollIntoView({behavior:'smooth'});}
+document.addEventListener('keydown',e=>{
+ if(['ArrowRight','ArrowDown',' ','PageDown'].includes(e.key)){e.preventDefault();go(1)}
+ if(['ArrowLeft','ArrowUp','PageUp'].includes(e.key)){e.preventDefault();go(-1)}
+ if(e.key==='Home'){i=0;slides[0].scrollIntoView()}
+ if(e.key==='End'){i=slides.length-1;slides[i].scrollIntoView()}});
+addEventListener('scroll',()=>{});
+</script>
+</body></html>
