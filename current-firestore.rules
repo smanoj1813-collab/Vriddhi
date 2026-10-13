@@ -526,10 +526,12 @@ service cloud.firestore {
         // calculation map from the UI or a direct client write.
         allow write: if docId == 'access'
           ? (isSuperadmin() || (role() == 'principal' && collegeId() == collegeId))
-          : docId in ['courses', 'codingLab']
-            // Course and Coding Lab assignments are PLATFORM access controls.
-            // Students can read their own college's setting, but only the
-            // platform superadmin may change it.
+          : docId in ['courses', 'codingLab', 'pyqPapers']
+            // Course, Coding Lab and previous-year-paper assignments are
+            // PLATFORM access controls. Students can read their own college's
+            // course/Coding Lab setting (pyqPapers is staff-only via the
+            // generic staff branch above), but only the platform superadmin
+            // may change any of them.
             ? isSuperadmin()
           : docId in ['branding', 'tally']
             ? isFinance(collegeId)
