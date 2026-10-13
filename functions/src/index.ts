@@ -244,6 +244,9 @@ export const api = onRequest(
 // contract and the one-release overlap with `api`.
 export { pdf } from './routes/pdf'
 
+// Previous-year papers assigned to colleges → college-owned assessment papers.
+export { createPyqAssessmentPaper } from './pyqAssessments'
+
 // Vriddhi platform employees (global academic staff assigned to colleges).
 export {
   assignEmployeeColleges,

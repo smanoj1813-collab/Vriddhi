@@ -2144,6 +2144,34 @@ describe('course assignments and course progress', () => {
     await assertSucceeds(setDoc(assignmentPath(superadminDb, COLLEGE_A), { enabled: true }))
   })
 
+  it('previous year paper assignments: own-college staff read, students blocked, superadmin-only writes', async () => {
+    const pyqPath = (db: any, college: string) => doc(db, 'colleges', college, 'config', 'pyqPapers')
+    const payload = {
+      assignments: { 'pyq-file-test': { enabled: true, assignedAt: '2026-10-02T00:00:00.000Z', assignedBy: 'sa' } },
+      updatedAt: '2026-10-02T00:00:00.000Z',
+      updatedBy: 'sa',
+    }
+    await testEnv.withSecurityRulesDisabled(async (context) => {
+      await setDoc(pyqPath(context.firestore(), COLLEGE_A), payload)
+    })
+
+    // Staff of the college need to list the assigned papers in the Question Bank.
+    await assertSucceeds(getDoc(pyqPath(facultyContext().firestore(), COLLEGE_A)))
+    await assertSucceeds(getDoc(pyqPath(adminContext().firestore(), COLLEGE_A)))
+    await assertSucceeds(getDoc(pyqPath(hodContext().firestore(), COLLEGE_A)))
+    await assertFails(getDoc(pyqPath(adminContext().firestore(), COLLEGE_B)))
+    // Students never see the assignment doc (they practise from /prep/papers).
+    await assertFails(getDoc(pyqPath(studentContext().firestore(), COLLEGE_A)))
+
+    // Assignment is a platform control, like course packs.
+    await assertFails(setDoc(pyqPath(facultyContext().firestore(), COLLEGE_A), payload))
+    await assertFails(setDoc(pyqPath(adminContext().firestore(), COLLEGE_A), payload))
+    await assertFails(setDoc(pyqPath(principalContext().firestore(), COLLEGE_A), payload))
+    await assertFails(setDoc(pyqPath(hodContext().firestore(), COLLEGE_A), payload))
+    await assertFails(setDoc(pyqPath(studentContext().firestore(), COLLEGE_A), payload))
+    await assertSucceeds(setDoc(pyqPath(superadminContext().firestore(), COLLEGE_B), { assignments: {} }))
+  })
+
   it('students and college course managers can access only their college assignment settings', async () => {
     const studentDb = studentContext().firestore()
     const adminDb = adminContext().firestore()
