@@ -24,15 +24,16 @@ import {
 } from '@/shared/types/staffAttendance';
 import {
   buildRegister,
-  dateKeysBetween,
-  dayOfWeek,
-  formatDayLabel,
+  formatDayLabelLong,
   hoursBetween,
   monthBounds,
+  monthGridCells,
   monthKeyOf,
   monthLabel,
   nowTime,
   summarizeByFaculty,
+  weekdayShort,
+  WEEKDAY_SHORT,
 } from '@/shared/utils/staffAttendanceStats';
 import {
   buildStaffAttendanceReport,
@@ -40,8 +41,6 @@ import {
   exportFilename,
   type ExportFormat,
 } from '@/shared/utils/attendanceExport';
-
-const DAY_INITIALS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
 
 function StatusChip({ status, active, onClick }: { status: StaffAttendanceStatus; active: boolean; onClick: () => void }) {
   const style = STAFF_STATUS_STYLE[status];
@@ -128,7 +127,11 @@ export default function FacultySelfAttendance() {
     };
   }, [month, range]);
 
-  const monthDays = useMemo(() => dateKeysBetween(monthWindow.start, monthWindow.end), [monthWindow]);
+  // Sunday-first cells padded out to whole weeks by the shared helper. A flat
+  // 1…N list drew the 1st in the Sunday column whatever weekday it really was,
+  // which slid every later date under the wrong header — today (a Monday) read
+  // as Thursday, and the Sunday week-off landed on Wednesday.
+  const gridCells = useMemo(() => monthGridCells(month), [month]);
 
   const existing = recordForDate(form.date);
   const isFutureDate = form.date > today;
@@ -137,7 +140,7 @@ export default function FacultySelfAttendance() {
     event.preventDefault();
     const ok = await save();
     if (ok) {
-      setToast(`Attendance saved for ${formatDayLabel(form.date)}`);
+      setToast(`Attendance saved for ${formatDayLabelLong(form.date)}`);
       setError(null);
     }
   };
@@ -326,7 +329,7 @@ export default function FacultySelfAttendance() {
 
           <div className="flex flex-col justify-between gap-4 rounded-xl border border-slate-200 bg-slate-50/70 p-4 dark:border-slate-700 dark:bg-slate-900/50">
             <div>
-              <p className="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">{formatDayLabel(form.date)}</p>
+              <p className="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">{formatDayLabelLong(form.date)}</p>
               <p className="mt-1 text-lg font-semibold text-slate-900 dark:text-white">{STAFF_STATUS_LABEL[form.status]}</p>
               <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
                 {form.checkIn || '—'} → {form.checkOut || '—'}
@@ -409,15 +412,20 @@ export default function FacultySelfAttendance() {
           </div>
         ) : (
           <div className="grid grid-cols-7 gap-1.5 sm:gap-2">
-            {DAY_INITIALS.map((d, i) => (
-              <div key={`head-${i}`} className="pb-1 text-center text-[11px] font-semibold uppercase text-slate-400">
+            {WEEKDAY_SHORT.map((d) => (
+              <div key={d} className="pb-1 text-center text-[11px] font-semibold uppercase text-slate-400">
                 {d}
               </div>
             ))}
-            {monthDays.map((date) => {
+            {gridCells.map((cell, index) => {
+              if (!cell.date) {
+                // Filler cell: keeps the 1st of the month under its real
+                // weekday instead of under the first column.
+                return <div key={`filler-${index}`} aria-hidden className="aspect-square rounded-xl" />;
+              }
+              const date = cell.date;
               const record = recordForDate(date);
-              const dow = dayOfWeek(date);
-              const isSunday = dow === 0;
+              const isSunday = cell.weekday === 0;
               const isToday = date === today;
               const isFuture = date > today;
               const style = record ? STAFF_STATUS_STYLE[record.status] : null;
@@ -427,7 +435,13 @@ export default function FacultySelfAttendance() {
                   type="button"
                   disabled={isFuture}
                   onClick={() => void selectDate(date)}
-                  title={record ? `${formatDayLabel(date)} — ${STAFF_STATUS_LABEL[record.status]}` : `${formatDayLabel(date)} — not marked`}
+                  title={
+                    record
+                      ? `${formatDayLabelLong(date)} — ${STAFF_STATUS_LABEL[record.status]}`
+                      : isSunday
+                        ? `${formatDayLabelLong(date)} — Sunday (week off)`
+                        : `${formatDayLabelLong(date)} — not marked`
+                  }
                   className={`relative flex aspect-square flex-col items-center justify-center rounded-xl border text-xs transition-all
                     ${isFuture ? 'cursor-not-allowed border-dashed border-slate-200 text-slate-300 dark:border-slate-800 dark:text-slate-600' : 'hover:border-teal-400 dark:hover:border-teal-500'}
                     ${style ? style.chip : isSunday ? 'border-slate-200 bg-slate-100/70 text-slate-400 dark:border-slate-700 dark:bg-slate-800/40 dark:text-slate-500' : 'border-slate-200 bg-white text-slate-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300'}
@@ -473,7 +487,9 @@ export default function FacultySelfAttendance() {
               {records.slice(0, 31).map((r) => (
                 <tr key={r.id} className="transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/40">
                   <td className="table-cell whitespace-nowrap font-medium text-slate-900 dark:text-white">{r.date}</td>
-                  <td className="table-cell whitespace-nowrap">{formatDayLabel(r.date).slice(0, 6)}</td>
+                  {/* The weekday, not a second copy of the date — this column
+                      is how a faculty member checks the calendar is in sync. */}
+                  <td className="table-cell whitespace-nowrap">{weekdayShort(r.date)}</td>
                   <td className="table-cell">
                     <span className={`inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-xs font-medium ${STAFF_STATUS_STYLE[r.status].chip}`}>
                       <span className={`h-1.5 w-1.5 rounded-full ${STAFF_STATUS_STYLE[r.status].dot}`} />

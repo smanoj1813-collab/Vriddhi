@@ -22,6 +22,7 @@ import {
   summarizeByFaculty,
   totalize,
   currentMonthKey,
+  todayKey,
   type AttendanceRange,
   type RangeKind,
 } from '@/shared/utils/staffAttendanceStats';
@@ -138,7 +139,7 @@ export function useStaffAttendanceAnalytics(collegeId: string | undefined) {
 
   /** Who has not recorded anything today — the actionable list for a principal. */
   const pendingToday = useMemo(() => {
-    const marked = new Set(visibleRecords.filter((r) => r.date === todayIso()).map((r) => r.facultyId));
+    const marked = new Set(visibleRecords.filter((r) => r.date === todayKey()).map((r) => r.facultyId));
     return filteredRoster.filter((m) => !marked.has(m.id));
   }, [visibleRecords, filteredRoster]);
 
@@ -173,11 +174,6 @@ export function useStaffAttendanceAnalytics(collegeId: string | undefined) {
     reload: load,
     lastLoadedAt,
   };
-}
-
-function todayIso(): string {
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
 export default useStaffAttendanceAnalytics;

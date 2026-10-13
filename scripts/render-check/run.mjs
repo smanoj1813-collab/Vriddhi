@@ -146,23 +146,29 @@ async function section(label, file, props, assertions) {
 //   credited = 2.5 (Bala) + 1 (Anitha) + 1 (Suresh) = 4.5
 //   overall  = 4.5 / (26 × 3) = 5.8%
 //   Bala     = 2.5 / 26      = 9.6%
-await section('panel', '/src/modules/admin/components/FacultyAttendancePanel.tsx', { collegeId: 'college-a' }, (t) => {
+// The panel opens on the CURRENT month, so September has to be selected before
+// the fixture maths can be asserted: leaving it at "today" meant these checks
+// silently measured an empty month once the calendar moved past the fixtures.
+await section('panel', '/src/modules/admin/components/FacultyAttendancePanel.tsx', { collegeId: 'college-a' }, async (t, view) => {
   check('panel: mounts without throwing', true);
-  check('panel: overall percentage matches the fixture maths (5.8%)', t.includes('5.8%'), t);
-  check('panel: per-faculty percentage matches (9.6% for 2.5/26 days)', t.includes('9.6%'), t);
-  check('panel: lists all three roster members, including ones with no records',
-    t.includes('Bala Kumar') && t.includes('Anitha Rao') && t.includes('Suresh Menon'), t);
-  check('panel: reports the working-day denominator (26)', t.includes('26'), t);
   check('panel: offers the month and date-range scopes', /Month/.test(t) && /Date range/i.test(t), t);
-  check('panel: offers CSV, XLSX and PDF downloads', /CSV/.test(t) && /XLSX/.test(t) && /PDF/.test(t), t);
-  check('panel: renders the day-by-day register', /Register/.test(t), t);
+  await view.type('input[type="month"]', '2026-09');
+  const text = view.text();
+  check('panel: overall percentage matches the fixture maths (5.8%)', text.includes('5.8%'), text);
+  check('panel: per-faculty percentage matches (9.6% for 2.5/26 days)', text.includes('9.6%'), text);
+  check('panel: lists all three roster members, including ones with no records',
+    text.includes('Bala Kumar') && text.includes('Anitha Rao') && text.includes('Suresh Menon'), text);
+  check('panel: reports the working-day denominator (26)', text.includes('26'), text);
+  check('panel: offers CSV, XLSX and PDF downloads', /CSV/.test(text) && /XLSX/.test(text) && /PDF/.test(text), text);
+  check('panel: renders the day-by-day register', /Register/.test(text), text);
 });
 
 // ── Same panel in dashboard-tab (compact) form ───────────────────────────────
 await section('panel (compact)', '/src/modules/admin/components/FacultyAttendancePanel.tsx',
-  { collegeId: 'college-a', compact: true }, (t) => {
+  { collegeId: 'college-a', compact: true }, async (t, view) => {
     check('panel (compact): mounts without throwing', true);
-    check('panel (compact): still computes the analysis', t.includes('5.8%'), t);
+    await view.type('input[type="month"]', '2026-09');
+    check('panel (compact): still computes the analysis', view.text().includes('5.8%'), view.text());
   });
 
 // ── Overview "today" tile ────────────────────────────────────────────────────
@@ -309,21 +315,86 @@ globalThis.__RC_ROLE = undefined;
 globalThis.__RC_CALLABLE_DATA = {};
 
 // ── Faculty "My Attendance" page ─────────────────────────────────────────────
-await section('my attendance', '/src/modules/faculty/pages/FacultySelfAttendance.tsx', {}, (t) => {
+// The fixtures are 1–3 Sep 2026, so the month is pinned to September instead of
+// being left at "today": the page opens on the CURRENT month, and once the
+// calendar rolled past September these assertions were quietly measuring an
+// empty month and failing on arithmetic that was perfectly fine.
+await section('my attendance', '/src/modules/faculty/pages/FacultySelfAttendance.tsx', {}, async (t, view) => {
   check('my attendance: mounts without throwing', true);
   check('my attendance: identifies the signed-in faculty member', t.includes('Bala Kumar'), t);
   check('my attendance: offers every status choice',
     /Present/.test(t) && /Late/.test(t) && /Half Day/.test(t) && /On Leave/.test(t) && /Absent/.test(t), t);
   check('my attendance: renders the month grid with Sundays marked off', /OFF/.test(t), t);
-  check('my attendance: shows the member\'s own percentage (9.6%)', t.includes('9.6%'), t);
-  check('my attendance: lists recent entries with hours worked', /8h/.test(t) && /4h/.test(t), t);
-  check('my attendance: previews the download filename', /my_attendance_\d{4}-\d{2}\.xlsx/.test(t), t);
+  // The page opens on TODAY, so the expected label must be derived from the
+  // clock. A hard-coded date here passed on the day it was written and failed
+  // the next morning — the same fixed-to-one-date mistake this suite exists to
+  // catch. The app's own formatter is deliberately NOT imported: the expected
+  // string is built from a bare Date and literal tables, so a wrong weekday
+  // name in the app is a failure here rather than a match.
+  const WEEKDAY_LONG = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  const MONTH_LABEL = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const now = new Date();
+  const todayLabel = `${WEEKDAY_LONG[now.getDay()]}, ${String(now.getDate()).padStart(2, '0')} ${MONTH_LABEL[now.getMonth()]} ${now.getFullYear()}`;
+  check('my attendance: names the selected day with its weekday', t.includes(todayLabel),
+    `expected "${todayLabel}" in: ${t.slice(0, 140)}`);
+
+  await view.type('input[type="month"]', '2026-09');
+  const text = view.text();
+  check('my attendance: shows the member\'s own percentage (9.6%)', text.includes('9.6%'), text);
+  check('my attendance: lists recent entries with hours worked', /8h/.test(text) && /4h/.test(text), text);
+  check('my attendance: previews the download filename', /my_attendance_\d{4}-\d{2}\.xlsx/.test(view.text()), text);
+
+  // ── Calendar alignment ─────────────────────────────────────────────────────
+  // The regression this section exists for: the month was rendered as a flat
+  // 1…N list inside a 7-column grid, so the 1st was always drawn in the first
+  // column. Every date then sat one-to-six columns away from its real weekday —
+  // in October 2026 today (Mon 12th) appeared under "Thu" and the Sunday week
+  // off under "Wed". Both rows of the calendar have to be read positionally:
+  // textContent alone cannot see it, because a filler cell contributes no text.
+  // One 7-column grid holds the header row first, then the day cells, so the
+  // 7th child onwards are the cells and cell n sits in column n % 7.
+  const grid = view.el('div.grid.grid-cols-7');
+  const children = [...(grid?.children ?? [])];
+  const headers = children.slice(0, 7).map((el) => (el.textContent || '').trim());
+  const cells = children.slice(7);
+  const WEEKDAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const wrong = [];
+  let dated = 0;
+  cells.forEach((el, index) => {
+    const m = /^([A-Za-z]+), (\d{2}) ([A-Za-z]{3}) (\d{4})/.exec(el.getAttribute('title') || '');
+    if (!m) return; // filler cell
+    dated += 1;
+    const column = index % 7;
+    if (headers.length !== 7) return;
+    if (!m[1].startsWith(headers[column])) {
+      wrong.push(`${m[0]} says ${m[1]} but is drawn under ${headers[column]}`);
+    }
+    // Independent of the app's own helpers: what does the real calendar say?
+    const real = new Date(Number(m[4]), MONTHS.indexOf(m[3]), Number(m[2])).getDay();
+    if (real !== column) {
+      wrong.push(`${m[0]} is a ${WEEKDAYS[real]} (column ${real}) but is drawn in column ${column}`);
+    }
+  });
+  check('my attendance: the calendar exposes seven columns and whole weeks',
+    headers.length === 7 && cells.length % 7 === 0,
+    `headers=${headers.join(',')} cells=${cells.length}`);
+  check('my attendance: every date sits under its own weekday column',
+    dated >= 30 && wrong.length === 0, `dated=${dated} :: ${wrong.slice(0, 3).join(' | ')}`);
+
+  const offColumns = cells
+    .map((el, index) => (/OFF/.test(el.textContent || '') ? index % 7 : -1))
+    .filter((column) => column >= 0);
+  check('my attendance: the week off is marked on Sundays, not on Wednesday',
+    offColumns.length > 0 && offColumns.every((column) => column === 0),
+    `OFF drawn in column(s): ${offColumns.join(',')} (0 = Sun)`);
 });
 
 // ── Standalone admin page (resolves collegeId from AuthContext) ──────────────
-await section('admin page', '/src/modules/admin/pages/FacultyAttendanceAdmin.tsx', {}, (t) => {
+await section('admin page', '/src/modules/admin/pages/FacultyAttendanceAdmin.tsx', {}, async (t, view) => {
   check('admin page: mounts without throwing', true);
-  check('admin page: renders the analysis panel inside it', t.includes('5.8%'), t);
+  await view.type('input[type="month"]', '2026-09');
+  check('admin page: renders the analysis panel inside it', view.text().includes('5.8%'), view.text());
 });
 
 // ── Student journey page ─────────────────────────────────────────────────────

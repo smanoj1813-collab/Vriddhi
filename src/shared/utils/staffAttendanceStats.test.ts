@@ -19,13 +19,17 @@ import {
   dayOfWeek,
   departmentBreakdown,
   emptyCounts,
+  formatDayLabelLong,
   hoursBetween,
   monthBounds,
+  monthGridCells,
   monthLabel,
   monthRange,
   summarizeByFaculty,
   toLocalDateKey,
   totalize,
+  weekdayShort,
+  WEEKDAY_SHORT,
   workingDaysBetween,
 } from './staffAttendanceStats'
 import type { StaffAttendanceRecord, StaffRosterEntry } from '../types/staffAttendance'
@@ -95,6 +99,75 @@ describe('date helpers', () => {
     assert.equal(monthLabel('2026-09'), 'September 2026')
     assert.equal(monthRange('2026-09').start, '2026-09-01')
     assert.equal(monthRange('2026-09').end, '2026-09-30')
+  })
+
+  it('names the weekday a date actually falls on', () => {
+    assert.equal(weekdayShort('2026-10-12'), 'Mon') // a Monday, as reported
+    assert.equal(weekdayShort('2026-10-04'), 'Sun')
+    assert.equal(formatDayLabelLong('2026-10-12'), 'Monday, 12 Oct 2026')
+    assert.equal(formatDayLabelLong('2026-10-04'), 'Sunday, 04 Oct 2026')
+    assert.equal(weekdayShort('not-a-date'), '')
+    assert.equal(formatDayLabelLong('2026-02-31'), '2026-02-31')
+  })
+})
+
+describe('monthGridCells', () => {
+  // The bug this pins: the calendar was a flat 1…N list dropped into a
+  // 7-column grid, so the 1st was always drawn in the first column. In October
+  // 2026 that put today (Mon 12th) at index 11 → column 4 = "Thursday", and
+  // the Sunday 4th at index 3 → column 3 = "Wednesday", which is how the week
+  // off appeared on the wrong day.
+
+  it('pads the first week so the 1st sits under its real weekday', () => {
+    const cells = monthGridCells('2026-10')
+    assert.equal(WEEKDAY_SHORT[new Date(2026, 9, 1).getDay()], 'Thu') // the premise
+    assert.deepEqual(cells.slice(0, 4).map((c) => c.date), [null, null, null, null])
+    assert.equal(cells[4].date, '2026-10-01')
+    assert.equal(cells[4].weekday, 4)
+  })
+
+  it('keeps a Monday in the Monday column instead of four columns away', () => {
+    const cells = monthGridCells('2026-10')
+    const index = cells.findIndex((c) => c.date === '2026-10-12')
+    assert.equal(index % 7, 1)
+    assert.equal(WEEKDAY_SHORT[index % 7], 'Mon')
+  })
+
+  it('puts every Sunday — the week off — in the Sunday column', () => {
+    const cells = monthGridCells('2026-10')
+    for (const sunday of ['2026-10-04', '2026-10-11', '2026-10-18', '2026-10-25']) {
+      const index = cells.findIndex((c) => c.date === sunday)
+      assert.equal(index % 7, 0, sunday)
+      assert.equal(cells[index].weekday, 0, sunday)
+    }
+  })
+
+  it('keeps position-in-list equal to weekday for whole months and leap years', () => {
+    // A month starting on a Sunday (no lead), one starting on a Saturday (six
+    // lead cells), a 30-day month and a leap February, so every edge of the
+    // padding is exercised.
+    for (const month of ['2026-02', '2026-04', '2026-08', '2026-10', '2026-11', '2028-02']) {
+      const cells = monthGridCells(month)
+      assert.equal(cells.length % 7, 0, `${month} should fill whole weeks`)
+      cells.forEach((cell, index) => {
+        assert.equal(cell.weekday, index % 7, `${month} cell ${index}`)
+        if (!cell.date) return
+        const [y, m, d] = cell.date.split('-').map(Number)
+        assert.equal(cell.weekday, new Date(y, m - 1, d).getDay(), cell.date)
+      })
+    }
+  })
+
+  it('covers every day of the month exactly once', () => {
+    const dated = monthGridCells('2026-10').filter((c) => c.date).map((c) => c.date)
+    assert.equal(dated.length, 31)
+    assert.equal(dated[0], '2026-10-01')
+    assert.equal(dated[30], '2026-10-31')
+  })
+
+  it('returns no cells for a malformed month', () => {
+    assert.deepEqual(monthGridCells('2026-13'), [])
+    assert.deepEqual(monthGridCells('October'), [])
   })
 })
 

@@ -30,6 +30,14 @@ export const SCHEDULING_MESSAGES: Record<string, string> = {
   // double-booking, so the copy leads with that and names the escape hatch.
   'functions/failed-precondition':
     'This would double-book a faculty member or a room. Fix the timetable first, or skip the conflicting slots.',
+  // A crash inside the callable sends no reason of its own — the SDK surfaces
+  // the bare word "INTERNAL". Left unframed, that is what an administrator
+  // reads after pressing Generate; the retry advice is safe because a re-run
+  // skips the sessions that already exist.
+  'functions/internal':
+    'An unexpected server error stopped this. Try again in a moment — re-running is safe, because sessions that already exist are skipped. If it keeps failing, ask your platform admin to check the generateClassSessions logs.',
+  'functions/unavailable':
+    'The server could not be reached. Check your connection and try again in a moment.',
 }
 
 /**
@@ -43,7 +51,23 @@ export const SESSION_WRITER_MESSAGES: Record<string, string> = {
   'functions/invalid-argument': 'That request was not valid. Reload the page and try again.',
   'functions/not-found': 'That class session no longer exists. Reload the page and try again.',
   'functions/failed-precondition': 'This class cannot be completed in its current state.',
+  // The code a teacher actually met when saving topics hit a server-side fault
+  // ("The class session could not be completed. (INTERNAL)" — nothing to act
+  // on). Repeating a completion is safe by design: the session's topic union is
+  // merged and ledger rows are only ever moved forward to covered.
+  'functions/internal':
+    'An unexpected server error stopped this. Nothing was saved — try again in a moment. Repeating is safe, because topics and ledger rows are merged rather than duplicated. If it keeps failing, ask your platform admin to check the completeClassSession logs.',
+  'functions/unavailable':
+    'The server could not be reached. Check your connection and try again in a moment — nothing was saved.',
 }
+
+/**
+ * Status words the SDK leaves behind when the callable crashed before it could
+ * send a message of its own ("INTERNAL", "UNAVAILABLE", …). Appending one of
+ * those in brackets tells the reader nothing the framing sentence did not, so
+ * they are treated as "no detail".
+ */
+const BARE_STATUS_DETAILS = new Set(['INTERNAL', 'UNKNOWN', 'UNAVAILABLE', 'DEADLINE_EXCEEDED'])
 
 /**
  * The message the callable actually sent. For a v2 httpsCallable the Firebase
@@ -76,6 +100,10 @@ export function describeSessionError(
   const framed = messages[code] || fallback
   const detail = serverMessage(error)
   if (!detail || detail === framed) return framed
+  // "…could not be completed. (INTERNAL)" was the whole complaint: a bare
+  // status word where the reader needed an instruction. A real server sentence
+  // still rides along — only the SDK's own status token is dropped.
+  if (BARE_STATUS_DETAILS.has(detail.replace(/[\s.]+$/, '').toUpperCase())) return framed
   return `${framed} (${detail})`
 }
 

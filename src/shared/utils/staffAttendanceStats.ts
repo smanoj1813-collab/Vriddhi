@@ -104,6 +104,11 @@ const MONTH_NAMES = [
 ];
 const MONTH_SHORT = MONTH_NAMES.map((m) => m.slice(0, 3));
 
+const WEEKDAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
+/** Column headers, Sunday-first: the order `Date#getDay()` already uses. */
+export const WEEKDAY_SHORT = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'] as const;
+
 /** Human label, e.g. `September 2026`. */
 export function monthLabel(month: string): string {
   if (!/^\d{4}-\d{2}$/.test(month)) return month;
@@ -118,6 +123,58 @@ export function formatDayLabel(dateKey: string): string {
   if (!d) return dateKey;
   const day = String(d.getDate()).padStart(2, '0');
   return `${day} ${MONTH_SHORT[d.getMonth()]} ${d.getFullYear()}`;
+}
+
+/** `Monday, 12 Oct 2026` — the same date with the weekday spelled out. */
+export function formatDayLabelLong(dateKey: string): string {
+  const d = parseDateKey(dateKey);
+  if (!d) return dateKey;
+  return `${WEEKDAY_NAMES[d.getDay()]}, ${formatDayLabel(dateKey)}`;
+}
+
+/** `Mon`, or `''` for an unparseable key. */
+export function weekdayShort(dateKey: string): string {
+  const dow = dayOfWeek(dateKey);
+  return dow < 0 ? '' : WEEKDAY_SHORT[dow];
+}
+
+// ─── Calendar grid ────────────────────────────────────────────────────────────
+//
+// A month drawn as a flat 1…N list inside a 7-column grid silently loses the
+// leading blanks: the 1st is painted in the first column whatever weekday it
+// really is, so every later date shifts by up to six places. That is exactly
+// how "today" (a Monday) appeared under Thursday and the Sunday week off
+// appeared under Wednesday. The padding is computed here — once, and pinned by
+// tests — instead of being left to each screen to remember.
+
+export interface CalendarCell {
+  /** `YYYY-MM-DD`, or `null` for a filler cell that keeps the columns honest. */
+  date: string | null;
+  /** 0 = Sunday … 6 = Saturday. */
+  weekday: number;
+}
+
+/**
+ * Sunday-first cells for a `YYYY-MM` month, padded out to whole weeks.
+ *
+ * Fillers are placed before the 1st and after the last day so that a cell's
+ * index in the list is always its real weekday: rendered in a 7-column grid,
+ * every date lands under its own day header and the Sunday column is the
+ * Sunday column.
+ */
+export function monthGridCells(month: string): CalendarCell[] {
+  const bounds = monthBounds(month);
+  if (!bounds) return [];
+  const lead = dayOfWeek(bounds.start); // 0 = Sunday → already the first column
+  const cells: CalendarCell[] = [];
+  for (let i = 0; i < lead; i++) cells.push({ date: null, weekday: i });
+  for (const date of dateKeysBetween(bounds.start, bounds.end)) {
+    cells.push({ date, weekday: dayOfWeek(date) });
+  }
+  // Pad the final row too, so the grid stays a rectangle and the last row's
+  // day cells keep the same height as every other row.
+  while (cells.length % 7 !== 0) cells.push({ date: null, weekday: cells.length % 7 });
+  return cells;
 }
 
 // ─── Selection model ──────────────────────────────────────────────────────────

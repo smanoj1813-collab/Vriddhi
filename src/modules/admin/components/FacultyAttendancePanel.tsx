@@ -33,7 +33,7 @@ import {
   downloadAttendanceReport,
   type ExportFormat,
 } from '@/shared/utils/attendanceExport';
-import { formatDayLabel, monthLabel } from '@/shared/utils/staffAttendanceStats';
+import { formatDayLabel, monthLabel, todayKey } from '@/shared/utils/staffAttendanceStats';
 
 const CHART_COLORS: Record<StaffAttendanceStatus, string> = STAFF_STATUS_ORDER.reduce(
   (acc, s) => ({ ...acc, [s]: STAFF_STATUS_STYLE[s].hex }),
@@ -390,7 +390,7 @@ export default function FacultyAttendancePanel({
                 Not marked today
               </h3>
               <p className="mb-3 text-xs text-slate-500 dark:text-slate-400">
-                Faculty with no attendance record for {formatDayLabel(new Date().toISOString().slice(0, 10))}.
+                Faculty with no attendance record for {formatDayLabel(todayKey())}.
               </p>
               {pendingToday.length === 0 ? (
                 <p className="flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300">
