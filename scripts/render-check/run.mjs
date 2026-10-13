@@ -325,7 +325,18 @@ await section('my attendance', '/src/modules/faculty/pages/FacultySelfAttendance
   check('my attendance: offers every status choice',
     /Present/.test(t) && /Late/.test(t) && /Half Day/.test(t) && /On Leave/.test(t) && /Absent/.test(t), t);
   check('my attendance: renders the month grid with Sundays marked off', /OFF/.test(t), t);
-  check('my attendance: names the selected day with its weekday', /Monday, 12 Oct 2026|Tuesday, 01 Sep 2026/.test(t), t);
+  // The page opens on TODAY, so the expected label must be derived from the
+  // clock. A hard-coded date here passed on the day it was written and failed
+  // the next morning — the same fixed-to-one-date mistake this suite exists to
+  // catch. The app's own formatter is deliberately NOT imported: the expected
+  // string is built from a bare Date and literal tables, so a wrong weekday
+  // name in the app is a failure here rather than a match.
+  const WEEKDAY_LONG = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  const MONTH_LABEL = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const now = new Date();
+  const todayLabel = `${WEEKDAY_LONG[now.getDay()]}, ${String(now.getDate()).padStart(2, '0')} ${MONTH_LABEL[now.getMonth()]} ${now.getFullYear()}`;
+  check('my attendance: names the selected day with its weekday', t.includes(todayLabel),
+    `expected "${todayLabel}" in: ${t.slice(0, 140)}`);
 
   await view.type('input[type="month"]', '2026-09');
   const text = view.text();
