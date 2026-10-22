@@ -14,6 +14,8 @@ interface NotificationPreferences {
 interface UpdateStudentProfileInput {
   name?: unknown
   notificationPrefs?: unknown
+  /** Student may add/correct their own APAAR/ABC ID (12 digits). */
+  apaarId?: unknown
 }
 
 const PREFERENCE_KEYS: Array<keyof NotificationPreferences> = [
@@ -68,8 +70,12 @@ export const updateMyStudentProfile = onCall(
     const input = (request.data || {}) as UpdateStudentProfileInput
     const name = input.name === undefined ? undefined : String(input.name).trim()
     const notificationPrefs = parsePreferences(input.notificationPrefs)
+    const apaarId = input.apaarId === undefined ? undefined : String(input.apaarId).replace(/\D/g, '')
+    if (apaarId !== undefined && apaarId !== '' && !/^\d{12}$/.test(apaarId)) {
+      throw new HttpsError('invalid-argument', 'APAAR/ABC ID must be 12 digits')
+    }
 
-    if (name === undefined && notificationPrefs === undefined) {
+    if (name === undefined && notificationPrefs === undefined && apaarId === undefined) {
       throw new HttpsError('invalid-argument', 'No editable profile fields were provided')
     }
     if (name !== undefined && (name.length < 2 || name.length > 100)) {
@@ -120,6 +126,7 @@ export const updateMyStudentProfile = onCall(
     }
     if (name !== undefined) updates.name = name
     if (notificationPrefs !== undefined) updates.notificationPrefs = notificationPrefs
+    if (apaarId !== undefined) updates.apaarId = apaarId
 
     let previousDisplayName: string | null | undefined
     if (name !== undefined) {

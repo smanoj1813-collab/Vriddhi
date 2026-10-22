@@ -142,6 +142,25 @@ const STUDENT_COLUMNS: ColumnMapping[] = [
     required: false,
     aliases: ['address', 'residential address', 'residential_address', 'home address', 'home_address'],
   },
+  {
+    /**
+     * APAAR / ABC ID — the 12-digit national student ID that keys the
+     * Academic Bank of Credits. Optional at import (many first-years create
+     * theirs after admission), but when a value IS supplied it must be a
+     * real 12-digit ID: a mistyped one silently blocks the student's NAD
+     * credit upload and, at some universities, their exam form.
+     */
+    field: 'apaarId',
+    required: false,
+    aliases: ['apaar id', 'apaarid', 'apaar_id', 'apaar', 'abc id', 'abcid', 'abc_id', 'academic bank of credits id'],
+    validator: (val, rowNum) => {
+      const digits = String(val).replace(/\D/g, '');
+      if (digits !== '' && !/^\d{12}$/.test(digits)) {
+        return `Row ${rowNum}: APAAR/ABC ID must be 12 digits, got "${val}"`;
+      }
+      return null;
+    },
+  },
 ];
 
 // Faculty import column definitions
@@ -633,6 +652,7 @@ export function generateCSVTemplate(type: ImportType = 'students'): string {
       'Date of Birth',
       'Gender',
       'Address',
+      'APAAR ID',
     ];
     const sampleRow = [
       'Ananya Rao',
@@ -647,6 +667,7 @@ export function generateCSVTemplate(type: ImportType = 'students'): string {
       '2006-03-15',
       'Female',
       '123 Main St, Bangalore',
+      '123456789012',
     ];
     return [headers.map(escape).join(','), sampleRow.map(escape).join(',')].join('\n');
   } else {

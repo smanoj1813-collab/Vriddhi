@@ -28,6 +28,8 @@ export interface StudentOnboardingData {
   aadhaarNo: string;
   scheme: string;
   universityId: string;
+  // APAAR / Academic Bank of Credits (national, UGC)
+  apaarId: string;
 }
 
 export interface FacultyOnboardingData {

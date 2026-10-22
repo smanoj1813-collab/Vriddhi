@@ -374,6 +374,8 @@ export interface ImportUserEntry {
   dob?: string;
   gender?: string;
   address?: string;
+  /** APAAR / ABC ID (12 digits) — lands on the student record when valid. */
+  apaarId?: string;
 }
 
 export interface ImportUsersInput {

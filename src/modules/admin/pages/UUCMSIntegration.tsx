@@ -8,6 +8,7 @@ import { collection, getDocs, query, where, limit, writeBatch, doc, serverTimest
 import { db } from '@/Firebase/config';
 import type { UUCMSImportRow, UUCMSImportResult } from '../types/uucms';
 import { getUUCMSStatusLabel, getUUCMSStatusColor } from '../types/uucms';
+import ApaarTab from '../components/ApaarTab';
 
 function getCollegeId(): string {
   const id = localStorage.getItem('vriddhi_college_id');
@@ -17,7 +18,7 @@ function getCollegeId(): string {
 
 export default function UUCMSIntegration() {
   const queryClient = useQueryClient();
-  const [activeTab, setActiveTab] = useState<'overview' | 'import' | 'sync' | 'mapping'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'import' | 'sync' | 'mapping' | 'apaar'>('overview');
   const [importFile, setImportFile] = useState<File | null>(null);
   const [importResult, setImportResult] = useState<UUCMSImportResult | null>(null);
   const [isImporting, setIsImporting] = useState(false);
@@ -283,6 +284,7 @@ UUCMS20240002,BCU2024BCA002,Priya S,priya@example.com,9876543211,BCA,2024-25,3,f
           { id: 'overview', label: 'Overview', icon: Database },
           { id: 'import', label: 'Import from UUCMS', icon: Upload },
           { id: 'mapping', label: 'Student Mapping', icon: Link2 },
+          { id: 'apaar', label: 'APAAR / ABC', icon: FileSpreadsheet },
           { id: 'sync', label: 'Sync Status', icon: RefreshCw },
         ].map(tab => (
           <button
@@ -532,6 +534,8 @@ UUCMS20240002,BCU2024BCA002,Priya S,priya@example.com,9876543211,BCA,2024-25,3,f
           </div>
         </div>
       )}
+
+      {activeTab === 'apaar' && <ApaarTab collegeId={getCollegeId()} />}
 
       {activeTab === 'sync' && (
         <div className="bg-white dark:bg-[#131b2e] border border-slate-200 dark:border-slate-800 rounded-2xl p-6">

@@ -42,6 +42,7 @@ export default function StudentSettings() {
 
   const [activeTab, setActiveTab] = useState<TabId>('profile');
   const [name, setName] = useState('');
+  const [apaarId, setApaarId] = useState('');
   const [savingProfile, setSavingProfile] = useState(false);
   const [profileMsg, setProfileMsg] = useState<{ type: 'ok' | 'err'; text: string } | null>(null);
 
@@ -205,6 +206,27 @@ export default function StudentSettings() {
                       className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white text-sm font-medium outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 transition-all"
                     />
                   </div>
+                </div>
+
+                <div>
+                  <label className="text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5 block">
+                    APAAR / ABC ID
+                  </label>
+                  <div className="relative">
+                    <GraduationCap size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      value={apaarId}
+                      onChange={(e) => setApaarId(e.target.value.replace(/[^\d\s-]/g, ''))}
+                      placeholder="12-digit APAAR ID (e.g. 1234 5678 9012)"
+                      className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white text-sm font-medium outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 transition-all"
+                    />
+                  </div>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1.5">
+                    Your permanent national student ID from DigiLocker (ABC ID card). Your university needs it to
+                    deposit your credits — without it, results and credits may not reach your ABC account.
+                  </p>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

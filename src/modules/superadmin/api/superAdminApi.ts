@@ -943,6 +943,7 @@ export async function importUsers(input: ImportUsersInput): Promise<ImportResult
       dob: s.dob || '',
       gender: s.gender || '',
       address: s.address || '',
+      apaarId: s.apaarId || '',
       mentorId: s.mentor || '',
     }));
 

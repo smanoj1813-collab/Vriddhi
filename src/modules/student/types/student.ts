@@ -193,4 +193,7 @@ export interface StudentProfile {
   scheme?: string;
   universityId?: string;
   uucmsInfo?: UUCMSInfo;
+  // APAAR (Automated Permanent Academic Account Registry) — the 12-digit
+  // national student ID keying the Academic Bank of Credits (NAD-ABC).
+  apaarId?: string;
 }

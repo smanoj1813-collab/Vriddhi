@@ -94,6 +94,7 @@ export const STUDENT_TEMPLATE: UploadTemplate = {
     // "Course" column had the same problem) — a template field that is
     // silently dropped is worse than no field at all.
     { name: 'Mentor ID', key: 'mentorId', label: 'Mentor ID', required: false, type: 'text', description: 'Optional — assigned faculty ID; a name that matches no faculty is kept for later repair', example: 'FAC001' },
+    { name: 'APAAR ID', key: 'apaarId', label: 'APAAR / ABC ID', required: false, type: 'text', description: 'Optional at admission — the 12-digit national student ID (Academic Bank of Credits). Needed before the university uploads credits to NAD; can be filled later from the UUCMS → APAAR desk', example: '123456789012' },
   ],
   sampleRow: {
     regNo: 'R2027001',
@@ -107,6 +108,7 @@ export const STUDENT_TEMPLATE: UploadTemplate = {
     dateOfBirth: '2006-03-15',
     gender: 'female',
     mentorId: 'FAC001',
+    apaarId: '123456789012',
   },
 };
 
