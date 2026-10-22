@@ -378,3 +378,54 @@ export async function downloadGuestBillPdf(m: GuestBillPdfModel): Promise<void> 
   drawFooter(doc, m.footer)
   doc.save(`guest-bill-${safeName(m.faculty.staffCode || m.faculty.name)}-${safeName(m.monthLabel)}.pdf`)
 }
+
+// ─── Student certificate (bonafide / TC / conduct / fee structure…) ───
+export interface StudentCertificatePdfModel {
+  letterhead: Letterhead
+  title: string
+  certificateNo: string
+  date: string
+  body: string
+  /** Optional particulars table (fee structure certificate). */
+  lines?: MoneyLine[]
+  linesTotal?: number
+  signatoryName?: string
+  signatoryDesignation?: string
+  fileTag: string
+}
+
+export async function downloadStudentCertificatePdf(m: StudentCertificatePdfModel): Promise<void> {
+  const doc = await newDoc()
+  let y = drawLetterhead(doc, m.letterhead, m.title || 'CERTIFICATE')
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(9.5)
+  doc.text(`Ref: ${m.certificateNo}`, LEFT, y)
+  doc.text(`Date: ${m.date}`, RIGHT, y, { align: 'right' })
+  y += 26
+
+  doc.setFontSize(11)
+  for (const para of m.body.split(/\n\s*\n/)) {
+    const lines = doc.splitTextToSize(para.replace(/\n/g, ' ').trim(), WIDTH) as string[]
+    for (const l of lines) { doc.text(l, LEFT, y, { maxWidth: WIDTH, align: 'justify' }); y += 16 }
+    y += 8
+  }
+
+  if (m.lines && m.lines.length) {
+    y += 2
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(10)
+    doc.text('Fee particulars', LEFT, y); y += 14
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(9.5)
+    for (const l of m.lines) {
+      doc.text(l.label, LEFT + 10, y); doc.text(rs(l.amount), LEFT + 330, y, { align: 'right' }); y += 14
+      if (y > 700) break
+    }
+    if (m.linesTotal !== undefined) {
+      doc.setFont('helvetica', 'bold')
+      doc.text('Total', LEFT + 10, y); doc.text(rs(m.linesTotal), LEFT + 330, y, { align: 'right' }); y += 14
+    }
+  }
+
+  drawSignature(doc, Math.min(y + 20, 720), m.signatoryName, m.signatoryDesignation)
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(9)
+  doc.text('Seal of the institution', LEFT, Math.min(y + 60, 760))
+  doc.save(`certificate-${safeName(m.fileTag)}.pdf`)
+}
