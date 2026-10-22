@@ -183,8 +183,11 @@ export default function FacultyAnnouncements() {
     setComposeBatches([])
     setComposeBranches([])
     setComposeCategory('general')
+    setComposeEmail(false)
     setFormError('')
   }
+
+  const [composeEmail, setComposeEmail] = useState(false)
 
   const handleSend = async () => {
     if (!composeTitle.trim() || !composeMessage.trim() || !collegeId) return
@@ -198,7 +201,7 @@ export default function FacultyAnnouncements() {
     try {
       const send = httpsCallable<
         Record<string, unknown>,
-        { id: string; recipientCount: number }
+        { id: string; recipientCount: number; emailed?: number }
       >(functions, 'sendAnnouncement')
 
       const result = await send({
@@ -209,6 +212,7 @@ export default function FacultyAnnouncements() {
         category: composeCategory,
         type: composeCategory === 'exam' ? 'warning' : composeCategory === 'event' ? 'event' : 'info',
         audience: composeTarget,
+        email: composeEmail,
         ...(composeTarget === 'cohort'
           ? { cohort: { batches: composeBatches, branches: composeBranches } }
           : {}),
@@ -219,7 +223,7 @@ export default function FacultyAnnouncements() {
       await fetchAnnouncements()
       setShowCompose(false)
       resetCompose()
-      setDeliveryNotice(`Delivered to ${result.data.recipientCount} student${result.data.recipientCount === 1 ? '' : 's'}.`)
+      setDeliveryNotice(`Delivered to ${result.data.recipientCount} student${result.data.recipientCount === 1 ? '' : 's'}.${composeEmail ? ` Email queued for ${result.data.emailed ?? 0}.` : ''}`)
     } catch (err) {
       setFormError(describeError(err))
     } finally {
@@ -476,6 +480,13 @@ export default function FacultyAnnouncements() {
                   className="w-full bg-white dark:bg-slate-700/50 border border-slate-300 dark:border-slate-600 rounded-xl px-3 py-2.5 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-teal-500 text-sm resize-none"
                 />
               </div>
+
+              <label className="flex items-start gap-2.5 rounded-xl border border-slate-200 dark:border-slate-700 px-3 py-2.5 cursor-pointer">
+                <input type="checkbox" className="mt-0.5" checked={composeEmail} onChange={(e) => setComposeEmail(e.target.checked)} />
+                <span className="text-sm text-slate-700 dark:text-slate-200">Also send by email
+                  <span className="block text-xs text-slate-500 dark:text-slate-400">Reaches students who have not opened the app. Use for exam dates and deadlines — not for everyday notices.</span>
+                </span>
+              </label>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
