@@ -186,6 +186,8 @@ const navItems: NavItem[] = [
   { label: "Faculty Attendance", path: "/admin/faculty-attendance", icon: <BadgeIcon fontSize="small" />, roles: ["admin", "principal"], section: "Academic" },
   { label: "Assessments", path: "/admin/test-reports", icon: <Assignment fontSize="small" />, roles: ["admin", "principal"], section: "Academic" },
   { label: "Grade Records", path: "/admin/grade-records", icon: <Assessment fontSize="small" />, roles: ["admin", "principal"], section: "Academic" },
+  { label: "Semester Promotion", path: "/admin/promotion", icon: <Assessment fontSize="small" />, roles: ["admin", "principal"], section: "Academic" },
+  { label: "Course Registration", path: "/admin/course-registration", icon: <AssignmentTurnedIn fontSize="small" />, roles: ["admin", "principal"], section: "Academic" },
   { label: "Question Bank", path: "/admin/question-bank", icon: <QuestionAnswer fontSize="small" />, roles: ["admin", "principal"], section: "Assessment Tools" },
   { label: "Paper Review", path: "/admin/paper-review", icon: <Description fontSize="small" />, roles: ["admin", "principal"], section: "Assessment Tools" },
   { label: "AI Question Generator", path: "/admin/ai-questions", icon: <AutoAwesome fontSize="small" />, roles: ["admin", "principal"], section: "Assessment Tools" },
@@ -351,6 +353,8 @@ const principalNav: SidebarEntry[] = [
     icon: <People fontSize="small" />,
     children: [
       { label: "Students", path: "/admin/students", icon: <People fontSize="small" /> },
+      { label: "Semester Promotion", path: "/admin/promotion", icon: <Assessment fontSize="small" /> },
+      { label: "Course Registration", path: "/admin/course-registration", icon: <AssignmentTurnedIn fontSize="small" /> },
       { label: "360° View", path: "/admin/view360", icon: <Assessment fontSize="small" /> },
       { label: "Admission Center", path: "/admin/admissions", icon: <People fontSize="small" /> },
     ],
@@ -397,6 +401,7 @@ const principalNav: SidebarEntry[] = [
     children: [
       { label: "Assessments", path: "/admin/test-reports", icon: <Assignment fontSize="small" /> },
       { label: "Grade Records", path: "/admin/grade-records", icon: <Assessment fontSize="small" /> },
+      { label: "Course Registration", path: "/admin/course-registration", icon: <AssignmentTurnedIn fontSize="small" /> },
       // REMOVED for principal (live in hodNav instead):
       //   Question Bank · Paper Review · Paper Generator
       { label: "AI Question Generator", path: "/admin/ai-questions", icon: <AutoAwesome fontSize="small" /> },
@@ -432,6 +437,8 @@ const principalNav: SidebarEntry[] = [
       { label: "Purchase Orders", path: "/admin/purchase-orders", icon: <ReceiptLong fontSize="small" /> },
       { label: "Vendors", path: "/admin/vendors", icon: <Storefront fontSize="small" /> },
       { label: "No-Dues", path: "/admin/no-dues", icon: <AssignmentTurnedIn fontSize="small" /> },
+      { label: "Certificate Desk", path: "/admin/certificates", icon: <AssignmentTurnedIn fontSize="small" /> },
+      { label: "Scholarship Desk", path: "/admin/scholarships", icon: <AssignmentTurnedIn fontSize="small" /> },
     ],
   },
 
@@ -569,6 +576,8 @@ const accountsNav: SidebarEntry[] = [
     children: [
       { label: "Finance Reports", path: "/admin/finance-reports", icon: <BarChartIcon fontSize="small" /> },
       { label: "No-Dues", path: "/admin/no-dues", icon: <AssignmentTurnedIn fontSize="small" /> },
+      { label: "Certificate Desk", path: "/admin/certificates", icon: <AssignmentTurnedIn fontSize="small" /> },
+      { label: "Scholarship Desk", path: "/admin/scholarships", icon: <AssignmentTurnedIn fontSize="small" /> },
     ],
   },
   { kind: "link", label: "Finance Settings", path: "/admin/finance-settings", icon: <Settings fontSize="small" /> },
@@ -615,6 +624,8 @@ const operationsNav: SidebarEntry[] = [
     ],
   },
   { kind: "link", label: "No-Dues", path: "/admin/no-dues", icon: <AssignmentTurnedIn fontSize="small" /> },
+  { kind: "link", label: "Certificate Desk", path: "/admin/certificates", icon: <AssignmentTurnedIn fontSize="small" /> },
+  { kind: "link", label: "Scholarship Desk", path: "/admin/scholarships", icon: <AssignmentTurnedIn fontSize="small" /> },
   { kind: "link", label: "Install App", path: "/admin/install-app", icon: <InstallMobile fontSize="small" /> },
 ];
 

@@ -14,6 +14,10 @@ const PurchaseOrdersPage = lazy(() => import('@/modules/office/pages/PurchaseOrd
 const VendorBillsPage = lazy(() => import('@/modules/office/pages/VendorBillsPage'));
 const FinanceReportsPage = lazy(() => import('@/modules/office/pages/FinanceReportsPage'));
 const NoDuesPage = lazy(() => import('@/modules/office/pages/NoDuesPage'));
+const CertificatesPage = lazy(() => import('@/modules/office/pages/CertificatesPage'));
+const PromotionPage = lazy(() => import('./pages/PromotionPage'));
+const ScholarshipsPage = lazy(() => import('@/modules/office/pages/ScholarshipsPage'));
+const CourseRegistrationPage = lazy(() => import('@/modules/office/pages/CourseRegistrationPage'));
 const AccountsDesk = lazy(() => import('@/modules/office/pages/AccountsDesk'));
 const OperationsDesk = lazy(() => import('@/modules/office/pages/OperationsDesk'));
 const AIAgentPage = lazy(() => import('./pages/AIAgentPage'));
@@ -164,6 +168,10 @@ export const adminRoutes: RouteObject[] = [
       { path: 'vendor-bills', element: <LazyPage><VendorBillsPage /></LazyPage> },
       { path: 'finance-reports', element: <LazyPage><FinanceReportsPage /></LazyPage> },
       { path: 'no-dues', element: <LazyPage><NoDuesPage /></LazyPage> },
+      { path: 'certificates', element: <LazyPage><CertificatesPage /></LazyPage> },
+      { path: 'promotion', element: <LazyPage><PromotionPage /></LazyPage> },
+      { path: 'scholarships', element: <LazyPage><ScholarshipsPage /></LazyPage> },
+      { path: 'course-registration', element: <LazyPage><CourseRegistrationPage /></LazyPage> },
       { path: 'accounts', element: <LazyPage><AccountsDesk /></LazyPage> },
       { path: 'operations', element: <LazyPage><OperationsDesk /></LazyPage> },
       { path: 'question-bank', element: questionWorkflowOnly(<LazyPage><QuestionBank initialTab="college" /></LazyPage>) },

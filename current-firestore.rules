@@ -517,7 +517,7 @@ service cloud.firestore {
           || (docId == 'codingLab' && role() == 'student' && collegeId() == collegeId)
           || (docId != 'courses' && docId != 'codingLab' && isStaff() && collegeId() == collegeId)
           || (isOffice() && collegeId() == collegeId)
-          || (docId in ['branding', 'library', 'nodues'] && collegeId() == collegeId));
+          || (docId in ['branding', 'library', 'nodues', 'certificates', 'scholarships', 'registration'] && collegeId() == collegeId));
         allow list: if isSignedIn() && (isSuperadmin()
           || ((isStaff() || isOffice()) && collegeId() == collegeId));
         // `config/access` is legacy; payroll roles no longer depend on it.
@@ -539,6 +539,12 @@ service cloud.firestore {
             ? false
             : docId == 'procurement'
               // purchase workflow (ops) + TDS sections (accounts)
+              ? (isOps(collegeId) || isFinance(collegeId))
+            : docId == 'registration'
+              // elective windows are academic setup: principal/admin/HOD + office
+              ? isBackOffice(collegeId)
+            : docId in ['certificates', 'scholarships']
+              // certificate desk wordings: office (ops/accounts) + principal
               ? (isOps(collegeId) || isFinance(collegeId))
             : docId in ['library', 'inventory', 'nodues']
               ? isOps(collegeId)
@@ -990,6 +996,55 @@ service cloud.firestore {
         // Department heads clear their department's section; the page limits
         // each office to the sections it owns.
         allow update: if isBackOffice(collegeId);
+        allow delete: if isSuperadmin() || (role() == 'principal' && collegeId() == collegeId);
+      }
+      // Student certificates (bonafide / TC / conduct / fee structure…):
+      // the office desk works the queue; the student may apply and follow
+      // their own requests. Issued body/number are frozen on the doc.
+      // Transactional email queue — written only by Cloud Functions
+      // (callables + triggers); the office may read the delivery log.
+      // Semester promotion runs — written only by the runPromotion
+      // callable; back-office staff can read the audit trail.
+      // Scholarship applications (SSP/NSP…): office desk verifies and
+      // tracks sanction/DBT; students record and follow their own.
+      match /scholarships/{docId} {
+        allow read: if isBackOffice(collegeId)
+          || (inCollege(collegeId) && resource.data.studentUid == request.auth.uid);
+        allow create: if isFinance(collegeId) || isOps(collegeId) || isBackOffice(collegeId)
+          || (role() == 'student' && inCollege(collegeId)
+            && request.resource.data.studentUid == request.auth.uid
+            && request.resource.data.status == 'applied');
+        allow update: if isFinance(collegeId) || isOps(collegeId);
+        allow delete: if isSuperadmin() || (role() == 'principal' && collegeId() == collegeId);
+      }
+      // Elective registrations — created only by the
+      // submitCourseRegistration callable (seat capacity is enforced
+      // server-side). Staff read + confirm/return; students read own.
+      match /courseRegistrations/{docId} {
+        allow read: if isBackOffice(collegeId)
+          || (inCollege(collegeId) && resource.data.studentUid == request.auth.uid);
+        allow create: if false;
+        allow update: if isBackOffice(collegeId);
+        allow delete: if isSuperadmin() || (role() == 'principal' && collegeId() == collegeId);
+      }
+      match /promotionRuns/{docId} {
+        allow read: if isBackOffice(collegeId);
+        allow write: if false;
+      }
+      match /mail/{docId} {
+        allow read: if isBackOffice(collegeId);
+        allow write: if false;
+      }
+      match /certificateRequests/{docId} {
+        allow read: if isBackOffice(collegeId)
+          || (inCollege(collegeId) && resource.data.studentUid == request.auth.uid);
+        allow create: if isFinance(collegeId) || isOps(collegeId) || isBackOffice(collegeId)
+          // a student may APPLY (status requested, no certificate yet)
+          || (role() == 'student' && inCollege(collegeId)
+            && request.resource.data.studentUid == request.auth.uid
+            && request.resource.data.status == 'requested'
+            && !('certificateNo' in request.resource.data));
+        allow update: if isFinance(collegeId) || isOps(collegeId);
         allow delete: if isSuperadmin() || (role() == 'principal' && collegeId() == collegeId);
       }
       match /counters/{docId} {
