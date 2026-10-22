@@ -1277,13 +1277,26 @@ service cloud.firestore {
       // teacher could edit their own day and re-parent it onto a colleague's
       // uid, silently moving attendance between people — the same hole the
       // facultyTopics rules close.
-      allow update: if (attendanceTenant(resource.data)
-          && attendanceTenant(request.resource.data)
-          && 'facultyId' in resource.data
-          && request.resource.data.facultyId == resource.data.facultyId
-          && ((claimedRole() == 'faculty' && isOwnRecord(resource.data))
-            || claimedRole() in ['admin', 'principal', 'hod']))
-        || isSuperadmin();
+      function mayUpdateAttendance(oldData, newData) {
+        // Cache the token values locally: repeated role canonicalisation in
+        // both tenant checks and the ownership branch pushed management
+        // corrections over Firestore's 1,000-expression request limit.
+        let callerRole = claimedRole();
+        let callerCollege = claimCollege();
+        let inTenant = isSignedIn() && !employeeSuspended()
+          && callerCollege != null && callerCollege != '';
+        let supportedRole = callerRole in ['faculty', 'mentor', 'employee', 'admin', 'principal', 'hod'];
+        let sameCollege = inTenant && 'collegeId' in oldData && 'collegeId' in newData
+          && oldData.collegeId == callerCollege && newData.collegeId == callerCollege;
+        return (sameCollege && supportedRole
+            && 'facultyId' in oldData
+            && newData.facultyId == oldData.facultyId
+            && (callerRole in ['admin', 'principal', 'hod']
+              || oldData.facultyId == request.auth.uid))
+          || isSuperadmin();
+      }
+
+      allow update: if mayUpdateAttendance(resource.data, request.resource.data);
 
       // Deleting a day of payroll-relevant history is a management action only.
       allow delete: if isSuperadmin()
