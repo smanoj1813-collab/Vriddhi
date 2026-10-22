@@ -2372,3 +2372,52 @@ describe('vriddhi platform employees (employee role)', () => {
     await assertFails(getDoc(doc(otherEmployee, 'platform_employees', EMPLOYEE_UID)))
   })
 })
+
+describe('student office applications', () => {
+  it('allows students to apply for their own no-dues and certificate requests only', async () => {
+    const db = studentContext().firestore()
+    const noDues = collection(db, 'colleges', COLLEGE_A, 'noDues')
+    const certificates = collection(db, 'colleges', COLLEGE_A, 'certificateRequests')
+
+    await assertSucceeds(addDoc(noDues, {
+      studentUid: STUDENT_UID, studentId: STUDENT_ID, purpose: 'Course completion',
+      status: 'open', sections: {},
+    }))
+    await assertFails(addDoc(noDues, {
+      studentUid: OTHER_UID, studentId: OTHER_STUDENT_ID, purpose: 'Course completion',
+      status: 'open', sections: {},
+    }))
+    await assertSucceeds(addDoc(certificates, {
+      studentUid: STUDENT_UID, studentId: STUDENT_ID, kind: 'bonafide',
+      status: 'requested',
+    }))
+    await assertFails(addDoc(certificates, {
+      studentUid: OTHER_UID, studentId: OTHER_STUDENT_ID, kind: 'bonafide',
+      status: 'requested',
+    }))
+  })
+
+  it('allows a student to record their own scholarship application and office status updates only', async () => {
+    const studentDb = studentContext().firestore()
+    const scholarshipCollection = collection(studentDb, 'colleges', COLLEGE_A, 'scholarships')
+    const own = await assertSucceeds(addDoc(scholarshipCollection, {
+      studentUid: STUDENT_UID, studentId: STUDENT_ID, schemeId: 'ssp-post-matric',
+      academicYear: '2026-27', status: 'applied',
+    }))
+    await assertFails(addDoc(scholarshipCollection, {
+      studentUid: OTHER_UID, studentId: OTHER_STUDENT_ID, schemeId: 'ssp-post-matric',
+      academicYear: '2026-27', status: 'applied',
+    }))
+
+    const accountsDb = testEnv.authenticatedContext('accounts-rules-test', {
+      role: 'accounts', collegeId: COLLEGE_A,
+    }).firestore()
+    await assertSucceeds(updateDoc(doc(accountsDb, 'colleges', COLLEGE_A, 'scholarships', own.id), {
+      status: 'verified', statusAt_verified: new Date().toISOString(),
+      updatedAt: new Date().toISOString(), updatedBy: 'accounts-rules-test',
+    }))
+    await assertFails(updateDoc(doc(studentDb, 'colleges', COLLEGE_A, 'scholarships', own.id), {
+      status: 'verified',
+    }))
+  })
+})
