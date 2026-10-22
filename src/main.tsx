@@ -15,12 +15,17 @@ import ErrorBoundary from './shared/components/ErrorBoundary'
 import ConfigRequiredScreen from './components/ConfigRequiredScreen'
 import { firebaseConfigStatus } from './Firebase/config'
 import { installChunkReloadGuard } from './shared/pwa/chunkReload'
+import { initSentry } from './shared/utils/sentry'
 import './index.css'
 
 // Item 2.2: hashed build files are served `immutable`, so a browser holding an
 // old index.html (deep links keep Firebase's default caching) can request a
 // chunk the last deploy deleted. Reload once, then surface it.
 installChunkReloadGuard(window, window.sessionStorage)
+
+// Env-gated error tracking: no-op until VITE_SENTRY_DSN is set (the SDK
+// chunk is only fetched then). See docs/OPS_RUNBOOK.md.
+void initSentry()
 
 const queryClient = new QueryClient({
   defaultOptions: {

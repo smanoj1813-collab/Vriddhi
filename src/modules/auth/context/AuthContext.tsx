@@ -1,5 +1,6 @@
 import React, { createContext, useState, useEffect, useCallback, useContext, useMemo, useRef } from 'react';
 import { onAuthStateChanged, signInWithEmailAndPassword, signOut, User as FirebaseUser } from 'firebase/auth';
+import { setSentryUser } from '@/shared/utils/sentry';
 import { auth } from '@/Firebase/config';
 import { resolveIdentity, type FirebaseUserData, type UserRole } from './auth';
 import { roleHasPermission } from '../permissions';
@@ -155,6 +156,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
     return () => unsubscribe();
   }, [resolveUserData]);
+
+  // Error-reporting identity (ids only); no-op when Sentry is not configured.
+  useEffect(() => {
+    setSentryUser(user ? { uid: (user as { uid?: string }).uid || '', role: (user as { role?: string }).role, collegeId: user.collegeId } : null);
+  }, [user]);
 
   const login = useCallback(async (email: string, password: string) => {
     setIsLoading(true);

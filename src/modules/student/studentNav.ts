@@ -65,6 +65,7 @@ export const STUDENT_NAV_ITEMS: StudentNavItem[] = [
   { id: 'grades', label: 'Grades', path: '/student/grades', icon: TrendingUp, group: 'academics', translationKey: 'nav.grades', hint: 'Marks, credits and GPA' },
   { id: 'curriculum', label: 'Curriculum', path: '/student/curriculum', icon: BookMarked, group: 'academics', translationKey: 'nav.curriculum', hint: 'Your syllabus and how far it has been taught' },
   { id: 'timetable', label: 'Timetable', path: '/student/timetable', icon: Clock, group: 'academics', translationKey: 'nav.timetable', hint: 'Weekly class schedule with rooms and faculty' },
+  { id: 'course-registration', label: 'Course Registration', path: '/student/course-registration', icon: BookMarked, group: 'academics', hint: 'Choose this semester\'s elective subjects' },
   // Section hub: the phone's "Learning" tab.
   { id: 'learning', label: 'Learning', path: '/student/learning', icon: Sparkles, group: 'practice', hub: true },
   { id: 'materials', label: 'Materials', path: '/student/materials', icon: Library, group: 'practice', translationKey: 'nav.materials', hint: 'Notes, slides and study material shared by faculty' },
@@ -78,6 +79,8 @@ export const STUDENT_NAV_ITEMS: StudentNavItem[] = [
   { id: 'challans', label: 'My Challans', path: '/student/challans', icon: Receipt, group: 'money', hint: 'Fee challans issued to you' },
   { id: 'halltickets', label: 'Hall Tickets', path: '/student/hall-tickets', icon: Download, group: 'money', hint: 'Download your exam hall tickets' },
   { id: 'no-dues', label: 'No-Dues Clearance', path: '/student/no-dues', icon: FileText, group: 'money', hint: 'Submit and track requests to clear campus dues' },
+  { id: 'certificates', label: 'Certificates', path: '/student/certificates', icon: Award, group: 'money', hint: 'Bonafide, transfer, conduct and fee-structure certificates' },
+  { id: 'scholarships', label: 'Scholarships', path: '/student/scholarships', icon: GraduationCap, group: 'money', hint: 'SSP / NSP applications, verification and DBT status' },
   { id: 'id-card', label: 'My ID Card', path: '/student/id-card', icon: IdCard, group: 'account', hint: 'Digital student ID with library barcode — download as PDF' },
   { id: 'events', label: 'Events', path: '/student/events', icon: CalendarDays, group: 'account', translationKey: 'nav.events', hint: 'Campus events and activities' },
   { id: 'notifications', label: 'Notifications', path: '/student/notifications', icon: Bell, group: 'account', translationKey: 'nav.notifications', badge: 'notifications', hint: 'Announcements and alerts for you' },

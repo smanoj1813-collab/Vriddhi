@@ -133,6 +133,7 @@ const UserImport: React.FC = () => {
           dob: r.dob || undefined,
           gender: r.gender || undefined,
           address: r.address || undefined,
+          apaarId: r.apaarId || undefined,
         })),
       })
       setImportResult(result)

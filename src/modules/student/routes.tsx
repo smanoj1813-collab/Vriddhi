@@ -31,6 +31,9 @@ const StudentFacultyConnectPage = lazy(() => import('./pages/StudentFacultyConne
 const StudentJourneyPage = lazy(() => import('./pages/StudentJourneyPage'));
 const StudentCurriculumPage = lazy(() => import('./pages/StudentCurriculumPage'));
 const StudentHallTickets = lazy(() => import('./pages/StudentHallTickets'));
+const StudentCertificates = lazy(() => import('@/modules/office/pages/StudentCertificates'));
+const StudentScholarships = lazy(() => import('@/modules/office/pages/StudentScholarships'));
+const StudentCourseRegistration = lazy(() => import('@/modules/office/pages/StudentCourseRegistration'));
 const PWAInstallPage = lazy(() => import('./pages/PWAInstallPage'));
 // Phone section hubs — the "Academics" and "Learning" bottom-bar tabs.
 const StudentHubPage = lazy(() => import('./pages/StudentHubPage'));
@@ -92,6 +95,9 @@ export const studentRoutes: RouteObject[] = [
       { path: 'hall-tickets', element: <StudentHallTickets /> },
       { path: 'library', element: <MemberLibrary memberType="student" /> },
       { path: 'no-dues', element: <StudentNoDues /> },
+      { path: 'certificates', element: <StudentCertificates /> },
+      { path: 'scholarships', element: <StudentScholarships /> },
+      { path: 'course-registration', element: <StudentCourseRegistration /> },
       { path: 'events', element: <StudentEvents /> },
       { path: 'notifications', element: <StudentNotificationsPage /> },
       { path: 'settings', element: <StudentSettings /> },

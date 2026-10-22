@@ -73,6 +73,10 @@ export const PERMISSION_MATRIX: Readonly<Record<string, readonly UserRole[]>> = 
   'library.fines': ['accounts', 'operations', 'principal'],
   'vendors.manage': ['accounts', 'operations', 'principal'],
   'noDues.manage': ['accounts', 'operations', 'principal'],
+  'certificates.manage': ['accounts', 'operations', 'principal'],
+  'promotion.manage': ['admin', 'principal', 'hod'],
+  'scholarships.manage': ['accounts', 'operations', 'principal'],
+  'registration.manage': ['admin', 'principal', 'hod'],
 
   // ── Principal-only governance ─────────────────────────────────
   'access.settings': ['principal'],
@@ -168,6 +172,10 @@ export const ADMIN_ROUTE_PERMISSIONS: ReadonlyArray<{ path: string; permission: 
   { path: '/admin/purchase-requests', permission: 'procurement.request' },
   { path: '/admin/vendors', permission: 'vendors.manage' },
   { path: '/admin/no-dues', permission: 'noDues.manage' },
+  { path: '/admin/certificates', permission: 'certificates.manage' },
+  { path: '/admin/promotion', permission: 'promotion.manage' },
+  { path: '/admin/scholarships', permission: 'scholarships.manage' },
+  { path: '/admin/course-registration', permission: 'registration.manage' },
   // Principal
   // Everyone in the shell
   { path: '/admin/install-app', permission: null },

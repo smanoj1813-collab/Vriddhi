@@ -26,6 +26,7 @@ import CompanyPrepVisibilityPanel from '@/shared/components/prep/CompanyPrepVisi
 import CourseAssignmentPanel from '@/shared/components/courses/CourseAssignmentPanel'
 import ResumeAddonPanel from '@/shared/components/resume/ResumeAddonPanel'
 import CollegeBrandingUpload from '@/shared/components/CollegeBrandingUpload'
+import EmailSettingsCard from '../components/EmailSettingsCard'
 
 // Toggle Switch Component
 function ToggleSwitch({ checked, onChange, label }: { checked: boolean; onChange: (v: boolean) => void; label?: string }) {
@@ -789,6 +790,8 @@ export default function Settings() {
             <SettingsCard className="p-6 md:p-8">
               <SectionTitle>Notification Preferences</SectionTitle>
               <SectionDesc>Choose how and when you want to be notified. Preferences are saved to your admin profile and local storage.</SectionDesc>
+
+              <div className="mb-4"><EmailSettingsCard /></div>
 
               <div className="space-y-4">
                 <div className="flex items-center justify-between p-4 rounded-xl bg-slate-50 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-700/30">

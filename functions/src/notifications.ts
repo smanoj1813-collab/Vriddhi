@@ -28,6 +28,8 @@
 // ------------------------------------------------------------------
 
 import * as admin from 'firebase-admin'
+import { enqueueMail } from './mail'
+import * as logger from 'firebase-functions/logger'
 import { HttpsError, onCall } from 'firebase-functions/v2/https'
 
 // ─── Identity ───────────────────────────────────────────────────────────────
@@ -379,17 +381,15 @@ export const sendAnnouncement = onCall(
       .limit(2000)
       .get()
 
-    let recipientCount = 0
-    if (audience === 'all') {
-      recipientCount = roster.size
-    } else if (audience === 'specific') {
+    let recipientDocs = roster.docs
+    if (audience === 'specific') {
       const wanted = new Set(studentIds)
-      recipientCount = roster.docs.filter((doc) => wanted.has(doc.id)).length
-      if (recipientCount === 0) {
+      recipientDocs = roster.docs.filter((doc) => wanted.has(doc.id))
+      if (recipientDocs.length === 0) {
         throw new HttpsError('invalid-argument', 'None of the selected students belong to this college')
       }
-    } else {
-      recipientCount = roster.docs.filter((doc) =>
+    } else if (audience === 'cohort') {
+      recipientDocs = roster.docs.filter((doc) =>
         announcementTargetsStudent(
           { collegeId, audience, cohort, studentIds: [] },
           {
@@ -402,8 +402,9 @@ export const sendAnnouncement = onCall(
             semester: Number(doc.data().semester) || 0,
           }
         )
-      ).length
+      )
     }
+    const recipientCount = recipientDocs.length
 
     if (recipientCount === 0) {
       throw new HttpsError(
@@ -432,7 +433,30 @@ export const sendAnnouncement = onCall(
       createdAt: admin.firestore.FieldValue.serverTimestamp(),
     })
 
-    return { id: ref.id, recipientCount }
+    // Optional email fan-out (announcement screen's "also email" choice).
+    // Best-effort: mail problems must never fail the announcement itself.
+    let emailed = 0
+    if (input.email === true) {
+      try {
+        const collegeSnap = await db.collection('colleges').doc(collegeId).get()
+        const collegeName = String(collegeSnap.data()?.name || '')
+        for (let i = 0; i < recipientDocs.length; i += 50) {
+          const chunk = recipientDocs.slice(i, i + 50)
+          await Promise.all(chunk.map(async (doc) => {
+            const id = await enqueueMail({
+              collegeId, kind: 'announcement', studentId: doc.id, source: 'sendAnnouncement',
+              to: String(doc.data().email || ''),
+              vars: { title, message, collegeName, studentName: String(doc.data().name || 'Student'), appUrl: String(process.env.APP_URL || '') },
+            })
+            if (id) emailed += 1
+          }))
+        }
+      } catch (error) {
+        logger.error('[Announcements] email fan-out failed', { collegeId, error: String(error).slice(0, 200) })
+      }
+    }
+
+    return { id: ref.id, recipientCount, emailed }
   }
 )
 

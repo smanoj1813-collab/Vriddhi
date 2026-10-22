@@ -134,6 +134,16 @@ import {
 import { getMyAcademicJourney } from './studentJourney'
 import { getMyCurriculum } from './studentCurriculum'
 import { getMyStudentAcademicContext, getFacultyAcademicContext, getPaperAcademicContext } from './academic/contextCallables'
+// ─── Transactional email: queue, delivery trigger, status/test ───
+import { onMailQueued, getMailStatus, sendTestEmail, queueTransactionalEmail } from './mail'
+// ─── Semester promotion / year rollover ───
+import { previewPromotion, runPromotion } from './promotion'
+// ─── Elective (course) registration: window state + submission ───
+import { getMyRegistrationWindow, submitCourseRegistration } from './registration'
+// ─── Ops: scheduled Firestore backup export ───
+import { scheduledFirestoreExport } from './backup'
+// ─── APAAR / Academic Bank of Credits: ID mapping + NAD-ABC export ───
+import { setStudentApaarIds, exportNadAbcRecords } from './apaar'
 // ─── Admission Center: the funnel before a student record exists ───
 import {
   saveAdmissionApplication,
@@ -369,4 +379,15 @@ export {
   saveAdmissionConfig,
   rotateAdmissionIngestToken,
   disableAdmissionIntake,
+  setStudentApaarIds,
+  exportNadAbcRecords,
+  onMailQueued,
+  getMailStatus,
+  sendTestEmail,
+  queueTransactionalEmail,
+  previewPromotion,
+  runPromotion,
+  getMyRegistrationWindow,
+  submitCourseRegistration,
+  scheduledFirestoreExport,
 }

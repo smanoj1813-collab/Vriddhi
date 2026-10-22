@@ -40,6 +40,8 @@ interface StudentImportRow {
   gender?: string
   address?: string
   mentorId?: string
+  /** APAAR / ABC ID (12 digits) — validated per row when supplied. */
+  apaarId?: string
 }
 
 interface BulkStudentPayload {
@@ -377,6 +379,16 @@ export const bulkCreateStudentAccounts = onCall(
         results.push({ regNo, name, email, success: false, error: 'Invalid semester' })
         continue
       }
+      // APAAR/ABC ID is optional at admission, but a supplied value that is
+      // not 12 digits is a data-entry error that would silently block the
+      // student's NAD credit upload later — reject the row with the reason.
+      const apaarId = String(row.apaarId || '').replace(/\D/g, '')
+      if (apaarId && !/^\d{12}$/.test(apaarId)) {
+        failedCount++
+        errors.push({ row: rowNum, regNo, message: 'Invalid APAAR/ABC ID (must be 12 digits)' })
+        results.push({ regNo, name, email, success: false, error: 'Invalid APAAR/ABC ID (must be 12 digits)' })
+        continue
+      }
 
       // Skip duplicates
       if (existingEmails.has(email)) {
@@ -548,6 +560,7 @@ export const bulkCreateStudentAccounts = onCall(
           dob: row.dob || '',
           gender: row.gender || '',
           address: row.address || '',
+          ...(apaarId ? { apaarId } : {}),
           userId: userRecord.uid,
           avatar: '',
           createdAt: admin.firestore.FieldValue.serverTimestamp(),
