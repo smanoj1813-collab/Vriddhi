@@ -6,10 +6,11 @@
 // the whole app in main.tsx so any uncaught render error shows a recoverable
 // screen (reload / go home) instead of a white page.
 //
-// It intentionally does NOT log to any external service — wire that up in
-// componentDidCatch when an error-reporting provider is adopted.
+// Reporting goes through src/shared/utils/sentry.ts (env-gated: a no-op
+// until VITE_SENTRY_DSN is configured).
 
 import React, { Component, type ReactNode } from 'react';
+import { reportError } from '@/shared/utils/sentry';
 
 interface Props {
   children: ReactNode;
@@ -30,8 +31,8 @@ export default class ErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, info: React.ErrorInfo): void {
-    // Console only. Swap for Sentry/etc. when available.
     console.error('[ErrorBoundary] Uncaught render error:', error, info.componentStack);
+    reportError(error, { componentStack: info.componentStack });
   }
 
   private handleReload = () => {
