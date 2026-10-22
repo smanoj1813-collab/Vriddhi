@@ -46,6 +46,13 @@ describe('student timetable cohort matching', () => {
     }, student, profile), true)
   })
 
+  it('hides unpublished drafts and superseded schedule revisions, while preserving legacy rows', () => {
+    const live = { branch: 'BBA', batch: '2027', semester: 4, division: '', subject: 'Accounting' }
+    assert.equal(scheduleMatchesStudentDocument(live, student, profile), true)
+    assert.equal(scheduleMatchesStudentDocument({ ...live, approvalStatus: 'pending_hod' }, student, profile), false)
+    assert.equal(scheduleMatchesStudentDocument({ ...live, isActive: false }, student, profile), false)
+  })
+
   it('accepts section-only student and schedule scope and ignores display punctuation', () => {
     assert.equal(scheduleMatchesStudentDocument({
       branch: 'B.B.A', batch: '2027', semester: 4, division: '', section: 'A,B', subject: 'Accounting',

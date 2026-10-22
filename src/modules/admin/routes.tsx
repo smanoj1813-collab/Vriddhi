@@ -22,8 +22,10 @@ const AccountsDesk = lazy(() => import('@/modules/office/pages/AccountsDesk'));
 const OperationsDesk = lazy(() => import('@/modules/office/pages/OperationsDesk'));
 const AIAgentPage = lazy(() => import('./pages/AIAgentPage'));
 const AIQuestionsPage = lazy(() => import('./pages/AIQuestionsPage'));
-const AdminClassSchedule = lazy(() => import('./pages/AdminClassSchedule'));
 const AdminCurriculum = lazy(() => import('./pages/AdminCurriculum'));
+const AcademicWorkflowPage = lazy(() => import('./pages/AcademicWorkflowPage'));
+const CurriculumApprovalPage = lazy(() => import('./pages/CurriculumApprovalPage'));
+const WorkflowInboxPage = lazy(() => import('./pages/WorkflowInboxPage'));
 const AdmissionCenter = lazy(() => import('./pages/AdmissionCenter'));
 const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
 const AdminFeeManagement = lazy(() => import('./pages/AdminFeeManagement'));
@@ -181,8 +183,11 @@ export const adminRoutes: RouteObject[] = [
       { path: 'pyq-papers', element: questionWorkflowOnly(<LazyPage><QuestionBank initialTab="pyq" /></LazyPage>) },
       { path: 'paper-review', element: questionWorkflowOnly(<LazyPage><PaperReview /></LazyPage>) },
       { path: 'paper-generator', element: questionWorkflowOnly(<LazyPage><PaperGeneratorAdmin /></LazyPage>) },
-      { path: 'class-schedule', element: <LazyPage><AdminClassSchedule /></LazyPage> },
+      { path: 'class-schedule', element: <LazyPage><AcademicWorkflowPage /></LazyPage> },
       { path: 'curriculum', element: <LazyPage><AdminCurriculum /></LazyPage> },
+      { path: 'curriculum-approvals', element: <LazyPage><CurriculumApprovalPage /></LazyPage> },
+      { path: 'schedule-workflow', element: <LazyPage><AcademicWorkflowPage /></LazyPage> },
+      { path: 'workflow-inbox', element: <LazyPage><WorkflowInboxPage /></LazyPage> },
       { path: 'curriculum-progress', element: <LazyPage><CurriculumProgress /></LazyPage> },
       { path: 'analytics', element: <LazyPage><Analytics /></LazyPage> },
       { path: 'assignment-analytics', element: <LazyPage><AssignmentAnalytics /></LazyPage> },

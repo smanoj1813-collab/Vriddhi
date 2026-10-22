@@ -163,6 +163,7 @@ const navItems: NavItem[] = [
   { label: "Import Students", path: "/superadmin/students/import", icon: <UploadFile fontSize="small" />, roles: ["superadmin"], section: "User Management" },
   { label: "Regenerate Credentials", path: "/superadmin/credentials/regenerate", icon: <BadgeIcon fontSize="small" />, roles: ["superadmin"], section: "User Management" },
   { label: "Curriculum", path: "/superadmin/curriculum", icon: <School fontSize="small" />, roles: ["superadmin"], section: "Academic" },
+  { label: "Workflow Inbox", path: "/admin/workflow-inbox", icon: <NotificationsNone fontSize="small" />, roles: ["superadmin"], section: "Academic" },
   // Prep Content Studio gets a first-class superadmin entry: it used to be
   // reachable only through /admin/settings → "AI Content & Cost" tab.
   { label: "Prep Content Studio", path: "/superadmin/prep-studio", icon: <AutoAwesome fontSize="small" />, roles: ["superadmin"], section: "Academic" },
@@ -192,8 +193,10 @@ const navItems: NavItem[] = [
   { label: "Paper Review", path: "/admin/paper-review", icon: <Description fontSize="small" />, roles: ["admin", "principal"], section: "Assessment Tools" },
   { label: "AI Question Generator", path: "/admin/ai-questions", icon: <AutoAwesome fontSize="small" />, roles: ["admin", "principal"], section: "Assessment Tools" },
   { label: "Paper Generator", path: "/admin/paper-generator", icon: <Description fontSize="small" />, roles: ["admin", "principal"], section: "Assessment Tools" },
-  { label: "Class Schedule", path: "/admin/class-schedule", icon: <CalendarToday fontSize="small" />, roles: ["admin", "principal"], section: "Operations" },
-  { label: "Curriculum", path: "/admin/curriculum", icon: <School fontSize="small" />, roles: ["admin", "principal"], section: "Operations" },
+  { label: "Timetable Workflow", path: "/admin/schedule-workflow", icon: <CalendarToday fontSize="small" />, roles: ["operations", "principal"], section: "Academic Workflow" },
+  { label: "Curriculum Approvals", path: "/admin/curriculum-approvals", icon: <CheckCircle fontSize="small" />, roles: ["principal"], section: "Academic Workflow" },
+  { label: "Workflow Inbox", path: "/admin/workflow-inbox", icon: <NotificationsNone fontSize="small" />, roles: ["principal", "operations"], section: "Academic Workflow" },
+  { label: "Curriculum Mapping", path: "/admin/curriculum", icon: <School fontSize="small" />, roles: ["operations"], section: "Academic Workflow" },
   { label: "Admission Center", path: "/admin/admissions", icon: <People fontSize="small" />, roles: ["admin", "principal"], section: "Students" },
   { label: "Fee Management", path: "/admin/fee-management", icon: <AttachMoney fontSize="small" />, roles: ["principal"], section: "Finance" },
   { label: "Faculty Payroll", path: "/admin/payroll", icon: <AccountBalance fontSize="small" />, roles: ["principal"], section: "Finance" },
@@ -216,8 +219,8 @@ const navItems: NavItem[] = [
   { label: "Paper Review", path: "/admin/paper-review", icon: <Description fontSize="small" />, roles: ["hod"], section: "Assessment Tools" },
   { label: "AI Question Generator", path: "/admin/ai-questions", icon: <AutoAwesome fontSize="small" />, roles: ["hod"], section: "Assessment Tools" },
   { label: "Paper Generator", path: "/admin/paper-generator", icon: <Description fontSize="small" />, roles: ["hod"], section: "Assessment Tools" },
-  { label: "Class Schedule", path: "/admin/class-schedule", icon: <CalendarToday fontSize="small" />, roles: ["hod"], section: "Operations" },
-  { label: "Curriculum", path: "/admin/curriculum", icon: <School fontSize="small" />, roles: ["hod"], section: "Operations" },
+  { label: "Timetable Workflow", path: "/admin/schedule-workflow", icon: <CalendarToday fontSize="small" />, roles: ["hod"], section: "Academic Workflow" },
+  { label: "Workflow Inbox", path: "/admin/workflow-inbox", icon: <NotificationsNone fontSize="small" />, roles: ["hod"], section: "Academic Workflow" },
   { label: "Analytics", path: "/admin/analytics", icon: <BarChartIcon fontSize="small" />, roles: ["hod"], section: "Insights" },
   { label: "Assignment Analytics", path: "/admin/assignment-analytics", icon: <Assignment fontSize="small" />, roles: ["hod"], section: "Insights" },
   { label: "Journey", path: "/admin/journey", icon: <TrendingUp fontSize="small" />, roles: ["hod"], section: "Insights" },
@@ -375,8 +378,9 @@ const principalNav: SidebarEntry[] = [
     label: "Academics",
     icon: <School fontSize="small" />,
     children: [
-      { label: "Curriculum", path: "/admin/curriculum", icon: <School fontSize="small" /> },
-      { label: "Class Schedule", path: "/admin/class-schedule", icon: <CalendarToday fontSize="small" /> },
+      { label: "Curriculum Approvals", path: "/admin/curriculum-approvals", icon: <CheckCircle fontSize="small" /> },
+      { label: "Timetable Workflow", path: "/admin/schedule-workflow", icon: <CalendarToday fontSize="small" /> },
+      { label: "Workflow Inbox", path: "/admin/workflow-inbox", icon: <NotificationsNone fontSize="small" /> },
       { label: "Academic Calendar", path: "/admin/academic-calendar", icon: <CalendarToday fontSize="small" /> },
     ],
   },
@@ -494,8 +498,8 @@ const hodNav: SidebarEntry[] = [
     label: "Academics",
     icon: <School fontSize="small" />,
     children: [
-      { label: "Curriculum", path: "/admin/curriculum", icon: <School fontSize="small" /> },
-      { label: "Class Schedule", path: "/admin/class-schedule", icon: <CalendarToday fontSize="small" /> },
+      { label: "Timetable Workflow", path: "/admin/schedule-workflow", icon: <CalendarToday fontSize="small" /> },
+      { label: "Workflow Inbox", path: "/admin/workflow-inbox", icon: <NotificationsNone fontSize="small" /> },
       { label: "Academic Calendar", path: "/admin/academic-calendar", icon: <CalendarToday fontSize="small" /> },
       { label: "Scheme Packs", path: "/admin/scheme-packs", icon: <AccountBalance fontSize="small" /> },
     ],
@@ -587,6 +591,9 @@ const accountsNav: SidebarEntry[] = [
 /** Operations team — library, inventory, stores and purchasing. */
 const operationsNav: SidebarEntry[] = [
   { kind: "link", label: "Operations Desk", path: "/admin/operations", icon: <Dashboard fontSize="small" /> },
+  { kind: "link", label: "Timetable Workflow", path: "/admin/schedule-workflow", icon: <CalendarToday fontSize="small" /> },
+  { kind: "link", label: "Curriculum Mapping", path: "/admin/curriculum", icon: <School fontSize="small" /> },
+  { kind: "link", label: "Workflow Inbox", path: "/admin/workflow-inbox", icon: <NotificationsNone fontSize="small" /> },
   {
     kind: "group",
     label: "Library",
@@ -662,7 +669,6 @@ const employeeNav: SidebarEntry[] = [
     label: "Scheduling",
     icon: <CalendarToday fontSize="small" />,
     children: [
-      { label: "Class Schedule", path: "/admin/class-schedule", icon: <CalendarToday fontSize="small" /> },
       { label: "My Weekly Schedule", path: "/faculty/schedule", icon: <CalendarToday fontSize="small" /> },
       { label: "Attendance", path: "/admin/attendance", icon: <CheckCircle fontSize="small" /> },
       { label: "Faculty Attendance", path: "/admin/faculty-attendance", icon: <BadgeIcon fontSize="small" /> },
@@ -674,7 +680,6 @@ const employeeNav: SidebarEntry[] = [
     label: "Curriculum",
     icon: <School fontSize="small" />,
     children: [
-      { label: "Curriculum", path: "/admin/curriculum", icon: <School fontSize="small" /> },
       { label: "Curriculum Progress", path: "/admin/curriculum-progress", icon: <School fontSize="small" /> },
       { label: "My Curriculum", path: "/faculty/curriculum", icon: <School fontSize="small" /> },
       { label: "Academic Calendar", path: "/admin/academic-calendar", icon: <CalendarToday fontSize="small" /> },
@@ -764,15 +769,15 @@ const mobileTabsByRole: Record<string, MobileTab[]> = {
     { label: "Dashboard", path: "/employee/dashboard", icon: <Dashboard fontSize="small" /> },
     {
       label: "Scheduling",
-      path: "/admin/class-schedule",
+      path: "/faculty/schedule",
       icon: <CalendarToday fontSize="small" />,
-      aliases: ["/faculty/schedule", "/admin/attendance"],
+      aliases: ["/admin/attendance"],
     },
     {
       label: "Curriculum",
-      path: "/admin/curriculum",
+      path: "/faculty/curriculum",
       icon: <School fontSize="small" />,
-      aliases: ["/admin/curriculum-progress", "/faculty/curriculum"],
+      aliases: ["/admin/curriculum-progress"],
     },
     {
       label: "Assessments",

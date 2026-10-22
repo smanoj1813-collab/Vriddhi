@@ -39,6 +39,19 @@ test('operations: library/inventory, shared fines, no finance', () => {
   assert.equal(canAccessAdminPath('operations', '/admin/students'), false)
 })
 
+test('academic workflow access is role-scoped to each step', () => {
+  assert.equal(canAccessAdminPath('operations', '/admin/schedule-workflow'), true)
+  assert.equal(canAccessAdminPath('hod', '/admin/schedule-workflow'), true)
+  assert.equal(canAccessAdminPath('principal', '/admin/schedule-workflow'), true)
+  assert.equal(canAccessAdminPath('operations', '/admin/curriculum'), true)
+  assert.equal(canAccessAdminPath('principal', '/admin/curriculum-approvals'), true)
+  assert.equal(canAccessAdminPath('operations', '/admin/curriculum-approvals'), false)
+  assert.equal(canAccessAdminPath('principal', '/admin/curriculum'), false)
+  assert.equal(canAccessAdminPath('hod', '/admin/curriculum'), false)
+  assert.equal(canAccessAdminPath('admin', '/admin/schedule-workflow'), false)
+  assert.equal(canAccessAdminPath('operations', '/admin/attendance'), false)
+})
+
 test('payroll: accounts manages it and principal retains approval access', () => {
   assert.equal(canAccessAdminPath('principal', '/admin/payroll'), true)
   assert.equal(canAccessAdminPath('accounts', '/admin/payroll'), true)
@@ -52,10 +65,9 @@ test('payroll: accounts manages it and principal retains approval access', () =>
 })
 
 test('vriddhi employees get the academic surface only', () => {
-  // Scheduling, curriculum, assessments, papers, grade records, reports.
+  // Academic teaching tools, papers, grade records, and reports. Timetable
+  // workflow and curriculum mapping belong to Operations / Principal / HOD.
   for (const p of [
-    '/admin/class-schedule',
-    '/admin/curriculum',
     '/admin/curriculum-progress',
     '/admin/academic-calendar',
     '/admin/assessments',
@@ -75,6 +87,10 @@ test('vriddhi employees get the academic surface only', () => {
   // of the default /admin rule.
   for (const p of [
     '/admin/admissions',
+    '/admin/class-schedule',
+    '/admin/curriculum',
+    '/admin/schedule-workflow',
+    '/admin/curriculum-approvals',
     '/admin/settings',
     '/admin/onboarding',
     '/admin/exam-management',

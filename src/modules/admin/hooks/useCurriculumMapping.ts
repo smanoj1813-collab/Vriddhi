@@ -105,7 +105,11 @@ export function useCurriculumMapping(collegeId: string | undefined) {
     setLoading(true);
     try {
       const result = await listCurriculumDocs({ collegeId, status: 'active', limit: 100 });
-      let items = result.items as unknown as CurriculumDoc[];
+      // Preserve pre-workflow assignments (no approvalStatus); only newly
+      // assigned curriculum waits for explicit Principal approval.
+      let items = (result.items as unknown as CurriculumDoc[]).filter((item: any) =>
+        !item.approvalStatus || item.approvalStatus === 'approved'
+      );
       if (items.length === 0) {
         // Fallback: the college's mappings already name the curriculum docs
         // they came from. If the list query returned nothing (tenancy field
@@ -114,7 +118,7 @@ export function useCurriculumMapping(collegeId: string | undefined) {
         const mapped = await listMappings({ collegeId, status: 'active' });
         const ids = [...new Set(mapped.map(m => m.curriculumId).filter(Boolean))];
         const docs = await Promise.all(ids.map(id => getCurriculumById(id)));
-        items = docs.filter((d) => !!d) as unknown as CurriculumDoc[];
+        items = docs.filter((d: any) => !!d && (!d.approvalStatus || d.approvalStatus === 'approved')) as unknown as CurriculumDoc[];
         if (ids.length > 0 && items.length === 0) {
           console.warn('[useCurriculumMapping] mappings reference curriculum docs that could not be read', ids);
         }

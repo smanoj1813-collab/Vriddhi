@@ -25,6 +25,7 @@
 // ═══════════════════════════════════════════════════════════════════════
 
 import React, { useState, useMemo, useCallback, useEffect } from 'react'
+import { Link } from 'react-router-dom'
 import {
   Box,
   Typography,
@@ -127,6 +128,8 @@ const EMPTY_FORM: MappingFormData = {
 
 const AdminCurriculum: React.FC = () => {
   const { user } = useAuth()
+  const isOperations = user?.role === 'operations'
+  const hideDirectScheduleControls = isOperations || user?.role === 'superadmin'
   const queryClient = useQueryClient()
   const collegeId = user?.collegeId || ''
 
@@ -776,34 +779,36 @@ const AdminCurriculum: React.FC = () => {
                           {slots.map(slot => (
                             <Box key={slot.id} sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                               <Chip size="small" variant="outlined" label={formatSlot(slot)} />
-                              <Tooltip title="Create the dated classes for the next term (needed for attendance). Safe to run twice.">
-                                <span>
-                                  <IconButton
-                                    size="small"
-                                    onClick={() => handleCreateSessions(slot)}
-                                    disabled={busySlotId === slot.id}
-                                  >
-                                    <SessionsIcon fontSize="inherit" />
+                              {!hideDirectScheduleControls && <>
+                                <Tooltip title="Create the dated classes for the next term (needed for attendance). Safe to run twice.">
+                                  <span>
+                                    <IconButton
+                                      size="small"
+                                      onClick={() => handleCreateSessions(slot)}
+                                      disabled={busySlotId === slot.id}
+                                    >
+                                      <SessionsIcon fontSize="inherit" />
+                                    </IconButton>
+                                  </span>
+                                </Tooltip>
+                                <Tooltip title="Reschedule — move this slot, or just one class">
+                                  <IconButton size="small" onClick={() => setRescheduleSlot(slot)}>
+                                    <RescheduleIcon fontSize="inherit" />
                                   </IconButton>
-                                </span>
-                              </Tooltip>
-                              <Tooltip title="Reschedule — move this slot, or just one class">
-                                <IconButton size="small" onClick={() => setRescheduleSlot(slot)}>
-                                  <RescheduleIcon fontSize="inherit" />
-                                </IconButton>
-                              </Tooltip>
-                              <Tooltip title="Switch the slot off and cancel its future classes">
-                                <span>
-                                  <IconButton
-                                    size="small"
-                                    color="error"
-                                    onClick={() => handleCancelSlot(slot)}
-                                    disabled={busySlotId === slot.id}
-                                  >
-                                    <CancelIcon fontSize="inherit" />
-                                  </IconButton>
-                                </span>
-                              </Tooltip>
+                                </Tooltip>
+                                <Tooltip title="Switch the slot off and cancel its future classes">
+                                  <span>
+                                    <IconButton
+                                      size="small"
+                                      color="error"
+                                      onClick={() => handleCancelSlot(slot)}
+                                      disabled={busySlotId === slot.id}
+                                    >
+                                      <CancelIcon fontSize="inherit" />
+                                    </IconButton>
+                                  </span>
+                                </Tooltip>
+                              </>}
                             </Box>
                           ))}
                         </Stack>
@@ -821,11 +826,19 @@ const AdminCurriculum: React.FC = () => {
                           {row.mapping ? 'Reassign' : 'Assign'}
                         </Button>
                       </Tooltip>
-                      <Tooltip title={slots.length > 0 ? 'Add another weekly slot' : 'Put this subject on the timetable'}>
-                        <Button size="small" variant="outlined" startIcon={<AddIcon />} onClick={() => handleOpenSchedule(row)} sx={{ ml: 1 }}>
-                          {slots.length > 0 ? 'Add slot' : 'Schedule'}
-                        </Button>
-                      </Tooltip>
+                      {isOperations ? (
+                        <Tooltip title="Prepare this subject in the HOD-reviewed timetable workflow">
+                          <Button component={Link} to="/admin/schedule-workflow" size="small" variant="outlined" startIcon={<AddIcon />} sx={{ ml: 1 }}>
+                            Prepare draft
+                          </Button>
+                        </Tooltip>
+                      ) : user?.role !== 'superadmin' ? (
+                        <Tooltip title={slots.length > 0 ? 'Add another weekly slot' : 'Put this subject on the timetable'}>
+                          <Button size="small" variant="outlined" startIcon={<AddIcon />} onClick={() => handleOpenSchedule(row)} sx={{ ml: 1 }}>
+                            {slots.length > 0 ? 'Add slot' : 'Schedule'}
+                          </Button>
+                        </Tooltip>
+                      ) : null}
                       {row.mapping && (
                         <Tooltip title="Remove this faculty assignment">
                           <IconButton size="small" color="error" onClick={() => handleDeleteMapping(row.mapping!.id)} sx={{ ml: 0.5 }}>

@@ -2421,3 +2421,82 @@ describe('student office applications', () => {
     }))
   })
 })
+
+// Academic workflow access: drafts remain private to Operations and the
+// specifically assigned programme HOD; only server callables may publish.
+describe('academic workflow schedule approvals', () => {
+  const operations = () => testEnv.authenticatedContext('ops-a', { role: 'operations', collegeId: COLLEGE_A })
+  const hod = () => testEnv.authenticatedContext('hod-a', { role: 'hod', collegeId: COLLEGE_A })
+  const otherHod = () => testEnv.authenticatedContext('hod-b', { role: 'hod', collegeId: COLLEGE_A })
+  const principal = () => testEnv.authenticatedContext('principal-a', { role: 'principal', collegeId: COLLEGE_A })
+
+  beforeEach(async () => {
+    await testEnv.withSecurityRulesDisabled(async (context) => {
+      const db = context.firestore()
+      await Promise.all([
+        setDoc(doc(db, 'weeklySchedules', 'workflow-live'), {
+          collegeId: COLLEGE_A, subject: 'Accounting', branch: 'B.Com', batch: '2026',
+          semester: 1, dayOfWeek: 'monday', startTime: '09:00', endTime: '10:00',
+        }),
+        setDoc(doc(db, 'classSessions', 'workflow-session'), {
+          collegeId: COLLEGE_A, subject: 'Accounting', branch: 'B.Com', batch: '2026',
+          semester: 1, date: '2026-10-25', status: 'scheduled', startTime: '09:00', endTime: '10:00',
+          presentCount: 0, attendanceCount: 0,
+        }),
+        setDoc(doc(db, 'scheduleProposals', 'proposal-hod-a'), {
+          collegeId: COLLEGE_A, reviewerUid: 'hod-a', status: 'pending_hod',
+          slot: { subject: 'Accounting', branch: 'B.Com' },
+        }),
+        setDoc(doc(db, 'scheduleProposals', 'proposal-hod-b'), {
+          collegeId: COLLEGE_A, reviewerUid: 'hod-b', status: 'pending_hod',
+          slot: { subject: 'Marketing', branch: 'BBA' },
+        }),
+        setDoc(doc(db, 'scheduleProposals', 'proposal-other-college'), {
+          collegeId: COLLEGE_B, reviewerUid: 'hod-a', status: 'pending_hod',
+        }),
+        setDoc(doc(db, 'workflowTasks', 'task-ops'), {
+          collegeId: COLLEGE_A, recipientUid: 'ops-a', title: 'Map faculty', read: false,
+        }),
+        setDoc(doc(db, 'workflowTasks', 'task-other'), {
+          collegeId: COLLEGE_A, recipientUid: 'ops-b', title: 'Private task', read: false,
+        }),
+      ])
+    })
+  })
+
+  it('keeps published legacy schedule readable but blocks direct staff edits', async () => {
+    const opsDb = operations().firestore()
+    await assertSucceeds(getDoc(doc(opsDb, 'weeklySchedules', 'workflow-live')))
+    await assertFails(updateDoc(doc(opsDb, 'weeklySchedules', 'workflow-live'), { subject: 'Changed without approval' }))
+    const principalDb = principal().firestore()
+    await assertFails(setDoc(doc(principalDb, 'weeklySchedules', 'principal-created'), {
+      collegeId: COLLEGE_A, subject: 'Unauthorized',
+    }))
+    await assertFails(updateDoc(doc(principalDb, 'classSessions', 'workflow-session'), { startTime: '11:00' }))
+    await assertSucceeds(updateDoc(doc(principalDb, 'classSessions', 'workflow-session'), { presentCount: 1 }))
+  })
+
+  it('lets Operations see college drafts, while HOD reads only assigned proposals', async () => {
+    const opsDb = operations().firestore()
+    await assertSucceeds(getDocs(query(collection(opsDb, 'scheduleProposals'), where('collegeId', '==', COLLEGE_A))))
+    const hodDb = hod().firestore()
+    const own = await assertSucceeds(getDocs(query(
+      collection(hodDb, 'scheduleProposals'),
+      where('collegeId', '==', COLLEGE_A), where('reviewerUid', '==', 'hod-a'),
+    )))
+    assert.equal(own.size, 1)
+    await assertFails(getDoc(doc(hodDb, 'scheduleProposals', 'proposal-hod-b')))
+    await assertFails(getDocs(query(collection(principal().firestore(), 'scheduleProposals'), where('collegeId', '==', COLLEGE_A))))
+  })
+
+  it('limits in-app workflow task reads and changes to the recipient', async () => {
+    const opsDb = operations().firestore()
+    const own = await assertSucceeds(getDocs(query(
+      collection(opsDb, 'workflowTasks'), where('recipientUid', '==', 'ops-a'), where('collegeId', '==', COLLEGE_A),
+    )))
+    assert.equal(own.size, 1)
+    await assertFails(getDoc(doc(opsDb, 'workflowTasks', 'task-other')))
+    await assertSucceeds(updateDoc(doc(opsDb, 'workflowTasks', 'task-ops'), { read: true }))
+    await assertFails(updateDoc(doc(opsDb, 'workflowTasks', 'task-ops'), { title: 'Forged task' }))
+  })
+})

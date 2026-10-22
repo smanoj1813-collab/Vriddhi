@@ -19,6 +19,9 @@ export function scheduleMatchesStudentDocument(
   student: Record<string, unknown>,
   profile: StudentScheduleCohort,
 ): boolean {
+  // Grandfather legacy rows (no approvalStatus), but never surface pending
+  // drafts or a superseded timetable version to a student.
+  if (schedule.isActive === false || schedule.approvalStatus === 'pending_hod') return false;
   const criteria: CohortCriteria = {
     collegeId: String(schedule.collegeId ?? profile.collegeId),
     branch: String(schedule.branch ?? ''),

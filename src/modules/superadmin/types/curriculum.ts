@@ -172,6 +172,9 @@ export interface CurriculumDoc {
   updatedAt?: string | null;
   assignedBy: string;
   assignedAt: string;
+  /** Principal approval state; absent means a grandfathered live assignment. */
+  approvalStatus?: 'pending_principal' | 'approved' | 'returned';
+  approvalNote?: string;
 }
 
 // ═══════════════════════════════════════════════════════════════════════

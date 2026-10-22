@@ -142,6 +142,7 @@ import { previewPromotion, runPromotion } from './promotion'
 import { getMyRegistrationWindow, submitCourseRegistration } from './registration'
 // ─── Ops: scheduled Firestore backup export ───
 import { scheduledFirestoreExport } from './backup'
+import { notifyCurriculumAssignment, reviewCurriculumAssignment, submitScheduleProposal, reviewScheduleProposal } from './academicWorkflow'
 // ─── APAAR / Academic Bank of Credits: ID mapping + NAD-ABC export ───
 import { setStudentApaarIds, exportNadAbcRecords } from './apaar'
 // ─── Admission Center: the funnel before a student record exists ───
@@ -356,6 +357,10 @@ export {
   autoGenerateWeeklySchedule,
   saveCalendarEvent,
   deleteCalendarEvent,
+  notifyCurriculumAssignment,
+  reviewCurriculumAssignment,
+  submitScheduleProposal,
+  reviewScheduleProposal,
   getAssignmentAnalytics,
   sendAnnouncement,
   listCollegeAnnouncements,
