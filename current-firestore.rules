@@ -722,10 +722,13 @@ service cloud.firestore {
       // and payment processing; the principal reads submitted snapshots and may
       // approve or request changes, but cannot edit or pay them.
       function isPayrollAccounts(cid) {
-        return isSuperadmin() || (collegeId() == cid && role() == 'accounts');
+        // Check the common tenant/role path first. This avoids evaluating the
+        // superadmin document fallback for ordinary accounts users and keeps
+        // complex payroll writes below Firestore's per-request expression cap.
+        return (collegeId() == cid && role() == 'accounts') || isSuperadmin();
       }
       function isPayrollApprover(cid) {
-        return isSuperadmin() || (collegeId() == cid && role() == 'principal');
+        return (collegeId() == cid && role() == 'principal') || isSuperadmin();
       }
       function isGuestBillManager(cid) {
         return isFinance(cid);
@@ -1243,6 +1246,17 @@ service cloud.firestore {
         return isSignedIn() && role() in ['admin', 'principal', 'hod'] && sameCollege(data);
       }
 
+      // Fast claim-only tenant predicate for the hot create/update paths. The
+      // generic tenantWrite() expands through several shared role helpers and
+      // can exceed Firestore's expression budget when combined with the
+      // attendance ownership and immutable-owner checks.
+      function attendanceTenant(data) {
+        return isSignedIn() && !employeeSuspended()
+          && claimCollege() != null && claimCollege() != ''
+          && 'collegeId' in data && data.collegeId == claimCollege()
+          && claimedRole() in ['faculty', 'admin', 'principal', 'hod'];
+      }
+
       allow get: if isSuperadmin() || isOwnRecord(resource.data) || isAttendanceManager(resource.data);
 
       // A list is authorised per candidate document, so a faculty member's own
@@ -1254,20 +1268,22 @@ service cloud.firestore {
       // A faculty member writes only their own document, in their own college;
       // management may correct a record. `claimedRole()` is the verified claim,
       // so a forged role field on a profile document cannot widen this.
-      allow create: if isSuperadmin()
-        || (tenantWrite(request.resource.data)
-          && (isOwnRecord(request.resource.data)
-            || claimedRole() in ['admin', 'principal', 'hod']));
+      allow create: if (attendanceTenant(request.resource.data)
+          && ((claimedRole() == 'faculty' && isOwnRecord(request.resource.data))
+            || claimedRole() in ['admin', 'principal', 'hod']))
+        || isSuperadmin();
 
       // `facultyId` is immutable on update, for management too. Without this a
       // teacher could edit their own day and re-parent it onto a colleague's
       // uid, silently moving attendance between people — the same hole the
       // facultyTopics rules close.
-      allow update: if isSuperadmin()
-        || (tenantWrite(resource.data) && tenantWrite(request.resource.data)
+      allow update: if (attendanceTenant(resource.data)
+          && attendanceTenant(request.resource.data)
           && 'facultyId' in resource.data
           && request.resource.data.facultyId == resource.data.facultyId
-          && (isOwnRecord(resource.data) || claimedRole() in ['admin', 'principal', 'hod']));
+          && ((claimedRole() == 'faculty' && isOwnRecord(resource.data))
+            || claimedRole() in ['admin', 'principal', 'hod']))
+        || isSuperadmin();
 
       // Deleting a day of payroll-relevant history is a management action only.
       allow delete: if isSuperadmin()
@@ -1854,7 +1870,8 @@ service cloud.firestore {
     // is the human gate the "AI-generated, reviewed" label promises, so a client
     // must never be able to flip the status field itself.
     match /prep_paper_answers/{answerId} {
-      allow read: if isSignedIn() && ((resource.data.status == 'published' && resource.data.rejected != true) || isSuperadmin());
+      allow read: if isSignedIn() && ((resource.data.status == 'published'
+        && (!('rejected' in resource.data) || resource.data.rejected != true)) || isSuperadmin());
       allow write: if false;
     }
 

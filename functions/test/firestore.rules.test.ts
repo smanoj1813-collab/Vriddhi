@@ -1331,6 +1331,13 @@ describe('prep model answers and MCQ sets (items 3.4 / 3.5)', () => {
         status: 'draft',
         answerMd: 'Draft that no student may see.',
       })
+      await setDoc(doc(db, 'prep_paper_answers', 'paper-1__A__3'), {
+        paperId: 'paper-1',
+        qid: 'A__3',
+        status: 'published',
+        rejected: true,
+        answerMd: 'Rejected answer that must stay private.',
+      })
       await setDoc(doc(db, 'prep_mcq_sets', 'paper-1__A__1'), {
         paperId: 'paper-1',
         status: 'published',
@@ -1348,6 +1355,7 @@ describe('prep model answers and MCQ sets (items 3.4 / 3.5)', () => {
     const db = studentContext().firestore()
     await assertSucceeds(getDoc(doc(db, 'prep_paper_answers', 'paper-1__A__1')))
     await assertFails(getDoc(doc(db, 'prep_paper_answers', 'paper-1__A__2')))
+    await assertFails(getDoc(doc(db, 'prep_paper_answers', 'paper-1__A__3')))
   })
 
   it('lets a superadmin read the draft so the review queue can be shown', async () => {
