@@ -1399,6 +1399,9 @@ export const autoGenerateWeeklySchedule = onCall(
     if (!uid) throw new HttpsError('unauthenticated', 'Authentication is required')
     const staff = await resolveSchedulingStaff(uid, request.auth?.token || {})
     const payload = validateAutoSchedulePayload(request.data, staff.role, staff.collegeId)
+    if (!payload.dryRun) {
+      throw new HttpsError('failed-precondition', 'Generated timetable placements must be submitted as schedule proposals for Operations and programme HOD review before publication.')
+    }
 
     const db = admin.firestore()
 
@@ -1408,6 +1411,9 @@ export const autoGenerateWeeklySchedule = onCall(
     const curriculum = curSnap.data() as Record<string, unknown>
     if (String(curriculum.collegeId ?? '') !== payload.collegeId) {
       throw new HttpsError('permission-denied', 'This curriculum belongs to another college')
+    }
+    if (curriculum.approvalStatus && curriculum.approvalStatus !== 'approved') {
+      throw new HttpsError('failed-precondition', 'Operations can work from this curriculum after Principal approval.')
     }
     const branch = String(curriculum.branch ?? '').trim()
     const semester = Number(curriculum.semester ?? 0) || 0

@@ -593,6 +593,9 @@ export const bulkImportWeeklySchedules = onCall(
     if (!uid) throw new HttpsError('unauthenticated', 'Authentication is required')
     const staff = await resolveSchedulingStaff(uid, request.auth?.token || {})
     const payload = validateScheduleImportPayload(request.data, staff.role, staff.collegeId)
+    if (!payload.dryRun) {
+      throw new HttpsError('failed-precondition', 'Imported timetable rows must be submitted as schedule proposals for Operations and programme HOD review before publication.')
+    }
 
     const db = admin.firestore()
     const [schedulesSnap, facultySnap, mappingsSnap] = await Promise.all([

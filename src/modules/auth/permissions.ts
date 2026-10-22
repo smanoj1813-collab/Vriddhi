@@ -62,6 +62,13 @@ export const PERMISSION_MATRIX: Readonly<Record<string, readonly UserRole[]>> = 
 
   // ── Operations (library, inventory, stores) ───────────────────
   'operations.desk': ['operations', 'principal'],
+  'academic.schedule.workflow': ['operations', 'hod', 'principal'],
+  'academic.schedule.prepare': ['operations'],
+  'academic.schedule.review': ['hod'],
+  'academic.schedule.view': ['principal'],
+  'academic.curriculum.map': ['operations'],
+  'academic.curriculum.approve': ['principal'],
+  'academic.workflow.inbox': ['operations', 'hod', 'principal'],
   'library.manage': ['operations', 'principal'],
   'inventory.manage': ['operations', 'principal'],
   'procurement.order': ['operations', 'principal'],
@@ -176,6 +183,12 @@ export const ADMIN_ROUTE_PERMISSIONS: ReadonlyArray<{ path: string; permission: 
   { path: '/admin/promotion', permission: 'promotion.manage' },
   { path: '/admin/scholarships', permission: 'scholarships.manage' },
   { path: '/admin/course-registration', permission: 'registration.manage' },
+  // Academic workflow (narrow by responsibility)
+  { path: '/admin/curriculum-approvals', permission: 'academic.curriculum.approve' },
+  { path: '/admin/curriculum', permission: 'academic.curriculum.map' },
+  { path: '/admin/schedule-workflow', permission: 'academic.schedule.workflow' },
+  { path: '/admin/class-schedule', permission: 'academic.schedule.workflow' },
+  { path: '/admin/workflow-inbox', permission: 'academic.workflow.inbox' },
   // Principal
   // Everyone in the shell
   { path: '/admin/install-app', permission: null },

@@ -2,7 +2,8 @@
 // api/syllabusCurriculumApi.ts — Firestore CRUD (deepSanitized)
 // ═══════════════════════════════════════════════════════════════════════
 
-import { db } from '@/Firebase/config';
+import { db, functions } from '@/Firebase/config';
+import { httpsCallable } from 'firebase/functions';
 import {
   collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc,
   query, where, orderBy, limit, Timestamp, writeBatch, Query, QueryDocumentSnapshot,
@@ -98,6 +99,8 @@ function docToCurriculumDoc(docSnap: QueryDocumentSnapshot<DocumentData>): Curri
     updatedAt: data.updatedAt?.toDate?.().toISOString() ?? null,
     assignedBy: data.assignedBy || "",
     assignedAt: data.assignedAt?.toDate?.().toISOString() || new Date().toISOString(),
+    approvalStatus: data.approvalStatus,
+    approvalNote: data.approvalNote,
   } as CurriculumDoc;
 }
 
@@ -424,12 +427,20 @@ export async function assignCurriculumToCollege(input: AssignCurriculumInput): P
     totalHours,
     totalMarks,
     status: "active" as const,
+    approvalStatus: "pending_principal",
     createdBy: extract.extractedBy,
     assignedBy: extract.extractedBy,
     assignedAt: now,
   });
 
   const docRef = await addDoc(collection(db, "curriculum"), curriculumData);
+  try {
+    await httpsCallable(functions, 'notifyCurriculumAssignment')({ curriculumId: docRef.id });
+  } catch (error) {
+    // Assignment remains safely pending if notification delivery is unavailable;
+    // the Principal's approval inbox also queries pending assignments directly.
+    console.warn('[Curriculum] Could not create approval notification task:', error);
+  }
 
   await updateDoc(doc(db, "syllabusExtracts", input.syllabusExtractId), {
     status: "assigned",

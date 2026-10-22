@@ -233,7 +233,7 @@ function SubjectCard({ subject, filter }: { subject: StudentSubject; filter: Fil
               onClick={() => setTab(k)}
               className={`px-3 py-2 sm:py-1.5 min-h-[40px] sm:min-h-0 rounded-lg text-xs font-semibold transition-colors ${tab === k ? 'bg-teal-600 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'}`}
             >
-              {k === 'topics' ? `Topics (${subject.totals.total})` : `Classes (${subject.upcomingSessions.length} upcoming)`}
+              {k === 'topics' ? `Topics (${subject.totals.total})` : `Classes (${subject.upcomingSessions.length} next 14 days)`}
             </button>
           ))}
         </div>
@@ -251,7 +251,9 @@ function SubjectCard({ subject, filter }: { subject: StudentSubject; filter: Fil
             <div>
               <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 mb-2">Upcoming classes</p>
               {subject.upcomingSessions.length === 0 ? (
-                <p className="text-xs text-slate-500">No classes scheduled in the next two weeks.</p>
+                <p className="text-xs text-slate-500">
+                  No dated class sessions were found for this subject in the next 14 days. Upcoming syllabus topics are not class bookings; the college must generate dated sessions from the weekly timetable for them to appear here.
+                </p>
               ) : (
                 <div className="space-y-2">{subject.upcomingSessions.map((s) => <SessionChip key={s.id} s={s} compact />)}</div>
               )}
