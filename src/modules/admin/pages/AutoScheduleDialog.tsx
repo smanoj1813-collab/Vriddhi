@@ -173,6 +173,7 @@ export default function AutoScheduleDialog({ collegeId, open, onClose, onApplied
         .map((d) => {
           const data = d.data() as Record<string, unknown>;
           if (String(data.status ?? 'active') === 'archived') return null;
+          if (data.approvalStatus && data.approvalStatus !== 'approved') return null;
           return {
             id: d.id,
             title: String(data.title ?? `${data.branch ?? ''} Sem ${data.semester ?? ''}`),

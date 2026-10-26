@@ -3,6 +3,9 @@ import { collection, getDocs, limit, query, where, doc, updateDoc } from 'fireba
 import { httpsCallable } from 'firebase/functions';
 import { db, functions } from '@/Firebase/config';
 import { useAuth } from '@/modules/auth/context/AuthContext';
+import AutoScheduleDialog from './AutoScheduleDialog';
+import ScheduleImportWorkflow from './ScheduleImportWorkflow';
+import { downloadTimetableJPG, downloadTimetablePDF, type TimetableSlot } from '@/shared/utils/timetableExport';
 
 type Row = Record<string, any> & { id: string };
 const inputClass = 'w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-white';
@@ -23,6 +26,7 @@ export default function AcademicWorkflowPage() {
   const [notice, setNotice] = useState('');
   const [error, setError] = useState('');
   const [reviewNotes, setReviewNotes] = useState<Record<string, string>>({});
+  const [autoScheduleOpen, setAutoScheduleOpen] = useState(false);
 
   const load = useCallback(async () => {
     if (!collegeId) return;
@@ -36,7 +40,9 @@ export default function AcademicWorkflowPage() {
       getDocs(query(collection(db, 'weeklySchedules'), where('collegeId', '==', collegeId), limit(1000))),
     ]);
     setProposals(proposalSnap?.docs.map((d) => ({ id: d.id, ...d.data() } as Row)) || []);
-    setSchedules(scheduleSnap.docs.map((d) => ({ id: d.id, ...d.data() } as Row)).filter((s) => s.isActive !== false));
+    setSchedules(scheduleSnap.docs.map((d) => ({ id: d.id, ...d.data() } as Row)).filter((s) =>
+      s.isActive !== false && (!s.approvalStatus || s.approvalStatus === 'approved'),
+    ));
     if (role === 'operations') {
       const [hodSnap, facultySnap] = await Promise.all([
         getDocs(query(collection(db, 'hods'), where('collegeId', '==', collegeId), limit(200))),
@@ -95,6 +101,27 @@ export default function AcademicWorkflowPage() {
     finally { setBusy(false); }
   };
 
+  const exportPublished = async (format: 'pdf' | 'jpg') => {
+    setError('');
+    try {
+      const exportOptions = {
+        title: 'Published weekly timetable',
+        subtitle: collegeId,
+        days: ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'],
+        slots: schedules.map((s): TimetableSlot => ({
+          dayOfWeek: String(s.dayOfWeek || ''), startTime: String(s.startTime || ''), endTime: String(s.endTime || ''),
+          subject: String(s.subject || ''), subjectCode: String(s.subjectCode || ''), facultyName: String(s.facultyName || ''),
+          room: String(s.room || ''), branch: String(s.branch || ''), batch: String(s.batch || ''),
+          semester: s.semester, division: String(s.division || ''), section: String(s.section || ''), type: String(s.type || ''),
+        })),
+        showCohort: true,
+        fileName: 'vriddhi-published-timetable',
+      };
+      if (format === 'pdf') await downloadTimetablePDF(exportOptions);
+      else await downloadTimetableJPG(exportOptions);
+    } catch (e) { setError(e instanceof Error ? e.message : 'Could not export the published timetable'); }
+  };
+
   if (!user || !collegeId) return <main className="p-6">Your account is not linked to a college.</main>;
   const isOps = role === 'operations';
   const isHod = role === 'hod';
@@ -110,6 +137,12 @@ export default function AcademicWorkflowPage() {
     {notice && <div role="status" className="rounded-lg border border-emerald-300 bg-emerald-50 p-3 text-sm text-emerald-800">{notice}</div>}
 
     {isOps && <>
+      <section className="flex flex-wrap items-center gap-3 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+        <div className="mr-auto"><h2 className="font-semibold">Bulk timetable tools</h2><p className="text-sm text-slate-500">Generate or import multiple draft slots. Every slot remains unpublished until its programme HOD approves it.</p></div>
+        <button type="button" onClick={() => setAutoScheduleOpen(true)} className="rounded-lg border border-teal-700 px-4 py-2 text-sm font-semibold text-teal-800 hover:bg-teal-50">Auto-generate drafts</button>
+        <ScheduleImportWorkflow onSubmitted={() => { void load(); setNotice('Imported timetable drafts were routed to their programme HODs for approval.'); }} />
+      </section>
+      <AutoScheduleDialog collegeId={collegeId} open={autoScheduleOpen} onClose={() => setAutoScheduleOpen(false)} onApplied={() => { void load(); setNotice('Generated timetable drafts were routed to their programme HODs for approval.'); }} />
       <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-900">
         <h2 className="text-lg font-semibold">Prepare a schedule draft</h2>
         <p className="mb-4 mt-1 text-sm text-slate-500">Submission creates an unpublished proposal. It does not replace or modify the live timetable.</p>
@@ -132,7 +165,7 @@ export default function AcademicWorkflowPage() {
         </form>
       </section>
       <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-900">
-        <h2 className="text-lg font-semibold">Published schedules</h2><p className="mb-4 text-sm text-slate-500">Generate dated class sessions after approval; student class counts use these dated sessions.</p>
+        <div className="mb-4 flex flex-wrap items-start justify-between gap-3"><div><h2 className="text-lg font-semibold">Published schedules</h2><p className="text-sm text-slate-500">Generate dated class sessions after approval; student class counts use these dated sessions.</p></div><div className="flex gap-2"><button type="button" onClick={() => void exportPublished('pdf')} className="rounded-lg border px-3 py-2 text-sm">Download PDF</button><button type="button" onClick={() => void exportPublished('jpg')} className="rounded-lg border px-3 py-2 text-sm">Download JPG</button></div></div>
         <div className="space-y-2">{schedules.map((s) => <div key={s.id} className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-slate-200 p-3 dark:border-slate-700"><div><strong>{s.subject}</strong><div className="text-xs text-slate-500">{s.branch} · Semester {s.semester} · {s.dayOfWeek} {s.startTime}–{s.endTime} · {s.room}</div></div><div className="flex gap-2"><button disabled={busy} onClick={() => generate(s)} className="rounded-lg border border-teal-700 px-3 py-2 text-sm text-teal-800 disabled:opacity-50">Generate dated sessions</button><button onClick={() => { setEditingScheduleId(s.id); setSlot({ ...emptySlot, ...s }); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="rounded-lg border border-slate-400 px-3 py-2 text-sm">Propose edit</button></div></div>)}{!schedules.length && <p className="text-sm text-slate-500">No published schedules in this college yet.</p>}</div>
       </section>
     </>}
@@ -142,7 +175,7 @@ export default function AcademicWorkflowPage() {
       <div className="mt-4 space-y-3">{relevantProposals.map((p) => <article key={p.id} className="rounded-xl border border-slate-200 p-4 dark:border-slate-700"><div className="flex flex-wrap justify-between gap-2"><div><h3 className="font-semibold">{p.slot?.subject || 'Class schedule'}</h3><p className="text-sm text-slate-500">{p.slot?.branch} · Semester {p.slot?.semester} · Batch {p.slot?.batch} · {p.slot?.dayOfWeek} {p.slot?.startTime}–{p.slot?.endTime} · {p.slot?.room}</p></div><span className="h-fit rounded-full bg-amber-100 px-2.5 py-1 text-xs font-semibold text-amber-900">{p.status}</span></div>{p.reviewNote && <p className="mt-2 text-sm text-rose-700">HOD note: {p.reviewNote}</p>}{isOps && p.status === 'returned' && <button onClick={() => { setEditingScheduleId(String(p.targetWeeklyScheduleId || '')); setReviewerUid(String(p.reviewerUid || '')); setSlot({ ...emptySlot, ...(p.slot || {}) }); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="mt-3 rounded-lg border border-teal-700 px-3 py-2 text-sm font-semibold text-teal-800">Revise returned draft</button>}{isHod && p.status === 'pending_hod' && <div className="mt-3 space-y-2"><textarea className={inputClass} placeholder="Review note (required when returning)" value={reviewNotes[p.id] || ''} onChange={(e) => setReviewNotes({ ...reviewNotes, [p.id]: e.target.value })} /><div className="flex gap-2"><button disabled={busy} onClick={() => review(p.id, 'approved')} className="rounded-lg bg-emerald-700 px-3 py-2 text-sm font-semibold text-white">Approve & publish</button><button disabled={busy || !reviewNotes[p.id]?.trim()} onClick={() => review(p.id, 'returned')} className="rounded-lg border border-rose-400 px-3 py-2 text-sm font-semibold text-rose-800">Return for changes</button></div></div>}</article>)}{!relevantProposals.length && <p className="text-sm text-slate-500">No schedule drafts to show.</p>}</div>
     </section>}
 
-    {isPrincipal && <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-900"><h2 className="text-lg font-semibold">Published schedule visibility</h2><p className="mb-4 text-sm text-slate-500">Read-only. Schedule changes are prepared by Operations and approved by the relevant programme HOD.</p><div className="space-y-2">{schedules.map((s) => <div key={s.id} className="rounded-lg border border-slate-200 p-3 dark:border-slate-700"><strong>{s.subject}</strong><p className="text-sm text-slate-500">{s.branch} · Semester {s.semester} · Batch {s.batch} · {s.dayOfWeek} {s.startTime}–{s.endTime} · {s.room}</p></div>)}{!schedules.length && <p className="text-sm text-slate-500">No published schedules yet.</p>}</div></section>}
+    {isPrincipal && <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-900"><div className="mb-4 flex flex-wrap items-start justify-between gap-3"><div><h2 className="text-lg font-semibold">Published schedule visibility</h2><p className="text-sm text-slate-500">Read-only. Schedule changes are prepared by Operations and approved by the relevant programme HOD.</p></div><div className="flex gap-2"><button type="button" onClick={() => void exportPublished('pdf')} className="rounded-lg border px-3 py-2 text-sm">Download PDF</button><button type="button" onClick={() => void exportPublished('jpg')} className="rounded-lg border px-3 py-2 text-sm">Download JPG</button></div></div><div className="space-y-2">{schedules.map((s) => <div key={s.id} className="rounded-lg border border-slate-200 p-3 dark:border-slate-700"><strong>{s.subject}</strong><p className="text-sm text-slate-500">{s.branch} · Semester {s.semester} · Batch {s.batch} · {s.dayOfWeek} {s.startTime}–{s.endTime} · {s.room}</p></div>)}{!schedules.length && <p className="text-sm text-slate-500">No published schedules yet.</p>}</div></section>}
     <button onClick={() => load().catch((e) => setError(e.message))} className="text-sm font-medium text-teal-800 underline">Refresh workflow</button>
   </main>;
 }
