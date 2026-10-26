@@ -23,6 +23,18 @@ export function isScheduleVisibleToStudents(approvalStatus: unknown): boolean {
 }
 
 export function sanitizeScheduleProposalSlot(input: Record<string, unknown>, collegeId: string) {
+  const optionalDateKey = (value: unknown, field: string): string => {
+    if (value === undefined || value === null || value === '') return ''
+    const key = String(value).trim()
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(key)) throw new Error(`${field} must be a yyyy-mm-dd date`)
+    const [year, month, day] = key.split('-').map(Number)
+    const date = new Date(Date.UTC(year, month - 1, day))
+    if (date.getUTCFullYear() !== year || date.getUTCMonth() !== month - 1 || date.getUTCDate() !== day) throw new Error(`${field} must be a real calendar date`)
+    return key
+  }
+  const effectiveFrom = optionalDateKey(input.effectiveFrom, 'effectiveFrom')
+  const effectiveTo = optionalDateKey(input.effectiveTo, 'effectiveTo')
+  if (effectiveFrom && effectiveTo && effectiveFrom > effectiveTo) throw new Error('effectiveTo must be on or after effectiveFrom')
   const required = ['subject', 'facultyId', 'branch', 'batch', 'room', 'dayOfWeek', 'startTime', 'endTime']
   for (const field of required) {
     if (!String(input[field] ?? '').trim()) throw new Error(`${field} is required`)
@@ -52,6 +64,13 @@ export function sanitizeScheduleProposalSlot(input: Record<string, unknown>, col
     startTime: String(input.startTime),
     endTime: String(input.endTime),
     type: String(input.type || 'lecture').trim().slice(0, 40),
+    ...(effectiveFrom ? { effectiveFrom } : {}),
+    ...(effectiveTo ? { effectiveTo } : {}),
+    ...(input.autoScheduled === true ? { autoScheduled: true } : {}),
+    ...(input.mappingId ? { mappingId: String(input.mappingId).slice(0, 160) } : {}),
+    ...(input.demandKey ? { demandKey: String(input.demandKey).slice(0, 300) } : {}),
+    ...(input.meetingKey ? { meetingKey: String(input.meetingKey).slice(0, 200) } : {}),
+    ...(Array.isArray(input.moduleQueue) ? { moduleQueue: input.moduleQueue.slice(0, 100).map((item) => String(item).slice(0, 100)) } : {}),
     isActive: true,
   }
 }

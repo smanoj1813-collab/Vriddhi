@@ -613,7 +613,7 @@ const AdminClassSchedule: React.FC = () => {
       const skipped = res.plan.totals.total - res.plan.totals.valid
       setSnackbar({
         open: true,
-        message: `${res.created ?? res.plan.totals.valid} schedule(s) imported${skipped > 0 ? `, ${skipped} skipped` : ''}`,
+        message: `${res.submitted ?? res.created ?? 0} schedule draft(s) sent for HOD approval${skipped > 0 ? `, ${skipped} skipped` : ''}`,
         severity: 'success',
       })
       setBulkDialogOpen(false)
@@ -1370,7 +1370,7 @@ const AdminClassSchedule: React.FC = () => {
               onClick={handleApplyImport}
               disabled={previewing || importPreview.plan.totals.valid === 0}
             >
-              {previewing ? 'Importing…' : `Apply ${importPreview.plan.totals.valid} valid row${importPreview.plan.totals.valid === 1 ? '' : 's'}`}
+              {previewing ? 'Submitting…' : `Submit ${importPreview.plan.totals.valid} valid draft${importPreview.plan.totals.valid === 1 ? '' : 's'} for HOD approval`}
             </Button>
           )}
         </DialogActions>

@@ -251,7 +251,7 @@ export default function AutoScheduleDialog({ collegeId, open, onClose, onApplied
       // apply replays exactly the previewed grid.
       if (res.randomSeed && !form.seed) setForm((f) => ({ ...f, seed: res.randomSeed as string }));
       if (!dryRun) {
-        setAppliedInfo(`Applied: ${res.created ?? res.plan.placements.length} slots written to the timetable${form.dateFrom ? ` (valid ${form.dateFrom}${form.dateTo ? ` → ${form.dateTo}` : ''})` : ''}`);
+        setAppliedInfo(`Submitted ${res.submitted ?? 0} unpublished schedule draft(s) for programme HOD approval${form.dateFrom ? ` (valid ${form.dateFrom}${form.dateTo ? ` → ${form.dateTo}` : ''})` : ''}`);
         onApplied();
       }
     } catch (e) {
@@ -480,7 +480,7 @@ export default function AutoScheduleDialog({ collegeId, open, onClose, onApplied
               </Tooltip>
             </Stack>
             <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
-              Preview and Apply replay this seed — regenerate for a different layout.
+              Preview and Submit replay this seed — regenerate for a different layout.
             </Typography>
           </Grid>
         </Grid>
@@ -748,7 +748,7 @@ export default function AutoScheduleDialog({ collegeId, open, onClose, onApplied
           disabled={!canRun || dateRangeInvalid || !plan || plan.placements.length === 0}
           onClick={() => run(false)}
         >
-          {busy === 'apply' ? 'Writing…' : `Apply ${plan ? `${plan.placements.length} slots` : ''}`}
+          {busy === 'apply' ? 'Submitting…' : `Submit ${plan ? `${plan.placements.length} drafts` : 'drafts'}`}
         </Button>
       </DialogActions>
     </Dialog>
