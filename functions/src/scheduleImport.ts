@@ -17,17 +17,16 @@
 //              (utils/timetableConflicts.ts), and cross-references each row
 //              against curriculumFacultyMappings. Returns a per-row report.
 //   apply    — dryRun: false. Re-runs the exact same plan on fresh data and
-//              writes only the `valid` rows, stamped importedAt/importedBy.
+//              submits valid rows as unpublished schedule proposals routed to
+//              programme HODs; nothing is written to weeklySchedules yet.
 //
-// Warnings (cohort clash, subject not in the mapped curriculum, faculty
-// differs from the mapped one) never block a row — they surface in the
-// preview so the admin decides. Hard clashes (faculty/room) and duplicates
-// do block, because both are recoverable typos and neither is physically
-// schedulable.
+// Advisory warnings (cohort overlap, faculty mismatch) surface in the
+// preview. Apply additionally requires each valid row to match a mapped course
+// from an approved (or grandfathered legacy) curriculum. Hard clashes
+// (faculty/room) and duplicates remain blocked because they are not schedulable.
 // ─────────────────────────────────────────────────────────────────────────────
 
 import * as admin from 'firebase-admin'
-import { Timestamp } from 'firebase-admin/firestore'
 import { HttpsError, onCall } from 'firebase-functions/v2/https'
 import {
   HARD_CLASH_KINDS,
@@ -38,6 +37,7 @@ import {
   type ScheduleEntry,
 } from './utils/timetableConflicts'
 import { resolveSchedulingStaff } from './classSchedule'
+import { createScheduleProposals } from './scheduleProposalService'
 
 // ═════════════════════════════════════════════════════════════════════════════
 // CSV parsing (quote-aware)
@@ -194,6 +194,7 @@ export interface ImportExistingSchedule {
 }
 
 export interface ImportMappingRef {
+  curriculumId?: string
   courseCode: string
   courseName: string
   branch: string
@@ -567,6 +568,7 @@ function toExistingSchedule(snap: admin.firestore.QueryDocumentSnapshot): Import
 function toMappingRef(snap: admin.firestore.QueryDocumentSnapshot): ImportMappingRef {
   const d = snap.data() as Record<string, unknown>
   return {
+    curriculumId: String(d.curriculumId ?? ''),
     courseCode: String(d.courseCode ?? ''),
     courseName: String(d.courseName ?? ''),
     branch: String(d.branch ?? ''),
@@ -584,7 +586,7 @@ const IMPORT_REGION = { region: 'asia-south1' as const }
 
 /**
  * Bulk-import weekly schedule rows. dryRun (default) returns the per-row
- * report without writing; dryRun: false writes only the valid rows.
+ * report without writing; dryRun: false submits valid rows as HOD-review drafts.
  */
 export const bulkImportWeeklySchedules = onCall(
   { ...IMPORT_REGION, memory: '512MiB', timeoutSeconds: 120 },
@@ -593,6 +595,9 @@ export const bulkImportWeeklySchedules = onCall(
     if (!uid) throw new HttpsError('unauthenticated', 'Authentication is required')
     const staff = await resolveSchedulingStaff(uid, request.auth?.token || {})
     const payload = validateScheduleImportPayload(request.data, staff.role, staff.collegeId)
+    if (!payload.dryRun && staff.role !== 'operations') {
+      throw new HttpsError('permission-denied', 'Only Operations can submit timetable drafts for HOD approval')
+    }
 
     const db = admin.firestore()
     const [schedulesSnap, facultySnap, mappingsSnap] = await Promise.all([
@@ -644,49 +649,59 @@ export const bulkImportWeeklySchedules = onCall(
       return { dryRun: true, plan }
     }
 
+    // A schedule import may use only mapped courses from an approved (or
+    // grandfathered legacy) curriculum. Keep the preview permissive so it can
+    // explain mapping warnings, but fail the apply before any proposal writes.
+    const rowMappings = plan.writeable.map((row) => mappings.filter((mapping) => {
+      const codeMatch = Boolean(row.subjectCode && mapping.courseCode && norm(row.subjectCode) === norm(mapping.courseCode))
+      const nameMatch = Boolean(row.subject && mapping.courseName && norm(row.subject) === norm(mapping.courseName))
+      const branchOk = !row.branch || !mapping.branch || norm(row.branch) === norm(mapping.branch)
+      const semesterOk = !row.semester || !mapping.semester || row.semester === mapping.semester
+      return (codeMatch || nameMatch) && branchOk && semesterOk
+    }))
+    if (rowMappings.some((matches) => matches.length === 0)) {
+      throw new HttpsError('failed-precondition', 'Every imported schedule row must match an assigned curriculum course before it can be submitted for HOD approval. Review the mapping warnings and Principal-approved curriculum.')
+    }
+    const curriculumIds = [...new Set(rowMappings.flatMap((matches) => matches.map((mapping) => mapping.curriculumId || '')).filter(Boolean))]
+    const curriculumSnapshots = await Promise.all(curriculumIds.map((id) => db.collection('curriculum').doc(id).get()))
+    const approvedCurriculumIds = new Set(curriculumSnapshots.flatMap((snap) => {
+      if (!snap.exists) return []
+      const approvalStatus = String(snap.data()?.approvalStatus ?? '')
+      return !approvalStatus || approvalStatus === 'approved' ? [snap.id] : []
+    }))
+    const rowWithoutApprovedMapping = rowMappings.some((matches) => !matches.some((mapping) =>
+      !mapping.curriculumId || approvedCurriculumIds.has(mapping.curriculumId),
+    ))
+    if (rowWithoutApprovedMapping) {
+      throw new HttpsError('failed-precondition', 'Imported schedules can only use curriculum assignments approved by the Principal. Approve the curriculum first, then retry.')
+    }
+
     if (plan.writeable.length === 0) {
       return { dryRun: false, plan, created: 0, createdRows: [] }
     }
 
-    const now = Timestamp.now()
-    const writeBatch = db.batch()
-    const createdRows: Array<{ line: number; subject: string; facultyId: string }> = []
-    for (const row of plan.writeable) {
-      const facultyName = byId.get(row.facultyId.toLowerCase()) ?? row.facultyName ?? row.facultyId
-      const initials = facultyName
-        .split(' ')
-        .filter(Boolean)
-        .map((n) => n[0])
-        .join('')
-        .toUpperCase()
-        .slice(0, 2)
-      writeBatch.set(db.collection('weeklySchedules').doc(), {
-        collegeId: payload.collegeId,
-        subject: row.subject,
-        subjectCode: row.subjectCode,
-        facultyId: row.facultyId,
-        facultyName,
-        facultyInitials: initials,
-        branch: row.branch,
-        batch: row.batch,
-        semester: row.semester,
-        division: row.division,
-        section: row.section,
-        room: row.room,
-        dayOfWeek: row.dayOfWeek,
-        startTime: row.startTime,
-        endTime: row.endTime,
-        type: row.type,
-        isActive: true,
-        importedAt: now,
-        importedBy: staff.name || staff.uid,
-        createdAt: now.toDate().toISOString(),
-        updatedAt: now.toDate().toISOString(),
-      })
-      createdRows.push({ line: row.line, subject: row.subject, facultyId: row.facultyId })
-    }
-    await writeBatch.commit()
-
-    return { dryRun: false, plan, created: createdRows.length, createdRows }
+    const slots = plan.writeable.map((row) => ({
+      subject: row.subject,
+      subjectCode: row.subjectCode,
+      facultyId: row.facultyId,
+      facultyName: byId.get(row.facultyId.toLowerCase()) ?? row.facultyName ?? row.facultyId,
+      branch: row.branch,
+      batch: row.batch,
+      semester: row.semester,
+      division: row.division,
+      section: row.section,
+      room: row.room,
+      dayOfWeek: row.dayOfWeek,
+      startTime: row.startTime,
+      endTime: row.endTime,
+      type: row.type,
+    }))
+    const proposalIds = await createScheduleProposals({
+      collegeId: payload.collegeId,
+      createdBy: staff.uid,
+      slots,
+    })
+    const submittedRows = plan.writeable.map((row, index) => ({ line: row.line, subject: row.subject, facultyId: row.facultyId, proposalId: proposalIds[index] }))
+    return { dryRun: false, plan, created: 0, submitted: submittedRows.length, submittedRows }
   },
 )

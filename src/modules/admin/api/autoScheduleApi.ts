@@ -215,7 +215,11 @@ export interface AutoSchedulePlan {
 export interface AutoScheduleResponse {
   dryRun: boolean;
   plan: AutoSchedulePlan;
+  /** Number of live schedules written (legacy response only; approval flow writes zero). */
   created?: number;
+  /** Number of unpublished proposals routed to programme HODs. */
+  submitted?: number;
+  proposalIds?: string[];
   /** Non-fatal operator hints (e.g. a dateRange wider than one generate run). */
   warnings?: string[];
   /** Effective RNG seed when strategy/room pick is random. */

@@ -73,7 +73,7 @@ export const MAX_CALENDAR_EVENTS_READ = 200
 const DATE_KEY_PATTERN = /^\d{4}-\d{2}-\d{2}$/
 
 /** Roles allowed to materialise / cancel sessions for their college. */
-export const SCHEDULING_ROLES = ['superadmin', 'admin', 'principal', 'hod']
+export const SCHEDULING_ROLES = ['superadmin', 'operations']
 
 export type DayOfWeek =
   | 'monday'
@@ -1467,6 +1467,9 @@ export const cancelWeeklySchedule = onCall(
     const uid = request.auth?.uid
     if (!uid) throw new HttpsError('unauthenticated', 'Authentication is required')
     const staff = await resolveSchedulingStaff(uid, request.auth?.token || {})
+    if (staff.role === 'operations' || staff.role === 'superadmin') {
+      throw new HttpsError('failed-precondition', 'Schedule changes must be submitted as an Operations proposal and approved by the programme HOD.')
+    }
 
     const raw = (request.data || {}) as Record<string, unknown>
     const weeklyScheduleId = String(raw.weeklyScheduleId ?? '').trim()
@@ -1958,6 +1961,9 @@ export const rescheduleClass = onCall(
     const uid = request.auth?.uid
     if (!uid) throw new HttpsError('unauthenticated', 'Authentication is required')
     const staff = await resolveSchedulingStaff(uid, request.auth?.token || {})
+    if (staff.role === 'operations' || staff.role === 'superadmin') {
+      throw new HttpsError('failed-precondition', 'Schedule changes must be submitted as an Operations proposal and approved by the programme HOD.')
+    }
 
     const raw = (request.data || {}) as Record<string, unknown>
     const scope: RescheduleScope = raw.scope === 'session' ? 'session' : 'slot'

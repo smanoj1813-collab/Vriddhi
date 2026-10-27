@@ -27,17 +27,17 @@
 //                 daily density (target 4–5 classes/day), and explicit faculty
 //                 demand arithmetic with merge suggestions when projected load
 //                 exceeds capacity.
-//   5. WRITE    — dryRun (default) only returns the plan. dryRun:false writes
-//                 each placement as an ordinary weeklySchedules doc (same
-//                 shape as bulk import), stamped autoScheduled for audit.
+//   5. SUBMIT   — dryRun (default) only returns the plan. dryRun:false routes
+//                 each placement as an unpublished proposal to the matching
+//                 programme HOD; approval is required before publication.
 // ─────────────────────────────────────────────────────────────────────────────
 
 import * as admin from 'firebase-admin'
-import { Timestamp } from 'firebase-admin/firestore'
 import { HttpsError, onCall } from 'firebase-functions/v2/https'
 import { resolveSchedulingStaff, isValidDateKey, daysBetween, MAX_GENERATE_RANGE_DAYS } from './classSchedule'
 import { hoursPerWeek, DEFAULT_SEMESTER_WEEKS, DEFAULT_CAPACITY_WEEKLY_HOURS } from './autoCurriculumMapping'
 import { normalizeDay, isValidTime } from './scheduleImport'
+import { createScheduleProposals } from './scheduleProposalService'
 import { buildCalendarView, toCalendarEventLite, MAX_CALENDAR_READ, type CalendarView, type CalendarEventLite } from './calendar'
 import { batchFieldsIntersect, batchKeyTokens, cohortLetters, divisionScopesOverlap, cohortScopesOverlap } from './cohortBatch'
 import type { DayOfWeek } from './classSchedule'
@@ -1399,6 +1399,9 @@ export const autoGenerateWeeklySchedule = onCall(
     if (!uid) throw new HttpsError('unauthenticated', 'Authentication is required')
     const staff = await resolveSchedulingStaff(uid, request.auth?.token || {})
     const payload = validateAutoSchedulePayload(request.data, staff.role, staff.collegeId)
+    if (!payload.dryRun && staff.role !== 'operations') {
+      throw new HttpsError('permission-denied', 'Only Operations can submit timetable drafts for HOD approval')
+    }
 
     const db = admin.firestore()
 
@@ -1408,6 +1411,9 @@ export const autoGenerateWeeklySchedule = onCall(
     const curriculum = curSnap.data() as Record<string, unknown>
     if (String(curriculum.collegeId ?? '') !== payload.collegeId) {
       throw new HttpsError('permission-denied', 'This curriculum belongs to another college')
+    }
+    if (curriculum.approvalStatus && curriculum.approvalStatus !== 'approved') {
+      throw new HttpsError('failed-precondition', 'Operations can work from this curriculum after Principal approval.')
     }
     const branch = String(curriculum.branch ?? '').trim()
     const semester = Number(curriculum.semester ?? 0) || 0
@@ -1624,55 +1630,39 @@ export const autoGenerateWeeklySchedule = onCall(
       return { dryRun: false, plan, created: 0, warnings: responseWarnings }
     }
 
-    const now = Timestamp.now()
-    const writeBatch = db.batch()
-    for (const p of plan.placements) {
-      const initials = p.facultyName
-        .split(' ')
-        .filter(Boolean)
-        .map((n) => n[0])
-        .join('')
-        .toUpperCase()
-        .slice(0, 2)
-      writeBatch.set(db.collection('weeklySchedules').doc(), {
-        collegeId: payload.collegeId,
-        subject: p.subject,
-        subjectCode: p.subjectCode,
-        facultyId: p.facultyId,
-        facultyName: p.facultyName,
-        facultyInitials: initials,
-        branch: p.branch,
-        batch: p.batch,
-        semester: p.semester,
-        division: p.division,
-        section: p.section,
-        room: p.room,
-        dayOfWeek: p.dayOfWeek,
-        startTime: p.startTime,
-        endTime: p.endTime,
-        type: p.type,
-        isActive: true,
+    const proposalIds = await createScheduleProposals({
+      collegeId: payload.collegeId,
+      createdBy: staff.uid,
+      slots: plan.placements.map((placement) => ({
+        subject: placement.subject,
+        subjectCode: placement.subjectCode,
+        facultyId: placement.facultyId,
+        facultyName: placement.facultyName,
+        branch: placement.branch,
+        batch: placement.batch,
+        semester: placement.semester,
+        division: placement.division,
+        section: placement.section,
+        room: placement.room,
+        dayOfWeek: placement.dayOfWeek,
+        startTime: placement.startTime,
+        endTime: placement.endTime,
+        type: placement.type,
         autoScheduled: true,
-        mappingId: p.mappingId,
-        demandKey: p.demandKey,
-        meetingKey: p.meetingKey,
-        // P1 — write-through applicability window (legacy docs keep no window
-        // and stay perpetual; these slots die with their term).
+        mappingId: placement.mappingId,
+        demandKey: placement.demandKey,
+        meetingKey: placement.meetingKey,
         ...(payload.dateRange?.from ? { effectiveFrom: payload.dateRange.from } : {}),
         ...(payload.dateRange?.to ? { effectiveTo: payload.dateRange.to } : {}),
-        // P2 — ordered module ids for the session-topics "next module" hint.
-        ...(moduleQueueByCourse.get(p.mappingId) ? { moduleQueue: moduleQueueByCourse.get(p.mappingId) } : {}),
-        importedAt: now,
-        importedBy: `${staff.name || staff.uid} (auto-scheduler)`,
-        createdAt: now.toDate().toISOString(),
-        updatedAt: now.toDate().toISOString(),
-      })
-    }
-    await writeBatch.commit()
+        ...(moduleQueueByCourse.get(placement.mappingId) ? { moduleQueue: moduleQueueByCourse.get(placement.mappingId) } : {}),
+      })),
+    })
     return {
       dryRun: false,
       plan,
-      created: plan.placements.length,
+      created: 0,
+      submitted: proposalIds.length,
+      proposalIds,
       warnings: responseWarnings,
       ...(plan.randomSeed ? { randomSeed: plan.randomSeed } : {}),
     }

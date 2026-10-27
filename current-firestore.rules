@@ -239,12 +239,22 @@ service cloud.firestore {
     // never be looser than a get — that mismatch was the cross-college leak.
     function canReadCurriculum(data) {
       return isSignedIn()
-        && (isSuperadmin() || (isStaff() && (sameCollege(data) || !('collegeId' in data))));
+        && (isSuperadmin()
+          || (isStaff() && (sameCollege(data) || !('collegeId' in data)))
+          || (role() == 'operations' && sameCollege(data)));
     }
 
     // The faculty member a curriculum-related row names as owner. Used by
     // facultyTopics (the planner ledger) and curriculumFacultyMappings
     // (tenancy on a legacy row may be absent, so ownership proves access).
+    function approvedCurriculumAssignment(curriculumId) {
+      let curriculumPath = /databases/$(database)/documents/curriculum/$(curriculumId);
+      return exists(curriculumPath)
+        && get(curriculumPath).data.collegeId == collegeId()
+        && (!('approvalStatus' in get(curriculumPath).data)
+          || get(curriculumPath).data.approvalStatus == 'approved');
+    }
+
     function isAssignedFaculty(data) {
       return isSignedIn() && 'facultyId' in data && data.facultyId == request.auth.uid;
     }
@@ -990,12 +1000,14 @@ service cloud.firestore {
       match /noDues/{docId} {
         allow read: if isBackOffice(collegeId)
           || (inCollege(collegeId) && resource.data.studentUid == request.auth.uid);
-        allow create: if isFinance(collegeId) || isOps(collegeId)
-          // a student may APPLY (empty checklist — offices fill their sections)
-          || (role() == 'student' && inCollege(collegeId)
+        // Check the student self-service path first: staff-role helpers use
+        // the superadmin document fallback and are substantially more costly
+        // under Firestore's per-request rules expression budget.
+        allow create: if (role() == 'student' && inCollege(collegeId)
             && request.resource.data.studentUid == request.auth.uid
             && request.resource.data.status == 'open'
-            && request.resource.data.sections.size() == 0);
+            && request.resource.data.sections.size() == 0)
+          || isFinance(collegeId) || isOps(collegeId);
         // Department heads clear their department's section; the page limits
         // each office to the sections it owns.
         allow update: if isBackOffice(collegeId);
@@ -1013,10 +1025,13 @@ service cloud.firestore {
       match /scholarships/{docId} {
         allow read: if isBackOffice(collegeId)
           || (inCollege(collegeId) && resource.data.studentUid == request.auth.uid);
-        allow create: if isFinance(collegeId) || isOps(collegeId) || isBackOffice(collegeId)
-          || (role() == 'student' && inCollege(collegeId)
+        // Student writes are the common direct-client path. Check them before
+        // office helpers, which include the superadmin profile fallback and
+        // consume more of the rules expression budget.
+        allow create: if (role() == 'student' && inCollege(collegeId)
             && request.resource.data.studentUid == request.auth.uid
-            && request.resource.data.status == 'applied');
+            && request.resource.data.status == 'applied')
+          || isFinance(collegeId) || isOps(collegeId) || isBackOffice(collegeId);
         allow update: if isFinance(collegeId) || isOps(collegeId);
         allow delete: if isSuperadmin() || (role() == 'principal' && collegeId() == collegeId);
       }
@@ -1041,12 +1056,13 @@ service cloud.firestore {
       match /certificateRequests/{docId} {
         allow read: if isBackOffice(collegeId)
           || (inCollege(collegeId) && resource.data.studentUid == request.auth.uid);
-        allow create: if isFinance(collegeId) || isOps(collegeId) || isBackOffice(collegeId)
-          // a student may APPLY (status requested, no certificate yet)
-          || (role() == 'student' && inCollege(collegeId)
+        // Student applications are common and have a cheap claim/ownership
+        // check; evaluate before office helpers with superadmin fallbacks.
+        allow create: if (role() == 'student' && inCollege(collegeId)
             && request.resource.data.studentUid == request.auth.uid
             && request.resource.data.status == 'requested'
-            && !('certificateNo' in request.resource.data));
+            && !('certificateNo' in request.resource.data))
+          || isFinance(collegeId) || isOps(collegeId) || isBackOffice(collegeId);
         allow update: if isFinance(collegeId) || isOps(collegeId);
         allow delete: if isSuperadmin() || (role() == 'principal' && collegeId() == collegeId);
       }
@@ -1345,20 +1361,34 @@ service cloud.firestore {
       // `allow get` may use resource.data (single document). `allow list` is
       // role based because a list/query request has no `resource`; the client
       // keeps its queries scoped by collegeId/facultyId.
-      allow get: if isSignedIn() && (isStaff() || sameCollege(resource.data));
-      // The timetable of a college is reference data for its students, not a
-      // private record — which is why the collegeId claim the identity repair
-      // writes has to exist: sameCollege() reads the tenant off the token.
-      allow list: if isSignedIn() && (isStaff() || sameCollege(resource.data));
-      allow create: if isCollegeStaff() && request.resource.data.collegeId == collegeId()
-        && request.resource.data.facultyId != null
-        && request.resource.data.branch != null
-        && request.resource.data.batch != null
-        && request.resource.data.dayOfWeek != null
-        && request.resource.data.startTime != null
-        && request.resource.data.endTime != null;
-      allow update: if isCollegeStaff() && sameCollege(resource.data);
-      allow delete: if isCollegeStaff() && sameCollege(resource.data);
+      allow get: if isSignedIn() && sameCollege(resource.data);
+      // Legacy rows without approvalStatus remain live. New rows are created
+      // only by the HOD review callable after an assigned programme review.
+      allow list: if isSignedIn() && sameCollege(resource.data);
+      allow create, update, delete: if false;
+    }
+
+    // Workflow drafts are visible only to the owning college's academic
+    // reviewers and Operations. Client-side writes are forbidden; callable
+    // functions validate the assigned HOD and perform state transitions.
+    match /scheduleProposals/{proposalId} {
+      allow get, list: if isSignedIn() && sameCollege(resource.data)
+        && (isSuperadmin()
+          || role() == 'operations'
+          || (role() == 'hod' && resource.data.reviewerUid == request.auth.uid));
+      allow create, update, delete: if false;
+    }
+
+    // In-app academic inbox. A user can only read and mark their own task read;
+    // task creation and workflow state are server-owned.
+    match /workflowTasks/{taskId} {
+      allow get, list: if isSignedIn() && resource.data.recipientUid == request.auth.uid
+        && sameCollege(resource.data);
+      allow update: if isSignedIn() && resource.data.recipientUid == request.auth.uid
+        && sameCollege(resource.data)
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read'])
+        && request.resource.data.read is bool;
+      allow create, delete: if false;
     }
 
     match /classSessions/{sessionId} {
@@ -1366,8 +1396,16 @@ service cloud.firestore {
         && (isStaff() || sameCollege(resource.data))
         && deptScoped(resource.data);
       allow list: if isSignedIn() && (isStaff() || sameCollege(resource.data));
-      allow create, update: if tenantWrite(request.resource.data);
-      allow delete: if tenantWrite(resource.data);
+      allow create: if tenantWrite(request.resource.data) && role() != 'principal';
+      allow update: if isSuperadmin()
+        || (isCollegeStaff() && sameCollege(resource.data) && sameCollege(request.resource.data)
+          && (role() != 'principal'
+            || request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+              'attendanceCount', 'presentCount', 'totalStudents', 'attendanceMarked',
+              'topicsCovered', 'topicsPlanned', 'topicIds', 'notes', 'updatedAt',
+              'updatedBy', 'markedAt'
+            ])));
+      allow delete: if tenantWrite(resource.data) && role() != 'principal';
     }
 
     match /curriculumFacultyMappings/{mappingId} {
@@ -1382,6 +1420,7 @@ service cloud.firestore {
       // used to do (now scoped).
       allow get, list: if isSuperadmin()
         || (isStaff() && sameCollege(resource.data))
+        || (role() == 'operations' && sameCollege(resource.data))
         || isAssignedFaculty(resource.data);
       // Assigning curriculum is a management act (superadmin or the college's
       // admin/hod/principal). The previous isCollegeStaff() also admitted
@@ -1389,9 +1428,15 @@ service cloud.firestore {
       // their college. `delete` reads resource.data — request.resource.data
       // is null on a delete, so the old shared statement could never succeed
       // for non-superadmins (the UI soft-removes via status='removed').
-      allow create, update: if isSuperadmin()
+      allow create: if isSuperadmin()
+        || (role() in ['admin', 'hod', 'principal'] && sameCollege(request.resource.data))
+        || (role() == 'operations' && sameCollege(request.resource.data)
+          && approvedCurriculumAssignment(request.resource.data.curriculumId));
+      allow update: if isSuperadmin()
         || (role() in ['admin', 'hod', 'principal']
-          && sameCollege(request.resource.data));
+          && sameCollege(resource.data) && sameCollege(request.resource.data))
+        || (role() == 'operations' && sameCollege(resource.data) && sameCollege(request.resource.data)
+          && approvedCurriculumAssignment(request.resource.data.curriculumId));
       allow delete: if isSuperadmin()
         || (role() in ['admin', 'hod', 'principal'] && sameCollege(resource.data));
     }
@@ -1597,8 +1642,8 @@ service cloud.firestore {
     // now the single definition for both.
     match /curriculum/{docId} {
       allow get, list: if canReadCurriculum(resource.data);
-      allow write: if isSuperadmin()
-        || (role() in ['admin', 'hod'] && sameCollege(request.resource.data));
+      // Principal decisions are made by a tenant-checked server callable.
+      allow write: if isSuperadmin();
     }
 
     // Same treatment for the parser's raw extracts: an extract before

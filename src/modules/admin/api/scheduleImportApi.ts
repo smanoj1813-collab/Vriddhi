@@ -4,7 +4,7 @@
 // The whole decision (validation, de-duplication, clash detection, curriculum
 // cross-reference) happens server-side in functions/src/scheduleImport.ts —
 // the same pure clash maths that generateClassSessions enforces. The dialog
-// is a two-step flow: preview (dryRun) → apply (dryRun: false).
+// is a two-step flow: preview (dryRun) → submit proposals (dryRun: false).
 // ═══════════════════════════════════════════════════════════════════════════════
 
 import { httpsCallable } from 'firebase/functions'
@@ -43,7 +43,11 @@ export interface ScheduleImportRequest {
 export interface ScheduleImportResult {
   dryRun: boolean
   plan: ImportPlan
+  /** Number of live schedules written (legacy response only; approval flow writes zero). */
   created?: number
+  /** Number of unpublished schedule proposals sent to programme HODs. */
+  submitted?: number
+  submittedRows?: Array<{ line: number; subject: string; facultyId: string; proposalId: string }>
   createdRows?: Array<{ line: number; subject: string; facultyId: string }>
 }
 
@@ -71,7 +75,7 @@ export async function previewScheduleImport(req: ScheduleImportRequest): Promise
   }
 }
 
-/** APPLY — re-checks on fresh data and writes only the valid rows. */
+/** APPLY — re-checks on fresh data and routes valid rows to programme HOD approval. */
 export async function applyScheduleImport(req: ScheduleImportRequest): Promise<ScheduleImportResult> {
   try {
     return await call({ ...req, dryRun: false })

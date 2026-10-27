@@ -488,7 +488,9 @@ export default function SuperAdminCurriculum() {
                             <Chip label={`${item.totalCourses ?? 0} courses`} size="small" variant="outlined" />
                             <Chip label={`${item.totalHours ?? 0} hrs`} size="small" variant="outlined" />
                             <Chip label={`${item.totalMarks ?? 0} marks`} size="small" variant="outlined" />
+                            <Chip label={`Principal: ${item.approvalStatus || 'approved (legacy)'}`} size="small" color={item.approvalStatus === 'approved' || !item.approvalStatus ? 'success' : item.approvalStatus === 'returned' ? 'warning' : 'default'} variant="outlined" />
                           </Stack>
+                          {item.approvalNote && <Typography variant="caption" color="warning.main" sx={{ display: 'block', mt: 0.5 }}>Principal note: {item.approvalNote}</Typography>}
                         </Box>
                         <Typography variant="caption" color="text.secondary" sx={{ whiteSpace: 'nowrap' }}>
                           {assignedDate && !Number.isNaN(assignedDate.getTime()) ? assignedDate.toLocaleDateString() : '-'}
