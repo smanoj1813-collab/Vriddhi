@@ -489,6 +489,265 @@ MBO is a collaborative management system where superiors and subordinates jointl
         },
       ],
     },
+    {
+      id: 'mpa-mod3-organizing-structure',
+      subjectId: 'bba-karnataka-mpa',
+      title: 'Organizing: Departmentation, Authority & Span of Control',
+      moduleNumber: 3,
+      moduleName: 'Module 3: Organizing Structure & Authority Relationships',
+      order: 3,
+      difficulty: 'core',
+      tier: 'free',
+      status: 'published',
+      examFrequency: 'high',
+      generatedBy: 'curator',
+      contentVersion: 1,
+      publishedAt: '2026-09-16T12:00:00.000Z',
+      featuredQuestionIds: ['q-mpa-03'],
+      subtopics: [
+        'Organizing Process: Steps and Significance',
+        'Types of Organization Structure: Line, Functional, Line & Staff',
+        'Departmentation: Functional, Product, Geographic, Customer, Matrix',
+        'Authority, Responsibility, Accountability & Delegation',
+        'Span of Control, Tall vs Flat Organizations & Centralization',
+      ],
+      explanationMd: `# Organizing: Departmentation, Authority & Span of Control
+
+### Core Concept & University Context
+Organizing is the process of identifying and grouping work to be performed, defining and delegating responsibility and authority, and establishing relationships for the purpose of enabling people to work most effectively together in accomplishing objectives.
+
+Under the KSHEC BBA syllabus, Karnataka university exams test the organizing process, types of organization structures, departmentation bases, delegation of authority, and span of control.
+
+---
+
+### The Organizing Process
+1. **Identification of Work**: Listing all tasks required to achieve goals.
+2. **Departmentation**: Grouping similar activities into departments.
+3. **Assignment of Duties**: Allocating specific jobs to individuals.
+4. **Establishing Authority**: Defining who reports to whom.
+5. **Establishing Relationships**: Creating authority-responsibility relationships.
+
+---
+
+### Types of Organization Structure
+- **Line Organization**: Direct vertical authority; simplest and oldest form.
+- **Functional Organization**: Specialists exercise authority over their function across departments.
+- **Line & Staff Organization**: Line managers have command authority; staff specialists advise.
+- **Matrix Organization**: Dual reporting to both functional and project managers.
+
+---
+
+### Departmentation Bases
+- **Functional**: By function (production, marketing, finance, HR).
+- **Product**: By product line.
+- **Geographic/Territorial**: By region or location.
+- **Customer**: By customer type.
+- **Matrix**: Combination of functional and product/project.
+
+---
+
+### Authority, Responsibility & Delegation
+- **Authority**: Right to give orders and exact obedience.
+- **Responsibility**: Obligation to perform assigned duties.
+- **Accountability**: Being answerable for results.
+- **Delegation**: Entrusting authority and responsibility to subordinates while retaining accountability.
+
+---
+
+### Span of Control
+- **Narrow Span**: Few subordinates per manager → tall structure, more levels.
+- **Wide Span**: Many subordinates per manager → flat structure, fewer levels.
+- Factors: nature of work, manager capability, subordinate capability, geographic dispersion.`,
+      formulas: [
+        {
+          id: 'formula-mpa-3',
+          label: 'Delegation Principle (Authority = Responsibility)',
+          formula: 'Effective Delegation = Authority Granted + Responsibility Assigned + Accountability Retained',
+          exampleQ: 'A branch manager delegates customer complaint handling to a team lead but remains answerable to the regional head. Is accountability delegated?',
+          exampleA: 'No. Authority and responsibility can be delegated, but accountability remains with the delegating manager.',
+        },
+      ],
+      tricks: [
+        {
+          id: 'trick-mpa-3',
+          title: 'Departmentation Base Mnemonic',
+          trick: 'F P G C M: Functional, Product, Geographic, Customer, Matrix — the five standard departmentation bases.',
+          whenToUse: 'Quick recall for 2-mark MCQs and short notes on departmentation.',
+        },
+      ],
+      howToSolve: [
+        {
+          id: 'solve-mpa-4',
+          step: 'Step 1: Match Organization Type to Business Context',
+          detail: 'For a small retail store → Line structure. For a multi-product company like Titan → Divisional/Product structure. For project-based IT work → Matrix structure.',
+          questionType: 'Case-Based Structure Selection Question',
+        },
+      ],
+
+    },
+    {
+      id: 'mpa-mod4-staffing-leadership-motivation',
+      subjectId: 'bba-karnataka-mpa',
+      title: 'Staffing, Leadership Styles & Motivation Theories',
+      moduleNumber: 4,
+      moduleName: 'Module 4: Staffing, Leading & Motivation',
+      order: 4,
+      difficulty: 'core',
+      tier: 'free',
+      status: 'published',
+      examFrequency: 'very_high',
+      generatedBy: 'curator',
+      contentVersion: 1,
+      publishedAt: '2026-09-16T12:00:00.000Z',
+      featuredQuestionIds: ['q-mpa-04'],
+      subtopics: [
+        'Staffing Process: Recruitment, Selection, Training & Development',
+        'Leadership Styles: Autocratic, Democratic, Laissez-Faire, Paternalistic',
+        'Motivation Theories: Maslow, Herzberg Two-Factor, McGregor X & Y',
+        'Communication: Process, Barriers & Effective Communication',
+        'Coordination: Essence of Management & Techniques',
+      ],
+      explanationMd: `# Staffing, Leadership Styles & Motivation Theories
+
+### Core Concept & University Context
+Staffing fills and keeps filled the positions in the organization structure. Leading motivates people to give their best. Karnataka university exams frequently test Maslow's hierarchy, Herzberg's two-factor theory, McGregor's Theory X & Y, leadership styles, and communication barriers.
+
+---
+
+### Staffing Process
+1. **Manpower Planning**: Estimating number and type of people needed.
+2. **Recruitment**: Attracting qualified candidates.
+3. **Selection**: Choosing the best candidates through tests, interviews.
+4. **Training & Development**: Improving skills and preparing for future roles.
+5. **Performance Appraisal**: Evaluating how well employees perform.
+
+---
+
+### Leadership Styles
+- **Autocratic**: Leader makes decisions alone; quick but lowers morale.
+- **Democratic**: Participative; decisions made with group input.
+- **Laissez-Faire**: Hands-off; group makes decisions; works with skilled teams.
+- **Paternalistic**: Fatherly approach; leader cares for employees like family.
+
+---
+
+### Motivation Theories
+- **Maslow's Hierarchy**: Physiological → Safety → Social → Esteem → Self-actualization.
+- **Herzberg Two-Factor**: Motivators (achievement, recognition) vs Hygiene factors (salary, policy).
+- **McGregor Theory X**: People dislike work, need control.
+- **McGregor Theory Y**: People are self-motivated, seek responsibility.
+
+---
+
+### Communication & Coordination
+- **Communication**: Sender → Message → Channel → Receiver → Feedback.
+- **Barriers**: Noise, language, filtering, emotions, status differences.
+- **Coordination**: Integrating efforts to achieve unity of action — "essence of management."`,
+      formulas: [
+        {
+          id: 'formula-mpa-4',
+          label: 'Maslow Hierarchy Order',
+          formula: 'Physiological → Safety → Social/Belonging → Esteem → Self-Actualization',
+          exampleQ: 'An employee who feels secure at work but lacks recognition is stuck at which Maslow level?',
+          exampleA: 'Safety needs are met; the unmet need is Esteem (recognition, status).',
+        },
+      ],
+      tricks: [
+        {
+          id: 'trick-mpa-4',
+          title: 'Theory X vs Theory Y Quick Contrast',
+          trick: 'X = Control & coercion (strict supervision). Y = Trust & participation (self-direction).',
+          whenToUse: 'Distinguish managerial assumptions in 5-mark theory questions.',
+        },
+      ],
+      howToSolve: [
+        {
+          id: 'solve-mpa-5',
+          step: 'Step 1: Identify Leadership Style from Leader Behaviour',
+          detail: 'If the leader decides alone without consulting → Autocratic. If the leader asks the team for input → Democratic. If the leader leaves the team alone → Laissez-Faire.',
+          questionType: 'Case-Based Leadership Identification',
+        },
+      ],
+
+    },
+    {
+      id: 'mpa-mod5-directing-coordination-control',
+      subjectId: 'bba-karnataka-mpa',
+      title: 'Directing, Coordination & Control Techniques',
+      moduleNumber: 5,
+      moduleName: 'Module 5: Directing, Coordination & Controlling',
+      order: 5,
+      difficulty: 'core',
+      tier: 'free',
+      status: 'published',
+      examFrequency: 'high',
+      generatedBy: 'curator',
+      contentVersion: 1,
+      publishedAt: '2026-09-16T12:00:00.000Z',
+      featuredQuestionIds: ['q-mpa-05'],
+      subtopics: [
+        'Directing: Elements, Supervision & Motivation in Action',
+        'Control Process: Setting Standards, Measurement & Corrective Action',
+        'Control Techniques: Budgetary Control, Break-Even, Ratio Analysis',
+        'Coordination: Principles, Types & Coordination vs Cooperation',
+        'Management by Exception & Modern Control Systems',
+      ],
+      explanationMd: `# Directing, Coordination & Control Techniques
+
+### Core Concept & University Context
+Directing guides and supervises subordinates to achieve organizational goals. Controlling ensures performance matches plans. Karnataka university exams test the control process, control techniques (budgetary, break-even, ratio analysis), and coordination concepts.
+
+---
+
+### Directing
+Directing includes supervision, motivation, leadership, and communication. It initiates action — all other functions (planning, organizing, staffing) prepare the stage; directing performs the play.
+
+---
+
+### Control Process
+1. **Setting Standards**: Establish criteria for measuring performance.
+2. **Measurement**: Compare actual performance against standards.
+3. **Comparison**: Identify deviations (variances).
+4. **Corrective Action**: Take steps to fix deviations and prevent recurrence.
+
+---
+
+### Control Techniques
+- **Traditional**: Personal observation, statistical reports, break-even analysis, budgetary control.
+- **Modern**: ROI, ratio analysis, PERT/CPM, management audit.
+- **Management by Exception**: Only significant deviations are reported to top management.
+
+---
+
+### Coordination
+Coordination integrates the efforts of departments to ensure unity of action. It differs from cooperation (voluntary) — coordination is deliberate and essential at every management level.`,
+      formulas: [
+        {
+          id: 'formula-mpa-5',
+          label: 'Management by Exception Threshold',
+          formula: 'Report to Top Management = Actual Deviation > Acceptable Tolerance Limit',
+          exampleQ: 'Budgeted cost ₹1,00,000; actual ₹1,02,000; tolerance ±2%. Is this reported?',
+          exampleA: 'Deviation = 2%, within tolerance → NOT reported under management by exception.',
+        },
+      ],
+      tricks: [
+        {
+          id: 'trick-mpa-5',
+          title: 'Control Process Sequence',
+          trick: 'Standard → Measure → Compare → Correct. Never correct before measuring against the standard.',
+          whenToUse: 'Avoids sequencing errors in control-process theory answers.',
+        },
+      ],
+      howToSolve: [
+        {
+          id: 'solve-mpa-6',
+          step: 'Step 1: Classify Traditional vs Modern Control Technique',
+          detail: 'Budgetary control, break-even, and personal observation are traditional. ROI, ratio analysis, PERT, and management audit are modern.',
+          questionType: 'Technique Classification Question',
+        },
+      ],
+
+    },
   ],
 
   // ── 2. Fundamentals of Business Accounting (Sem 1) ──
@@ -572,6 +831,88 @@ Every commercial transaction alters at least two accounts such that this balance
           questionType: 'Journal Entry Formulation',
         },
       ],
+    },
+    {
+      id: 'acc-mod2-journal-ledger-trial-balance',
+      subjectId: 'bba-karnataka-accounting',
+      title: 'Journal, Ledger, Subsidiary Books & Trial Balance',
+      moduleNumber: 2,
+      moduleName: 'Module 2: Recording Transactions & Trial Balance',
+      order: 2,
+      difficulty: 'basic',
+      tier: 'free',
+      status: 'published',
+      examFrequency: 'very_high',
+      generatedBy: 'curator',
+      contentVersion: 1,
+      publishedAt: '2026-09-16T12:00:00.000Z',
+      featuredQuestionIds: ['q-acc-02'],
+      subtopics: [
+        'Journal: Format, Advantages & Compound Entries',
+        'Ledger: Posting, Balancing & Ledger Formats',
+        'Subsidiary Books: Cash Book, Purchases Book, Sales Book',
+        'Trial Balance: Objectives, Preparation & Limitations',
+        'Errors: Types, Rectification & Suspense Account',
+      ],
+      explanationMd: `# Journal, Ledger, Subsidiary Books & Trial Balance
+
+### Core Concept & University Context
+The Journal is the book of original entry; the Ledger is the book of final classification. The Trial Balance checks arithmetical accuracy before final accounts are prepared. Karnataka universities heavily test journal entries, ledger posting, and trial balance preparation.
+
+---
+
+### Journal
+The journal records transactions chronologically using the double-entry system.
+Format: Date | Particulars | L.F. | Debit (₹) | Credit (₹)
+- **Compound Entry**: One entry affecting three or more accounts.
+
+### Ledger
+The ledger classifies journal entries account-wise.
+Format: Dr. side | Cr. side. Each account is balanced at period-end.
+
+### Subsidiary Books
+Special journals for repetitive transactions:
+- **Cash Book**: Cash receipts and payments.
+- **Purchases Book**: Credit purchases of goods only.
+- **Sales Book**: Credit sales of goods only.
+- **Purchases/Sales Returns Book**: Goods returned.
+
+### Trial Balance
+A statement of debit and credit balances extracted from ledger accounts to check arithmetical accuracy.
+- **Limitation**: Does not detect errors of omission, commission, principle, or compensating errors.
+
+### Errors & Suspense Account
+- **Errors of Omission**: Transaction not recorded at all.
+- **Errors of Commission**: Wrong posting/calculation.
+- **Errors of Principle**: Wrong account classification.
+- **Compensating Errors**: Two errors cancel each other.
+- **Suspense Account**: Temporary account when trial balance disagrees.`,
+      formulas: [
+        {
+          id: 'formula-acc-k2',
+          label: 'Trial Balance Equality Check',
+          formula: 'Total of Debit Column = Total of Credit Column',
+          exampleQ: 'Debit totals ₹2,50,000 and Credit totals ₹2,48,000. Is the trial balance correct?',
+          exampleA: 'No. The ₹2,000 difference must be placed in a Suspense Account pending error detection.',
+        },
+      ],
+      tricks: [
+        {
+          id: 'trick-acc-k2',
+          title: 'Golden Rules → DEALER Cross-Check',
+          trick: 'Debit: Drawings, Expenses, Assets (DEA increase). Credit: Liabilities, Equity, Revenue (LER increase).',
+          whenToUse: 'Eliminates debit/credit mistakes during fast journal entries.',
+        },
+      ],
+      howToSolve: [
+        {
+          id: 'solve-acc-k2',
+          step: 'Step 1: Identify Both Affected Accounts & Apply Golden Rule',
+          detail: 'Ascertain the two accounts involved, classify each (Real/Personal/Nominal), then debit-credit per golden rule.',
+          questionType: 'Journal Entry Formulation',
+        },
+      ],
+
     },
     {
       id: 'acc-mod3-consignment',
@@ -712,10 +1053,172 @@ Depreciation is calculated on the reducing book value at the beginning of each p
         },
       ],
     },
+    {
+      id: 'acc-mod5-final-accounts-adjustments',
+      subjectId: 'bba-karnataka-accounting',
+      title: 'Final Accounts: Trading, P&L & Balance Sheet with Adjustments',
+      moduleNumber: 5,
+      moduleName: 'Module 5: Final Accounts & Adjustments',
+      order: 5,
+      difficulty: 'core',
+      tier: 'free',
+      status: 'published',
+      examFrequency: 'very_high',
+      generatedBy: 'curator',
+      contentVersion: 1,
+      publishedAt: '2026-09-16T12:00:00.000Z',
+      featuredQuestionIds: ['q-acc-05'],
+      subtopics: [
+        'Trading Account: Gross Profit & Direct Expenses',
+        'Profit & Loss Account: Net Profit & Indirect Expenses',
+        'Balance Sheet: Assets & Liabilities Classification',
+        'Adjustments: Closing Stock, Outstanding/Prepaid, Depreciation, Bad Debts',
+        'Marshalling of Balance Sheet: Liquidity & Permanence Order',
+      ],
+      explanationMd: `# Final Accounts: Trading, P&L & Balance Sheet with Adjustments
+
+### Core Concept & University Context
+Final accounts (Trading A/c, Profit & Loss A/c, Balance Sheet) are prepared from the trial balance to ascertain profit/loss and financial position. Adjustments (closing stock, outstanding/prepaid expenses, depreciation, bad debts) are critical — every adjustment has a double effect. Karnataka universities set 12-15 mark problems on final accounts with adjustments.
+
+---
+
+### Trading Account
+Determines Gross Profit/Gross Loss.
+- Debit: Opening Stock, Purchases, Direct Expenses, Carriage Inward.
+- Credit: Sales, Closing Stock.
+- Gross Profit = Credit side − Debit side.
+
+### Profit & Loss Account
+Determines Net Profit/Net Loss.
+- Debit: Indirect Expenses (salaries, rent, depreciation, bad debts).
+- Credit: Gross Profit (b/d), Indirect Incomes (discount received, commission).
+- Net Profit = Credit side − Debit side.
+
+### Balance Sheet
+Shows financial position on a date.
+- Liabilities side: Capital, Loans, Creditors, Outstanding expenses.
+- Assets side: Fixed assets, Current assets, Investments, Cash.
+
+### Adjustments (Double Effect Rule)
+Every adjustment appears TWICE in final accounts:
+1. **Closing Stock**: Credit to Trading A/c; Asset in Balance Sheet.
+2. **Outstanding Expense**: Add to expense in P&L; Liability in Balance Sheet.
+3. **Prepaid Expense**: Deduct from expense in P&L; Asset in Balance Sheet.
+4. **Depreciation**: Deduct in P&L; deduct from asset in Balance Sheet.
+5. **Bad Debts**: Deduct in P&L; deduct from debtors in Balance Sheet.
+
+### Marshalling
+Order of assets/liabilities:
+- **Liquidity**: Most liquid asset first (cash → least liquid).
+- **Permanence**: Most permanent first (goodwill → cash).`,
+      formulas: [
+        {
+          id: 'formula-acc-k5',
+          label: 'Gross Profit Formula',
+          formula: 'Gross Profit = Net Sales − Cost of Goods Sold',
+          exampleQ: 'Sales ₹5,00,000; COGS ₹3,80,000. What is Gross Profit?',
+          exampleA: 'Gross Profit = ₹5,00,000 − ₹3,80,000 = ₹1,20,000.',
+        },
+      ],
+      tricks: [
+        {
+          id: 'trick-acc-k5',
+          title: 'Adjustment Double-Effect Mnemonic',
+          trick: 'Every adjustment hits TWO places: once in the P&L/Trading account and once in the Balance Sheet. Never post an adjustment only once.',
+          whenToUse: 'Prevents the most common marks-losing error in final-accounts problems.',
+        },
+      ],
+      howToSolve: [
+        {
+          id: 'solve-acc-k5',
+          step: 'Step 1: Pass Adjustment Entries Before Preparing Statements',
+          detail: 'Convert every adjustment into a journal entry first (e.g., Depreciation A/c Dr → To Asset A/c), then reflect both effects in Trading/P&L/Balance Sheet.',
+          questionType: 'Final Accounts with Adjustments Problem',
+        },
+      ],
+
+    },
   ],
 
   // ── 3. Principles of Marketing (Sem 1) ──
   'bba-karnataka-marketing': [
+    {
+      id: 'mkt-mod1-marketing-concepts-environment',
+      subjectId: 'bba-karnataka-marketing',
+      title: 'Marketing Concepts, Environment & Marketing Mix (4Ps)',
+      moduleNumber: 1,
+      moduleName: 'Module 1: Introduction to Marketing & Environment',
+      order: 1,
+      difficulty: 'basic',
+      tier: 'free',
+      status: 'published',
+      examFrequency: 'high',
+      generatedBy: 'curator',
+      contentVersion: 1,
+      publishedAt: '2026-09-16T12:00:00.000Z',
+      featuredQuestionIds: ['q-mkt-03'],
+      subtopics: [
+        'Marketing: Meaning, Scope & Core Concepts (Needs, Wants, Demand)',
+        'Marketing Philosophies: Production, Product, Selling, Marketing, Societal',
+        'Marketing Environment: Micro & Macro (PESTLE Analysis)',
+        'Marketing Mix: 4Ps (Product, Price, Place, Promotion)',
+        'Service Marketing Mix: 7Ps (Adding People, Process, Physical Evidence)',
+      ],
+      explanationMd: `# Marketing Concepts, Environment & Marketing Mix (4Ps)
+
+### Core Concept & University Context
+Marketing is a social and managerial process by which individuals and groups obtain what they need and want through creating, offering, and exchanging products of value. Karnataka university exams test marketing concepts, philosophies, environment, and the 4Ps/7Ps framework.
+
+---
+
+### Core Marketing Concepts
+- **Needs**: States of felt deprivation (food, shelter).
+- **Wants**: Needs shaped by culture and personality.
+- **Demand**: Wants backed by buying power.
+- **Value**: Benefits relative to cost.
+- **Satisfaction**: Perceived performance vs expectations.
+
+### Marketing Philosophies (Orientations)
+1. **Production Concept**: Focus on production efficiency and distribution.
+2. **Product Concept**: Focus on quality, performance, features.
+3. **Selling Concept**: Focus on aggressive selling and promotion.
+4. **Marketing Concept**: Focus on customer needs and integrated marketing.
+5. **Societal Marketing Concept**: Customer needs + society's long-term welfare.
+
+### Marketing Environment
+- **Microenvironment**: Company, suppliers, intermediaries, customers, competitors, publics.
+- **Macroenvironment**: PESTLE — Political, Economic, Social, Technological, Legal, Environmental.
+
+### Marketing Mix
+- **4Ps**: Product, Price, Place, Promotion.
+- **7Ps (Services)**: Adds People, Process, Physical Evidence.`,
+      formulas: [
+        {
+          id: 'formula-mkt-1',
+          label: 'Marketing Concept Equation',
+          formula: 'Customer Satisfaction = Perceived Performance − Expected Performance',
+          exampleQ: 'A customer expects a phone to last 3 years but it fails in 1 year. What is the satisfaction level?',
+          exampleA: 'Negative satisfaction: Perceived performance (1 year) < Expected performance (3 years).',
+        },
+      ],
+      tricks: [
+        {
+          id: 'trick-mkt-1',
+          title: '4Ps vs 7Ps Mnemonic',
+          trick: '4Ps = Product, Price, Place, Promotion. Services add 3 more: People, Process, Physical Evidence.',
+          whenToUse: 'Instantly recall the service marketing mix for services-sector questions.',
+        },
+      ],
+      howToSolve: [
+        {
+          id: 'solve-mkt-2',
+          step: 'Step 1: Identify Marketing Philosophy from Company Behaviour',
+          detail: 'If the company exists because it makes great products → Product Concept. If it starts from customer needs → Marketing Concept.',
+          questionType: 'Philosophy Identification Case Study',
+        },
+      ],
+
+    },
     {
       id: 'mkt-mod2-stp',
       subjectId: 'bba-karnataka-marketing',
@@ -856,6 +1359,160 @@ The **Product Life Cycle (PLC)** describes the sales and profit trajectory of a 
           questionType: 'Diagram-Driven University Question',
         },
       ],
+    },
+    {
+      id: 'mkt-mod4-distribution-channels-retailing',
+      subjectId: 'bba-karnataka-marketing',
+      title: 'Distribution Channels, Retailing & Logistics',
+      moduleNumber: 4,
+      moduleName: 'Module 4: Place – Distribution Channels & Retailing',
+      order: 4,
+      difficulty: 'core',
+      tier: 'free',
+      status: 'published',
+      examFrequency: 'high',
+      generatedBy: 'curator',
+      contentVersion: 1,
+      publishedAt: '2026-09-16T12:00:00.000Z',
+      featuredQuestionIds: ['q-mkt-04'],
+      subtopics: [
+        'Channels of Distribution: Direct vs Indirect, Zero to Three-Level',
+        'Types of Intermediaries: Wholesalers, Retailers, Agents, Brokers',
+        'Retailing Formats: Department Stores, Supermarkets, Malls, E-tailing',
+        'Channel Selection Factors & Conflict Management',
+        'Logistics & Supply Chain Management Basics',
+      ],
+      explanationMd: `# Distribution Channels, Retailing & Logistics
+
+### Core Concept & University Context
+Place (distribution) makes products available where and when customers want them. Karnataka university exams test channel levels, intermediary types, retail formats, and channel conflict.
+
+---
+
+### Channels of Distribution
+- **Zero-level**: Manufacturer → Consumer (direct, e.g., company showroom).
+- **One-level**: Manufacturer → Retailer → Consumer.
+- **Two-level**: Manufacturer → Wholesaler → Retailer → Consumer.
+- **Three-level**: Manufacturer → Agent → Wholesaler → Retailer → Consumer.
+
+### Intermediaries
+- **Wholesaler**: Sells to retailers/institutions in bulk.
+- **Retailer**: Sells to final consumers.
+- **Agent/Broker**: Facilitates sale without taking ownership.
+
+### Retailing Formats
+- Department Stores, Supermarkets, Convenience Stores, Malls, E-tailing (online), Vending.
+
+### Channel Selection Factors
+Product characteristics, market size, competition, company resources, customer buying habits.
+
+### Channel Conflict
+Disagreement among channel members (e.g., vertical conflict between manufacturer and retailer). Resolved through clear policies and communication.
+
+### Logistics & SCM
+Logistics = movement and storage of goods. Supply Chain = broader network from raw material to end customer.`,
+      formulas: [
+        {
+          id: 'formula-mkt-4',
+          label: 'Channel Level Counting Rule',
+          formula: 'Channel Levels = Number of Intermediary Levels Between Producer and Consumer',
+          exampleQ: 'Manufacturer → Wholesaler → Retailer → Consumer has how many levels?',
+          exampleA: 'Two-level channel (two intermediary levels: wholesaler and retailer).',
+        },
+      ],
+      tricks: [
+        {
+          id: 'trick-mkt-4',
+          title: 'Zero vs One vs Two Level Trap',
+          trick: 'Count intermediaries, not arrows. Direct (zero) = no intermediary between producer and consumer.',
+          whenToUse: 'Avoids off-by-one errors in channel-level MCQs.',
+        },
+      ],
+      howToSolve: [
+        {
+          id: 'solve-mkt-4',
+          step: 'Step 1: Map Intermediaries Between Producer and Consumer',
+          detail: 'List every independent business that takes title or assists in transfer. Count them to name the channel level.',
+          questionType: 'Channel Level Identification Question',
+        },
+      ],
+
+    },
+    {
+      id: 'mkt-mod5-promotion-mix-advertising',
+      subjectId: 'bba-karnataka-marketing',
+      title: 'Promotion Mix: Advertising, Sales Promotion & Personal Selling',
+      moduleNumber: 5,
+      moduleName: 'Module 5: Promotion Mix & Integrated Marketing Communication',
+      order: 5,
+      difficulty: 'core',
+      tier: 'free',
+      status: 'published',
+      examFrequency: 'high',
+      generatedBy: 'curator',
+      contentVersion: 1,
+      publishedAt: '2026-09-16T12:00:00.000Z',
+      featuredQuestionIds: ['q-mkt-05'],
+      subtopics: [
+        'Promotion Mix: Advertising, Personal Selling, Sales Promotion, Public Relations',
+        'Advertising: Media Selection, Objectives & Advertising Budget',
+        'Sales Promotion: Consumer & Trade Promotion Techniques',
+        'Personal Selling: Process & Qualities of a Salesperson',
+        'Integrated Marketing Communication (IMC) & Digital Marketing Basics',
+      ],
+      explanationMd: `# Promotion Mix: Advertising, Sales Promotion & Personal Selling
+
+### Core Concept & University Context
+Promotion communicates with customers to inform, persuade, and remind. Karnataka university exams test the four promotion-mix elements, advertising media, sales promotion techniques, personal selling process, and IMC.
+
+---
+
+### Promotion Mix (4 Elements)
+1. **Advertising**: Paid, non-personal communication via media.
+2. **Personal Selling**: Face-to-face presentation by salesperson.
+3. **Sales Promotion**: Short-term incentives (discounts, coupons, contests).
+4. **Public Relations**: Building goodwill with the public.
+
+### Advertising
+- Objectives: Inform, persuade, remind.
+- Media: TV, radio, print, outdoor, digital.
+- Budget methods: % of sales, affordable, competitive parity, objective-and-task.
+
+### Sales Promotion
+- **Consumer**: Discounts, coupons, free samples, contests, lucky draws.
+- **Trade**: Display allowances, buying allowances, free goods, push money.
+
+### Personal Selling Process
+Prospecting → Pre-approach → Approach → Presentation → Handling objections → Closing → Follow-up.
+
+### IMC
+Integrated Marketing Communication coordinates all promotion tools for a consistent message. Digital marketing includes social media, SEO, email, content marketing.`,
+      formulas: [
+        {
+          id: 'formula-mkt-5',
+          label: 'AIDA Model (Advertising Effectiveness)',
+          formula: 'Attention → Interest → Desire → Action',
+          exampleQ: 'Which AIDA stage does a "Limited-time 50% off" banner target?',
+          exampleA: 'Desire and Action — creating urgency to prompt immediate purchase.',
+        },
+      ],
+      tricks: [
+        {
+          id: 'trick-mkt-5',
+          title: 'Promotion Mix 4 Elements Mnemonic',
+          trick: 'APPS: Advertising, Personal Selling, Promotion (sales), Public Relations.',
+          whenToUse: 'Fast recall of all four promotion-mix elements.',
+        },
+      ],
+      howToSolve: [
+        {
+          id: 'solve-mkt-5',
+          step: 'Step 1: Match Promotion Tool to Objective',
+          detail: 'Build awareness → Advertising. Close a sale → Personal Selling. Boost short-term sales → Sales Promotion. Build image → Public Relations.',
+          questionType: 'Tool-Objective Matching Question',
+        },
+      ],
+
     },
   ],
 
@@ -3411,5 +4068,141 @@ export const SEEDED_UNIVERSAL_QUESTIONS: UniversalQuestion[] = [
       stream: 'taxation',
       program: 'bba',
     },
+  },
+  {
+    id: 'q-mpa-03',
+    questionText: 'Which organization structure has direct vertical authority from top to bottom with no staff specialists?',
+    options: [
+      'Line Organization',
+      'Functional Organization',
+      'Matrix Organization',
+      'Line & Staff Organization',
+    ],
+    correctIndex: 0,
+    explanation: 'A Line Organization has direct vertical authority relationships from top management to workers, without specialized staff advisors.',
+    difficulty: 'basic',
+    status: 'approved',
+    pyqTag: { university: 'Bangalore University (BU)', year: 2024, marks: 2, semester: 1 },
+    prepTags: { subjectId: 'bba-karnataka-mpa', topicIds: ['mpa-mod3-organizing-structure'], stream: 'management', program: 'bba' },
+
+  },
+  {
+    id: 'q-mpa-04',
+    questionText: 'Under Maslow\'s hierarchy, which need is satisfied by job security and a safe working environment?',
+    options: [
+      'Physiological',
+      'Safety',
+      'Social',
+      'Esteem',
+    ],
+    correctIndex: 1,
+    explanation: 'Safety needs include security of employment, income, and a safe physical work environment — the second level in Maslow\'s hierarchy.',
+    difficulty: 'basic',
+    status: 'approved',
+    pyqTag: { university: 'Mysore University (UOM)', year: 2023, marks: 2, semester: 1 },
+    prepTags: { subjectId: 'bba-karnataka-mpa', topicIds: ['mpa-mod4-staffing-leadership-motivation'], stream: 'management', program: 'bba' },
+
+  },
+  {
+    id: 'q-mpa-05',
+    questionText: 'Which control technique reports only significant deviations from standards to top management?',
+    options: [
+      'Budgetary Control',
+      'Break-Even Analysis',
+      'Management by Exception',
+      'Ratio Analysis',
+    ],
+    correctIndex: 2,
+    explanation: 'Management by Exception focuses managerial attention only on material deviations that exceed acceptable tolerance limits.',
+    difficulty: 'core',
+    status: 'approved',
+    pyqTag: { university: 'Bengaluru City University (BCU)', year: 2024, marks: 5, semester: 1 },
+    prepTags: { subjectId: 'bba-karnataka-mpa', topicIds: ['mpa-mod5-directing-coordination-control'], stream: 'management', program: 'bba' },
+
+  },
+  {
+    id: 'q-acc-02',
+    questionText: 'Which book of original entry records credit purchases of goods only?',
+    options: [
+      'Sales Book',
+      'Purchases Book',
+      'Cash Book',
+      'Journal Proper',
+    ],
+    correctIndex: 1,
+    explanation: 'The Purchases Book records credit purchases of goods (trading merchandise) only; cash purchases go in the Cash Book.',
+    difficulty: 'basic',
+    status: 'approved',
+    pyqTag: { university: 'Bangalore University (BU)', year: 2024, marks: 2, semester: 1 },
+    prepTags: { subjectId: 'bba-karnataka-accounting', topicIds: ['acc-mod2-journal-ledger-trial-balance'], stream: 'commerce', program: 'bba' },
+
+  },
+  {
+    id: 'q-acc-05',
+    questionText: 'Closing stock appears in final accounts as:',
+    options: [
+      'Only on the credit side of the Trading Account',
+      'Only as a current asset in the Balance Sheet',
+      'On the credit side of the Trading Account and as a current asset in the Balance Sheet',
+      'Only on the debit side of the Profit & Loss Account',
+    ],
+    correctIndex: 2,
+    explanation: 'Closing stock has a double effect: credited to the Trading Account and shown as a current asset in the Balance Sheet.',
+    difficulty: 'core',
+    status: 'approved',
+    pyqTag: { university: 'Mysore University (UOM)', year: 2023, marks: 10, semester: 1 },
+    prepTags: { subjectId: 'bba-karnataka-accounting', topicIds: ['acc-mod5-final-accounts-adjustments'], stream: 'commerce', program: 'bba' },
+
+  },
+  {
+    id: 'q-mkt-03',
+    questionText: 'Which marketing philosophy starts from customer needs and integrates all activities to satisfy them?',
+    options: [
+      'Production Concept',
+      'Product Concept',
+      'Selling Concept',
+      'Marketing Concept',
+    ],
+    correctIndex: 3,
+    explanation: 'The Marketing Concept holds that organizational goals are achieved by identifying customer needs and delivering desired satisfactions better than competitors.',
+    difficulty: 'basic',
+    status: 'approved',
+    pyqTag: { university: 'Bangalore University (BU)', year: 2024, marks: 2, semester: 1 },
+    prepTags: { subjectId: 'bba-karnataka-marketing', topicIds: ['mkt-mod1-marketing-concepts-environment'], stream: 'management', program: 'bba' },
+
+  },
+  {
+    id: 'q-mkt-04',
+    questionText: 'Manufacturer → Wholesaler → Retailer → Consumer is which channel level?',
+    options: [
+      'Zero-level channel',
+      'One-level channel',
+      'Two-level channel',
+      'Three-level channel',
+    ],
+    correctIndex: 2,
+    explanation: 'Two intermediary levels (wholesaler and retailer) sit between producer and consumer, making it a two-level channel.',
+    difficulty: 'basic',
+    status: 'approved',
+    pyqTag: { university: 'Mysore University (UOM)', year: 2023, marks: 2, semester: 1 },
+    prepTags: { subjectId: 'bba-karnataka-marketing', topicIds: ['mkt-mod4-distribution-channels-retailing'], stream: 'management', program: 'bba' },
+
+  },
+  {
+    id: 'q-mkt-05',
+    questionText: 'Which element of the promotion mix is paid, non-personal communication through media?',
+    options: [
+      'Personal Selling',
+      'Sales Promotion',
+      'Public Relations',
+      'Advertising',
+    ],
+    correctIndex: 3,
+    explanation: 'Advertising is any paid form of non-personal presentation and promotion of ideas, goods, or services by an identified sponsor.',
+    difficulty: 'basic',
+    status: 'approved',
+    pyqTag: { university: 'Bengaluru City University (BCU)', year: 2024, marks: 2, semester: 1 },
+    prepTags: { subjectId: 'bba-karnataka-marketing', topicIds: ['mkt-mod5-promotion-mix-advertising'], stream: 'management', program: 'bba' },
+
   },
 ]

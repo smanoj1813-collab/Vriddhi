@@ -267,8 +267,8 @@ describe('legacy BBA catalogue (partial, pre-dates the completeness contract)', 
 
   it('pins the known partial shape so silent drift is caught', () => {
     assert.equal(LEGACY_BBA.subjects.length, 20)
-    assert.equal(topics.length, 31)
-    assert.equal(LEGACY_BBA.questions.length, 31)
+    assert.equal(topics.length, 39)
+    assert.equal(LEGACY_BBA.questions.length, 39)
   })
 
   it('has unique subject, topic and question ids', () => {
