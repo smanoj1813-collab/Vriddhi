@@ -15,6 +15,37 @@ import katex from 'katex';
 import 'katex/dist/katex.min.css';
 import { formatDifficultyBadge } from '@/shared/utils/prepHelpers';
 
+// Bundled prep illustrations. Seed markdown references these by bare filename
+// (e.g. `![SWOT Diagram](swot-analysis.png)`), so the renderer resolves them
+// through this map at display time — no re-seeding needed when assets change.
+import prepBcgMatrix from '../../assets/prep-images/bcg-matrix.png';
+import prepBreakEvenAnalysis from '../../assets/prep-images/break-even-analysis.png';
+import prepCostCurves from '../../assets/prep-images/cost-curves.png';
+import prepFinancialStatements from '../../assets/prep-images/financial-statements.png';
+import prepMarketStructures from '../../assets/prep-images/market-structures.png';
+import prepOrgStructure from '../../assets/prep-images/org-structure.png';
+import prepSupplyDemandCurve from '../../assets/prep-images/supply-demand-curve.png';
+import prepSwotAnalysis from '../../assets/prep-images/swot-analysis.png';
+
+const PREP_IMAGE_URLS: Record<string, string> = {
+  'bcg-matrix.png': prepBcgMatrix,
+  'break-even-analysis.png': prepBreakEvenAnalysis,
+  'cost-curves.png': prepCostCurves,
+  'financial-statements.png': prepFinancialStatements,
+  'market-structures.png': prepMarketStructures,
+  'org-structure.png': prepOrgStructure,
+  'supply-demand-curve.png': prepSupplyDemandCurve,
+  'swot-analysis.png': prepSwotAnalysis,
+};
+
+/** Resolve a markdown image src to a renderable URL, or null if unknown. */
+export function resolvePrepImageSrc(src: string): string | null {
+  if (/^https?:\/\//i.test(src)) return src;
+  const base = src.split('/').pop() || src;
+  if (PREP_IMAGE_URLS[base]) return PREP_IMAGE_URLS[base];
+  return src.startsWith('/') ? src : null;
+}
+
 // Platform catalog, mirroring PREP_PROGRAM_CATALOG in functions/src/prepShared.ts
 // (kept local so the public page has no cross-app import into the functions
 // source tree).
@@ -476,27 +507,32 @@ export function PrepMarkdown({ text }: { text: string }) {
       );
       continue;
     }
-    // ![Caption](https://…) on its own line → figure block. Only http(s)
-    // URLs are rendered (the Studio "Upload image" control produces exactly
-    // this syntax with a Storage URL).
-    const image = line.match(/^!\[([^\]]*)\]\((https?:\/\/\S+?)\)\s*$/);
+    // ![Caption](src) on its own line → figure block. Accepts full http(s)
+    // URLs (the Studio "Upload image" control produces exactly this syntax
+    // with a Storage URL) and bare/relative filenames of bundled illustrations
+    // (seed markdown embeds e.g. `swot-analysis.png`, resolved through
+    // resolvePrepImageSrc). Unknown non-URL sources are skipped.
+    const image = line.match(/^!\[([^\]]*)\]\(([^)\s]+)\)\s*$/);
     if (image) {
       flushList();
-      blocks.push(
-        <Box key={key++} sx={{ my: 1.5, textAlign: 'center' }}>
-          <img
-            src={image[2]}
-            alt={image[1] || 'Diagram'}
-            loading="lazy"
-            style={{ maxWidth: '100%', height: 'auto', borderRadius: 8, border: '1px solid rgba(0,0,0,0.08)' }}
-          />
-          {image[1] ? (
-            <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
-              {image[1]}
-            </Typography>
-          ) : null}
-        </Box>,
-      );
+      const src = resolvePrepImageSrc(image[2]);
+      if (src) {
+        blocks.push(
+          <Box key={key++} sx={{ my: 1.5, textAlign: 'center' }}>
+            <img
+              src={src}
+              alt={image[1] || 'Diagram'}
+              loading="lazy"
+              style={{ maxWidth: '100%', height: 'auto', borderRadius: 8, border: '1px solid rgba(0,0,0,0.08)' }}
+            />
+            {image[1] ? (
+              <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
+                {image[1]}
+              </Typography>
+            ) : null}
+          </Box>,
+        );
+      }
       continue;
     }
     if (!line.trim()) {
