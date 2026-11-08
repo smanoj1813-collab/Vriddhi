@@ -496,7 +496,11 @@ MBO is a collaborative management system where superiors and subordinates jointl
         'Delegation vs Decentralization'
       ], explanationMd: `# Organizing: Structure, Departmentation & Authority
 
-Organizing structures roles, responsibilities, and authority.`,
+Organizing structures roles, responsibilities, and authority.
+
+![Mpa Mod3 Organizing Diagram](org-structure.png)
+
+`,
       formulas: [
         { id: 'formula-mpa-mod3-organizing-1', label: 'Key Formula', formula: 'Formula placeholder', exampleQ: 'Example question', exampleA: 'Example answer' },
       ],
@@ -784,7 +788,11 @@ Every transaction affects at least two accounts — one debited, one credited.
 Transfer journal entries to individual ledger accounts.
 
 ### Trial Balance
-A statement listing all ledger account balances.`,
+A statement listing all ledger account balances.
+
+![Acc Mod2 Journal Ledger Trial Balance Diagram](financial-statements.png)
+
+`,
       formulas: [
         { id: 'formula-acc-m2-1', label: 'Accounting Equation', formula: 'Assets = Liabilities + Owner’s Equity', exampleQ: 'If capital is ₹2,00,000 and liabilities are ₹50,000, what are total assets?', exampleA: 'Assets = 2,00,000 + 50,000 = ₹2,50,000.' },
       ],
@@ -812,7 +820,11 @@ Opens with opening stock, records purchases and direct expenses, closes with clo
 Starts with gross profit, records indirect expenses and incomes.
 
 ### Balance Sheet
-Statement of financial position.`,
+Statement of financial position.
+
+![Acc Mod5 Final Accounts Adjustments Diagram](financial-statements.png)
+
+`,
       formulas: [
         { id: 'formula-acc-m5-1', label: 'Gross Profit', formula: 'Gross Profit = Net Sales − Cost of Goods Sold', exampleQ: 'Sales ₹5,00,000, COGS ₹3,50,000. Gross Profit?', exampleA: 'Gross Profit = 5,00,000 − 3,50,000 = ₹1,50,000.' },
       ],
@@ -1455,7 +1467,11 @@ $$\\text{Price Elasticity} (E_p) = \\frac{\\% \\Delta Q}{\\% \\Delta P} = \\frac
         'Cost Concepts: TC, AC, MC, AFC, AVC'
       ], explanationMd: `# Production Functions & Cost Analysis
 
-When MP > AP, AP is rising.`,
+When MP > AP, AP is rising.
+
+![Eco Mod2 Production Functions Diagram](supply-demand-curve.png)
+
+`,
       formulas: [
         { id: 'formula-eco-m2-1', label: 'Marginal Product', formula: 'MP = ΔTP ÷ ΔL', exampleQ: 'TP with 3 workers = 30; TP with 4 workers = 38. MP of 4th worker?', exampleA: 'MP = (38 − 30) ÷ (4 − 3) = 8 units.' },
       ],
@@ -1474,7 +1490,11 @@ When MP > AP, AP is rising.`,
         'Equilibrium of Firm'
       ], explanationMd: `# Cost Curves & Revenue Concepts
 
-MC cuts AC at its minimum point.`,
+MC cuts AC at its minimum point.
+
+![Eco Mod3 Cost Curves Diagram](cost-curves.png)
+
+`,
       formulas: [
         { id: 'formula-eco-m3-1', label: 'Marginal Cost', formula: 'MC = ΔTC ÷ ΔQ', exampleQ: 'TC at 10 units = ₹500; TC at 11 units = ₹545. MC of 11th unit?', exampleA: 'MC = (545 − 500) ÷ (11 − 10) = ₹45.' },
       ],
@@ -1493,7 +1513,11 @@ MC cuts AC at its minimum point.`,
         'Price Discrimination: Types & Conditions'
       ], explanationMd: `# Market Structures
 
-A single seller with no close substitutes defines monopoly.`,
+A single seller with no close substitutes defines monopoly.
+
+![Eco Mod4 Market Structures Diagram](market-structures.png)
+
+`,
       formulas: [
         { id: 'formula-eco-mod4-market-structures-1', label: 'Key Formula', formula: 'Formula placeholder', exampleQ: 'Example question', exampleA: 'Example answer' },
       ],
@@ -1512,7 +1536,11 @@ A single seller with no close substitutes defines monopoly.`,
         'Differential Pricing'
       ], explanationMd: `# Managerial Pricing Methods
 
-Penetration pricing sets a low initial price to capture market share quickly.`,
+Penetration pricing sets a low initial price to capture market share quickly.
+
+![Eco Mod5 Managerial Pricing Diagram](supply-demand-curve.png)
+
+`,
       formulas: [
         { id: 'formula-eco-mod5-managerial-pricing-1', label: 'Key Formula', formula: 'Formula placeholder', exampleQ: 'Example question', exampleA: 'Example answer' },
       ],
@@ -2432,7 +2460,11 @@ Capital Budgeting involves planning and evaluating long-term capital investments
         'Perpetuity'
       ], explanationMd: `# Time Value of Money
 
-Money today is worth more than the same amount in future.`,
+Money today is worth more than the same amount in future.
+
+![Fm Mngt Mod1 Time Value Of Money Diagram](break-even-analysis.png)
+
+`,
       formulas: [
         { id: 'formula-fmngt-m1-1', label: 'Future Value', formula: 'FV = PV × (1 + r)^n', exampleQ: '₹10,000 at 10% for 2 years. FV?', exampleA: 'FV = 10,000 × 1.10² = ₹12,100.' },
       ],
@@ -2470,7 +2502,11 @@ Working capital = Current assets − Current liabilities.`,
         'Profitability Index'
       ], explanationMd: `# Capital Budgeting
 
-Accept project if NPV > 0.`,
+Accept project if NPV > 0.
+
+![Fm Mngt Mod5 Capital Budgeting Diagram](break-even-analysis.png)
+
+`,
       formulas: [
         { id: 'formula-fmngt-m5-1', label: 'NPV', formula: 'NPV = Σ (Cash flows ÷ (1+r)^t) − Initial Investment', exampleQ: 'Investment ₹1,00,000; cash inflow ₹30,000/yr for 5 years at 10%. NPV?', exampleA: 'NPV ≈ ₹13,723 (positive — accept).' },
       ],
@@ -2758,7 +2794,11 @@ A flexible budget adjusts for different levels of activity.`,
         'Cost-Volume-Profit Analysis'
       ], explanationMd: `# Marginal Costing & Decision Making
 
-Contribution = Sales − Variable Cost.`,
+Contribution = Sales − Variable Cost.
+
+![Mgmt Mod5 Marginal Costing Decision Making Diagram](break-even-analysis.png)
+
+`,
       formulas: [
         { id: 'formula-mgmt-m5-1', label: 'P/V Ratio', formula: 'P/V Ratio = Contribution ÷ Sales × 100', exampleQ: 'Sales ₹1,00,000; Variable Cost ₹60,000. P/V Ratio?', exampleA: 'Contribution = 40,000; P/V Ratio = 40,000 ÷ 1,00,000 × 100 = 40%.' },
       ],
@@ -3074,7 +3114,11 @@ OM transforms inputs into goods and services.`,
         'Safety Stock & Reorder Level'
       ], explanationMd: `# Inventory Management
 
-ABC analysis classifies items by value: A (high value), B (medium), C (low value).`,
+ABC analysis classifies items by value: A (high value), B (medium), C (low value).
+
+![Ops Mod3 Inventory Management Diagram](org-structure.png)
+
+`,
       formulas: [
         { id: 'formula-ops-m3-1', label: 'EOQ', formula: 'EOQ = √(2 × Demand × Ordering Cost ÷ Holding Cost)', exampleQ: 'Annual demand 10,000, ordering cost ₹50, holding cost ₹2. EOQ?', exampleA: 'EOQ = √(2 × 10,000 × 50 ÷ 2) ≈ 707 units.' },
       ],
@@ -3224,7 +3268,11 @@ Strategic management involves formulation and implementation of major goals.`,
         'Competitor Analysis'
       ], explanationMd: `# SWOT & PESTLE Analysis
 
-SWOT is internal (S, W) and external (O, T); PESTLE is macro-environmental.`,
+SWOT is internal (S, W) and external (O, T); PESTLE is macro-environmental.
+
+![Strat Mod3 Swot Pestle Analysis Diagram](swot-analysis.png)
+
+`,
       formulas: [
         { id: 'formula-strat-mod3-swot-pestle-analysis-1', label: 'Key Formula', formula: 'Formula placeholder', exampleQ: 'Example question', exampleA: 'Example answer' },
       ],
@@ -3262,7 +3310,11 @@ Implementation puts strategy into action through structure, resources and system
         'Mergers & Acquisitions'
       ], explanationMd: `# Corporate Level Strategies
 
-BCG Matrix classifies SBUs as Stars, Cash Cows, Question Marks, Dogs.`,
+BCG Matrix classifies SBUs as Stars, Cash Cows, Question Marks, Dogs.
+
+![Strat Mod5 Corporate Level Strategies Diagram](bcg-matrix.png)
+
+`,
       formulas: [
         { id: 'formula-strat-mod5-corporate-level-strategies-1', label: 'Key Formula', formula: 'Formula placeholder', exampleQ: 'Example question', exampleA: 'Example answer' },
       ],
