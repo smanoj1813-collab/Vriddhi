@@ -32,8 +32,11 @@ import {
   Container,
   Divider,
   Grid,
+  IconButton,
+  InputAdornment,
   Skeleton,
   Stack,
+  TextField,
   Typography,
 } from '@mui/material';
 import {
@@ -41,9 +44,11 @@ import {
   AutoAwesome,
   Calculate,
   ChevronRight,
+  Close,
   FormatListNumbered,
   Lightbulb,
   MenuBook,
+  Search,
 } from '@mui/icons-material';
 import {
   fetchPrepSubjects,
@@ -277,6 +282,7 @@ function HubView() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [attempt, setAttempt] = useState(0);
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     let cancelled = false;
@@ -305,7 +311,20 @@ function HubView() {
   // shared placement catalogue (QA / LR / Verbal) listed for every program.
   const academicSubjects = useMemo(() => subjects.filter((s) => effectivePrepTrack(s) === 'academic'), [subjects]);
   const aptitudeSubjects = useMemo(() => subjects.filter((s) => effectivePrepTrack(s) === 'aptitude'), [subjects]);
-  const groups = useMemo(() => groupAcademicSubjects(academicSubjects), [academicSubjects]);
+
+  /** Subjects matching the search query (empty = all academic subjects). */
+  const searchMatchedSubjects = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) return academicSubjects;
+    return academicSubjects.filter(
+      (s) =>
+        s.name.toLowerCase().includes(q) ||
+        (s.stream || '').toLowerCase().includes(q) ||
+        (s.yearGroup || '').toLowerCase().includes(q)
+    );
+  }, [academicSubjects, searchQuery]);
+
+  const groups = useMemo(() => groupAcademicSubjects(searchMatchedSubjects), [searchMatchedSubjects]);
   const topicTotal = academicSubjects.reduce((n, s) => n + (s.topicCount || 0), 0);
 
   // Expanded semester groups. `null` = not resolved yet for this program, so
@@ -377,14 +396,86 @@ function HubView() {
                   meta={
                     loading
                       ? `Loading ${PROGRAM_LABELS[program]} packs…`
-                      : `${PROGRAM_LABELS[program]} · ${academicSubjects.length} subject${academicSubjects.length === 1 ? '' : 's'} · ${topicTotal} topics`
+                      : `${PROGRAM_LABELS[program]} · ${searchQuery.trim() ? searchMatchedSubjects.length : academicSubjects.length} subject${searchQuery.trim() ? searchMatchedSubjects.length : academicSubjects.length === 1 ? '' : 's'} · ${topicTotal} topics`
                   }
                 />
+                {/* Topic/subject search */}
+                <Box sx={{ width: '100%', maxWidth: 420 }}>
+                  <TextField
+                    size="small"
+                    variant="outlined"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Search subjects…"
+                    slotProps={{
+                      input: {
+                        startAdornment: (
+                          <InputAdornment position="start">
+                            <Search sx={{ color: 'text.secondary' }} />
+                          </InputAdornment>
+                        ),
+                        endAdornment:
+                          searchQuery.trim() ? (
+                            <InputAdornment position="end">
+                              <IconButton
+                                size="small"
+                                onClick={() => setSearchQuery('')}
+                                sx={{ ml: -1 }}
+                              >
+                                <Close sx={{ color: 'text.secondary' }} />
+                              </IconButton>
+                            </InputAdornment>
+                          ) : null,
+                      },
+                    }}
+                    sx={{ mb: 1.5 }}
+                  />
+                  {searchQuery.trim() && searchMatchedSubjects.length === 0 && !loading && !error ? (
+                    <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5 }}>
+                      No subjects match "{searchQuery}".
+                    </Typography>
+                  ) : null}
+                </Box>
                 {loading ? (
                   <Stack spacing={1}>
                     {[0, 1, 2, 3].map((i) => (
                       <Skeleton key={i} variant="rounded" height={48} sx={{ borderRadius: 2.5 }} />
                     ))}
+                  </Stack>
+                ) : searchQuery.trim() ? (
+                  <Stack spacing={1}>
+                    {searchMatchedSubjects.length === 0 ? (
+                      <EmptyBlock
+                        title={`No ${PROGRAM_LABELS[program]} subjects match “${searchQuery}”`}
+                        body="Try a different keyword or browse by semester above."
+                      />
+                    ) : (
+                      searchMatchedSubjects.map((s) => (
+                        <Card key={s.id} variant="outlined" sx={{ overflow: 'hidden' }}>
+                          <CardActionArea
+                            component={Link}
+                            to={`/prep/subject/${s.id}?program=${program}`}
+                            sx={{ p: 2, height: '100%', display: 'block' }}
+                          >
+                            <Stack spacing={1}>
+                              <Stack direction="row" spacing={1} sx={{ alignItems: 'center', justifyContent: 'space-between' }}>
+                                <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 700, flex: 1 }}>
+                                  {s.semester ? `Semester ${s.semester}` : s.yearGroup || 'All'}
+                                </Typography>
+                                <Chip size="small" variant="outlined" label={formatStreamLabel(s.stream)} />
+                              </Stack>
+                              <Typography variant="h6" sx={{ fontWeight: 700, mb: 0.5 }}>
+                                {s.name}
+                              </Typography>
+                              <Typography variant="caption" color="text.secondary" sx={{ mb: 1 }}>
+                                {(s.topicCount || 0)} topic{(s.topicCount || 0) === 1 ? '' : 's'} ·
+                                {(s.programs || []).map((p) => PROGRAM_LABELS[p] || p).join(', ')}
+                              </Typography>
+                            </Stack>
+                          </CardActionArea>
+                        </Card>
+                      ))
+                    )}
                   </Stack>
                 ) : groups.length === 0 ? (
                   <EmptyBlock
