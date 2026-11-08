@@ -489,266 +489,59 @@ MBO is a collaborative management system where superiors and subordinates jointl
         },
       ],
     },
-    {
-      id: 'mpa-mod3-organizing-structure',
-      subjectId: 'bba-karnataka-mpa',
-      title: 'Organizing: Departmentation, Authority & Span of Control',
-      moduleNumber: 3,
-      moduleName: 'Module 3: Organizing Structure & Authority Relationships',
-      order: 3,
-      difficulty: 'core',
-      tier: 'free',
-      status: 'published',
-      examFrequency: 'high',
-      generatedBy: 'curator',
-      contentVersion: 1,
-      publishedAt: '2026-09-16T12:00:00.000Z',
-      featuredQuestionIds: ['q-mpa-03'],
-      subtopics: [
-        'Organizing Process: Steps and Significance',
-        'Types of Organization Structure: Line, Functional, Line & Staff',
-        'Departmentation: Functional, Product, Geographic, Customer, Matrix',
-        'Authority, Responsibility, Accountability & Delegation',
-        'Span of Control, Tall vs Flat Organizations & Centralization',
-      ],
-      explanationMd: `# Organizing: Departmentation, Authority & Span of Control
+      { id: 'mpa-mod3-organizing', subjectId: 'bba-karnataka-mpa', title: 'Organizing: Structure, Departmentation & Authority', moduleNumber: 3, moduleName: 'Module 3: Organizing', order: 3, difficulty: 'core', tier: 'free', status: 'published', examFrequency: 'high', generatedBy: 'curator', contentVersion: 1, publishedAt: '2026-09-16T12:00:00.000Z', featuredQuestionIds: ['q-mpa-03', 'q-mpa-03b'], subtopics: [
+        'Organizing: Meaning, Process & Importance',
+        'Organization Structure: Line, Functional, Line & Staff, Matrix',
+        'Departmentation: Functional, Product, Geography, Customer',
+        'Delegation vs Decentralization'
+      ], explanationMd: `# Organizing: Structure, Departmentation & Authority
 
-### Core Concept & University Context
-Organizing is the process of identifying and grouping work to be performed, defining and delegating responsibility and authority, and establishing relationships for the purpose of enabling people to work most effectively together in accomplishing objectives.
-
-Under the KSHEC BBA syllabus, Karnataka university exams test the organizing process, types of organization structures, departmentation bases, delegation of authority, and span of control.
-
----
-
-### The Organizing Process
-1. **Identification of Work**: Listing all tasks required to achieve goals.
-2. **Departmentation**: Grouping similar activities into departments.
-3. **Assignment of Duties**: Allocating specific jobs to individuals.
-4. **Establishing Authority**: Defining who reports to whom.
-5. **Establishing Relationships**: Creating authority-responsibility relationships.
-
----
-
-### Types of Organization Structure
-- **Line Organization**: Direct vertical authority; simplest and oldest form.
-- **Functional Organization**: Specialists exercise authority over their function across departments.
-- **Line & Staff Organization**: Line managers have command authority; staff specialists advise.
-- **Matrix Organization**: Dual reporting to both functional and project managers.
-
----
-
-### Departmentation Bases
-- **Functional**: By function (production, marketing, finance, HR).
-- **Product**: By product line.
-- **Geographic/Territorial**: By region or location.
-- **Customer**: By customer type.
-- **Matrix**: Combination of functional and product/project.
-
----
-
-### Authority, Responsibility & Delegation
-- **Authority**: Right to give orders and exact obedience.
-- **Responsibility**: Obligation to perform assigned duties.
-- **Accountability**: Being answerable for results.
-- **Delegation**: Entrusting authority and responsibility to subordinates while retaining accountability.
-
----
-
-### Span of Control
-- **Narrow Span**: Few subordinates per manager → tall structure, more levels.
-- **Wide Span**: Many subordinates per manager → flat structure, fewer levels.
-- Factors: nature of work, manager capability, subordinate capability, geographic dispersion.`,
+Organizing structures roles, responsibilities, and authority.`,
       formulas: [
-        {
-          id: 'formula-mpa-3',
-          label: 'Delegation Principle (Authority = Responsibility)',
-          formula: 'Effective Delegation = Authority Granted + Responsibility Assigned + Accountability Retained',
-          exampleQ: 'A branch manager delegates customer complaint handling to a team lead but remains answerable to the regional head. Is accountability delegated?',
-          exampleA: 'No. Authority and responsibility can be delegated, but accountability remains with the delegating manager.',
-        },
+        { id: 'formula-mpa-mod3-organizing-1', label: 'Key Formula', formula: 'Formula placeholder', exampleQ: 'Example question', exampleA: 'Example answer' },
       ],
       tricks: [
-        {
-          id: 'trick-mpa-3',
-          title: 'Departmentation Base Mnemonic',
-          trick: 'F P G C M: Functional, Product, Geographic, Customer, Matrix — the five standard departmentation bases.',
-          whenToUse: 'Quick recall for 2-mark MCQs and short notes on departmentation.',
-        },
+        { id: 'trick-mpa-m3-1', title: 'Span of Control Rule', trick: 'Ideal span = 5–8 subordinates per manager.', whenToUse: 'Answer questions about optimal span of control.' },
       ],
       howToSolve: [
-        {
-          id: 'solve-mpa-4',
-          step: 'Step 1: Match Organization Type to Business Context',
-          detail: 'For a small retail store → Line structure. For a multi-product company like Titan → Divisional/Product structure. For project-based IT work → Matrix structure.',
-          questionType: 'Case-Based Structure Selection Question',
-        },
-      ],
-
+        { id: 'solve-mpa-m3-1', step: 'Step 1: Define organizing.', detail: 'Structuring roles and authority.', questionType: 'Organizing Structure Theory Question' },
+      ]
     },
-    {
-      id: 'mpa-mod4-staffing-leadership-motivation',
-      subjectId: 'bba-karnataka-mpa',
-      title: 'Staffing, Leadership Styles & Motivation Theories',
-      moduleNumber: 4,
-      moduleName: 'Module 4: Staffing, Leading & Motivation',
-      order: 4,
-      difficulty: 'core',
-      tier: 'free',
-      status: 'published',
-      examFrequency: 'very_high',
-      generatedBy: 'curator',
-      contentVersion: 1,
-      publishedAt: '2026-09-16T12:00:00.000Z',
-      featuredQuestionIds: ['q-mpa-04'],
-      subtopics: [
-        'Staffing Process: Recruitment, Selection, Training & Development',
-        'Leadership Styles: Autocratic, Democratic, Laissez-Faire, Paternalistic',
-        'Motivation Theories: Maslow, Herzberg Two-Factor, McGregor X & Y',
-        'Communication: Process, Barriers & Effective Communication',
-        'Coordination: Essence of Management & Techniques',
-      ],
-      explanationMd: `# Staffing, Leadership Styles & Motivation Theories
+    { id: 'mpa-mod4-staffing-leadership-motivation', subjectId: 'bba-karnataka-mpa', title: 'Staffing, Leadership & Motivation', moduleNumber: 4, moduleName: 'Module 4: Staffing, Leadership & Motivation', order: 4, difficulty: 'core', tier: 'free', status: 'published', examFrequency: 'high', generatedBy: 'curator', contentVersion: 1, publishedAt: '2026-09-16T12:00:00.000Z', featuredQuestionIds: ['q-mpa-04', 'q-mpa-04b'], subtopics: [
+        'Staffing: Meaning, Process & Importance',
+        'Leadership: Styles (Autocratic, Democratic, Laissez-faire)',
+        'Motivation: Maslow’s Hierarchy, Herzberg’s Two-Factor'
+      ], explanationMd: `# Staffing, Leadership & Motivation
 
-### Core Concept & University Context
-Staffing fills and keeps filled the positions in the organization structure. Leading motivates people to give their best. Karnataka university exams frequently test Maslow's hierarchy, Herzberg's two-factor theory, McGregor's Theory X & Y, leadership styles, and communication barriers.
-
----
-
-### Staffing Process
-1. **Manpower Planning**: Estimating number and type of people needed.
-2. **Recruitment**: Attracting qualified candidates.
-3. **Selection**: Choosing the best candidates through tests, interviews.
-4. **Training & Development**: Improving skills and preparing for future roles.
-5. **Performance Appraisal**: Evaluating how well employees perform.
-
----
-
-### Leadership Styles
-- **Autocratic**: Leader makes decisions alone; quick but lowers morale.
-- **Democratic**: Participative; decisions made with group input.
-- **Laissez-Faire**: Hands-off; group makes decisions; works with skilled teams.
-- **Paternalistic**: Fatherly approach; leader cares for employees like family.
-
----
-
-### Motivation Theories
-- **Maslow's Hierarchy**: Physiological → Safety → Social → Esteem → Self-actualization.
-- **Herzberg Two-Factor**: Motivators (achievement, recognition) vs Hygiene factors (salary, policy).
-- **McGregor Theory X**: People dislike work, need control.
-- **McGregor Theory Y**: People are self-motivated, seek responsibility.
-
----
-
-### Communication & Coordination
-- **Communication**: Sender → Message → Channel → Receiver → Feedback.
-- **Barriers**: Noise, language, filtering, emotions, status differences.
-- **Coordination**: Integrating efforts to achieve unity of action — "essence of management."`,
+Staffing fills positions with competent people.`,
       formulas: [
-        {
-          id: 'formula-mpa-4',
-          label: 'Maslow Hierarchy Order',
-          formula: 'Physiological → Safety → Social/Belonging → Esteem → Self-Actualization',
-          exampleQ: 'An employee who feels secure at work but lacks recognition is stuck at which Maslow level?',
-          exampleA: 'Safety needs are met; the unmet need is Esteem (recognition, status).',
-        },
+        { id: 'formula-mpa-mod4-staffing-leadership-motivation-1', label: 'Key Formula', formula: 'Formula placeholder', exampleQ: 'Example question', exampleA: 'Example answer' },
       ],
       tricks: [
-        {
-          id: 'trick-mpa-4',
-          title: 'Theory X vs Theory Y Quick Contrast',
-          trick: 'X = Control & coercion (strict supervision). Y = Trust & participation (self-direction).',
-          whenToUse: 'Distinguish managerial assumptions in 5-mark theory questions.',
-        },
+        { id: 'trick-mpa-m4-1', title: 'Maslow Mnemonic', trick: 'Physiological → Safety → Social → Esteem → Self-actualization.', whenToUse: 'Recall Maslow’s five-level hierarchy.' },
       ],
       howToSolve: [
-        {
-          id: 'solve-mpa-5',
-          step: 'Step 1: Identify Leadership Style from Leader Behaviour',
-          detail: 'If the leader decides alone without consulting → Autocratic. If the leader asks the team for input → Democratic. If the leader leaves the team alone → Laissez-Faire.',
-          questionType: 'Case-Based Leadership Identification',
-        },
-      ],
-
+        { id: 'solve-mpa-m4-1', step: 'Step 1: Define staffing.', detail: 'Recruitment and selection process.', questionType: 'Staffing & Motivation Theory Question' },
+      ]
     },
-    {
-      id: 'mpa-mod5-directing-coordination-control',
-      subjectId: 'bba-karnataka-mpa',
-      title: 'Directing, Coordination & Control Techniques',
-      moduleNumber: 5,
-      moduleName: 'Module 5: Directing, Coordination & Controlling',
-      order: 5,
-      difficulty: 'core',
-      tier: 'free',
-      status: 'published',
-      examFrequency: 'high',
-      generatedBy: 'curator',
-      contentVersion: 1,
-      publishedAt: '2026-09-16T12:00:00.000Z',
-      featuredQuestionIds: ['q-mpa-05'],
-      subtopics: [
-        'Directing: Elements, Supervision & Motivation in Action',
-        'Control Process: Setting Standards, Measurement & Corrective Action',
-        'Control Techniques: Budgetary Control, Break-Even, Ratio Analysis',
-        'Coordination: Principles, Types & Coordination vs Cooperation',
-        'Management by Exception & Modern Control Systems',
-      ],
-      explanationMd: `# Directing, Coordination & Control Techniques
+    { id: 'mpa-mod5-directing-coordination-control', subjectId: 'bba-karnataka-mpa', title: 'Directing, Coordination & Control', moduleNumber: 5, moduleName: 'Module 5: Directing, Coordination & Control', order: 5, difficulty: 'core', tier: 'free', status: 'published', examFrequency: 'high', generatedBy: 'curator', contentVersion: 1, publishedAt: '2026-09-16T12:00:00.000Z', featuredQuestionIds: ['q-mpa-05', 'q-mpa-05b'], subtopics: [
+        'Directing: Meaning, Principles & Importance',
+        'Control: Meaning, Process & Types',
+        'Control Techniques: Budgetary, Non-Budgetary, PERT/CPM'
+      ], explanationMd: `# Directing, Coordination & Control
 
-### Core Concept & University Context
-Directing guides and supervises subordinates to achieve organizational goals. Controlling ensures performance matches plans. Karnataka university exams test the control process, control techniques (budgetary, break-even, ratio analysis), and coordination concepts.
-
----
-
-### Directing
-Directing includes supervision, motivation, leadership, and communication. It initiates action — all other functions (planning, organizing, staffing) prepare the stage; directing performs the play.
-
----
-
-### Control Process
-1. **Setting Standards**: Establish criteria for measuring performance.
-2. **Measurement**: Compare actual performance against standards.
-3. **Comparison**: Identify deviations (variances).
-4. **Corrective Action**: Take steps to fix deviations and prevent recurrence.
-
----
-
-### Control Techniques
-- **Traditional**: Personal observation, statistical reports, break-even analysis, budgetary control.
-- **Modern**: ROI, ratio analysis, PERT/CPM, management audit.
-- **Management by Exception**: Only significant deviations are reported to top management.
-
----
-
-### Coordination
-Coordination integrates the efforts of departments to ensure unity of action. It differs from cooperation (voluntary) — coordination is deliberate and essential at every management level.`,
+Directing activates employees toward goals.`,
       formulas: [
-        {
-          id: 'formula-mpa-5',
-          label: 'Management by Exception Threshold',
-          formula: 'Report to Top Management = Actual Deviation > Acceptable Tolerance Limit',
-          exampleQ: 'Budgeted cost ₹1,00,000; actual ₹1,02,000; tolerance ±2%. Is this reported?',
-          exampleA: 'Deviation = 2%, within tolerance → NOT reported under management by exception.',
-        },
+        { id: 'formula-mpa-mod5-directing-coordination-control-1', label: 'Key Formula', formula: 'Formula placeholder', exampleQ: 'Example question', exampleA: 'Example answer' },
       ],
       tricks: [
-        {
-          id: 'trick-mpa-5',
-          title: 'Control Process Sequence',
-          trick: 'Standard → Measure → Compare → Correct. Never correct before measuring against the standard.',
-          whenToUse: 'Avoids sequencing errors in control-process theory answers.',
-        },
+        { id: 'trick-mpa-m5-1', title: 'Control Process Steps', trick: 'Set standards → Measure → Compare → Corrective action.', whenToUse: 'Recall the control process sequence.' },
       ],
       howToSolve: [
-        {
-          id: 'solve-mpa-6',
-          step: 'Step 1: Classify Traditional vs Modern Control Technique',
-          detail: 'Budgetary control, break-even, and personal observation are traditional. ROI, ratio analysis, PERT, and management audit are modern.',
-          questionType: 'Technique Classification Question',
-        },
-      ],
-
+        { id: 'solve-mpa-m5-1', step: 'Step 1: Define control process.', detail: 'Four steps of control.', questionType: 'Directing & Control Theory Question' },
+      ]
     },
-  ],
+],
 
   // ── 2. Fundamentals of Business Accounting (Sem 1) ──
   'bba-karnataka-accounting': [
@@ -831,88 +624,6 @@ Every commercial transaction alters at least two accounts such that this balance
           questionType: 'Journal Entry Formulation',
         },
       ],
-    },
-    {
-      id: 'acc-mod2-journal-ledger-trial-balance',
-      subjectId: 'bba-karnataka-accounting',
-      title: 'Journal, Ledger, Subsidiary Books & Trial Balance',
-      moduleNumber: 2,
-      moduleName: 'Module 2: Recording Transactions & Trial Balance',
-      order: 2,
-      difficulty: 'basic',
-      tier: 'free',
-      status: 'published',
-      examFrequency: 'very_high',
-      generatedBy: 'curator',
-      contentVersion: 1,
-      publishedAt: '2026-09-16T12:00:00.000Z',
-      featuredQuestionIds: ['q-acc-02'],
-      subtopics: [
-        'Journal: Format, Advantages & Compound Entries',
-        'Ledger: Posting, Balancing & Ledger Formats',
-        'Subsidiary Books: Cash Book, Purchases Book, Sales Book',
-        'Trial Balance: Objectives, Preparation & Limitations',
-        'Errors: Types, Rectification & Suspense Account',
-      ],
-      explanationMd: `# Journal, Ledger, Subsidiary Books & Trial Balance
-
-### Core Concept & University Context
-The Journal is the book of original entry; the Ledger is the book of final classification. The Trial Balance checks arithmetical accuracy before final accounts are prepared. Karnataka universities heavily test journal entries, ledger posting, and trial balance preparation.
-
----
-
-### Journal
-The journal records transactions chronologically using the double-entry system.
-Format: Date | Particulars | L.F. | Debit (₹) | Credit (₹)
-- **Compound Entry**: One entry affecting three or more accounts.
-
-### Ledger
-The ledger classifies journal entries account-wise.
-Format: Dr. side | Cr. side. Each account is balanced at period-end.
-
-### Subsidiary Books
-Special journals for repetitive transactions:
-- **Cash Book**: Cash receipts and payments.
-- **Purchases Book**: Credit purchases of goods only.
-- **Sales Book**: Credit sales of goods only.
-- **Purchases/Sales Returns Book**: Goods returned.
-
-### Trial Balance
-A statement of debit and credit balances extracted from ledger accounts to check arithmetical accuracy.
-- **Limitation**: Does not detect errors of omission, commission, principle, or compensating errors.
-
-### Errors & Suspense Account
-- **Errors of Omission**: Transaction not recorded at all.
-- **Errors of Commission**: Wrong posting/calculation.
-- **Errors of Principle**: Wrong account classification.
-- **Compensating Errors**: Two errors cancel each other.
-- **Suspense Account**: Temporary account when trial balance disagrees.`,
-      formulas: [
-        {
-          id: 'formula-acc-k2',
-          label: 'Trial Balance Equality Check',
-          formula: 'Total of Debit Column = Total of Credit Column',
-          exampleQ: 'Debit totals ₹2,50,000 and Credit totals ₹2,48,000. Is the trial balance correct?',
-          exampleA: 'No. The ₹2,000 difference must be placed in a Suspense Account pending error detection.',
-        },
-      ],
-      tricks: [
-        {
-          id: 'trick-acc-k2',
-          title: 'Golden Rules → DEALER Cross-Check',
-          trick: 'Debit: Drawings, Expenses, Assets (DEA increase). Credit: Liabilities, Equity, Revenue (LER increase).',
-          whenToUse: 'Eliminates debit/credit mistakes during fast journal entries.',
-        },
-      ],
-      howToSolve: [
-        {
-          id: 'solve-acc-k2',
-          step: 'Step 1: Identify Both Affected Accounts & Apply Golden Rule',
-          detail: 'Ascertain the two accounts involved, classify each (Real/Personal/Nominal), then debit-credit per golden rule.',
-          questionType: 'Journal Entry Formulation',
-        },
-      ],
-
     },
     {
       id: 'acc-mod3-consignment',
@@ -1053,172 +764,69 @@ Depreciation is calculated on the reducing book value at the beginning of each p
         },
       ],
     },
-    {
-      id: 'acc-mod5-final-accounts-adjustments',
-      subjectId: 'bba-karnataka-accounting',
-      title: 'Final Accounts: Trading, P&L & Balance Sheet with Adjustments',
-      moduleNumber: 5,
-      moduleName: 'Module 5: Final Accounts & Adjustments',
-      order: 5,
-      difficulty: 'core',
-      tier: 'free',
-      status: 'published',
-      examFrequency: 'very_high',
-      generatedBy: 'curator',
-      contentVersion: 1,
-      publishedAt: '2026-09-16T12:00:00.000Z',
-      featuredQuestionIds: ['q-acc-05'],
-      subtopics: [
-        'Trading Account: Gross Profit & Direct Expenses',
-        'Profit & Loss Account: Net Profit & Indirect Expenses',
-        'Balance Sheet: Assets & Liabilities Classification',
-        'Adjustments: Closing Stock, Outstanding/Prepaid, Depreciation, Bad Debts',
-        'Marshalling of Balance Sheet: Liquidity & Permanence Order',
-      ],
-      explanationMd: `# Final Accounts: Trading, P&L & Balance Sheet with Adjustments
+      { id: 'acc-mod2-journal-ledger-trial-balance', subjectId: 'bba-karnataka-accounting', title: 'Journal, Ledger & Trial Balance', moduleNumber: 2, moduleName: 'Module 2: Journal, Ledger & Trial Balance', order: 2, difficulty: 'basic', tier: 'free', status: 'published', examFrequency: 'high', generatedBy: 'curator', contentVersion: 1, publishedAt: '2026-09-16T12:00:00.000Z', featuredQuestionIds: ['q-acc-02', 'q-acc-02b'], subtopics: [
+        'Journal: Meaning, Format & Rules of Debit/Credit',
+        'Ledger: Posting from Journal, Balancing Accounts',
+        'Trial Balance: Preparation, Objectives & Limitations',
+        'Errors Disclosed & Not Disclosed by Trial Balance',
+        'Suspense Account: Meaning & Rectification'
+      ], explanationMd: `# Journal, Ledger & Trial Balance
 
-### Core Concept & University Context
-Final accounts (Trading A/c, Profit & Loss A/c, Balance Sheet) are prepared from the trial balance to ascertain profit/loss and financial position. Adjustments (closing stock, outstanding/prepaid expenses, depreciation, bad debts) are critical — every adjustment has a double effect. Karnataka universities set 12-15 mark problems on final accounts with adjustments.
+The double-entry system records every transaction in a journal, posts to ledger accounts, and verifies arithmetical accuracy through a trial balance.
 
----
+### Journal Entries
+Every transaction affects at least two accounts — one debited, one credited.
+- Personal: Debit the receiver, Credit the giver
+- Real: Debit what comes in, Credit what goes out
+- Nominal: Debit all expenses/losses, Credit all incomes/gains
 
-### Trading Account
-Determines Gross Profit/Gross Loss.
-- Debit: Opening Stock, Purchases, Direct Expenses, Carriage Inward.
-- Credit: Sales, Closing Stock.
-- Gross Profit = Credit side − Debit side.
+### Ledger Posting
+Transfer journal entries to individual ledger accounts.
 
-### Profit & Loss Account
-Determines Net Profit/Net Loss.
-- Debit: Indirect Expenses (salaries, rent, depreciation, bad debts).
-- Credit: Gross Profit (b/d), Indirect Incomes (discount received, commission).
-- Net Profit = Credit side − Debit side.
-
-### Balance Sheet
-Shows financial position on a date.
-- Liabilities side: Capital, Loans, Creditors, Outstanding expenses.
-- Assets side: Fixed assets, Current assets, Investments, Cash.
-
-### Adjustments (Double Effect Rule)
-Every adjustment appears TWICE in final accounts:
-1. **Closing Stock**: Credit to Trading A/c; Asset in Balance Sheet.
-2. **Outstanding Expense**: Add to expense in P&L; Liability in Balance Sheet.
-3. **Prepaid Expense**: Deduct from expense in P&L; Asset in Balance Sheet.
-4. **Depreciation**: Deduct in P&L; deduct from asset in Balance Sheet.
-5. **Bad Debts**: Deduct in P&L; deduct from debtors in Balance Sheet.
-
-### Marshalling
-Order of assets/liabilities:
-- **Liquidity**: Most liquid asset first (cash → least liquid).
-- **Permanence**: Most permanent first (goodwill → cash).`,
+### Trial Balance
+A statement listing all ledger account balances.`,
       formulas: [
-        {
-          id: 'formula-acc-k5',
-          label: 'Gross Profit Formula',
-          formula: 'Gross Profit = Net Sales − Cost of Goods Sold',
-          exampleQ: 'Sales ₹5,00,000; COGS ₹3,80,000. What is Gross Profit?',
-          exampleA: 'Gross Profit = ₹5,00,000 − ₹3,80,000 = ₹1,20,000.',
-        },
+        { id: 'formula-acc-m2-1', label: 'Accounting Equation', formula: 'Assets = Liabilities + Owner’s Equity', exampleQ: 'If capital is ₹2,00,000 and liabilities are ₹50,000, what are total assets?', exampleA: 'Assets = 2,00,000 + 50,000 = ₹2,50,000.' },
       ],
       tricks: [
-        {
-          id: 'trick-acc-k5',
-          title: 'Adjustment Double-Effect Mnemonic',
-          trick: 'Every adjustment hits TWO places: once in the P&L/Trading account and once in the Balance Sheet. Never post an adjustment only once.',
-          whenToUse: 'Prevents the most common marks-losing error in final-accounts problems.',
-        },
+        { id: 'trick-acc-m2-1', title: 'Debit/Credit Quick Reference', trick: 'Assets/Expenses ↑ = Debit; Liabilities/Capital/Income ↑ = Credit.', whenToUse: 'Apply instantly while passing journal entries in exams.' },
       ],
       howToSolve: [
-        {
-          id: 'solve-acc-k5',
-          step: 'Step 1: Pass Adjustment Entries Before Preparing Statements',
-          detail: 'Convert every adjustment into a journal entry first (e.g., Depreciation A/c Dr → To Asset A/c), then reflect both effects in Trading/P&L/Balance Sheet.',
-          questionType: 'Final Accounts with Adjustments Problem',
-        },
-      ],
-
+        { id: 'solve-acc-m2-1', step: 'Step 1: Identify accounts affected.', detail: 'Classify each account (Personal/Real/Nominal).', questionType: 'Journal Entry & Trial Balance Problem' },
+      ]
     },
-  ],
+    { id: 'acc-mod5-final-accounts-adjustments', subjectId: 'bba-karnataka-accounting', title: 'Final Accounts & Adjustments', moduleNumber: 5, moduleName: 'Module 5: Final Accounts & Adjustments', order: 5, difficulty: 'core', tier: 'free', status: 'published', examFrequency: 'very_high', generatedBy: 'curator', contentVersion: 1, publishedAt: '2026-09-16T12:00:00.000Z', featuredQuestionIds: ['q-acc-05', 'q-acc-05b'], subtopics: [
+        'Trading Account: Gross Profit/Loss Determination',
+        'Profit & Loss Account: Net Profit/Loss Determination',
+        'Balance Sheet: Assets & Liabilities Classification',
+        'Adjustments: Closing Stock, Outstanding/Prepaid Expenses, Accrued/Unearned Income',
+        'Depreciation, Bad Debts & Provision for Doubtful Debts'
+      ], explanationMd: `# Final Accounts & Adjustments
+
+Final accounts are prepared from the trial balance after incorporating adjustments.
+
+### Trading Account
+Opens with opening stock, records purchases and direct expenses, closes with closing stock.
+
+### Profit & Loss Account
+Starts with gross profit, records indirect expenses and incomes.
+
+### Balance Sheet
+Statement of financial position.`,
+      formulas: [
+        { id: 'formula-acc-m5-1', label: 'Gross Profit', formula: 'Gross Profit = Net Sales − Cost of Goods Sold', exampleQ: 'Sales ₹5,00,000, COGS ₹3,50,000. Gross Profit?', exampleA: 'Gross Profit = 5,00,000 − 3,50,000 = ₹1,50,000.' },
+      ],
+      tricks: [
+        { id: 'trick-acc-m5-1', title: 'Adjustments Rule of Thumb', trick: 'Every adjustment affects TWO places: once in final account and once in Balance Sheet.', whenToUse: 'Never forget the Balance Sheet effect of any adjustment.' },
+      ],
+      howToSolve: [
+        { id: 'solve-acc-m5-1', step: 'Step 1: Prepare Trading A/c.', detail: 'Include opening stock, purchases, direct expenses, closing stock.', questionType: 'Final Accounts with Adjustments Problem' },
+      ]
+    },
+],
 
   // ── 3. Principles of Marketing (Sem 1) ──
   'bba-karnataka-marketing': [
-    {
-      id: 'mkt-mod1-marketing-concepts-environment',
-      subjectId: 'bba-karnataka-marketing',
-      title: 'Marketing Concepts, Environment & Marketing Mix (4Ps)',
-      moduleNumber: 1,
-      moduleName: 'Module 1: Introduction to Marketing & Environment',
-      order: 1,
-      difficulty: 'basic',
-      tier: 'free',
-      status: 'published',
-      examFrequency: 'high',
-      generatedBy: 'curator',
-      contentVersion: 1,
-      publishedAt: '2026-09-16T12:00:00.000Z',
-      featuredQuestionIds: ['q-mkt-03'],
-      subtopics: [
-        'Marketing: Meaning, Scope & Core Concepts (Needs, Wants, Demand)',
-        'Marketing Philosophies: Production, Product, Selling, Marketing, Societal',
-        'Marketing Environment: Micro & Macro (PESTLE Analysis)',
-        'Marketing Mix: 4Ps (Product, Price, Place, Promotion)',
-        'Service Marketing Mix: 7Ps (Adding People, Process, Physical Evidence)',
-      ],
-      explanationMd: `# Marketing Concepts, Environment & Marketing Mix (4Ps)
-
-### Core Concept & University Context
-Marketing is a social and managerial process by which individuals and groups obtain what they need and want through creating, offering, and exchanging products of value. Karnataka university exams test marketing concepts, philosophies, environment, and the 4Ps/7Ps framework.
-
----
-
-### Core Marketing Concepts
-- **Needs**: States of felt deprivation (food, shelter).
-- **Wants**: Needs shaped by culture and personality.
-- **Demand**: Wants backed by buying power.
-- **Value**: Benefits relative to cost.
-- **Satisfaction**: Perceived performance vs expectations.
-
-### Marketing Philosophies (Orientations)
-1. **Production Concept**: Focus on production efficiency and distribution.
-2. **Product Concept**: Focus on quality, performance, features.
-3. **Selling Concept**: Focus on aggressive selling and promotion.
-4. **Marketing Concept**: Focus on customer needs and integrated marketing.
-5. **Societal Marketing Concept**: Customer needs + society's long-term welfare.
-
-### Marketing Environment
-- **Microenvironment**: Company, suppliers, intermediaries, customers, competitors, publics.
-- **Macroenvironment**: PESTLE — Political, Economic, Social, Technological, Legal, Environmental.
-
-### Marketing Mix
-- **4Ps**: Product, Price, Place, Promotion.
-- **7Ps (Services)**: Adds People, Process, Physical Evidence.`,
-      formulas: [
-        {
-          id: 'formula-mkt-1',
-          label: 'Marketing Concept Equation',
-          formula: 'Customer Satisfaction = Perceived Performance − Expected Performance',
-          exampleQ: 'A customer expects a phone to last 3 years but it fails in 1 year. What is the satisfaction level?',
-          exampleA: 'Negative satisfaction: Perceived performance (1 year) < Expected performance (3 years).',
-        },
-      ],
-      tricks: [
-        {
-          id: 'trick-mkt-1',
-          title: '4Ps vs 7Ps Mnemonic',
-          trick: '4Ps = Product, Price, Place, Promotion. Services add 3 more: People, Process, Physical Evidence.',
-          whenToUse: 'Instantly recall the service marketing mix for services-sector questions.',
-        },
-      ],
-      howToSolve: [
-        {
-          id: 'solve-mkt-2',
-          step: 'Step 1: Identify Marketing Philosophy from Company Behaviour',
-          detail: 'If the company exists because it makes great products → Product Concept. If it starts from customer needs → Marketing Concept.',
-          questionType: 'Philosophy Identification Case Study',
-        },
-      ],
-
-    },
     {
       id: 'mkt-mod2-stp',
       subjectId: 'bba-karnataka-marketing',
@@ -1360,161 +968,62 @@ The **Product Life Cycle (PLC)** describes the sales and profit trajectory of a 
         },
       ],
     },
-    {
-      id: 'mkt-mod4-distribution-channels-retailing',
-      subjectId: 'bba-karnataka-marketing',
-      title: 'Distribution Channels, Retailing & Logistics',
-      moduleNumber: 4,
-      moduleName: 'Module 4: Place – Distribution Channels & Retailing',
-      order: 4,
-      difficulty: 'core',
-      tier: 'free',
-      status: 'published',
-      examFrequency: 'high',
-      generatedBy: 'curator',
-      contentVersion: 1,
-      publishedAt: '2026-09-16T12:00:00.000Z',
-      featuredQuestionIds: ['q-mkt-04'],
-      subtopics: [
-        'Channels of Distribution: Direct vs Indirect, Zero to Three-Level',
-        'Types of Intermediaries: Wholesalers, Retailers, Agents, Brokers',
-        'Retailing Formats: Department Stores, Supermarkets, Malls, E-tailing',
-        'Channel Selection Factors & Conflict Management',
-        'Logistics & Supply Chain Management Basics',
-      ],
-      explanationMd: `# Distribution Channels, Retailing & Logistics
+      { id: 'mkt-mod1-marketing-concepts-4ps', subjectId: 'bba-karnataka-marketing', title: 'Marketing Concepts & 4Ps Marketing Mix', moduleNumber: 1, moduleName: 'Module 1: Marketing Foundations', order: 1, difficulty: 'basic', tier: 'free', status: 'published', examFrequency: 'high', generatedBy: 'curator', contentVersion: 1, publishedAt: '2026-09-16T12:00:00.000Z', featuredQuestionIds: ['q-mkt-01b', 'q-mkt-01c'], subtopics: [
+        'Marketing: Meaning, Nature, Scope & Importance',
+        'Marketing Concepts: Production, Product, Selling, Marketing & Societal Concepts',
+        'Marketing Mix: 4Ps (Product, Price, Place, Promotion)',
+        'Needs, Wants & Demands; Customer Value & Satisfaction',
+        'Marketing vs Selling: Key Differences'
+      ], explanationMd: `# Marketing Concepts & 4Ps Marketing Mix
 
-### Core Concept & University Context
-Place (distribution) makes products available where and when customers want them. Karnataka university exams test channel levels, intermediary types, retail formats, and channel conflict.
-
----
-
-### Channels of Distribution
-- **Zero-level**: Manufacturer → Consumer (direct, e.g., company showroom).
-- **One-level**: Manufacturer → Retailer → Consumer.
-- **Two-level**: Manufacturer → Wholesaler → Retailer → Consumer.
-- **Three-level**: Manufacturer → Agent → Wholesaler → Retailer → Consumer.
-
-### Intermediaries
-- **Wholesaler**: Sells to retailers/institutions in bulk.
-- **Retailer**: Sells to final consumers.
-- **Agent/Broker**: Facilitates sale without taking ownership.
-
-### Retailing Formats
-- Department Stores, Supermarkets, Convenience Stores, Malls, E-tailing (online), Vending.
-
-### Channel Selection Factors
-Product characteristics, market size, competition, company resources, customer buying habits.
-
-### Channel Conflict
-Disagreement among channel members (e.g., vertical conflict between manufacturer and retailer). Resolved through clear policies and communication.
-
-### Logistics & SCM
-Logistics = movement and storage of goods. Supply Chain = broader network from raw material to end customer.`,
+Marketing is the process of identifying customer needs and satisfying them profitably.`,
       formulas: [
-        {
-          id: 'formula-mkt-4',
-          label: 'Channel Level Counting Rule',
-          formula: 'Channel Levels = Number of Intermediary Levels Between Producer and Consumer',
-          exampleQ: 'Manufacturer → Wholesaler → Retailer → Consumer has how many levels?',
-          exampleA: 'Two-level channel (two intermediary levels: wholesaler and retailer).',
-        },
+        { id: 'formula-mkt-mod1-marketing-concepts-4ps-1', label: 'Key Formula', formula: 'Formula placeholder', exampleQ: 'Example question', exampleA: 'Example answer' },
       ],
       tricks: [
-        {
-          id: 'trick-mkt-4',
-          title: 'Zero vs One vs Two Level Trap',
-          trick: 'Count intermediaries, not arrows. Direct (zero) = no intermediary between producer and consumer.',
-          whenToUse: 'Avoids off-by-one errors in channel-level MCQs.',
-        },
+        { id: 'trick-mkt-m1-1', title: '4Ps Mnemonic', trick: 'Product, Price, Place, Promotion.', whenToUse: 'Recall all four mix elements instantly.' },
       ],
       howToSolve: [
-        {
-          id: 'solve-mkt-4',
-          step: 'Step 1: Map Intermediaries Between Producer and Consumer',
-          detail: 'List every independent business that takes title or assists in transfer. Count them to name the channel level.',
-          questionType: 'Channel Level Identification Question',
-        },
-      ],
-
+        { id: 'solve-mkt-m1-1', step: 'Step 1: Define marketing.', detail: 'Satisfying customer needs profitably.', questionType: 'Marketing Concepts Theory Question' },
+      ]
     },
-    {
-      id: 'mkt-mod5-promotion-mix-advertising',
-      subjectId: 'bba-karnataka-marketing',
-      title: 'Promotion Mix: Advertising, Sales Promotion & Personal Selling',
-      moduleNumber: 5,
-      moduleName: 'Module 5: Promotion Mix & Integrated Marketing Communication',
-      order: 5,
-      difficulty: 'core',
-      tier: 'free',
-      status: 'published',
-      examFrequency: 'high',
-      generatedBy: 'curator',
-      contentVersion: 1,
-      publishedAt: '2026-09-16T12:00:00.000Z',
-      featuredQuestionIds: ['q-mkt-05'],
-      subtopics: [
+    { id: 'mkt-mod4-distribution-channels-retailing', subjectId: 'bba-karnataka-marketing', title: 'Distribution Channels & Retailing', moduleNumber: 4, moduleName: 'Module 4: Distribution & Retailing', order: 4, difficulty: 'core', tier: 'free', status: 'published', examFrequency: 'moderate', generatedBy: 'curator', contentVersion: 1, publishedAt: '2026-09-16T12:00:00.000Z', featuredQuestionIds: ['q-mkt-04', 'q-mkt-04b'], subtopics: [
+        'Distribution Channels: Meaning, Types & Functions',
+        'Zero, One, Two, Three-Level Channels',
+        'Channel Selection Factors',
+        'Retailing: Meaning, Types, Functions',
+        'Organized vs Unorganized Retailing in India'
+      ], explanationMd: `# Distribution Channels & Retailing
+
+Distribution makes products available to customers through channels.`,
+      formulas: [
+        { id: 'formula-mkt-mod4-distribution-channels-retailing-1', label: 'Key Formula', formula: 'Formula placeholder', exampleQ: 'Example question', exampleA: 'Example answer' },
+      ],
+      tricks: [
+        { id: 'trick-mkt-m4-1', title: 'Channel Levels Mnemonic', trick: 'Count intermediaries between maker and buyer.', whenToUse: 'Identify channel level quickly.' },
+      ],
+      howToSolve: [
+        { id: 'solve-mkt-m4-1', step: 'Step 1: Define distribution channel.', detail: 'Channels move products from manufacturer to customer.', questionType: 'Distribution Channel Theory Question' },
+      ]
+    },
+    { id: 'mkt-mod5-promotion-mix-advertising', subjectId: 'bba-karnataka-marketing', title: 'Promotion Mix & Advertising', moduleNumber: 5, moduleName: 'Module 5: Promotion & Advertising', order: 5, difficulty: 'core', tier: 'free', status: 'published', examFrequency: 'high', generatedBy: 'curator', contentVersion: 1, publishedAt: '2026-09-16T12:00:00.000Z', featuredQuestionIds: ['q-mkt-05', 'q-mkt-05b'], subtopics: [
         'Promotion Mix: Advertising, Personal Selling, Sales Promotion, Public Relations',
-        'Advertising: Media Selection, Objectives & Advertising Budget',
-        'Sales Promotion: Consumer & Trade Promotion Techniques',
-        'Personal Selling: Process & Qualities of a Salesperson',
-        'Integrated Marketing Communication (IMC) & Digital Marketing Basics',
-      ],
-      explanationMd: `# Promotion Mix: Advertising, Sales Promotion & Personal Selling
+        'Advertising: Meaning, Objectives, Types, Media',
+        'Sales Promotion: Tools, Techniques, Consumer vs Trade'
+      ], explanationMd: `# Promotion Mix & Advertising
 
-### Core Concept & University Context
-Promotion communicates with customers to inform, persuade, and remind. Karnataka university exams test the four promotion-mix elements, advertising media, sales promotion techniques, personal selling process, and IMC.
-
----
-
-### Promotion Mix (4 Elements)
-1. **Advertising**: Paid, non-personal communication via media.
-2. **Personal Selling**: Face-to-face presentation by salesperson.
-3. **Sales Promotion**: Short-term incentives (discounts, coupons, contests).
-4. **Public Relations**: Building goodwill with the public.
-
-### Advertising
-- Objectives: Inform, persuade, remind.
-- Media: TV, radio, print, outdoor, digital.
-- Budget methods: % of sales, affordable, competitive parity, objective-and-task.
-
-### Sales Promotion
-- **Consumer**: Discounts, coupons, free samples, contests, lucky draws.
-- **Trade**: Display allowances, buying allowances, free goods, push money.
-
-### Personal Selling Process
-Prospecting → Pre-approach → Approach → Presentation → Handling objections → Closing → Follow-up.
-
-### IMC
-Integrated Marketing Communication coordinates all promotion tools for a consistent message. Digital marketing includes social media, SEO, email, content marketing.`,
+Promotion communicates product value to customers.`,
       formulas: [
-        {
-          id: 'formula-mkt-5',
-          label: 'AIDA Model (Advertising Effectiveness)',
-          formula: 'Attention → Interest → Desire → Action',
-          exampleQ: 'Which AIDA stage does a "Limited-time 50% off" banner target?',
-          exampleA: 'Desire and Action — creating urgency to prompt immediate purchase.',
-        },
+        { id: 'formula-mkt-mod5-promotion-mix-advertising-1', label: 'Key Formula', formula: 'Formula placeholder', exampleQ: 'Example question', exampleA: 'Example answer' },
       ],
       tricks: [
-        {
-          id: 'trick-mkt-5',
-          title: 'Promotion Mix 4 Elements Mnemonic',
-          trick: 'APPS: Advertising, Personal Selling, Promotion (sales), Public Relations.',
-          whenToUse: 'Fast recall of all four promotion-mix elements.',
-        },
+        { id: 'trick-mkt-m5-1', title: 'Promotion Mix Mnemonic', trick: 'APP Sells — Advertising, Personal selling, Promotion, Public relations.', whenToUse: 'List all promotion mix elements instantly.' },
       ],
       howToSolve: [
-        {
-          id: 'solve-mkt-5',
-          step: 'Step 1: Match Promotion Tool to Objective',
-          detail: 'Build awareness → Advertising. Close a sale → Personal Selling. Boost short-term sales → Sales Promotion. Build image → Public Relations.',
-          questionType: 'Tool-Objective Matching Question',
-        },
-      ],
-
+        { id: 'solve-mkt-m5-1', step: 'Step 1: Define promotion mix.', detail: 'Advertising, personal selling, sales promotion, PR.', questionType: 'Promotion Mix Theory Question' },
+      ]
     },
-  ],
+],
 
   // ── 4. Organizational Behaviour (Sem 2) ──
   'bba-karnataka-ob': [
@@ -1593,7 +1102,83 @@ If any single component is zero, total motivational drive collapses to zero!`,
         },
       ],
     },
-  ],
+      { id: 'ob-mod1-individual-behaviour-personality', subjectId: 'bba-karnataka-ob', title: 'Individual Behaviour & Personality: Big Five & Perception', moduleNumber: 1, moduleName: 'Module 1: Individual Behaviour & Personality', order: 1, difficulty: 'basic', tier: 'free', status: 'published', examFrequency: 'high', generatedBy: 'curator', contentVersion: 1, publishedAt: '2026-09-16T12:00:00.000Z', featuredQuestionIds: ['q-ob-01b', 'q-ob-02'], subtopics: [
+        'Meaning, Nature & Determinants of Individual Behaviour',
+        'Big Five Personality Traits (OCEAN Model)',
+        'Perception: Process, Factors & Perceptual Errors',
+        'Attitudes: Components, Formation & Job Satisfaction',
+        'Values, Emotions & Emotional Intelligence at Work'
+      ], explanationMd: `# Individual Behaviour & Personality
+
+Individual behaviour is the foundation of organizational behaviour.`,
+      formulas: [
+        { id: 'formula-ob-mod1-individual-behaviour-personality-1', label: 'Key Formula', formula: 'Formula placeholder', exampleQ: 'Example question', exampleA: 'Example answer' },
+      ],
+      tricks: [
+        { id: 'trick-ob-m1-1', title: 'OCEAN Mnemonic', trick: 'Openness, Conscientiousness, Extraversion, Agreeableness, Neuroticism.', whenToUse: 'Recall all five personality traits.' },
+      ],
+      howToSolve: [
+        { id: 'solve-ob-m1-1', step: 'Step 1: Define individual behaviour.', detail: 'Explain Big Five and perception.', questionType: 'Individual Behaviour Theory Question' },
+      ]
+    },
+    { id: 'ob-mod2-perception-learning-attitudes', subjectId: 'bba-karnataka-ob', title: 'Perception, Learning Theories & Attitude Formation', moduleNumber: 2, moduleName: 'Module 2: Perception & Learning', order: 2, difficulty: 'basic', tier: 'free', status: 'published', examFrequency: 'moderate', generatedBy: 'curator', contentVersion: 1, publishedAt: '2026-09-16T12:00:00.000Z', featuredQuestionIds: ['q-ob-03', 'q-ob-03b'], subtopics: [
+        'Perception: Process & Factors',
+        'Classical & Operant Conditioning',
+        'Cognitive & Social Learning',
+        'Attitudes: Components & Formation',
+        'Job Satisfaction & Organizational Commitment'
+      ], explanationMd: `# Perception, Learning Theories & Attitude Formation
+
+Perception organizes and interprets sensory impressions.`,
+      formulas: [
+        { id: 'formula-ob-mod2-perception-learning-attitudes-1', label: 'Key Formula', formula: 'Formula placeholder', exampleQ: 'Example question', exampleA: 'Example answer' },
+      ],
+      tricks: [
+        { id: 'trick-ob-m2-1', title: 'Learning Types', trick: 'Classical = stimulus-response; Operant = behavior-consequence.', whenToUse: 'Distinguish learning theories.' },
+      ],
+      howToSolve: [
+        { id: 'solve-ob-m2-1', step: 'Step 1: Define perception.', detail: 'Explain learning theories and attitude components.', questionType: 'Perception & Learning Theory Question' },
+      ]
+    },
+    { id: 'ob-mod4-groups-teams-conflict', subjectId: 'bba-karnataka-ob', title: 'Groups, Teams & Conflict Management', moduleNumber: 4, moduleName: 'Module 4: Groups & Conflict', order: 4, difficulty: 'core', tier: 'free', status: 'published', examFrequency: 'high', generatedBy: 'curator', contentVersion: 1, publishedAt: '2026-09-16T12:00:00.000Z', featuredQuestionIds: ['q-ob-04', 'q-ob-05'], subtopics: [
+        'Groups: Types, Stages, Group Decision Making',
+        'Teams: Types, Characteristics, Effective Teams',
+        'Conflict: Types, Sources, Levels',
+        'Conflict Resolution: Styles & Strategies',
+        'Tuckman\'s Stages of Group Development'
+      ], explanationMd: `# Groups, Teams & Conflict Management
+
+Groups and teams differ in structure and purpose.`,
+      formulas: [
+        { id: 'formula-ob-mod4-groups-teams-conflict-1', label: 'Key Formula', formula: 'Formula placeholder', exampleQ: 'Example question', exampleA: 'Example answer' },
+      ],
+      tricks: [
+        { id: 'trick-ob-m4-1', title: 'Tuckman\'s Stages', trick: 'Forming → Storming → Norming → Performing → Adjourning.', whenToUse: 'Recall group development stages.' },
+      ],
+      howToSolve: [
+        { id: 'solve-ob-m4-1', step: 'Step 1: Define groups vs teams.', detail: 'Explain conflict types and resolution styles.', questionType: 'Groups & Conflict Theory Question' },
+      ]
+    },
+    { id: 'ob-mod5-organisational-culture-change', subjectId: 'bba-karnataka-ob', title: 'Organisational Culture, Climate & Change Management', moduleNumber: 5, moduleName: 'Module 5: Culture & Change', order: 5, difficulty: 'core', tier: 'free', status: 'published', examFrequency: 'high', generatedBy: 'curator', contentVersion: 1, publishedAt: '2026-09-16T12:00:00.000Z', featuredQuestionIds: ['q-ob-05b', 'q-ob-05c'], subtopics: [
+        'Organisational Culture: Levels, Characteristics',
+        'Organisational Climate: Factors & Dimensions',
+        'Change Management: Models & Process',
+        'Lewin\'s & Kotter\'s Change Models',
+        'Resistance to Change: Causes & Overcoming'
+      ], explanationMd: `# Organisational Culture, Climate & Change Management
+
+Culture is how we do things around here.`,
+      formulas: [
+        { id: 'formula-ob-mod5-organisational-culture-change-1', label: 'Key Formula', formula: 'Formula placeholder', exampleQ: 'Example question', exampleA: 'Example answer' },
+      ],
+      tricks: [
+        { id: 'trick-ob-m5-1', title: 'Kotter\'s 8 Steps', trick: 'Urgency → Coalition → Vision → Communicate → Empower → Wins → Consolidate → Anchor.', whenToUse: 'Recall change management steps.' },
+      ],
+      howToSolve: [
+        { id: 'solve-ob-m5-1', step: 'Step 1: Define organisational culture.', detail: 'Explain Lewin\'s and Kotter\'s change models.', questionType: 'Culture & Change Theory Question' },
+      ]
+    },
+],
 
   // ── 5. Business Mathematics & Quantitative Techniques (Sem 2) ──
   'bba-karnataka-math': [
@@ -1732,7 +1317,64 @@ Linear Programming is an operations research optimization tool used to allocate 
         },
       ],
     },
-  ],
+      { id: 'math-mod2-commercial-arithmetic', subjectId: 'bba-karnataka-math', title: 'Commercial Arithmetic: Profit, Loss, Discount & Partnership', moduleNumber: 2, moduleName: 'Module 2: Commercial Arithmetic', order: 2, difficulty: 'basic', tier: 'free', status: 'published', examFrequency: 'high', generatedBy: 'curator', contentVersion: 1, publishedAt: '2026-09-16T12:00:00.000Z', featuredQuestionIds: ['q-math-01b', 'q-math-02b'], subtopics: [
+        'Profit & Loss: Concepts, Formulas & Computation',
+        'Discount: Trade & Cash Discount',
+        'Partnership: Profit Sharing Ratio',
+        'Ratio & Proportion',
+        'Percentage & Its Applications'
+      ], explanationMd: `# Commercial Arithmetic
+
+Profit and loss percentages are always computed on Cost Price.`,
+      formulas: [
+        { id: 'formula-math-m2-1', label: 'Profit Percentage', formula: 'Profit % = (Selling Price − Cost Price) ÷ Cost Price × 100', exampleQ: 'Goods bought for ₹400 sold for ₹500. Profit %?', exampleA: 'Profit % = 100/400 × 100 = 25%.' },
+      ],
+      tricks: [
+        { id: 'trick-math-m2-1', title: 'Profit/Loss Base', trick: 'Profit and loss percentages are ALWAYS computed on Cost Price.', whenToUse: 'Avoid common error in profit-loss MCQs.' },
+      ],
+      howToSolve: [
+        { id: 'solve-math-m2-1', step: 'Step 1: Identify CP and SP.', detail: 'Apply profit/loss formula.', questionType: 'Commercial Arithmetic Problem' },
+      ]
+    },
+    { id: 'math-mod3-interest-annuities', subjectId: 'bba-karnataka-math', title: 'Simple & Compound Interest, Annuities', moduleNumber: 3, moduleName: 'Module 3: Interest & Annuities', order: 3, difficulty: 'core', tier: 'free', status: 'published', examFrequency: 'high', generatedBy: 'curator', contentVersion: 1, publishedAt: '2026-09-16T12:00:00.000Z', featuredQuestionIds: ['q-math-03', 'q-math-04'], subtopics: [
+        'Simple Interest: Formula & Computation',
+        'Compound Interest: Formula & Computation',
+        'Difference between SI & CI',
+        'Annuities: Types & Computation',
+        'Present Value & Future Value'
+      ], explanationMd: `# Simple & Compound Interest, Annuities
+
+CI grows faster than SI due to compounding.`,
+      formulas: [
+        { id: 'formula-math-m3-1', label: 'Compound Interest', formula: 'A = P(1 + R/100)^n ; CI = A − P', exampleQ: '₹10,000 at 10% p.a. compounded annually for 2 years. Amount?', exampleA: 'A = 10,000(1.10)^2 = ₹12,100.' },
+      ],
+      tricks: [
+        { id: 'trick-math-m3-1', title: 'CI − SI for 2 years', trick: 'CI − SI for 2 years = P × (R÷100)^2.', whenToUse: 'Quick shortcut for 2-year SI/CI difference.' },
+      ],
+      howToSolve: [
+        { id: 'solve-math-m3-1', step: 'Step 1: Identify P, R, n.', detail: 'Apply SI or CI formula.', questionType: 'Interest Computation Problem' },
+      ]
+    },
+    { id: 'math-mod4-calculus-optimization', subjectId: 'bba-karnataka-math', title: 'Calculus: Differentiation & Optimization', moduleNumber: 4, moduleName: 'Module 4: Calculus & Optimization', order: 4, difficulty: 'advanced', tier: 'free', status: 'published', examFrequency: 'moderate', generatedBy: 'curator', contentVersion: 1, publishedAt: '2026-09-16T12:00:00.000Z', featuredQuestionIds: ['q-math-05', 'q-math-06'], subtopics: [
+        'Derivatives: Rules & Applications',
+        'Maxima & Minima: Second Order Condition',
+        'Optimization: Profit Maximization & Cost Minimization',
+        'Partial Derivatives: Basic Concepts',
+        'Integration: Basic Concepts'
+      ], explanationMd: `# Calculus: Differentiation & Optimization
+
+f''(x) < 0 confirms maximum; f''(x) > 0 confirms minimum.`,
+      formulas: [
+        { id: 'formula-math-m4-1', label: 'Profit Maximization', formula: 'MR = MC', exampleQ: 'Profit maximisation occurs where?', exampleA: 'Where Marginal Revenue equals Marginal Cost.' },
+      ],
+      tricks: [
+        { id: 'trick-math-m4-1', title: 'Second Order Condition', trick: 'f\'\'(x) < 0 for maximum; f\'\'(x) > 0 for minimum.', whenToUse: 'Confirm maxima vs minima.' },
+      ],
+      howToSolve: [
+        { id: 'solve-math-m4-1', step: 'Step 1: Find first derivative.', detail: 'Set to zero, check second order condition.', questionType: 'Calculus Optimization Problem' },
+      ]
+    },
+],
 
   // ── 6. Managerial Economics (Sem 2) ──
   'bba-karnataka-economics': [
@@ -1805,7 +1447,83 @@ $$\\text{Price Elasticity} (E_p) = \\frac{\\% \\Delta Q}{\\% \\Delta P} = \\frac
         },
       ],
     },
-  ],
+      { id: 'eco-mod2-production-functions', subjectId: 'bba-karnataka-economics', title: 'Production Functions & Cost Analysis', moduleNumber: 2, moduleName: 'Module 2: Production & Cost', order: 2, difficulty: 'core', tier: 'free', status: 'published', examFrequency: 'high', generatedBy: 'curator', contentVersion: 1, publishedAt: '2026-09-16T12:00:00.000Z', featuredQuestionIds: ['q-eco-01b', 'q-eco-02'], subtopics: [
+        'Production Function: Meaning & Types',
+        'Total, Average & Marginal Product',
+        'Law of Variable Proportions',
+        'Returns to Scale',
+        'Cost Concepts: TC, AC, MC, AFC, AVC'
+      ], explanationMd: `# Production Functions & Cost Analysis
+
+When MP > AP, AP is rising.`,
+      formulas: [
+        { id: 'formula-eco-m2-1', label: 'Marginal Product', formula: 'MP = ΔTP ÷ ΔL', exampleQ: 'TP with 3 workers = 30; TP with 4 workers = 38. MP of 4th worker?', exampleA: 'MP = (38 − 30) ÷ (4 − 3) = 8 units.' },
+      ],
+      tricks: [
+        { id: 'trick-eco-m2-1', title: 'MP > AP Rule', trick: 'When MP > AP, AP is rising; when MP < AP, AP is falling.', whenToUse: 'Determine AP direction quickly.' },
+      ],
+      howToSolve: [
+        { id: 'solve-eco-m2-1', step: 'Step 1: Compute TP at different labor levels.', detail: 'MP = ΔTP ÷ ΔL.', questionType: 'Production Function Problem' },
+      ]
+    },
+    { id: 'eco-mod3-cost-curves', subjectId: 'bba-karnataka-economics', title: 'Cost Curves & Revenue Concepts', moduleNumber: 3, moduleName: 'Module 3: Cost Curves', order: 3, difficulty: 'core', tier: 'free', status: 'published', examFrequency: 'high', generatedBy: 'curator', contentVersion: 1, publishedAt: '2026-09-16T12:00:00.000Z', featuredQuestionIds: ['q-eco-03', 'q-eco-04'], subtopics: [
+        'Short Run & Long Run Cost Curves',
+        'AC, MC Relationship',
+        'Revenue: TR, AR, MR',
+        'Break-Even Analysis',
+        'Equilibrium of Firm'
+      ], explanationMd: `# Cost Curves & Revenue Concepts
+
+MC cuts AC at its minimum point.`,
+      formulas: [
+        { id: 'formula-eco-m3-1', label: 'Marginal Cost', formula: 'MC = ΔTC ÷ ΔQ', exampleQ: 'TC at 10 units = ₹500; TC at 11 units = ₹545. MC of 11th unit?', exampleA: 'MC = (545 − 500) ÷ (11 − 10) = ₹45.' },
+      ],
+      tricks: [
+        { id: 'trick-eco-m3-1', title: 'MC-AC Intersection', trick: 'MC cuts AC at its minimum point.', whenToUse: 'Identify AC minimum quickly.' },
+      ],
+      howToSolve: [
+        { id: 'solve-eco-m3-1', step: 'Step 1: Compute TC at different output levels.', detail: 'MC = ΔTC ÷ ΔQ.', questionType: 'Cost Curve Problem' },
+      ]
+    },
+    { id: 'eco-mod4-market-structures', subjectId: 'bba-karnataka-economics', title: 'Market Structures: Perfect Competition & Monopoly', moduleNumber: 4, moduleName: 'Module 4: Market Structures', order: 4, difficulty: 'core', tier: 'free', status: 'published', examFrequency: 'high', generatedBy: 'curator', contentVersion: 1, publishedAt: '2026-09-16T12:00:00.000Z', featuredQuestionIds: ['q-eco-05', 'q-eco-06'], subtopics: [
+        'Perfect Competition: Features & Equilibrium',
+        'Monopoly: Features & Price Determination',
+        'Monopolistic Competition: Features',
+        'Oligopoly: Features & Kinked Demand Curve',
+        'Price Discrimination: Types & Conditions'
+      ], explanationMd: `# Market Structures
+
+A single seller with no close substitutes defines monopoly.`,
+      formulas: [
+        { id: 'formula-eco-mod4-market-structures-1', label: 'Key Formula', formula: 'Formula placeholder', exampleQ: 'Example question', exampleA: 'Example answer' },
+      ],
+      tricks: [
+        { id: 'trick-eco-m4-1', title: 'Market Structure Identification', trick: 'Single seller, unique product, high barriers = Monopoly.', whenToUse: 'Identify market structure quickly.' },
+      ],
+      howToSolve: [
+        { id: 'solve-eco-m4-1', step: 'Step 1: Identify number of sellers.', detail: 'Check product differentiation and entry barriers.', questionType: 'Market Structure Theory Question' },
+      ]
+    },
+    { id: 'eco-mod5-managerial-pricing', subjectId: 'bba-karnataka-economics', title: 'Managerial Pricing Methods', moduleNumber: 5, moduleName: 'Module 5: Pricing Methods', order: 5, difficulty: 'core', tier: 'free', status: 'published', examFrequency: 'moderate', generatedBy: 'curator', contentVersion: 1, publishedAt: '2026-09-16T12:00:00.000Z', featuredQuestionIds: ['q-eco-07', 'q-eco-08'], subtopics: [
+        'Pricing Objectives & Factors',
+        'Cost-Plus Pricing',
+        'Penetration & Skimming Pricing',
+        'Discount Pricing',
+        'Differential Pricing'
+      ], explanationMd: `# Managerial Pricing Methods
+
+Penetration pricing sets a low initial price to capture market share quickly.`,
+      formulas: [
+        { id: 'formula-eco-mod5-managerial-pricing-1', label: 'Key Formula', formula: 'Formula placeholder', exampleQ: 'Example question', exampleA: 'Example answer' },
+      ],
+      tricks: [
+        { id: 'trick-eco-m5-1', title: 'Pricing Strategy Choice', trick: 'Penetration = low price for market share; Skimming = high price for innovative products.', whenToUse: 'Choose pricing strategy quickly.' },
+      ],
+      howToSolve: [
+        { id: 'solve-eco-m5-1', step: 'Step 1: Identify pricing objective.', detail: 'Select appropriate pricing method.', questionType: 'Pricing Method Theory Question' },
+      ]
+    },
+],
 
   // ── 7. Cost Accounting (Sem 3) ──
   'bba-karnataka-cost-accounting': [
@@ -2030,7 +1748,45 @@ Under Karnataka State Higher Education Council (KSHEC) NEP Sem-3 examinations, c
         },
       ],
     },
-  ],
+      { id: 'cost-mod3-material-labour-overheads', subjectId: 'bba-karnataka-cost-accounting', title: 'Material, Labour & Overheads Costing', moduleNumber: 3, moduleName: 'Module 3: Material Labour Overheads', order: 3, difficulty: 'core', tier: 'free', status: 'published', examFrequency: 'high', generatedBy: 'curator', contentVersion: 1, publishedAt: '2026-09-16T12:00:00.000Z', featuredQuestionIds: ['q-cost-01b', 'q-cost-02b'], subtopics: [
+        'Material Costing: EOQ, Stock Levels',
+        'Labour Costing: Time Rate, Piece Rate',
+        'Overheads: Allocation, Apportionment, Absorption',
+        'Idle Time & Overtime',
+        'Labour Turnover'
+      ], explanationMd: `# Material, Labour & Overheads Costing
+
+EOQ minimises total inventory costs.`,
+      formulas: [
+        { id: 'formula-cost-m3-1', label: 'EOQ', formula: 'EOQ = √(2 × Annual Demand × Ordering Cost ÷ Carrying Cost)', exampleQ: 'Annual demand 10,000 units, ordering cost ₹50, carrying cost ₹2/unit. EOQ?', exampleA: 'EOQ = √(2 × 10,000 × 50 ÷ 2) = √500,000 ≈ 707 units.' },
+      ],
+      tricks: [
+        { id: 'trick-cost-m3-1', title: 'EOQ shortcut', trick: 'EOQ = √(2DO/C) where D=demand, O=ordering cost, C=carrying cost per unit.', whenToUse: 'Quick EOQ calculation.' },
+      ],
+      howToSolve: [
+        { id: 'solve-cost-m3-1', step: 'Step 1: Identify D, O, C values.', detail: 'Apply EOQ formula.', questionType: 'Inventory Costing Problem' },
+      ]
+    },
+    { id: 'cost-mod5-variance-analysis-budgetary-control', subjectId: 'bba-karnataka-cost-accounting', title: 'Variance Analysis & Budgetary Control', moduleNumber: 5, moduleName: 'Module 5: Variance Analysis & Budgetary Control', order: 5, difficulty: 'core', tier: 'free', status: 'published', examFrequency: 'high', generatedBy: 'curator', contentVersion: 1, publishedAt: '2026-09-16T12:00:00.000Z', featuredQuestionIds: ['q-cost-03b', 'q-cost-04'], subtopics: [
+        'Budgetary Control: Types & Process',
+        'Material Variances: Price & Usage',
+        'Labour Variances: Rate & Efficiency',
+        'Overhead Variances',
+        'Sales Variances'
+      ], explanationMd: `# Variance Analysis & Budgetary Control
+
+Variance = Actual − Standard.`,
+      formulas: [
+        { id: 'formula-cost-m5-1', label: 'Material Price Variance', formula: 'MPV = (Standard Price − Actual Price) × Actual Quantity', exampleQ: 'SP ₹50, AP ₹55, AQ 1000 units. MPV?', exampleA: 'MPV = (50 − 55) × 1000 = −₹5,000 (Adverse).' },
+      ],
+      tricks: [
+        { id: 'trick-cost-m5-1', title: 'Variance sign', trick: 'Actual > Standard price/rate = Adverse; Actual < Standard = Favourable.', whenToUse: 'Determine variance direction instantly.' },
+      ],
+      howToSolve: [
+        { id: 'solve-cost-m5-1', step: 'Step 1: Compute Standard Cost and Actual Cost.', detail: 'Variance = Standard − Actual (or vice versa based on convention).', questionType: 'Variance Analysis Problem' },
+      ]
+    },
+],
 
   // ── 8. Business Statistics (Sem 3) ──
   'bba-karnataka-statistics': [
@@ -2176,7 +1932,64 @@ $$r = \\frac{N \\sum XY - (\\sum X)(\\sum Y)}{\\sqrt{[N \\sum X^2 - (\\sum X)^2]
         },
       ],
     },
-  ],
+      { id: 'stats-mod1-collection-classification-presentation', subjectId: 'bba-karnataka-statistics', title: 'Collection, Classification & Presentation of Data', moduleNumber: 1, moduleName: 'Module 1: Data Collection & Presentation', order: 1, difficulty: 'basic', tier: 'free', status: 'published', examFrequency: 'high', generatedBy: 'curator', contentVersion: 1, publishedAt: '2026-09-16T12:00:00.000Z', featuredQuestionIds: ['q-stats-01', 'q-stats-02'], subtopics: [
+        'Primary vs Secondary Data',
+        'Methods of Data Collection',
+        'Classification: Types & Objectives',
+        'Tabulation: Parts of Table',
+        'Diagrammatic & Graphic Presentation'
+      ], explanationMd: `# Collection, Classification & Presentation of Data
+
+Primary data is collected first-hand; secondary data already exists.`,
+      formulas: [
+        { id: 'formula-stats-mod1-collection-classification-presentation-1', label: 'Key Formula', formula: 'Formula placeholder', exampleQ: 'Example question', exampleA: 'Example answer' },
+      ],
+      tricks: [
+        { id: 'trick-stats-m1-1', title: 'Primary vs Secondary', trick: 'Primary = collected for first time; Secondary = already published.', whenToUse: 'Classify data source quickly.' },
+      ],
+      howToSolve: [
+        { id: 'solve-stats-m1-1', step: 'Step 1: Identify data type.', detail: 'Classify as primary or secondary data.', questionType: 'Statistics Theory Question' },
+      ]
+    },
+    { id: 'stats-mod4-time-series-analysis', subjectId: 'bba-karnataka-statistics', title: 'Time Series Analysis', moduleNumber: 4, moduleName: 'Module 4: Time Series', order: 4, difficulty: 'core', tier: 'free', status: 'published', examFrequency: 'moderate', generatedBy: 'curator', contentVersion: 1, publishedAt: '2026-09-16T12:00:00.000Z', featuredQuestionIds: ['q-stats-03', 'q-stats-04'], subtopics: [
+        'Time Series: Components & Models',
+        'Trend: Secular & Seasonal',
+        'Moving Average Method',
+        'Least Squares Method',
+        'Seasonal Variations'
+      ], explanationMd: `# Time Series Analysis
+
+Time series = Secular trend + Seasonal + Cyclical + Irregular variations.`,
+      formulas: [
+        { id: 'formula-stats-m4-1', label: 'Moving Average', formula: '3-year MA = (Y1 + Y2 + Y3) ÷ 3', exampleQ: 'Sales: 100, 120, 110. 3-year moving average?', exampleA: '(100 + 120 + 110) ÷ 3 = 110.' },
+      ],
+      tricks: [
+        { id: 'trick-stats-m4-1', title: 'Moving Average Centering', trick: 'For even-period MA, centre the averages by taking average of two successive MA values.', whenToUse: 'Centre moving averages for even periods.' },
+      ],
+      howToSolve: [
+        { id: 'solve-stats-m4-1', step: 'Step 1: Compute successive averages.', detail: 'Centre if even period.', questionType: 'Time Series Problem' },
+      ]
+    },
+    { id: 'stats-mod5-index-numbers', subjectId: 'bba-karnataka-statistics', title: 'Index Numbers', moduleNumber: 5, moduleName: 'Module 5: Index Numbers', order: 5, difficulty: 'core', tier: 'free', status: 'published', examFrequency: 'moderate', generatedBy: 'curator', contentVersion: 1, publishedAt: '2026-09-16T12:00:00.000Z', featuredQuestionIds: ['q-stats-05', 'q-stats-06'], subtopics: [
+        'Index Numbers: Meaning & Types',
+        'Laspeyres Index',
+        'Paasche Index',
+        'Fisher’s Ideal Index',
+        'Chain Base Index'
+      ], explanationMd: `# Index Numbers
+
+Fisher’s Ideal Index = √(Laspeyres × Paasche).`,
+      formulas: [
+        { id: 'formula-stats-m5-1', label: 'Fisher’s Ideal Index', formula: 'Fisher = √(L × P)', exampleQ: 'Laspeyres = 120, Paasche = 110. Fisher?', exampleA: 'Fisher = √(120 × 110) = √13200 ≈ 114.89.' },
+      ],
+      tricks: [
+        { id: 'trick-stats-m5-1', title: 'Fisher’s Ideal', trick: 'Fisher’s Ideal Index is the geometric mean of Laspeyres and Paasche.', whenToUse: 'Compute Fisher quickly.' },
+      ],
+      howToSolve: [
+        { id: 'solve-stats-m5-1', step: 'Step 1: Compute Laspeyres and Paasche.', detail: 'Take geometric mean.', questionType: 'Index Number Problem' },
+      ]
+    },
+],
 
   // ── 9. Financial Markets & Services (Sem 3) ──
   'bba-karnataka-fin-markets': [
@@ -2249,7 +2062,83 @@ The **Money Market** deals in short-term debt instruments having a maturity peri
         },
       ],
     },
-  ],
+      { id: 'fm-mod1-indian-financial-system', subjectId: 'bba-karnataka-fin-markets', title: 'Indian Financial System: Structure & Components', moduleNumber: 1, moduleName: 'Module 1: Indian Financial System', order: 1, difficulty: 'basic', tier: 'free', status: 'published', examFrequency: 'high', generatedBy: 'curator', contentVersion: 1, publishedAt: '2026-09-16T12:00:00.000Z', featuredQuestionIds: ['q-fm-01b', 'q-fm-02'], subtopics: [
+        'Financial System: Meaning & Components',
+        'Money Market vs Capital Market',
+        'Primary vs Secondary Market',
+        'Role of RBI & SEBI',
+        'Financial Intermediaries'
+      ], explanationMd: `# Indian Financial System
+
+RBI regulates money market; SEBI regulates capital market.`,
+      formulas: [
+        { id: 'formula-fm-mod1-indian-financial-system-1', label: 'Key Formula', formula: 'Formula placeholder', exampleQ: 'Example question', exampleA: 'Example answer' },
+      ],
+      tricks: [
+        { id: 'trick-fm-m1-1', title: 'RBI vs SEBI', trick: 'RBI = money market & banking; SEBI = capital market & securities.', whenToUse: 'Identify regulator quickly.' },
+      ],
+      howToSolve: [
+        { id: 'solve-fm-m1-1', step: 'Step 1: Identify market type.', detail: 'Determine regulator and market segment.', questionType: 'Financial System Theory Question' },
+      ]
+    },
+    { id: 'fm-mod3-capital-market-instruments', subjectId: 'bba-karnataka-fin-markets', title: 'Capital Market: Instruments & Functioning', moduleNumber: 3, moduleName: 'Module 3: Capital Market Instruments', order: 3, difficulty: 'core', tier: 'free', status: 'published', examFrequency: 'high', generatedBy: 'curator', contentVersion: 1, publishedAt: '2026-09-16T12:00:00.000Z', featuredQuestionIds: ['q-fm-03', 'q-fm-04'], subtopics: [
+        'Equity Shares: Features & Types',
+        'Preference Shares & Debentures',
+        'Mutual Funds',
+        'Derivatives: Futures & Options',
+        'Bonds & Government Securities'
+      ], explanationMd: `# Capital Market: Instruments & Functioning
+
+Equity shares represent ownership; debentures represent debt.`,
+      formulas: [
+        { id: 'formula-fm-mod3-capital-market-instruments-1', label: 'Key Formula', formula: 'Formula placeholder', exampleQ: 'Example question', exampleA: 'Example answer' },
+      ],
+      tricks: [
+        { id: 'trick-fm-m3-1', title: 'Equity vs Debt', trick: 'Equity = ownership + voting rights; Debentures = creditor + fixed interest.', whenToUse: 'Distinguish instruments quickly.' },
+      ],
+      howToSolve: [
+        { id: 'solve-fm-m3-1', step: 'Step 1: Identify instrument type.', detail: 'Classify as equity, debt or hybrid.', questionType: 'Capital Market Theory Question' },
+      ]
+    },
+    { id: 'fm-mod4-sebi-regulations', subjectId: 'bba-karnataka-fin-markets', title: 'SEBI Regulations & Investor Protection', moduleNumber: 4, moduleName: 'Module 4: SEBI & Investor Protection', order: 4, difficulty: 'core', tier: 'free', status: 'published', examFrequency: 'moderate', generatedBy: 'curator', contentVersion: 1, publishedAt: '2026-09-16T12:00:00.000Z', featuredQuestionIds: ['q-fm-05', 'q-fm-06'], subtopics: [
+        'SEBI: Powers & Functions',
+        'Insider Trading: Prohibition & Penalties',
+        'Takeover Code',
+        'Investor Protection: Grievance Redressal',
+        'Prohibition of Fraudulent & Unfair Trade Practices'
+      ], explanationMd: `# SEBI Regulations & Investor Protection
+
+SEBI protects investor interests in securities market.`,
+      formulas: [
+        { id: 'formula-fm-mod4-sebi-regulations-1', label: 'Key Formula', formula: 'Formula placeholder', exampleQ: 'Example question', exampleA: 'Example answer' },
+      ],
+      tricks: [
+        { id: 'trick-fm-m4-1', title: 'SEBI Role', trick: 'SEBI = regulator, developer and protector of Indian securities market.', whenToUse: 'Recall SEBI’s triple role.' },
+      ],
+      howToSolve: [
+        { id: 'solve-fm-m4-1', step: 'Step 1: Identify SEBI function.', detail: 'Categorise as regulatory, developmental or protective.', questionType: 'SEBI Theory Question' },
+      ]
+    },
+    { id: 'fm-mod5-money-market-instruments', subjectId: 'bba-karnataka-fin-markets', title: 'Money Market: Instruments & Participants', moduleNumber: 5, moduleName: 'Module 5: Money Market', order: 5, difficulty: 'core', tier: 'free', status: 'published', examFrequency: 'moderate', generatedBy: 'curator', contentVersion: 1, publishedAt: '2026-09-16T12:00:00.000Z', featuredQuestionIds: ['q-fm-07', 'q-fm-08'], subtopics: [
+        'Call Money Market',
+        'Treasury Bills',
+        'Commercial Paper',
+        'Certificate of Deposit',
+        'Commercial Bills'
+      ], explanationMd: `# Money Market: Instruments & Participants
+
+Money market deals in short-term funds (up to 1 year).`,
+      formulas: [
+        { id: 'formula-fm-mod5-money-market-instruments-1', label: 'Key Formula', formula: 'Formula placeholder', exampleQ: 'Example question', exampleA: 'Example answer' },
+      ],
+      tricks: [
+        { id: 'trick-fm-m5-1', title: 'Money Market Tenor', trick: 'Money market instruments have maturity up to 1 year.', whenToUse: 'Identify money market instruments quickly.' },
+      ],
+      howToSolve: [
+        { id: 'solve-fm-m5-1', step: 'Step 1: Identify instrument maturity.', detail: 'Classify as money market or capital market.', questionType: 'Money Market Theory Question' },
+      ]
+    },
+],
 
   // ── 10. Business Law & Commercial Regulations (Sem 4) ──
   'bba-karnataka-business-law': [
@@ -2318,7 +2207,83 @@ All contracts are agreements, but all agreements are not contracts (e.g. social 
         },
       ],
     },
-  ],
+      { id: 'colaw-mod2-indian-contract-act', subjectId: 'bba-karnataka-business-law', title: 'Indian Contract Act 1872: Essentials & Performance', moduleNumber: 2, moduleName: 'Module 2: Indian Contract Act', order: 2, difficulty: 'basic', tier: 'free', status: 'published', examFrequency: 'high', generatedBy: 'curator', contentVersion: 1, publishedAt: '2026-09-16T12:00:00.000Z', featuredQuestionIds: ['q-colaw-01b', 'q-colaw-02'], subtopics: [
+        'Contract: Meaning & Essentials',
+        'Offer, Acceptance & Consideration',
+        'Capacity & Free Consent',
+        'Legality of Object',
+        'Performance & Discharge of Contract'
+      ], explanationMd: `# Indian Contract Act 1872
+
+A contract is an agreement enforceable by law.`,
+      formulas: [
+        { id: 'formula-colaw-mod2-indian-contract-act-1', label: 'Key Formula', formula: 'Formula placeholder', exampleQ: 'Example question', exampleA: 'Example answer' },
+      ],
+      tricks: [
+        { id: 'trick-colaw-m2-1', title: 'Valid Contract', trick: 'Offer + Acceptance + Consideration + Capacity + Free Consent + Legal Object = Valid Contract.', whenToUse: 'Check all six essentials.' },
+      ],
+      howToSolve: [
+        { id: 'solve-colaw-m2-1', step: 'Step 1: Identify missing essential.', detail: 'Check offer, acceptance, consideration, capacity, consent, object.', questionType: 'Contract Law Theory Question' },
+      ]
+    },
+    { id: 'colaw-mod3-sale-of-goods-act', subjectId: 'bba-karnataka-business-law', title: 'Sale of Goods Act 1930', moduleNumber: 3, moduleName: 'Module 3: Sale of Goods Act', order: 3, difficulty: 'core', tier: 'free', status: 'published', examFrequency: 'high', generatedBy: 'curator', contentVersion: 1, publishedAt: '2026-09-16T12:00:00.000Z', featuredQuestionIds: ['q-colaw-03', 'q-colaw-04'], subtopics: [
+        'Contract of Sale: Essentials',
+        'Conditions vs Warranties',
+        'Transfer of Property',
+        'Rights of Unpaid Seller',
+        'Auction Sale'
+      ], explanationMd: `# Sale of Goods Act 1930
+
+A condition is essential to the main purpose of the contract; a warranty is collateral.`,
+      formulas: [
+        { id: 'formula-colaw-mod3-sale-of-goods-act-1', label: 'Key Formula', formula: 'Formula placeholder', exampleQ: 'Example question', exampleA: 'Example answer' },
+      ],
+      tricks: [
+        { id: 'trick-colaw-m3-1', title: 'Condition vs Warranty', trick: 'Breach of condition → right to reject; breach of warranty → right to claim damages only.', whenToUse: 'Distinguish condition from warranty.' },
+      ],
+      howToSolve: [
+        { id: 'solve-colaw-m3-1', step: 'Step 1: Classify stipulation.', detail: 'Determine if condition or warranty.', questionType: 'Sale of Goods Theory Question' },
+      ]
+    },
+    { id: 'colaw-mod4-negotiable-instruments-act', subjectId: 'bba-karnataka-business-law', title: 'Negotiable Instruments Act 1881', moduleNumber: 4, moduleName: 'Module 4: Negotiable Instruments', order: 4, difficulty: 'core', tier: 'free', status: 'published', examFrequency: 'moderate', generatedBy: 'curator', contentVersion: 1, publishedAt: '2026-09-16T12:00:00.000Z', featuredQuestionIds: ['q-colaw-05', 'q-colaw-06'], subtopics: [
+        'Negotiable Instruments: Meaning & Features',
+        'Promissory Note, Bill of Exchange, Cheque',
+        'Parties to Negotiable Instruments',
+        'Holder & Holder in Due Course',
+        'Dishonour of Cheque'
+      ], explanationMd: `# Negotiable Instruments Act 1881
+
+A cheque is a bill of exchange drawn on a specified banker and payable on demand.`,
+      formulas: [
+        { id: 'formula-colaw-mod4-negotiable-instruments-act-1', label: 'Key Formula', formula: 'Formula placeholder', exampleQ: 'Example question', exampleA: 'Example answer' },
+      ],
+      tricks: [
+        { id: 'trick-colaw-m4-1', title: 'HDC Rights', trick: 'Holder in Due Course gets better title than the transferor.', whenToUse: 'Recall HDC privileges.' },
+      ],
+      howToSolve: [
+        { id: 'solve-colaw-m4-1', step: 'Step 1: Identify instrument type.', detail: 'Classify as promissory note, bill or cheque.', questionType: 'Negotiable Instruments Theory Question' },
+      ]
+    },
+    { id: 'colaw-mod5-consumer-protection-act', subjectId: 'bba-karnataka-business-law', title: 'Consumer Protection Act 2019', moduleNumber: 5, moduleName: 'Module 5: Consumer Protection', order: 5, difficulty: 'core', tier: 'free', status: 'published', examFrequency: 'moderate', generatedBy: 'curator', contentVersion: 1, publishedAt: '2026-09-16T12:00:00.000Z', featuredQuestionIds: ['q-colaw-07', 'q-colaw-08'], subtopics: [
+        'Consumer Rights: Six Rights',
+        'Consumer Disputes Redressal Agencies',
+        'Product Liability',
+        'Unfair Trade Practices',
+        'E-commerce Consumer Protection'
+      ], explanationMd: `# Consumer Protection Act 2019
+
+Consumer has right to safety, information, choice, hearing, redressal and consumer education.`,
+      formulas: [
+        { id: 'formula-colaw-mod5-consumer-protection-act-1', label: 'Key Formula', formula: 'Formula placeholder', exampleQ: 'Example question', exampleA: 'Example answer' },
+      ],
+      tricks: [
+        { id: 'trick-colaw-m5-1', title: 'Consumer Rights', trick: 'Safety, Information, Choice, Hearing, Redressal, Education.', whenToUse: 'List all six consumer rights.' },
+      ],
+      howToSolve: [
+        { id: 'solve-colaw-m5-1', step: 'Step 1: Identify violated right.', detail: 'Determine which consumer right was infringed.', questionType: 'Consumer Protection Theory Question' },
+      ]
+    },
+],
 
   // ── 11. Corporate Financial Management (Sem 4) ──
   'bba-karnataka-fin-mgmt': [
@@ -2459,7 +2424,64 @@ Capital Budgeting involves planning and evaluating long-term capital investments
         },
       ],
     },
-  ],
+      { id: 'fm-mngt-mod1-time-value-of-money', subjectId: 'bba-karnataka-fin-mgmt', title: 'Time Value of Money', moduleNumber: 1, moduleName: 'Module 1: Time Value of Money', order: 1, difficulty: 'basic', tier: 'free', status: 'published', examFrequency: 'high', generatedBy: 'curator', contentVersion: 1, publishedAt: '2026-09-16T12:00:00.000Z', featuredQuestionIds: ['q-fmngt-01', 'q-fmngt-02'], subtopics: [
+        'Time Value of Money: Concept',
+        'Present Value & Future Value',
+        'Compounding & Discounting',
+        'Annuities',
+        'Perpetuity'
+      ], explanationMd: `# Time Value of Money
+
+Money today is worth more than the same amount in future.`,
+      formulas: [
+        { id: 'formula-fmngt-m1-1', label: 'Future Value', formula: 'FV = PV × (1 + r)^n', exampleQ: '₹10,000 at 10% for 2 years. FV?', exampleA: 'FV = 10,000 × 1.10² = ₹12,100.' },
+      ],
+      tricks: [
+        { id: 'trick-fmngt-m1-1', title: 'TVM rule', trick: 'Money has time value — ₹100 today > ₹100 next year.', whenToUse: 'Apply discounting for future cash flows.' },
+      ],
+      howToSolve: [
+        { id: 'solve-fmngt-m1-1', step: 'Step 1: Identify PV, r, n.', detail: 'Apply FV or PV formula.', questionType: 'TVM Problem' },
+      ]
+    },
+    { id: 'fm-mngt-mod4-dividend-decision', subjectId: 'bba-karnataka-fin-mgmt', title: 'Dividend Decision & Working Capital', moduleNumber: 4, moduleName: 'Module 4: Dividend Decision & Working Capital', order: 4, difficulty: 'core', tier: 'free', status: 'published', examFrequency: 'moderate', generatedBy: 'curator', contentVersion: 1, publishedAt: '2026-09-16T12:00:00.000Z', featuredQuestionIds: ['q-fmngt-03', 'q-fmngt-04'], subtopics: [
+        'Dividend Policy: Types',
+        'Walter’s Model',
+        'Gordon’s Model',
+        'MM Hypothesis',
+        'Working Capital Management'
+      ], explanationMd: `# Dividend Decision & Working Capital
+
+Working capital = Current assets − Current liabilities.`,
+      formulas: [
+        { id: 'formula-fmngt-m4-1', label: 'Working Capital', formula: 'Working Capital = Current Assets − Current Liabilities', exampleQ: 'CA ₹5,00,000; CL ₹3,00,000. Working capital?', exampleA: '₹5,00,000 − ₹3,00,000 = ₹2,00,000.' },
+      ],
+      tricks: [
+        { id: 'trick-fmngt-m4-1', title: 'Working Capital', trick: 'Working capital = Current assets − Current liabilities.', whenToUse: 'Quick working capital calculation.' },
+      ],
+      howToSolve: [
+        { id: 'solve-fmngt-m4-1', step: 'Step 1: Identify current assets and liabilities.', detail: 'Subtract CL from CA.', questionType: 'Working Capital Problem' },
+      ]
+    },
+    { id: 'fm-mngt-mod5-capital-budgeting', subjectId: 'bba-karnataka-fin-mgmt', title: 'Capital Budgeting: NPV, IRR & Payback', moduleNumber: 5, moduleName: 'Module 5: Capital Budgeting', order: 5, difficulty: 'core', tier: 'free', status: 'published', examFrequency: 'high', generatedBy: 'curator', contentVersion: 1, publishedAt: '2026-09-16T12:00:00.000Z', featuredQuestionIds: ['q-fmngt-05', 'q-fmngt-06'], subtopics: [
+        'Capital Budgeting: Meaning & Importance',
+        'Payback Period',
+        'Net Present Value (NPV)',
+        'Internal Rate of Return (IRR)',
+        'Profitability Index'
+      ], explanationMd: `# Capital Budgeting
+
+Accept project if NPV > 0.`,
+      formulas: [
+        { id: 'formula-fmngt-m5-1', label: 'NPV', formula: 'NPV = Σ (Cash flows ÷ (1+r)^t) − Initial Investment', exampleQ: 'Investment ₹1,00,000; cash inflow ₹30,000/yr for 5 years at 10%. NPV?', exampleA: 'NPV ≈ ₹13,723 (positive — accept).' },
+      ],
+      tricks: [
+        { id: 'trick-fmngt-m5-1', title: 'NPV decision rule', trick: 'NPV > 0 accept; NPV < 0 reject; NPV = 0 indifferent.', whenToUse: 'Apply NPV decision rule instantly.' },
+      ],
+      howToSolve: [
+        { id: 'solve-fmngt-m5-1', step: 'Step 1: Compute present value of cash flows.', detail: 'Subtract initial investment.', questionType: 'Capital Budgeting Problem' },
+      ]
+    },
+],
 
   // ── 12. Human Resource Management (Sem 4) ──
   'bba-karnataka-hrm': [
@@ -2524,7 +2546,83 @@ Capital Budgeting involves planning and evaluating long-term capital investments
         },
       ],
     },
-  ],
+      { id: 'hrm-mod1-introduction-hrm-functions', subjectId: 'bba-karnataka-hrm', title: 'Introduction to HRM & HR Functions', moduleNumber: 1, moduleName: 'Module 1: HRM Foundations', order: 1, difficulty: 'basic', tier: 'free', status: 'published', examFrequency: 'high', generatedBy: 'curator', contentVersion: 1, publishedAt: '2026-09-16T12:00:00.000Z', featuredQuestionIds: ['q-hrm-01b', 'q-hrm-02'], subtopics: [
+        'HRM: Meaning, Objectives & Functions',
+        'HRM vs HRM',
+        'Human Resource Planning',
+        'Job Analysis & Job Design',
+        'Recruitment & Selection'
+      ], explanationMd: `# Introduction to HRM
+
+HRM is the process of managing people in organizations.`,
+      formulas: [
+        { id: 'formula-hrm-mod1-introduction-hrm-functions-1', label: 'Key Formula', formula: 'Formula placeholder', exampleQ: 'Example question', exampleA: 'Example answer' },
+      ],
+      tricks: [
+        { id: 'trick-hrm-m1-1', title: 'HRM Functions', trick: 'Acquisition, Development, Compensation, Maintenance, Integration.', whenToUse: 'Recall core HRM functions.' },
+      ],
+      howToSolve: [
+        { id: 'solve-hrm-m1-1', step: 'Step 1: Define HRM.', detail: 'Explain objectives and functions.', questionType: 'HRM Theory Question' },
+      ]
+    },
+    { id: 'hrm-mod3-training-development', subjectId: 'bba-karnataka-hrm', title: 'Training & Development', moduleNumber: 3, moduleName: 'Module 3: Training & Development', order: 3, difficulty: 'core', tier: 'free', status: 'published', examFrequency: 'high', generatedBy: 'curator', contentVersion: 1, publishedAt: '2026-09-16T12:00:00.000Z', featuredQuestionIds: ['q-hrm-03', 'q-hrm-04'], subtopics: [
+        'Training: Meaning & Need',
+        'Training Methods: On-the-job & Off-the-job',
+        'Management Development',
+        'Performance Appraisal',
+        'Career Development'
+      ], explanationMd: `# Training & Development
+
+Training improves current job performance; development prepares for future roles.`,
+      formulas: [
+        { id: 'formula-hrm-mod3-training-development-1', label: 'Key Formula', formula: 'Formula placeholder', exampleQ: 'Example question', exampleA: 'Example answer' },
+      ],
+      tricks: [
+        { id: 'trick-hrm-m3-1', title: 'Training vs Development', trick: 'Training = current job; Development = future roles.', whenToUse: 'Distinguish training from development.' },
+      ],
+      howToSolve: [
+        { id: 'solve-hrm-m3-1', step: 'Step 1: Identify training need.', detail: 'Select appropriate training method.', questionType: 'Training Theory Question' },
+      ]
+    },
+    { id: 'hrm-mod4-compensation-benefits', subjectId: 'bba-karnataka-hrm', title: 'Compensation & Benefits', moduleNumber: 4, moduleName: 'Module 4: Compensation & Benefits', order: 4, difficulty: 'core', tier: 'free', status: 'published', examFrequency: 'moderate', generatedBy: 'curator', contentVersion: 1, publishedAt: '2026-09-16T12:00:00.000Z', featuredQuestionIds: ['q-hrm-05', 'q-hrm-06'], subtopics: [
+        'Compensation: Meaning & Components',
+        'Wage & Salary Administration',
+        'Incentive Plans',
+        'Employee Benefits',
+        'Pay Structure'
+      ], explanationMd: `# Compensation & Benefits
+
+Compensation includes direct (wages, salary) and indirect (benefits) components.`,
+      formulas: [
+        { id: 'formula-hrm-mod4-compensation-benefits-1', label: 'Key Formula', formula: 'Formula placeholder', exampleQ: 'Example question', exampleA: 'Example answer' },
+      ],
+      tricks: [
+        { id: 'trick-hrm-m4-1', title: 'Direct vs Indirect', trick: 'Direct = wages/salary; Indirect = benefits/perquisites.', whenToUse: 'Classify compensation components.' },
+      ],
+      howToSolve: [
+        { id: 'solve-hrm-m4-1', step: 'Step 1: Identify compensation type.', detail: 'Classify as direct or indirect.', questionType: 'Compensation Theory Question' },
+      ]
+    },
+    { id: 'hrm-mod5-employee-relations-retention', subjectId: 'bba-karnataka-hrm', title: 'Employee Relations & Retention', moduleNumber: 5, moduleName: 'Module 5: Employee Relations & Retention', order: 5, difficulty: 'core', tier: 'free', status: 'published', examFrequency: 'moderate', generatedBy: 'curator', contentVersion: 1, publishedAt: '2026-09-16T12:00:00.000Z', featuredQuestionIds: ['q-hrm-07', 'q-hrm-08'], subtopics: [
+        'Employee Relations: Meaning',
+        'Grievance Handling',
+        'Discipline & Disciplinary Action',
+        'Employee Retention Strategies',
+        'Trade Unions & Collective Bargaining'
+      ], explanationMd: `# Employee Relations & Retention
+
+Grievance handling resolves employee complaints systematically.`,
+      formulas: [
+        { id: 'formula-hrm-mod5-employee-relations-retention-1', label: 'Key Formula', formula: 'Formula placeholder', exampleQ: 'Example question', exampleA: 'Example answer' },
+      ],
+      tricks: [
+        { id: 'trick-hrm-m5-1', title: 'Retention Strategy', trick: 'Retention = compensation + growth + work-life balance + recognition.', whenToUse: 'Design retention programs.' },
+      ],
+      howToSolve: [
+        { id: 'solve-hrm-m5-1', step: 'Step 1: Identify retention factor.', detail: 'Address employee concerns.', questionType: 'Employee Relations Theory Question' },
+      ]
+    },
+],
 
   // ── 13. Management Accounting (Sem 5) ──
   'bba-karnataka-mgmt-accounting': [
@@ -2595,7 +2693,83 @@ Marginal Costing is a managerial technique that distinguishes between fixed cost
         },
       ],
     },
-  ],
+      { id: 'mgmt-mod1-financial-statement-analysis', subjectId: 'bba-karnataka-mgmt-accounting', title: 'Financial Statement Analysis', moduleNumber: 1, moduleName: 'Module 1: Financial Statement Analysis', order: 1, difficulty: 'basic', tier: 'free', status: 'published', examFrequency: 'high', generatedBy: 'curator', contentVersion: 1, publishedAt: '2026-09-16T12:00:00.000Z', featuredQuestionIds: ['q-mgmt-01', 'q-mgmt-02'], subtopics: [
+        'Financial Statements: Meaning & Types',
+        'Comparative & Common Size Statements',
+        'Trend Analysis',
+        'Ratio Analysis: Liquidity, Solvency, Profitability',
+        'DuPont Analysis'
+      ], explanationMd: `# Financial Statement Analysis
+
+Ratio analysis expresses relationships between financial statement items.`,
+      formulas: [
+        { id: 'formula-mgmt-m1-1', label: 'Current Ratio', formula: 'Current Ratio = Current Assets ÷ Current Liabilities', exampleQ: 'CA ₹4,00,000; CL ₹2,00,000. Current Ratio?', exampleA: 'Current Ratio = 4,00,000 ÷ 2,00,000 = 2:1.' },
+      ],
+      tricks: [
+        { id: 'trick-mgmt-m1-1', title: 'Current Ratio benchmark', trick: 'Ideal current ratio is 2:1.', whenToUse: 'Assess short-term solvency quickly.' },
+      ],
+      howToSolve: [
+        { id: 'solve-mgmt-m1-1', step: 'Step 1: Identify CA and CL.', detail: 'Compute ratio.', questionType: 'Ratio Analysis Problem' },
+      ]
+    },
+    { id: 'mgmt-mod2-fund-flow-cash-flow', subjectId: 'bba-karnataka-mgmt-accounting', title: 'Fund Flow & Cash Flow Statement', moduleNumber: 2, moduleName: 'Module 2: Fund Flow & Cash Flow', order: 2, difficulty: 'core', tier: 'free', status: 'published', examFrequency: 'high', generatedBy: 'curator', contentVersion: 1, publishedAt: '2026-09-16T12:00:00.000Z', featuredQuestionIds: ['q-mgmt-03', 'q-mgmt-04'], subtopics: [
+        'Fund Flow Statement: Meaning & Preparation',
+        'Cash Flow Statement: AS-3',
+        'Operating, Investing, Financing Activities',
+        'Direct vs Indirect Method',
+        'Fund Flow vs Cash Flow'
+      ], explanationMd: `# Fund Flow & Cash Flow Statement
+
+Cash flow shows actual cash movements; fund flow shows working capital changes.`,
+      formulas: [
+        { id: 'formula-mgmt-mod2-fund-flow-cash-flow-1', label: 'Key Formula', formula: 'Formula placeholder', exampleQ: 'Example question', exampleA: 'Example answer' },
+      ],
+      tricks: [
+        { id: 'trick-mgmt-m2-1', title: 'Cash Flow Activities', trick: 'Operating = daily business; Investing = assets; Financing = capital structure.', whenToUse: 'Classify cash flows correctly.' },
+      ],
+      howToSolve: [
+        { id: 'solve-mgmt-m2-1', step: 'Step 1: Classify each cash flow.', detail: 'Operating/investing/financing.', questionType: 'Cash Flow Problem' },
+      ]
+    },
+    { id: 'mgmt-mod4-budgetary-control', subjectId: 'bba-karnataka-mgmt-accounting', title: 'Budgetary Control', moduleNumber: 4, moduleName: 'Module 4: Budgetary Control', order: 4, difficulty: 'core', tier: 'free', status: 'published', examFrequency: 'moderate', generatedBy: 'curator', contentVersion: 1, publishedAt: '2026-09-16T12:00:00.000Z', featuredQuestionIds: ['q-mgmt-05', 'q-mgmt-06'], subtopics: [
+        'Budget: Meaning & Types',
+        'Fixed vs Flexible Budget',
+        'Zero-Based Budgeting',
+        'Cash Budget',
+        'Production Budget'
+      ], explanationMd: `# Budgetary Control
+
+A flexible budget adjusts for different levels of activity.`,
+      formulas: [
+        { id: 'formula-mgmt-mod4-budgetary-control-1', label: 'Key Formula', formula: 'Formula placeholder', exampleQ: 'Example question', exampleA: 'Example answer' },
+      ],
+      tricks: [
+        { id: 'trick-mgmt-m4-1', title: 'Fixed vs Flexible', trick: 'Fixed budget = one activity level; Flexible budget = multiple activity levels.', whenToUse: 'Choose budget type correctly.' },
+      ],
+      howToSolve: [
+        { id: 'solve-mgmt-m4-1', step: 'Step 1: Identify budget type.', detail: 'Prepare budget for activity level.', questionType: 'Budgeting Problem' },
+      ]
+    },
+    { id: 'mgmt-mod5-marginal-costing-decision-making', subjectId: 'bba-karnataka-mgmt-accounting', title: 'Marginal Costing & Decision Making', moduleNumber: 5, moduleName: 'Module 5: Marginal Costing', order: 5, difficulty: 'core', tier: 'free', status: 'published', examFrequency: 'high', generatedBy: 'curator', contentVersion: 1, publishedAt: '2026-09-16T12:00:00.000Z', featuredQuestionIds: ['q-mgmt-07', 'q-mgmt-08'], subtopics: [
+        'Marginal Costing: Concept',
+        'Contribution & P/V Ratio',
+        'Break-Even Point',
+        'Margin of Safety',
+        'Cost-Volume-Profit Analysis'
+      ], explanationMd: `# Marginal Costing & Decision Making
+
+Contribution = Sales − Variable Cost.`,
+      formulas: [
+        { id: 'formula-mgmt-m5-1', label: 'P/V Ratio', formula: 'P/V Ratio = Contribution ÷ Sales × 100', exampleQ: 'Sales ₹1,00,000; Variable Cost ₹60,000. P/V Ratio?', exampleA: 'Contribution = 40,000; P/V Ratio = 40,000 ÷ 1,00,000 × 100 = 40%.' },
+      ],
+      tricks: [
+        { id: 'trick-mgmt-m5-1', title: 'BEP formula', trick: 'BEP (units) = Fixed Cost ÷ Contribution per unit.', whenToUse: 'Quick break-even calculation.' },
+      ],
+      howToSolve: [
+        { id: 'solve-mgmt-m5-1', step: 'Step 1: Compute contribution.', detail: 'BEP = Fixed Cost ÷ Contribution per unit.', questionType: 'Marginal Costing Problem' },
+      ]
+    },
+],
 
   // ── 14. Income Tax - I (Sem 5) ──
   'bba-karnataka-income-tax-1': [
@@ -2753,7 +2927,64 @@ $$\\text{Salary for HRA} = \\text{Basic Pay} + \\text{Dearness Allowance (Enter 
         },
       ],
     },
-  ],
+      { id: 'tax1-mod1-basic-concepts-residential-status', subjectId: 'bba-karnataka-income-tax-1', title: 'Basic Concepts & Residential Status', moduleNumber: 1, moduleName: 'Module 1: Basic Concepts', order: 1, difficulty: 'basic', tier: 'free', status: 'published', examFrequency: 'high', generatedBy: 'curator', contentVersion: 1, publishedAt: '2026-09-16T12:00:00.000Z', featuredQuestionIds: ['q-tax1-01', 'q-tax1-02'], subtopics: [
+        'Income Tax: Meaning & Features',
+        'Assessment Year vs Previous Year',
+        'Residential Status: Individual',
+        'Residential Status: HUF & Company',
+        'Tax Incidence'
+      ], explanationMd: `# Basic Concepts & Residential Status
+
+Residential status determines tax incidence in India.`,
+      formulas: [
+        { id: 'formula-tax1-mod1-basic-concepts-residential-status-1', label: 'Key Formula', formula: 'Formula placeholder', exampleQ: 'Example question', exampleA: 'Example answer' },
+      ],
+      tricks: [
+        { id: 'trick-tax1-m1-1', title: 'Resident test', trick: '182 days in India in PY = Resident.', whenToUse: 'Determine residential status quickly.' },
+      ],
+      howToSolve: [
+        { id: 'solve-tax1-m1-1', step: 'Step 1: Count days in India.', detail: 'Apply resident/non-resident test.', questionType: 'Income Tax Theory Question' },
+      ]
+    },
+    { id: 'tax1-mod4-computation-total-income', subjectId: 'bba-karnataka-income-tax-1', title: 'Computation of Total Income & Tax Liability', moduleNumber: 4, moduleName: 'Module 4: Computation of Total Income', order: 4, difficulty: 'core', tier: 'free', status: 'published', examFrequency: 'high', generatedBy: 'curator', contentVersion: 1, publishedAt: '2026-09-16T12:00:00.000Z', featuredQuestionIds: ['q-tax1-03', 'q-tax1-04'], subtopics: [
+        'Gross Total Income',
+        'Deductions under Chapter VI-A',
+        'Total Income',
+        'Tax Liability & Rebates',
+        'Advance Tax & TDS'
+      ], explanationMd: `# Computation of Total Income
+
+Total Income = Gross Total Income − Deductions under Chapter VI-A.`,
+      formulas: [
+        { id: 'formula-tax1-m4-1', label: 'Total Income', formula: 'Total Income = Gross Total Income − Chapter VI-A Deductions', exampleQ: 'GTI ₹6,00,000; Section 80C deduction ₹1,50,000. Total Income?', exampleA: 'Total Income = 6,00,000 − 1,50,000 = ₹4,50,000.' },
+      ],
+      tricks: [
+        { id: 'trick-tax1-m4-1', title: 'Section 80C limit', trick: 'Section 80C deduction limit is ₹1,50,000 per year.', whenToUse: 'Apply 80C limit quickly.' },
+      ],
+      howToSolve: [
+        { id: 'solve-tax1-m4-1', step: 'Step 1: Compute GTI.', detail: 'Subtract Chapter VI-A deductions.', questionType: 'Tax Computation Problem' },
+      ]
+    },
+    { id: 'tax1-mod5-tax-planning-avoidance-evasion', subjectId: 'bba-karnataka-income-tax-1', title: 'Tax Planning, Avoidance & Evasion', moduleNumber: 5, moduleName: 'Module 5: Tax Planning', order: 5, difficulty: 'core', tier: 'free', status: 'published', examFrequency: 'moderate', generatedBy: 'curator', contentVersion: 1, publishedAt: '2026-09-16T12:00:00.000Z', featuredQuestionIds: ['q-tax1-05', 'q-tax1-06'], subtopics: [
+        'Tax Planning: Meaning & Objectives',
+        'Tax Avoidance vs Tax Evasion',
+        'Legitimate Tax Planning Tools',
+        'Tax Holiday & Exemptions',
+        'Penalties for Tax Evasion'
+      ], explanationMd: `# Tax Planning, Avoidance & Evasion
+
+Tax planning is legal; tax evasion is illegal.`,
+      formulas: [
+        { id: 'formula-tax1-mod5-tax-planning-avoidance-evasion-1', label: 'Key Formula', formula: 'Formula placeholder', exampleQ: 'Example question', exampleA: 'Example answer' },
+      ],
+      tricks: [
+        { id: 'trick-tax1-m5-1', title: 'Planning vs Evasion', trick: 'Tax planning = legal; Tax evasion = illegal (concealment, fraud).', whenToUse: 'Distinguish planning from evasion.' },
+      ],
+      howToSolve: [
+        { id: 'solve-tax1-m5-1', step: 'Step 1: Identify activity type.', detail: 'Classify as planning, avoidance or evasion.', questionType: 'Tax Planning Theory Question' },
+      ]
+    },
+],
 
   // ── 15. Production & Operations Management (Sem 5) ──
   'bba-karnataka-operations-mgmt': [
@@ -2816,7 +3047,83 @@ Plant layout involves configuring departments, workstations, machines, and mater
         },
       ],
     },
-  ],
+      { id: 'ops-mod1-production-operations-intro', subjectId: 'bba-karnataka-operations-mgmt', title: 'Introduction to Production & Operations Management', moduleNumber: 1, moduleName: 'Module 1: Operations Foundations', order: 1, difficulty: 'basic', tier: 'free', status: 'published', examFrequency: 'high', generatedBy: 'curator', contentVersion: 1, publishedAt: '2026-09-16T12:00:00.000Z', featuredQuestionIds: ['q-ops-01b', 'q-ops-02'], subtopics: [
+        'Operations Management: Meaning & Scope',
+        'Production vs Operations Management',
+        'Types of Production Systems',
+        'Plant Location & Layout',
+        'Operations Strategy'
+      ], explanationMd: `# Introduction to Production & Operations Management
+
+OM transforms inputs into goods and services.`,
+      formulas: [
+        { id: 'formula-ops-mod1-production-operations-intro-1', label: 'Key Formula', formula: 'Formula placeholder', exampleQ: 'Example question', exampleA: 'Example answer' },
+      ],
+      tricks: [
+        { id: 'trick-ops-m1-1', title: 'OM Transformation', trick: 'Inputs → Transformation Process → Outputs (goods/services).', whenToUse: 'Recall OM transformation model.' },
+      ],
+      howToSolve: [
+        { id: 'solve-ops-m1-1', step: 'Step 1: Define operations management.', detail: 'Explain transformation process.', questionType: 'Operations Theory Question' },
+      ]
+    },
+    { id: 'ops-mod3-inventory-management', subjectId: 'bba-karnataka-operations-mgmt', title: 'Inventory Management', moduleNumber: 3, moduleName: 'Module 3: Inventory Management', order: 3, difficulty: 'core', tier: 'free', status: 'published', examFrequency: 'high', generatedBy: 'curator', contentVersion: 1, publishedAt: '2026-09-16T12:00:00.000Z', featuredQuestionIds: ['q-ops-03', 'q-ops-04'], subtopics: [
+        'Inventory: Meaning & Types',
+        'EOQ Model',
+        'ABC Analysis',
+        'JIT & Lean Inventory',
+        'Safety Stock & Reorder Level'
+      ], explanationMd: `# Inventory Management
+
+ABC analysis classifies items by value: A (high value), B (medium), C (low value).`,
+      formulas: [
+        { id: 'formula-ops-m3-1', label: 'EOQ', formula: 'EOQ = √(2 × Demand × Ordering Cost ÷ Holding Cost)', exampleQ: 'Annual demand 10,000, ordering cost ₹50, holding cost ₹2. EOQ?', exampleA: 'EOQ = √(2 × 10,000 × 50 ÷ 2) ≈ 707 units.' },
+      ],
+      tricks: [
+        { id: 'trick-ops-m3-1', title: 'ABC Classification', trick: 'A-items: high value, low quantity (70-80% value, 10-20% items).', whenToUse: 'Prioritise A-items for tight control.' },
+      ],
+      howToSolve: [
+        { id: 'solve-ops-m3-1', step: 'Step 1: Identify D, ordering cost, holding cost.', detail: 'Apply EOQ formula.', questionType: 'Inventory Problem' },
+      ]
+    },
+    { id: 'ops-mod4-quality-management', subjectId: 'bba-karnataka-operations-mgmt', title: 'Quality Management & TQM', moduleNumber: 4, moduleName: 'Module 4: Quality Management', order: 4, difficulty: 'core', tier: 'free', status: 'published', examFrequency: 'moderate', generatedBy: 'curator', contentVersion: 1, publishedAt: '2026-09-16T12:00:00.000Z', featuredQuestionIds: ['q-ops-05', 'q-ops-06'], subtopics: [
+        'Quality: Meaning & Dimensions',
+        'TQM: Principles & Elements',
+        'ISO 9000 Series',
+        'Quality Control Tools',
+        'Six Sigma'
+      ], explanationMd: `# Quality Management & TQM
+
+TQM is a management approach centred on quality, customer satisfaction and continuous improvement.`,
+      formulas: [
+        { id: 'formula-ops-mod4-quality-management-1', label: 'Key Formula', formula: 'Formula placeholder', exampleQ: 'Example question', exampleA: 'Example answer' },
+      ],
+      tricks: [
+        { id: 'trick-ops-m4-1', title: 'ISO 9000', trick: 'ISO 9000 is a family of quality management standards.', whenToUse: 'Recall ISO quality standards.' },
+      ],
+      howToSolve: [
+        { id: 'solve-ops-m4-1', step: 'Step 1: Define TQM.', detail: 'Explain continuous improvement.', questionType: 'Quality Management Theory Question' },
+      ]
+    },
+    { id: 'ops-mod5-supply-chain-logistics', subjectId: 'bba-karnataka-operations-mgmt', title: 'Supply Chain & Logistics Management', moduleNumber: 5, moduleName: 'Module 5: Supply Chain & Logistics', order: 5, difficulty: 'core', tier: 'free', status: 'published', examFrequency: 'moderate', generatedBy: 'curator', contentVersion: 1, publishedAt: '2026-09-16T12:00:00.000Z', featuredQuestionIds: ['q-ops-07', 'q-ops-08'], subtopics: [
+        'Supply Chain: Meaning & Components',
+        'Logistics: Meaning & Functions',
+        'Procurement & Vendor Management',
+        'Warehousing & Distribution',
+        'Reverse Logistics'
+      ], explanationMd: `# Supply Chain & Logistics Management
+
+Supply chain covers the flow from raw materials to end customer.`,
+      formulas: [
+        { id: 'formula-ops-mod5-supply-chain-logistics-1', label: 'Key Formula', formula: 'Formula placeholder', exampleQ: 'Example question', exampleA: 'Example answer' },
+      ],
+      tricks: [
+        { id: 'trick-ops-m5-1', title: 'Supply Chain Flow', trick: 'Supplier → Manufacturer → Distributor → Retailer → Customer.', whenToUse: 'Trace supply chain flow.' },
+      ],
+      howToSolve: [
+        { id: 'solve-ops-m5-1', step: 'Step 1: Identify supply chain stage.', detail: 'Map the flow of goods.', questionType: 'Supply Chain Theory Question' },
+      ]
+    },
+],
 
   // ── 16. Strategic Management & Business Policy (Sem 6) ──
   'bba-karnataka-strategic-mgmt': [
@@ -2890,7 +3197,83 @@ Module 2 in the 6th Semester Karnataka BBA syllabus tests analytical skills in m
         },
       ],
     },
-  ],
+      { id: 'strat-mod1-introduction-strategic-management', subjectId: 'bba-karnataka-strategic-mgmt', title: 'Introduction to Strategic Management', moduleNumber: 1, moduleName: 'Module 1: Strategic Foundations', order: 1, difficulty: 'basic', tier: 'free', status: 'published', examFrequency: 'high', generatedBy: 'curator', contentVersion: 1, publishedAt: '2026-09-16T12:00:00.000Z', featuredQuestionIds: ['q-strat-01b', 'q-strat-02'], subtopics: [
+        'Strategic Management: Meaning & Process',
+        'Vision, Mission & Objectives',
+        'Stakeholders & Corporate Governance',
+        'Strategic Decision Making',
+        'Levels of Strategy'
+      ], explanationMd: `# Introduction to Strategic Management
+
+Strategic management involves formulation and implementation of major goals.`,
+      formulas: [
+        { id: 'formula-strat-mod1-introduction-strategic-management-1', label: 'Key Formula', formula: 'Formula placeholder', exampleQ: 'Example question', exampleA: 'Example answer' },
+      ],
+      tricks: [
+        { id: 'trick-strat-m1-1', title: 'Strategy Levels', trick: 'Corporate → Business → Functional strategy levels.', whenToUse: 'Identify strategy level quickly.' },
+      ],
+      howToSolve: [
+        { id: 'solve-strat-m1-1', step: 'Step 1: Define strategic management.', detail: 'Explain formulation and implementation.', questionType: 'Strategy Theory Question' },
+      ]
+    },
+    { id: 'strat-mod3-swot-pestle-analysis', subjectId: 'bba-karnataka-strategic-mgmt', title: 'SWOT & PESTLE Analysis', moduleNumber: 3, moduleName: 'Module 3: Environmental Analysis', order: 3, difficulty: 'core', tier: 'free', status: 'published', examFrequency: 'high', generatedBy: 'curator', contentVersion: 1, publishedAt: '2026-09-16T12:00:00.000Z', featuredQuestionIds: ['q-strat-03', 'q-strat-04'], subtopics: [
+        'Environmental Scanning',
+        'SWOT Analysis: Strengths, Weaknesses, Opportunities, Threats',
+        'PESTLE Analysis: Political, Economic, Social, Technological, Legal, Environmental',
+        'Porter’s Five Forces',
+        'Competitor Analysis'
+      ], explanationMd: `# SWOT & PESTLE Analysis
+
+SWOT is internal (S, W) and external (O, T); PESTLE is macro-environmental.`,
+      formulas: [
+        { id: 'formula-strat-mod3-swot-pestle-analysis-1', label: 'Key Formula', formula: 'Formula placeholder', exampleQ: 'Example question', exampleA: 'Example answer' },
+      ],
+      tricks: [
+        { id: 'trick-strat-m3-1', title: 'SWOT vs PESTLE', trick: 'SWOT = internal + immediate external; PESTLE = macro environment only.', whenToUse: 'Choose analysis framework.' },
+      ],
+      howToSolve: [
+        { id: 'solve-strat-m3-1', step: 'Step 1: Identify internal vs external factors.', detail: 'Classify as S/W/O/T or PESTLE.', questionType: 'Environmental Analysis Problem' },
+      ]
+    },
+    { id: 'strat-mod4-strategy-implementation', subjectId: 'bba-karnataka-strategic-mgmt', title: 'Strategy Implementation & Control', moduleNumber: 4, moduleName: 'Module 4: Strategy Implementation', order: 4, difficulty: 'core', tier: 'free', status: 'published', examFrequency: 'high', generatedBy: 'curator', contentVersion: 1, publishedAt: '2026-09-16T12:00:00.000Z', featuredQuestionIds: ['q-strat-05', 'q-strat-06'], subtopics: [
+        'Strategy Implementation: Steps',
+        'Resource Allocation',
+        'Organisational Structure & Strategy',
+        'Strategic Control & Balanced Scorecard',
+        'Corrective Action'
+      ], explanationMd: `# Strategy Implementation & Control
+
+Implementation puts strategy into action through structure, resources and systems.`,
+      formulas: [
+        { id: 'formula-strat-mod4-strategy-implementation-1', label: 'Key Formula', formula: 'Formula placeholder', exampleQ: 'Example question', exampleA: 'Example answer' },
+      ],
+      tricks: [
+        { id: 'trick-strat-m4-1', title: 'Balanced Scorecard', trick: 'Financial, Customer, Internal Process, Learning & Growth.', whenToUse: 'Recall four BSC perspectives.' },
+      ],
+      howToSolve: [
+        { id: 'solve-strat-m4-1', step: 'Step 1: Align structure with strategy.', detail: 'Implement through resource allocation.', questionType: 'Strategy Implementation Theory Question' },
+      ]
+    },
+    { id: 'strat-mod5-corporate-level-strategies', subjectId: 'bba-karnataka-strategic-mgmt', title: 'Corporate Level Strategies', moduleNumber: 5, moduleName: 'Module 5: Corporate Strategies', order: 5, difficulty: 'core', tier: 'free', status: 'published', examFrequency: 'moderate', generatedBy: 'curator', contentVersion: 1, publishedAt: '2026-09-16T12:00:00.000Z', featuredQuestionIds: ['q-strat-07', 'q-strat-08'], subtopics: [
+        'Growth Strategies: Concentration, Integration, Diversification',
+        'Stability Strategies',
+        'Retrenchment Strategies: Turnaround, Divestment, Liquidation',
+        'Portfolio Analysis: BCG Matrix',
+        'Mergers & Acquisitions'
+      ], explanationMd: `# Corporate Level Strategies
+
+BCG Matrix classifies SBUs as Stars, Cash Cows, Question Marks, Dogs.`,
+      formulas: [
+        { id: 'formula-strat-mod5-corporate-level-strategies-1', label: 'Key Formula', formula: 'Formula placeholder', exampleQ: 'Example question', exampleA: 'Example answer' },
+      ],
+      tricks: [
+        { id: 'trick-strat-m5-1', title: 'BCG Matrix', trick: 'Stars = high growth, high share; Cash Cows = low growth, high share.', whenToUse: 'Classify SBUs in BCG Matrix.' },
+      ],
+      howToSolve: [
+        { id: 'solve-strat-m5-1', step: 'Step 1: Identify growth rate and market share.', detail: 'Classify SBU in BCG matrix.', questionType: 'Corporate Strategy Problem' },
+      ]
+    },
+],
 
   // ── 17. Goods and Services Tax (GST) & Customs Duty (Sem 6) ──
   'bba-karnataka-gst': [
@@ -3043,7 +3426,64 @@ Even if used in business, ITC is strictly **denied** on:
         },
       ],
     },
-  ],
+      { id: 'gst-mod2-gst-registration-compliance', subjectId: 'bba-karnataka-gst', title: 'GST Registration & Compliance', moduleNumber: 2, moduleName: 'Module 2: GST Registration & Compliance', order: 2, difficulty: 'basic', tier: 'free', status: 'published', examFrequency: 'high', generatedBy: 'curator', contentVersion: 1, publishedAt: '2026-09-16T12:00:00.000Z', featuredQuestionIds: ['q-gst-01b', 'q-gst-02b'], subtopics: [
+        'GST: Meaning & Features',
+        'CGST, SGST, IGST, UTGST',
+        'Registration: Threshold & Procedure',
+        'GST Returns: Types & Due Dates',
+        'Input Tax Credit: Eligibility & Conditions'
+      ], explanationMd: `# GST Registration & Compliance
+
+IGST is levied on inter-state supplies; CGST + SGST on intra-state supplies.`,
+      formulas: [
+        { id: 'formula-gst-mod2-gst-registration-compliance-1', label: 'Key Formula', formula: 'Formula placeholder', exampleQ: 'Example question', exampleA: 'Example answer' },
+      ],
+      tricks: [
+        { id: 'trick-gst-m2-1', title: 'CGST+SGST vs IGST', trick: 'Intra-state = CGST + SGST; Inter-state = IGST.', whenToUse: 'Apply correct GST type.' },
+      ],
+      howToSolve: [
+        { id: 'solve-gst-m2-1', step: 'Step 1: Identify place of supply.', detail: 'Intra-state or inter-state.', questionType: 'GST Theory Question' },
+      ]
+    },
+    { id: 'gst-mod4-gst-returns-assessment', subjectId: 'bba-karnataka-gst', title: 'GST Returns, Assessment & Audit', moduleNumber: 4, moduleName: 'Module 4: GST Returns & Assessment', order: 4, difficulty: 'core', tier: 'free', status: 'published', examFrequency: 'moderate', generatedBy: 'curator', contentVersion: 1, publishedAt: '2026-09-16T12:00:00.000Z', featuredQuestionIds: ['q-gst-03', 'q-gst-04'], subtopics: [
+        'GSTR-1, GSTR-3B, GSTR-9',
+        'Assessment: Self, Provisional, Summary, Best Judgement',
+        'Audit under GST',
+        'Demand & Recovery',
+        'Refund under GST'
+      ], explanationMd: `# GST Returns, Assessment & Audit
+
+GSTR-3B is a monthly summary return; GSTR-9 is annual return.`,
+      formulas: [
+        { id: 'formula-gst-mod4-gst-returns-assessment-1', label: 'Key Formula', formula: 'Formula placeholder', exampleQ: 'Example question', exampleA: 'Example answer' },
+      ],
+      tricks: [
+        { id: 'trick-gst-m4-1', title: 'GSTR Returns', trick: 'GSTR-1 = outward supplies; GSTR-3B = summary; GSTR-9 = annual.', whenToUse: 'Identify return type.' },
+      ],
+      howToSolve: [
+        { id: 'solve-gst-m4-1', step: 'Step 1: Identify return period.', detail: 'File appropriate GSTR form.', questionType: 'GST Compliance Question' },
+      ]
+    },
+    { id: 'gst-mod5-customs-law-basics', subjectId: 'bba-karnataka-gst', title: 'Customs Law: Basics & Procedures', moduleNumber: 5, moduleName: 'Module 5: Customs Law', order: 5, difficulty: 'core', tier: 'free', status: 'published', examFrequency: 'moderate', generatedBy: 'curator', contentVersion: 1, publishedAt: '2026-09-16T12:00:00.000Z', featuredQuestionIds: ['q-gst-05', 'q-gst-06'], subtopics: [
+        'Customs Act: Meaning & Scope',
+        'Types of Customs Duty',
+        'Valuation under Customs',
+        'Import & Export Procedures',
+        'Warehousing under Customs'
+      ], explanationMd: `# Customs Law
+
+Customs duty is levied on import and export of goods.`,
+      formulas: [
+        { id: 'formula-gst-mod5-customs-law-basics-1', label: 'Key Formula', formula: 'Formula placeholder', exampleQ: 'Example question', exampleA: 'Example answer' },
+      ],
+      tricks: [
+        { id: 'trick-gst-m5-1', title: 'Customs Duty', trick: 'Basic Customs Duty is the primary duty on imported goods.', whenToUse: 'Recall customs duty types.' },
+      ],
+      howToSolve: [
+        { id: 'solve-gst-m5-1', step: 'Step 1: Identify import or export.', detail: 'Apply relevant customs provision.', questionType: 'Customs Law Theory Question' },
+      ]
+    },
+],
 
   // ── 18. Entrepreneurship Development (Sem 6) ──
   'bba-karnataka-entrepreneurship': [
@@ -3111,7 +3551,83 @@ Bengaluru is recognized as the startup capital of India. Under the NEP 2020 BBA 
         },
       ],
     },
-  ],
+      { id: 'ent-mod1-introduction-entrepreneurship', subjectId: 'bba-karnataka-entrepreneurship', title: 'Introduction to Entrepreneurship', moduleNumber: 1, moduleName: 'Module 1: Entrepreneurship Foundations', order: 1, difficulty: 'basic', tier: 'free', status: 'published', examFrequency: 'high', generatedBy: 'curator', contentVersion: 1, publishedAt: '2026-09-16T12:00:00.000Z', featuredQuestionIds: ['q-ent-01b', 'q-ent-02'], subtopics: [
+        'Entrepreneur: Meaning & Types',
+        'Entrepreneurship: Concept & Importance',
+        'Entrepreneur vs Manager',
+        'Qualities of Successful Entrepreneur',
+        'Role of Entrepreneurship in Economic Development'
+      ], explanationMd: `# Introduction to Entrepreneurship
+
+An entrepreneur organises, manages and assumes risks of a business.`,
+      formulas: [
+        { id: 'formula-ent-mod1-introduction-entrepreneurship-1', label: 'Key Formula', formula: 'Formula placeholder', exampleQ: 'Example question', exampleA: 'Example answer' },
+      ],
+      tricks: [
+        { id: 'trick-ent-m1-1', title: 'Entrepreneur vs Manager', trick: 'Entrepreneur bears risk and owns the business; Manager is an employee.', whenToUse: 'Distinguish entrepreneur from manager.' },
+      ],
+      howToSolve: [
+        { id: 'solve-ent-m1-1', step: 'Step 1: Define entrepreneur.', detail: 'Explain role in economic development.', questionType: 'Entrepreneurship Theory Question' },
+      ]
+    },
+    { id: 'ent-mod3-business-plan-preparation', subjectId: 'bba-karnataka-entrepreneurship', title: 'Business Plan Preparation', moduleNumber: 3, moduleName: 'Module 3: Business Plan', order: 3, difficulty: 'core', tier: 'free', status: 'published', examFrequency: 'high', generatedBy: 'curator', contentVersion: 1, publishedAt: '2026-09-16T12:00:00.000Z', featuredQuestionIds: ['q-ent-03', 'q-ent-04'], subtopics: [
+        'Business Plan: Meaning & Components',
+        'Market Analysis in Business Plan',
+        'Financial Plan & Projections',
+        'Operations Plan',
+        'Risk Analysis'
+      ], explanationMd: `# Business Plan Preparation
+
+A business plan is a roadmap for the venture.`,
+      formulas: [
+        { id: 'formula-ent-mod3-business-plan-preparation-1', label: 'Key Formula', formula: 'Formula placeholder', exampleQ: 'Example question', exampleA: 'Example answer' },
+      ],
+      tricks: [
+        { id: 'trick-ent-m3-1', title: 'Business Plan Components', trick: 'Executive summary, market analysis, operations, financials, risk.', whenToUse: 'Structure a business plan.' },
+      ],
+      howToSolve: [
+        { id: 'solve-ent-m3-1', step: 'Step 1: Identify business plan section.', detail: 'Draft appropriate section.', questionType: 'Business Plan Theory Question' },
+      ]
+    },
+    { id: 'ent-mod4-finance-sources-startup', subjectId: 'bba-karnataka-entrepreneurship', title: 'Sources of Finance for Startups', moduleNumber: 4, moduleName: 'Module 4: Startup Finance', order: 4, difficulty: 'core', tier: 'free', status: 'published', examFrequency: 'moderate', generatedBy: 'curator', contentVersion: 1, publishedAt: '2026-09-16T12:00:00.000Z', featuredQuestionIds: ['q-ent-05', 'q-ent-06'], subtopics: [
+        'Bootstrapping & Own Funds',
+        'Angel Investors',
+        'Venture Capital',
+        'Bank Loans & Mudra',
+        'Crowdfunding'
+      ], explanationMd: `# Sources of Finance for Startups
+
+Bootstrapping means funding from personal savings and revenue.`,
+      formulas: [
+        { id: 'formula-ent-mod4-finance-sources-startup-1', label: 'Key Formula', formula: 'Formula placeholder', exampleQ: 'Example question', exampleA: 'Example answer' },
+      ],
+      tricks: [
+        { id: 'trick-ent-m4-1', title: 'Startup Funding Stages', trick: 'Bootstrap → Angel → VC → IPO.', whenToUse: 'Trace startup funding lifecycle.' },
+      ],
+      howToSolve: [
+        { id: 'solve-ent-m4-1', step: 'Step 1: Identify funding stage.', detail: 'Select appropriate source.', questionType: 'Startup Finance Theory Question' },
+      ]
+    },
+    { id: 'ent-mod5-startup-ecosystem-india', subjectId: 'bba-karnataka-entrepreneurship', title: 'Startup Ecosystem in India', moduleNumber: 5, moduleName: 'Module 5: Startup Ecosystem', order: 5, difficulty: 'core', tier: 'free', status: 'published', examFrequency: 'moderate', generatedBy: 'curator', contentVersion: 1, publishedAt: '2026-09-16T12:00:00.000Z', featuredQuestionIds: ['q-ent-07', 'q-ent-08'], subtopics: [
+        'Startup India Scheme',
+        'Incubators & Accelerators',
+        'MSME Registration',
+        'Legal Registration: Proprietorship, Partnership, LLP, Company',
+        'Exit Strategies'
+      ], explanationMd: `# Startup Ecosystem in India
+
+Startup India provides tax benefits and compliance relaxations.`,
+      formulas: [
+        { id: 'formula-ent-mod5-startup-ecosystem-india-1', label: 'Key Formula', formula: 'Formula placeholder', exampleQ: 'Example question', exampleA: 'Example answer' },
+      ],
+      tricks: [
+        { id: 'trick-ent-m5-1', title: 'Startup India', trick: 'Startup India offers tax holiday for 3 years in first 7 years.', whenToUse: 'Recall Startup India benefits.' },
+      ],
+      howToSolve: [
+        { id: 'solve-ent-m5-1', step: 'Step 1: Identify startup benefit.', detail: 'Explain registration options.', questionType: 'Startup Ecosystem Theory Question' },
+      ]
+    },
+],
 
   // ── 19. Company Law & Secretarial Practice (Sem 6) ──
   'bba-karnataka-company-law': [
@@ -3183,7 +3699,83 @@ The "corporate veil" is the legal curtain separating the personality of the comp
         },
       ],
     },
-  ],
+      { id: 'colaw-mod2-companies-act-incorporation', subjectId: 'bba-karnataka-company-law', title: 'Companies Act 2013: Incorporation & Types', moduleNumber: 2, moduleName: 'Module 2: Incorporation & Types', order: 2, difficulty: 'basic', tier: 'free', status: 'published', examFrequency: 'high', generatedBy: 'curator', contentVersion: 1, publishedAt: '2026-09-16T12:00:00.000Z', featuredQuestionIds: ['q-claw-01', 'q-claw-02'], subtopics: [
+        'Company: Meaning & Features',
+        'Types of Companies: Private, Public, OPC',
+        'Incorporation Process',
+        'MOA & AOA',
+        'Certificate of Incorporation'
+      ], explanationMd: `# Companies Act 2013
+
+A company is an artificial person created by law with separate legal entity.`,
+      formulas: [
+        { id: 'formula-colaw-mod2-companies-act-incorporation-1', label: 'Key Formula', formula: 'Formula placeholder', exampleQ: 'Example question', exampleA: 'Example answer' },
+      ],
+      tricks: [
+        { id: 'trick-claw-m2-1', title: 'MOA vs AOA', trick: 'MOA = charter/objects; AOA = internal rules/regulations.', whenToUse: 'Distinguish MOA from AOA.' },
+      ],
+      howToSolve: [
+        { id: 'solve-claw-m2-1', step: 'Step 1: Define company.', detail: 'Explain incorporation process.', questionType: 'Company Law Theory Question' },
+      ]
+    },
+    { id: 'colaw-mod3-shares-debentures', subjectId: 'bba-karnataka-company-law', title: 'Shares, Debentures & Share Capital', moduleNumber: 3, moduleName: 'Module 3: Share Capital', order: 3, difficulty: 'core', tier: 'free', status: 'published', examFrequency: 'high', generatedBy: 'curator', contentVersion: 1, publishedAt: '2026-09-16T12:00:00.000Z', featuredQuestionIds: ['q-claw-03', 'q-claw-04'], subtopics: [
+        'Share Capital: Meaning & Types',
+        'Equity vs Preference Shares',
+        'Issue of Shares: At Par, Premium, Discount',
+        'Debentures: Types & Features',
+        'Transfer & Transmission of Shares'
+      ], explanationMd: `# Shares, Debentures & Share Capital
+
+Equity shareholders have voting rights; preference shareholders get fixed dividend.`,
+      formulas: [
+        { id: 'formula-colaw-mod3-shares-debentures-1', label: 'Key Formula', formula: 'Formula placeholder', exampleQ: 'Example question', exampleA: 'Example answer' },
+      ],
+      tricks: [
+        { id: 'trick-claw-m3-1', title: 'Equity vs Preference', trick: 'Equity = voting rights + variable dividend; Preference = fixed dividend + no vote.', whenToUse: 'Distinguish share types.' },
+      ],
+      howToSolve: [
+        { id: 'solve-claw-m3-1', step: 'Step 1: Identify share type.', detail: 'Explain rights and features.', questionType: 'Share Capital Theory Question' },
+      ]
+    },
+    { id: 'colaw-mod4-company-management-directors', subjectId: 'bba-karnataka-company-law', title: 'Company Management: Directors & Meetings', moduleNumber: 4, moduleName: 'Module 4: Directors & Meetings', order: 4, difficulty: 'core', tier: 'free', status: 'published', examFrequency: 'moderate', generatedBy: 'curator', contentVersion: 1, publishedAt: '2026-09-16T12:00:00.000Z', featuredQuestionIds: ['q-claw-05', 'q-claw-06'], subtopics: [
+        'Directors: Appointment & Removal',
+        'Duties & Liabilities of Directors',
+        'Board Meetings & Resolutions',
+        'Annual General Meeting',
+        'Extraordinary General Meeting'
+      ], explanationMd: `# Company Management
+
+Directors manage the company; shareholders own it.`,
+      formulas: [
+        { id: 'formula-colaw-mod4-company-management-directors-1', label: 'Key Formula', formula: 'Formula placeholder', exampleQ: 'Example question', exampleA: 'Example answer' },
+      ],
+      tricks: [
+        { id: 'trick-claw-m4-1', title: 'AGM frequency', trick: 'AGM must be held once every year, within 6 months of year-end.', whenToUse: 'Recall AGM timing.' },
+      ],
+      howToSolve: [
+        { id: 'solve-claw-m4-1', step: 'Step 1: Identify meeting type.', detail: 'Explain meeting requirements.', questionType: 'Company Management Theory Question' },
+      ]
+    },
+    { id: 'colaw-mod5-winding-up-insolvency', subjectId: 'bba-karnataka-company-law', title: 'Winding Up & Insolvency', moduleNumber: 5, moduleName: 'Module 5: Winding Up & Insolvency', order: 5, difficulty: 'core', tier: 'free', status: 'published', examFrequency: 'moderate', generatedBy: 'curator', contentVersion: 1, publishedAt: '2026-09-16T12:00:00.000Z', featuredQuestionIds: ['q-claw-07', 'q-claw-08'], subtopics: [
+        'Winding Up: Meaning & Modes',
+        'Voluntary vs Compulsory Winding Up',
+        'Liquidator: Powers & Duties',
+        'Insolvency & Bankruptcy Code 2016',
+        'Corporate Insolvency Resolution Process'
+      ], explanationMd: `# Winding Up & Insolvency
+
+IBC 2016 consolidated insolvency laws in India.`,
+      formulas: [
+        { id: 'formula-colaw-mod5-winding-up-insolvency-1', label: 'Key Formula', formula: 'Formula placeholder', exampleQ: 'Example question', exampleA: 'Example answer' },
+      ],
+      tricks: [
+        { id: 'trick-claw-m5-1', title: 'IBC objective', trick: 'IBC 2016 aims to resolve insolvency in a time-bound manner.', whenToUse: 'Recall IBC purpose.' },
+      ],
+      howToSolve: [
+        { id: 'solve-claw-m5-1', step: 'Step 1: Identify winding up mode.', detail: 'Explain liquidator role.', questionType: 'Insolvency Theory Question' },
+      ]
+    },
+],
 
   // ── 20. Income Tax - II (Sem 6) ──
   'bba-karnataka-income-tax-2': [
@@ -3256,7 +3848,83 @@ $$\\text{Total Taxable Income} = \\text{Gross Total Income (GTI)} - \\text{Deduc
         },
       ],
     },
-  ],
+      { id: 'tax2-mod1-heads-of-income-salary', subjectId: 'bba-karnataka-income-tax-2', title: 'Income from Salary', moduleNumber: 1, moduleName: 'Module 1: Salary Income', order: 1, difficulty: 'basic', tier: 'free', status: 'published', examFrequency: 'high', generatedBy: 'curator', contentVersion: 1, publishedAt: '2026-09-16T12:00:00.000Z', featuredQuestionIds: ['q-tax2-01b', 'q-tax2-02'], subtopics: [
+        'Salary: Meaning & Components',
+        'Allowances: Taxable & Exempt',
+        'Perquisites: Types & Valuation',
+        'Deduction under Section 16',
+        'Computation of Salary Income'
+      ], explanationMd: `# Income from Salary
+
+Salary includes basic wages, allowances, perquisites and profits in lieu of salary.`,
+      formulas: [
+        { id: 'formula-tax2-m1-1', label: 'Gross Salary', formula: 'Gross Salary = Basic + Allowances + Perquisites − Section 16 Deductions', exampleQ: 'Basic ₹40,000/month; HRA ₹10,000/month. Annual gross salary?', exampleA: 'Annual basic = 4,80,000; Annual HRA = 1,20,000; Gross = ₹6,00,000 (before deductions).' },
+      ],
+      tricks: [
+        { id: 'trick-tax2-m1-1', title: 'Section 16 deductions', trick: 'Section 16: Standard deduction ₹50,000, entertainment allowance, professional tax.', whenToUse: 'Apply salary deductions.' },
+      ],
+      howToSolve: [
+        { id: 'solve-tax2-m1-1', step: 'Step 1: Sum all salary components.', detail: 'Subtract Section 16 deductions.', questionType: 'Salary Income Problem' },
+      ]
+    },
+    { id: 'tax2-mod2-income-from-house-property', subjectId: 'bba-karnataka-income-tax-2', title: 'Income from House Property', moduleNumber: 2, moduleName: 'Module 2: House Property Income', order: 2, difficulty: 'core', tier: 'free', status: 'published', examFrequency: 'moderate', generatedBy: 'curator', contentVersion: 1, publishedAt: '2026-09-16T12:00:00.000Z', featuredQuestionIds: ['q-tax2-03', 'q-tax2-04'], subtopics: [
+        'House Property: Meaning',
+        'Annual Value: Gross & Net',
+        'Municipal Taxes',
+        'Standard Deduction under Section 24',
+        'Interest on Housing Loan'
+      ], explanationMd: `# Income from House Property
+
+Annual value is the inherent capacity of property to earn income.`,
+      formulas: [
+        { id: 'formula-tax2-m2-1', label: 'Net Annual Value', formula: 'NAV = GAV − Municipal Taxes', exampleQ: 'GAV ₹2,40,000; Municipal tax ₹20,000. NAV?', exampleA: 'NAV = 2,40,000 − 20,000 = ₹2,20,000.' },
+      ],
+      tricks: [
+        { id: 'trick-tax2-m2-1', title: 'Standard deduction 24(a)', trick: 'Standard deduction = 30% of NAV (repairs, maintenance).', whenToUse: 'Apply 30% standard deduction.' },
+      ],
+      howToSolve: [
+        { id: 'solve-tax2-m2-1', step: 'Step 1: Compute GAV and NAV.', detail: 'Apply standard deduction and interest.', questionType: 'House Property Problem' },
+      ]
+    },
+    { id: 'tax2-mod3-profit-gains-business-profession', subjectId: 'bba-karnataka-income-tax-2', title: 'Profit & Gains from Business or Profession', moduleNumber: 3, moduleName: 'Module 3: Business Income', order: 3, difficulty: 'core', tier: 'free', status: 'published', examFrequency: 'high', generatedBy: 'curator', contentVersion: 1, publishedAt: '2026-09-16T12:00:00.000Z', featuredQuestionIds: ['q-tax2-05', 'q-tax2-06'], subtopics: [
+        'Business Income: Meaning',
+        'Allowable Expenses',
+        'Depreciation under Section 32',
+        'Presumptive Taxation: Section 44AD',
+        'Computation of Business Income'
+      ], explanationMd: `# Profit & Gains from Business or Profession
+
+Business income = Revenue − Allowable expenses − Depreciation.`,
+      formulas: [
+        { id: 'formula-tax2-mod3-profit-gains-business-profession-1', label: 'Key Formula', formula: 'Formula placeholder', exampleQ: 'Example question', exampleA: 'Example answer' },
+      ],
+      tricks: [
+        { id: 'trick-tax2-m3-1', title: 'Section 44AD', trick: 'Section 44AD presumptive: 8% of turnover (6% digital) for small businesses.', whenToUse: 'Apply presumptive taxation.' },
+      ],
+      howToSolve: [
+        { id: 'solve-tax2-m3-1', step: 'Step 1: Identify business receipts.', detail: 'Subtract allowable expenses and depreciation.', questionType: 'Business Income Problem' },
+      ]
+    },
+    { id: 'tax2-mod5-capital-gains-income-other-sources', subjectId: 'bba-karnataka-income-tax-2', title: 'Capital Gains & Income from Other Sources', moduleNumber: 5, moduleName: 'Module 5: Capital Gains & Other Sources', order: 5, difficulty: 'core', tier: 'free', status: 'published', examFrequency: 'moderate', generatedBy: 'curator', contentVersion: 1, publishedAt: '2026-09-16T12:00:00.000Z', featuredQuestionIds: ['q-tax2-07', 'q-tax2-08'], subtopics: [
+        'Capital Gains: Short-term & Long-term',
+        'Cost Inflation Index',
+        'Exemptions: Sections 54, 54EC',
+        'Income from Other Sources',
+        'Deductions under Section 57'
+      ], explanationMd: `# Capital Gains & Other Sources
+
+LTCG on listed equity above ₹1 lakh is taxed at 10%.`,
+      formulas: [
+        { id: 'formula-tax2-m5-1', label: 'LTCG Tax', formula: 'LTCG on listed equity > ₹1 lakh = 10% without indexation', exampleQ: 'LTCG ₹1,50,000 on listed equity. Tax?', exampleA: 'Tax = 10% of (1,50,000 − 1,00,000) = ₹5,000.' },
+      ],
+      tricks: [
+        { id: 'trick-tax2-m5-1', title: 'LTCG equity exemption', trick: 'LTCG up to ₹1 lakh per year on listed equity is exempt.', whenToUse: 'Apply ₹1 lakh LTCG exemption.' },
+      ],
+      howToSolve: [
+        { id: 'solve-tax2-m5-1', step: 'Step 1: Classify STCG vs LTCG.', detail: 'Apply holding period rules.', questionType: 'Capital Gains Problem' },
+      ]
+    },
+],
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
@@ -4068,141 +4736,971 @@ export const SEEDED_UNIVERSAL_QUESTIONS: UniversalQuestion[] = [
       stream: 'taxation',
       program: 'bba',
     },
+  },  { id: 'q-acc-02', questionText: 'Which account is debited when goods are purchased for cash?', options: [
+      'Purchases',
+      'Cash',
+      'Sales',
+      'Capital'
+    ], correctIndex: 0, explanation: 'Purchases account is debited; Cash is credited.', difficulty: 'basic', status: 'approved', pyqTag: { university: 'Bangalore University (BU)', year: 2024, marks: 2, semester: 1 }, prepTags: { subjectId: 'bba-karnataka-accounting', topicIds: ['acc-mod2-journal-ledger-trial-balance'], stream: 'commerce', program: 'bba' },
   },
-  {
-    id: 'q-mpa-03',
-    questionText: 'Which organization structure has direct vertical authority from top to bottom with no staff specialists?',
-    options: [
-      'Line Organization',
-      'Functional Organization',
-      'Matrix Organization',
-      'Line & Staff Organization',
-    ],
-    correctIndex: 0,
-    explanation: 'A Line Organization has direct vertical authority relationships from top management to workers, without specialized staff advisors.',
-    difficulty: 'basic',
-    status: 'approved',
-    pyqTag: { university: 'Bangalore University (BU)', year: 2024, marks: 2, semester: 1 },
-    prepTags: { subjectId: 'bba-karnataka-mpa', topicIds: ['mpa-mod3-organizing-structure'], stream: 'management', program: 'bba' },
-
+  { id: 'q-acc-02b', questionText: 'Trial Balance is prepared to check:', options: [
+      'Arithmetical accuracy',
+      'Fraud detection',
+      'All errors',
+      'None'
+    ], correctIndex: 0, explanation: 'Trial Balance checks arithmetical accuracy.', difficulty: 'basic', status: 'approved', pyqTag: { university: 'Mysore University (UOM)', year: 2023, marks: 2, semester: 1 }, prepTags: { subjectId: 'bba-karnataka-accounting', topicIds: ['acc-mod2-journal-ledger-trial-balance'], stream: 'commerce', program: 'bba' },
   },
-  {
-    id: 'q-mpa-04',
-    questionText: 'Under Maslow\'s hierarchy, which need is satisfied by job security and a safe working environment?',
-    options: [
-      'Physiological',
+  { id: 'q-acc-05', questionText: 'Closing stock is shown in:', options: [
+      'Trading Account only',
+      'Balance Sheet only',
+      'Both Trading Account and Balance Sheet',
+      'Profit & Loss Account'
+    ], correctIndex: 2, explanation: 'Closing stock is credited to Trading A/c and shown as asset in Balance Sheet.', difficulty: 'basic', status: 'approved', pyqTag: { university: 'Bangalore University (BU)', year: 2024, marks: 2, semester: 1 }, prepTags: { subjectId: 'bba-karnataka-accounting', topicIds: ['acc-mod5-final-accounts-adjustments'], stream: 'commerce', program: 'bba' },
+  },
+  { id: 'q-acc-05b', questionText: 'Outstanding expenses are:', options: [
+      'Assets',
+      'Liabilities',
+      'Incomes',
+      'Expenses'
+    ], correctIndex: 1, explanation: 'Outstanding expenses are unpaid expenses — a liability.', difficulty: 'basic', status: 'approved', pyqTag: { university: 'Mysore University (UOM)', year: 2023, marks: 2, semester: 1 }, prepTags: { subjectId: 'bba-karnataka-accounting', topicIds: ['acc-mod5-final-accounts-adjustments'], stream: 'commerce', program: 'bba' },
+  },
+  { id: 'q-mkt-01b', questionText: 'Which marketing concept focuses on customer needs and wants?', options: [
+      'Production',
+      'Product',
+      'Selling',
+      'Marketing'
+    ], correctIndex: 3, explanation: 'Marketing concept focuses on customer needs.', difficulty: 'basic', status: 'approved', pyqTag: { university: 'Bangalore University (BU)', year: 2024, marks: 2, semester: 1 }, prepTags: { subjectId: 'bba-karnataka-marketing', topicIds: ['mkt-mod1-marketing-concepts-4ps'], stream: 'commerce', program: 'bba' },
+  },
+  { id: 'q-mkt-01c', questionText: 'Which of the following is NOT one of the 4Ps?', options: [
+      'Product',
+      'Price',
+      'Place',
+      'Profit'
+    ], correctIndex: 3, explanation: 'The 4Ps are Product, Price, Place, Promotion — not Profit.', difficulty: 'basic', status: 'approved', pyqTag: { university: 'Mysore University (UOM)', year: 2023, marks: 2, semester: 1 }, prepTags: { subjectId: 'bba-karnataka-marketing', topicIds: ['mkt-mod1-marketing-concepts-4ps'], stream: 'commerce', program: 'bba' },
+  },
+  { id: 'q-mkt-04', questionText: 'Which channel has NO intermediary?', options: [
+      'Zero-level',
+      'One-level',
+      'Two-level',
+      'Three-level'
+    ], correctIndex: 0, explanation: 'Zero-level channel is direct: manufacturer → customer.', difficulty: 'basic', status: 'approved', pyqTag: { university: 'Bangalore University (BU)', year: 2024, marks: 2, semester: 1 }, prepTags: { subjectId: 'bba-karnataka-marketing', topicIds: ['mkt-mod4-distribution-channels-retailing'], stream: 'commerce', program: 'bba' },
+  },
+  { id: 'q-mkt-04b', questionText: 'Kirana stores are examples of:', options: [
+      'Organized retail',
+      'Unorganized retail',
+      'E-commerce',
+      'Department stores'
+    ], correctIndex: 1, explanation: 'Kirana stores are small, unorganized retail outlets.', difficulty: 'basic', status: 'approved', pyqTag: { university: 'Mysore University (UOM)', year: 2023, marks: 2, semester: 1 }, prepTags: { subjectId: 'bba-karnataka-marketing', topicIds: ['mkt-mod4-distribution-channels-retailing'], stream: 'commerce', program: 'bba' },
+  },
+  { id: 'q-mkt-05', questionText: 'Which is NOT an element of promotion mix?', options: [
+      'Advertising',
+      'Personal selling',
+      'Sales promotion',
+      'Production'
+    ], correctIndex: 3, explanation: 'Production is not part of promotion mix.', difficulty: 'basic', status: 'approved', pyqTag: { university: 'Bangalore University (BU)', year: 2024, marks: 2, semester: 1 }, prepTags: { subjectId: 'bba-karnataka-marketing', topicIds: ['mkt-mod5-promotion-mix-advertising'], stream: 'commerce', program: 'bba' },
+  },
+  { id: 'q-mkt-05b', questionText: 'Sales promotion refers to:', options: [
+      'Long-term brand building',
+      'Short-term incentives',
+      'Personal communication',
+      'Mass media advertising'
+    ], correctIndex: 1, explanation: 'Sales promotion uses short-term incentives.', difficulty: 'basic', status: 'approved', pyqTag: { university: 'Mysore University (UOM)', year: 2023, marks: 2, semester: 1 }, prepTags: { subjectId: 'bba-karnataka-marketing', topicIds: ['mkt-mod5-promotion-mix-advertising'], stream: 'commerce', program: 'bba' },
+  },
+  { id: 'q-mpa-03', questionText: 'Which structure has dual reporting relationships?', options: [
+      'Line',
+      'Functional',
+      'Matrix',
+      'Line & Staff'
+    ], correctIndex: 2, explanation: 'Matrix structure combines functional and project reporting.', difficulty: 'basic', status: 'approved', pyqTag: { university: 'Bangalore University (BU)', year: 2024, marks: 2, semester: 1 }, prepTags: { subjectId: 'bba-karnataka-mpa', topicIds: ['mpa-mod3-organizing'], stream: 'management', program: 'bba' },
+  },
+  { id: 'q-mpa-03b', questionText: 'Delegation can be taken back; decentralization:', options: [
+      'Can also be taken back',
+      'Is wider dispersal of authority',
+      'Is same as delegation',
+      'None'
+    ], correctIndex: 1, explanation: 'Decentralization is systematic dispersal of authority.', difficulty: 'basic', status: 'approved', pyqTag: { university: 'Mysore University (UOM)', year: 2023, marks: 2, semester: 1 }, prepTags: { subjectId: 'bba-karnataka-mpa', topicIds: ['mpa-mod3-organizing'], stream: 'management', program: 'bba' },
+  },
+  { id: 'q-mpa-04', questionText: 'Maslow’s highest level need is:', options: [
       'Safety',
       'Social',
       'Esteem',
-    ],
-    correctIndex: 1,
-    explanation: 'Safety needs include security of employment, income, and a safe physical work environment — the second level in Maslow\'s hierarchy.',
-    difficulty: 'basic',
-    status: 'approved',
-    pyqTag: { university: 'Mysore University (UOM)', year: 2023, marks: 2, semester: 1 },
-    prepTags: { subjectId: 'bba-karnataka-mpa', topicIds: ['mpa-mod4-staffing-leadership-motivation'], stream: 'management', program: 'bba' },
-
+      'Self-actualization'
+    ], correctIndex: 3, explanation: 'Self-actualization is the top of Maslow’s hierarchy.', difficulty: 'basic', status: 'approved', pyqTag: { university: 'Bangalore University (BU)', year: 2024, marks: 2, semester: 1 }, prepTags: { subjectId: 'bba-karnataka-mpa', topicIds: ['mpa-mod4-staffing-leadership-motivation'], stream: 'management', program: 'bba' },
   },
-  {
-    id: 'q-mpa-05',
-    questionText: 'Which control technique reports only significant deviations from standards to top management?',
-    options: [
-      'Budgetary Control',
-      'Break-Even Analysis',
-      'Management by Exception',
-      'Ratio Analysis',
-    ],
-    correctIndex: 2,
-    explanation: 'Management by Exception focuses managerial attention only on material deviations that exceed acceptable tolerance limits.',
-    difficulty: 'core',
-    status: 'approved',
-    pyqTag: { university: 'Bengaluru City University (BCU)', year: 2024, marks: 5, semester: 1 },
-    prepTags: { subjectId: 'bba-karnataka-mpa', topicIds: ['mpa-mod5-directing-coordination-control'], stream: 'management', program: 'bba' },
-
+  { id: 'q-mpa-04b', questionText: 'Herzberg’s motivators include:', options: [
+      'Salary',
+      'Company policy',
+      'Recognition',
+      'Working conditions'
+    ], correctIndex: 2, explanation: 'Recognition is a motivator; salary and policy are hygiene factors.', difficulty: 'basic', status: 'approved', pyqTag: { university: 'Mysore University (UOM)', year: 2023, marks: 2, semester: 1 }, prepTags: { subjectId: 'bba-karnataka-mpa', topicIds: ['mpa-mod4-staffing-leadership-motivation'], stream: 'management', program: 'bba' },
   },
-  {
-    id: 'q-acc-02',
-    questionText: 'Which book of original entry records credit purchases of goods only?',
-    options: [
-      'Sales Book',
-      'Purchases Book',
-      'Cash Book',
-      'Journal Proper',
-    ],
-    correctIndex: 1,
-    explanation: 'The Purchases Book records credit purchases of goods (trading merchandise) only; cash purchases go in the Cash Book.',
-    difficulty: 'basic',
-    status: 'approved',
-    pyqTag: { university: 'Bangalore University (BU)', year: 2024, marks: 2, semester: 1 },
-    prepTags: { subjectId: 'bba-karnataka-accounting', topicIds: ['acc-mod2-journal-ledger-trial-balance'], stream: 'commerce', program: 'bba' },
-
+  { id: 'q-mpa-05', questionText: 'The control process starts with:', options: [
+      'Taking corrective action',
+      'Setting standards',
+      'Measuring performance',
+      'Comparing'
+    ], correctIndex: 1, explanation: 'Control begins with setting performance standards.', difficulty: 'basic', status: 'approved', pyqTag: { university: 'Bangalore University (BU)', year: 2024, marks: 2, semester: 1 }, prepTags: { subjectId: 'bba-karnataka-mpa', topicIds: ['mpa-mod5-directing-coordination-control'], stream: 'management', program: 'bba' },
   },
-  {
-    id: 'q-acc-05',
-    questionText: 'Closing stock appears in final accounts as:',
-    options: [
-      'Only on the credit side of the Trading Account',
-      'Only as a current asset in the Balance Sheet',
-      'On the credit side of the Trading Account and as a current asset in the Balance Sheet',
-      'Only on the debit side of the Profit & Loss Account',
-    ],
-    correctIndex: 2,
-    explanation: 'Closing stock has a double effect: credited to the Trading Account and shown as a current asset in the Balance Sheet.',
-    difficulty: 'core',
-    status: 'approved',
-    pyqTag: { university: 'Mysore University (UOM)', year: 2023, marks: 10, semester: 1 },
-    prepTags: { subjectId: 'bba-karnataka-accounting', topicIds: ['acc-mod5-final-accounts-adjustments'], stream: 'commerce', program: 'bba' },
-
+  { id: 'q-mpa-05b', questionText: 'PERT/CPM is which type of control technique?', options: [
+      'Budgetary',
+      'Non-budgetary',
+      'Traditional',
+      'None'
+    ], correctIndex: 1, explanation: 'PERT/CPM is a non-budgetary control technique.', difficulty: 'basic', status: 'approved', pyqTag: { university: 'Mysore University (UOM)', year: 2023, marks: 2, semester: 1 }, prepTags: { subjectId: 'bba-karnataka-mpa', topicIds: ['mpa-mod5-directing-coordination-control'], stream: 'management', program: 'bba' },
   },
-  {
-    id: 'q-mkt-03',
-    questionText: 'Which marketing philosophy starts from customer needs and integrates all activities to satisfy them?',
-    options: [
-      'Production Concept',
-      'Product Concept',
-      'Selling Concept',
-      'Marketing Concept',
-    ],
-    correctIndex: 3,
-    explanation: 'The Marketing Concept holds that organizational goals are achieved by identifying customer needs and delivering desired satisfactions better than competitors.',
-    difficulty: 'basic',
-    status: 'approved',
-    pyqTag: { university: 'Bangalore University (BU)', year: 2024, marks: 2, semester: 1 },
-    prepTags: { subjectId: 'bba-karnataka-marketing', topicIds: ['mkt-mod1-marketing-concepts-environment'], stream: 'management', program: 'bba' },
-
+  { id: 'q-ob-01b', questionText: 'Which Big Five trait describes an employee who is dependable, organised and achievement-oriented?', options: [
+      'Openness',
+      'Conscientiousness',
+      'Extraversion',
+      'Neuroticism'
+    ], correctIndex: 1, explanation: 'Conscientiousness reflects dependability, organisation and achievement orientation.', difficulty: 'basic', status: 'approved', pyqTag: { university: 'Bangalore University (BU)', year: 2024, marks: 2, semester: 2 }, prepTags: { subjectId: 'bba-karnataka-ob', topicIds: ['ob-mod1-individual-behaviour-personality'], stream: 'management', program: 'bba' },
   },
-  {
-    id: 'q-mkt-04',
-    questionText: 'Manufacturer → Wholesaler → Retailer → Consumer is which channel level?',
-    options: [
-      'Zero-level channel',
-      'One-level channel',
-      'Two-level channel',
-      'Three-level channel',
-    ],
-    correctIndex: 2,
-    explanation: 'Two intermediary levels (wholesaler and retailer) sit between producer and consumer, making it a two-level channel.',
-    difficulty: 'basic',
-    status: 'approved',
-    pyqTag: { university: 'Mysore University (UOM)', year: 2023, marks: 2, semester: 1 },
-    prepTags: { subjectId: 'bba-karnataka-marketing', topicIds: ['mkt-mod4-distribution-channels-retailing'], stream: 'management', program: 'bba' },
-
+  { id: 'q-ob-02', questionText: 'Under classical conditioning, a neutral stimulus is paired with which type of stimulus?', options: [
+      'Unconditioned stimulus',
+      'Conditioned response',
+      'Reinforcement',
+      'Punishment'
+    ], correctIndex: 0, explanation: 'Pavlov paired a neutral stimulus with an unconditioned stimulus to produce a conditioned response.', difficulty: 'basic', status: 'approved', pyqTag: { university: 'Mysore University (UOM)', year: 2023, marks: 2, semester: 2 }, prepTags: { subjectId: 'bba-karnataka-ob', topicIds: ['ob-mod1-individual-behaviour-personality'], stream: 'management', program: 'bba' },
   },
-  {
-    id: 'q-mkt-05',
-    questionText: 'Which element of the promotion mix is paid, non-personal communication through media?',
-    options: [
-      'Personal Selling',
-      'Sales Promotion',
-      'Public Relations',
-      'Advertising',
-    ],
-    correctIndex: 3,
-    explanation: 'Advertising is any paid form of non-personal presentation and promotion of ideas, goods, or services by an identified sponsor.',
-    difficulty: 'basic',
-    status: 'approved',
-    pyqTag: { university: 'Bengaluru City University (BCU)', year: 2024, marks: 2, semester: 1 },
-    prepTags: { subjectId: 'bba-karnataka-marketing', topicIds: ['mkt-mod5-promotion-mix-advertising'], stream: 'management', program: 'bba' },
-
+  { id: 'q-ob-03', questionText: 'In perception, which factor affects how we interpret sensory information?', options: [
+      'Motivation',
+      'Learning',
+      'Personality',
+      'All of the above'
+    ], correctIndex: 3, explanation: 'Motivation, learning and personality all affect perception.', difficulty: 'basic', status: 'approved', pyqTag: { university: 'Bangalore University (BU)', year: 2024, marks: 2, semester: 2 }, prepTags: { subjectId: 'bba-karnataka-ob', topicIds: ['ob-mod2-perception-learning-attitudes'], stream: 'management', program: 'bba' },
   },
+  { id: 'q-ob-03b', questionText: 'Which learning theory involves reinforcement after desired behaviour?', options: [
+      'Classical conditioning',
+      'Operant conditioning',
+      'Cognitive learning',
+      'Social learning'
+    ], correctIndex: 1, explanation: 'Operant conditioning uses reinforcement after desired behaviour.', difficulty: 'basic', status: 'approved', pyqTag: { university: 'Mysore University (UOM)', year: 2023, marks: 2, semester: 2 }, prepTags: { subjectId: 'bba-karnataka-ob', topicIds: ['ob-mod2-perception-learning-attitudes'], stream: 'management', program: 'bba' },
+  },
+  { id: 'q-ob-04', questionText: 'In Tuckman\'s model, which stage is characterised by conflict over roles and leadership?', options: [
+      'Forming',
+      'Storming',
+      'Norming',
+      'Performing'
+    ], correctIndex: 1, explanation: 'Storming is marked by conflict and resistance.', difficulty: 'basic', status: 'approved', pyqTag: { university: 'Bangalore University (BU)', year: 2024, marks: 5, semester: 2 }, prepTags: { subjectId: 'bba-karnataka-ob', topicIds: ['ob-mod4-groups-teams-conflict'], stream: 'management', program: 'bba' },
+  },
+  { id: 'q-ob-05', questionText: 'Which conflict style is both assertive and cooperative?', options: [
+      'Competing',
+      'Collaborating',
+      'Avoiding',
+      'Accommodating'
+    ], correctIndex: 1, explanation: 'Collaborating is high assertiveness + high cooperation (win-win).', difficulty: 'basic', status: 'approved', pyqTag: { university: 'Bengaluru City University (BCU)', year: 2024, marks: 5, semester: 2 }, prepTags: { subjectId: 'bba-karnataka-ob', topicIds: ['ob-mod4-groups-teams-conflict'], stream: 'management', program: 'bba' },
+  },
+  { id: 'q-ob-05b', questionText: 'Which Kotter step comes immediately after forming a guiding coalition?', options: [
+      'Create urgency',
+      'Create a vision',
+      'Communicate the vision',
+      'Generate short-term wins'
+    ], correctIndex: 1, explanation: 'After the coalition, the next step is to create the strategic vision.', difficulty: 'basic', status: 'approved', pyqTag: { university: 'Mysore University (UOM)', year: 2023, marks: 2, semester: 2 }, prepTags: { subjectId: 'bba-karnataka-ob', topicIds: ['ob-mod5-organisational-culture-change'], stream: 'management', program: 'bba' },
+  },
+  { id: 'q-ob-05c', questionText: 'In Lewin\'s model, which step stabilises the new state after change?', options: [
+      'Unfreeze',
+      'Change',
+      'Refreeze',
+      'Evaluate'
+    ], correctIndex: 2, explanation: 'Refreeze locks in new behaviours.', difficulty: 'basic', status: 'approved', pyqTag: { university: 'Bangalore University (BU)', year: 2024, marks: 2, semester: 2 }, prepTags: { subjectId: 'bba-karnataka-ob', topicIds: ['ob-mod5-organisational-culture-change'], stream: 'management', program: 'bba' },
+  },
+  { id: 'q-math-01b', questionText: 'Profit percentage is always computed on which base?', options: [
+      'Selling Price',
+      'Cost Price',
+      'Marked Price',
+      'Discount'
+    ], correctIndex: 1, explanation: 'Profit% and Loss% are computed on Cost Price.', difficulty: 'basic', status: 'approved', pyqTag: { university: 'Bangalore University (BU)', year: 2024, marks: 2, semester: 2 }, prepTags: { subjectId: 'bba-karnataka-math', topicIds: ['math-mod2-commercial-arithmetic'], stream: 'aptitude', program: 'bba' },
+  },
+  { id: 'q-math-02b', questionText: 'Goods bought for ₹400 sold for ₹500. Profit %?', options: [
+      '20%',
+      '25%',
+      '30%',
+      '200%'
+    ], correctIndex: 1, explanation: 'Profit = ₹100; Profit % = 100/400 × 100 = 25%.', difficulty: 'basic', status: 'approved', pyqTag: { university: 'Mysore University (UOM)', year: 2023, marks: 2, semester: 2 }, prepTags: { subjectId: 'bba-karnataka-math', topicIds: ['math-mod2-commercial-arithmetic'], stream: 'aptitude', program: 'bba' },
+  },
+  { id: 'q-math-03', questionText: '₹10,000 at 10% p.a. compounded annually for 2 years. Amount?', options: [
+      '₹11,000',
+      '₹12,000',
+      '₹12,100',
+      '₹13,310'
+    ], correctIndex: 2, explanation: 'A = 10,000(1.10)^2 = ₹12,100.', difficulty: 'core', status: 'approved', pyqTag: { university: 'Bangalore University (BU)', year: 2024, marks: 5, semester: 2 }, prepTags: { subjectId: 'bba-karnataka-math', topicIds: ['math-mod3-interest-annuities'], stream: 'aptitude', program: 'bba' },
+  },
+  { id: 'q-math-04', questionText: 'CI − SI for 2 years = ?', options: [
+      'P × R/100',
+      'P × (R/100)^2',
+      'P × R × 2',
+      'P × (1+R/100)^2'
+    ], correctIndex: 1, explanation: 'The difference for 2 years = Principal × (Rate/100)^2.', difficulty: 'core', status: 'approved', pyqTag: { university: 'Mysore University (UOM)', year: 2023, marks: 2, semester: 2 }, prepTags: { subjectId: 'bba-karnataka-math', topicIds: ['math-mod3-interest-annuities'], stream: 'aptitude', program: 'bba' },
+  },
+  { id: 'q-math-05', questionText: 'For maxima, the second order condition requires f\'\'(x) to be:', options: [
+      'Positive',
+      'Negative',
+      'Zero',
+      'Undefined'
+    ], correctIndex: 1, explanation: 'f\'\'(x) < 0 confirms a maximum.', difficulty: 'advanced', status: 'approved', pyqTag: { university: 'Bangalore University (BU)', year: 2024, marks: 5, semester: 2 }, prepTags: { subjectId: 'bba-karnataka-math', topicIds: ['math-mod4-calculus-optimization'], stream: 'aptitude', program: 'bba' },
+  },
+  { id: 'q-math-06', questionText: 'Profit maximisation occurs where:', options: [
+      'MR > MC',
+      'MR < MC',
+      'MR = MC',
+      'AR = AC'
+    ], correctIndex: 2, explanation: 'A firm maximises profit where Marginal Revenue equals Marginal Cost.', difficulty: 'advanced', status: 'approved', pyqTag: { university: 'Mysore University (UOM)', year: 2023, marks: 2, semester: 2 }, prepTags: { subjectId: 'bba-karnataka-math', topicIds: ['math-mod4-calculus-optimization'], stream: 'aptitude', program: 'bba' },
+  },
+  { id: 'q-eco-01b', questionText: 'TP with 3 workers = 30; TP with 4 workers = 38. MP of 4th worker?', options: [
+      '6',
+      '8',
+      '10',
+      '12'
+    ], correctIndex: 1, explanation: 'MP = (38 − 30) ÷ (4 − 3) = 8 units.', difficulty: 'core', status: 'approved', pyqTag: { university: 'Bangalore University (BU)', year: 2024, marks: 2, semester: 2 }, prepTags: { subjectId: 'bba-karnataka-economics', topicIds: ['eco-mod2-production-functions'], stream: 'economics', program: 'bba' },
+  },
+  { id: 'q-eco-02', questionText: 'When MP > AP, AP is:', options: [
+      'Rising',
+      'Falling',
+      'Constant',
+      'Zero'
+    ], correctIndex: 0, explanation: 'When marginal product exceeds average product, the average is pulled up.', difficulty: 'basic', status: 'approved', pyqTag: { university: 'Mysore University (UOM)', year: 2023, marks: 2, semester: 2 }, prepTags: { subjectId: 'bba-karnataka-economics', topicIds: ['eco-mod2-production-functions'], stream: 'economics', program: 'bba' },
+  },
+  { id: 'q-eco-03', questionText: 'MC cuts AC at:', options: [
+      'Maximum',
+      'Minimum',
+      'Never',
+      'Always above'
+    ], correctIndex: 1, explanation: 'The MC curve intersects AC at its minimum point.', difficulty: 'basic', status: 'approved', pyqTag: { university: 'Bangalore University (BU)', year: 2024, marks: 2, semester: 2 }, prepTags: { subjectId: 'bba-karnataka-economics', topicIds: ['eco-mod3-cost-curves'], stream: 'economics', program: 'bba' },
+  },
+  { id: 'q-eco-04', questionText: 'TC at 10 units = ₹500; TC at 11 units = ₹545. MC of 11th unit?', options: [
+      '₹35',
+      '₹40',
+      '₹45',
+      '₹50'
+    ], correctIndex: 2, explanation: 'MC = (545 − 500) ÷ (11 − 10) = ₹45.', difficulty: 'core', status: 'approved', pyqTag: { university: 'Mysore University (UOM)', year: 2023, marks: 5, semester: 2 }, prepTags: { subjectId: 'bba-karnataka-economics', topicIds: ['eco-mod3-cost-curves'], stream: 'economics', program: 'bba' },
+  },
+  { id: 'q-eco-05', questionText: 'Single seller, unique product, high entry barriers = ?', options: [
+      'Perfect Competition',
+      'Monopoly',
+      'Monopolistic Competition',
+      'Oligopoly'
+    ], correctIndex: 1, explanation: 'A single seller with no close substitutes defines monopoly.', difficulty: 'basic', status: 'approved', pyqTag: { university: 'Bangalore University (BU)', year: 2024, marks: 2, semester: 2 }, prepTags: { subjectId: 'bba-karnataka-economics', topicIds: ['eco-mod4-market-structures'], stream: 'economics', program: 'bba' },
+  },
+  { id: 'q-eco-06', questionText: 'Many sellers, differentiated products = ?', options: [
+      'Monopoly',
+      'Oligopoly',
+      'Monopolistic Competition',
+      'Perfect Competition'
+    ], correctIndex: 2, explanation: 'Product differentiation with many sellers is monopolistic competition.', difficulty: 'basic', status: 'approved', pyqTag: { university: 'Mysore University (UOM)', year: 2023, marks: 2, semester: 2 }, prepTags: { subjectId: 'bba-karnataka-economics', topicIds: ['eco-mod4-market-structures'], stream: 'economics', program: 'bba' },
+  },
+  { id: 'q-eco-07', questionText: 'Low initial price to gain market share = ?', options: [
+      'Skimming',
+      'Penetration',
+      'Cost-plus',
+      'Discrimination'
+    ], correctIndex: 1, explanation: 'Penetration pricing sets a low initial price to capture market share quickly.', difficulty: 'basic', status: 'approved', pyqTag: { university: 'Bangalore University (BU)', year: 2024, marks: 2, semester: 2 }, prepTags: { subjectId: 'bba-karnataka-economics', topicIds: ['eco-mod5-managerial-pricing'], stream: 'economics', program: 'bba' },
+  },
+  { id: 'q-eco-08', questionText: 'High initial price for innovative product = ?', options: [
+      'Penetration',
+      'Skimming',
+      'Cost-plus',
+      'Psychological'
+    ], correctIndex: 1, explanation: 'Skimming sets a high initial price for innovative products.', difficulty: 'basic', status: 'approved', pyqTag: { university: 'Mysore University (UOM)', year: 2023, marks: 2, semester: 2 }, prepTags: { subjectId: 'bba-karnataka-economics', topicIds: ['eco-mod5-managerial-pricing'], stream: 'economics', program: 'bba' },
+  },
+  { id: 'q-cost-01b', questionText: 'EOQ formula = ?', options: [
+      '√(2DS/H)',
+      'D × S',
+      'D/H',
+      'S × H'
+    ], correctIndex: 0, explanation: 'EOQ = √(2 × Demand × Setup/Order cost ÷ Holding cost per unit).', difficulty: 'basic', status: 'approved', pyqTag: { university: 'Bangalore University (BU)', year: 2024, marks: 2, semester: 3 }, prepTags: { subjectId: 'bba-karnataka-cost-accounting', topicIds: ['cost-mod3-material-labour-overheads'], stream: 'accounting', program: 'bba' },
+  },
+  { id: 'q-cost-02b', questionText: 'Idle time is treated as:', options: [
+      'Direct labour cost',
+      'Indirect labour cost',
+      'Material cost',
+      'Overhead'
+    ], correctIndex: 1, explanation: 'Idle time is indirect labour — part of overheads.', difficulty: 'basic', status: 'approved', pyqTag: { university: 'Mysore University (UOM)', year: 2023, marks: 2, semester: 3 }, prepTags: { subjectId: 'bba-karnataka-cost-accounting', topicIds: ['cost-mod3-material-labour-overheads'], stream: 'accounting', program: 'bba' },
+  },
+  { id: 'q-cost-03b', questionText: 'Material Price Variance = ?', options: [
+      '(SP − AP) × AQ',
+      '(SP − AP) × SQ',
+      '(SQ − AQ) × SP',
+      'SP × AQ'
+    ], correctIndex: 0, explanation: 'MPV = (Standard Price − Actual Price) × Actual Quantity.', difficulty: 'basic', status: 'approved', pyqTag: { university: 'Bangalore University (BU)', year: 2024, marks: 2, semester: 3 }, prepTags: { subjectId: 'bba-karnataka-cost-accounting', topicIds: ['cost-mod5-variance-analysis-budgetary-control'], stream: 'accounting', program: 'bba' },
+  },
+  { id: 'q-cost-04', questionText: 'SP ₹50, AP ₹55, AQ 1000 units. Material Price Variance?', options: [
+      '₹5,000 Favourable',
+      '₹5,000 Adverse',
+      '₹55,000',
+      '₹50,000'
+    ], correctIndex: 1, explanation: 'MPV = (50 − 55) × 1000 = −₹5,000 (Adverse).', difficulty: 'core', status: 'approved', pyqTag: { university: 'Mysore University (UOM)', year: 2023, marks: 5, semester: 3 }, prepTags: { subjectId: 'bba-karnataka-cost-accounting', topicIds: ['cost-mod5-variance-analysis-budgetary-control'], stream: 'accounting', program: 'bba' },
+  },
+  { id: 'q-stats-01', questionText: 'Census method of data collection:', options: [
+      'Covers every item',
+      'Covers a sample',
+      'Is less expensive',
+      'Is quicker'
+    ], correctIndex: 0, explanation: 'Census covers every item in the population.', difficulty: 'basic', status: 'approved', pyqTag: { university: 'Bangalore University (BU)', year: 2024, marks: 2, semester: 3 }, prepTags: { subjectId: 'bba-karnataka-statistics', topicIds: ['stats-mod1-collection-classification-presentation'], stream: 'aptitude', program: 'bba' },
+  },
+  { id: 'q-stats-02', questionText: 'Secondary data is:', options: [
+      'Collected first-hand',
+      'Already published',
+      'Always more accurate',
+      'Primary in nature'
+    ], correctIndex: 1, explanation: 'Secondary data has already been collected and published by others.', difficulty: 'basic', status: 'approved', pyqTag: { university: 'Mysore University (UOM)', year: 2023, marks: 2, semester: 3 }, prepTags: { subjectId: 'bba-karnataka-statistics', topicIds: ['stats-mod1-collection-classification-presentation'], stream: 'aptitude', program: 'bba' },
+  },
+  { id: 'q-stats-03', questionText: 'Sales: 100, 120, 110. 3-year moving average?', options: [
+      '100',
+      '110',
+      '120',
+      '113'
+    ], correctIndex: 1, explanation: '(100 + 120 + 110) ÷ 3 = 110.', difficulty: 'basic', status: 'approved', pyqTag: { university: 'Bangalore University (BU)', year: 2024, marks: 2, semester: 3 }, prepTags: { subjectId: 'bba-karnataka-statistics', topicIds: ['stats-mod4-time-series-analysis'], stream: 'aptitude', program: 'bba' },
+  },
+  { id: 'q-stats-04', questionText: 'Which component shows long-term movement?', options: [
+      'Seasonal',
+      'Cyclical',
+      'Secular trend',
+      'Irregular'
+    ], correctIndex: 2, explanation: 'Secular trend shows long-term movement.', difficulty: 'basic', status: 'approved', pyqTag: { university: 'Mysore University (UOM)', year: 2023, marks: 2, semester: 3 }, prepTags: { subjectId: 'bba-karnataka-statistics', topicIds: ['stats-mod4-time-series-analysis'], stream: 'aptitude', program: 'bba' },
+  },
+  { id: 'q-stats-05', questionText: 'Fisher’s Ideal Index = ?', options: [
+      'Laspeyres × Paasche',
+      '√(Laspeyres × Paasche)',
+      '(L + P) ÷ 2',
+      'L − P'
+    ], correctIndex: 1, explanation: 'Fisher’s Ideal Index is the geometric mean of Laspeyres and Paasche.', difficulty: 'basic', status: 'approved', pyqTag: { university: 'Bangalore University (BU)', year: 2024, marks: 2, semester: 3 }, prepTags: { subjectId: 'bba-karnataka-statistics', topicIds: ['stats-mod5-index-numbers'], stream: 'aptitude', program: 'bba' },
+  },
+  { id: 'q-stats-06', questionText: 'Laspeyres = 120, Paasche = 110. Fisher’s Ideal Index?', options: [
+      '110',
+      '115',
+      '114.89',
+      '120'
+    ], correctIndex: 2, explanation: 'Fisher = √(120 × 110) = √13200 ≈ 114.89.', difficulty: 'core', status: 'approved', pyqTag: { university: 'Mysore University (UOM)', year: 2023, marks: 5, semester: 3 }, prepTags: { subjectId: 'bba-karnataka-statistics', topicIds: ['stats-mod5-index-numbers'], stream: 'aptitude', program: 'bba' },
+  },
+  { id: 'q-fm-01b', questionText: 'RBI regulates which market?', options: [
+      'Money market',
+      'Capital market',
+      'Both',
+      'Neither'
+    ], correctIndex: 0, explanation: 'RBI regulates money market and banking.', difficulty: 'basic', status: 'approved', pyqTag: { university: 'Bangalore University (BU)', year: 2024, marks: 2, semester: 3 }, prepTags: { subjectId: 'bba-karnataka-fin-markets', topicIds: ['fm-mod1-indian-financial-system'], stream: 'economics', program: 'bba' },
+  },
+  { id: 'q-fm-02', questionText: 'SEBI regulates:', options: [
+      'Money market',
+      'Capital market',
+      'Foreign exchange',
+      'Banking'
+    ], correctIndex: 1, explanation: 'SEBI regulates capital market and securities.', difficulty: 'basic', status: 'approved', pyqTag: { university: 'Mysore University (UOM)', year: 2023, marks: 2, semester: 3 }, prepTags: { subjectId: 'bba-karnataka-fin-markets', topicIds: ['fm-mod1-indian-financial-system'], stream: 'economics', program: 'bba' },
+  },
+  { id: 'q-fm-03', questionText: 'Debenture holders are:', options: [
+      'Owners',
+      'Creditors',
+      'Managers',
+      'Employees'
+    ], correctIndex: 1, explanation: 'Debenture holders are creditors of the company.', difficulty: 'basic', status: 'approved', pyqTag: { university: 'Bangalore University (BU)', year: 2024, marks: 2, semester: 3 }, prepTags: { subjectId: 'bba-karnataka-fin-markets', topicIds: ['fm-mod3-capital-market-instruments'], stream: 'economics', program: 'bba' },
+  },
+  { id: 'q-fm-04', questionText: 'Equity shareholders have:', options: [
+      'Fixed dividend',
+      'Voting rights',
+      'Guaranteed return',
+      'Priority in repayment'
+    ], correctIndex: 1, explanation: 'Equity shareholders have voting rights.', difficulty: 'basic', status: 'approved', pyqTag: { university: 'Mysore University (UOM)', year: 2023, marks: 2, semester: 3 }, prepTags: { subjectId: 'bba-karnataka-fin-markets', topicIds: ['fm-mod3-capital-market-instruments'], stream: 'economics', program: 'bba' },
+  },
+  { id: 'q-fm-05', questionText: 'Insider trading is:', options: [
+      'Legal',
+      'Prohibited by SEBI',
+      'Encouraged',
+      'None'
+    ], correctIndex: 1, explanation: 'SEBI prohibits insider trading.', difficulty: 'basic', status: 'approved', pyqTag: { university: 'Bangalore University (BU)', year: 2024, marks: 2, semester: 3 }, prepTags: { subjectId: 'bba-karnataka-fin-markets', topicIds: ['fm-mod4-sebi-regulations'], stream: 'economics', program: 'bba' },
+  },
+  { id: 'q-fm-06', questionText: 'SEBI’s protective function includes:', options: [
+      'Investor education',
+      'Price fixing',
+      'Company formation',
+      'None'
+    ], correctIndex: 0, explanation: 'Investor education and grievance redressal are protective functions.', difficulty: 'basic', status: 'approved', pyqTag: { university: 'Mysore University (UOM)', year: 2023, marks: 2, semester: 3 }, prepTags: { subjectId: 'bba-karnataka-fin-markets', topicIds: ['fm-mod4-sebi-regulations'], stream: 'economics', program: 'bba' },
+  },
+  { id: 'q-fm-07', questionText: 'Money market instruments have maturity of:', options: [
+      'Up to 1 year',
+      'More than 1 year',
+      '5–10 years',
+      'Perpetual'
+    ], correctIndex: 0, explanation: 'Money market deals in short-term funds up to 1 year.', difficulty: 'basic', status: 'approved', pyqTag: { university: 'Bangalore University (BU)', year: 2024, marks: 2, semester: 3 }, prepTags: { subjectId: 'bba-karnataka-fin-markets', topicIds: ['fm-mod5-money-market-instruments'], stream: 'economics', program: 'bba' },
+  },
+  { id: 'q-fm-08', questionText: 'Treasury Bills are issued by:', options: [
+      'RBI on behalf of Government',
+      'Commercial banks',
+      'SEBI',
+      'Companies'
+    ], correctIndex: 0, explanation: 'T-Bills are issued by RBI on behalf of the Government of India.', difficulty: 'basic', status: 'approved', pyqTag: { university: 'Mysore University (UOM)', year: 2023, marks: 2, semester: 3 }, prepTags: { subjectId: 'bba-karnataka-fin-markets', topicIds: ['fm-mod5-money-market-instruments'], stream: 'economics', program: 'bba' },
+  },
+  { id: 'q-colaw-01b', questionText: 'Which is NOT an essential of a valid contract?', options: [
+      'Offer',
+      'Acceptance',
+      'Consideration',
+      'Undue influence'
+    ], correctIndex: 3, explanation: 'Undue influence vitiates free consent — it is not an essential element.', difficulty: 'basic', status: 'approved', pyqTag: { university: 'Bangalore University (BU)', year: 2024, marks: 2, semester: 4 }, prepTags: { subjectId: 'bba-karnataka-business-law', topicIds: ['colaw-mod2-indian-contract-act'], stream: 'law', program: 'bba' },
+  },
+  { id: 'q-colaw-02', questionText: 'Consideration must be:', options: [
+      'Adequate',
+      'Real and lawful',
+      'Monetary only',
+      'Past'
+    ], correctIndex: 1, explanation: 'Consideration must be real and lawful — not necessarily adequate.', difficulty: 'basic', status: 'approved', pyqTag: { university: 'Mysore University (UOM)', year: 2023, marks: 2, semester: 4 }, prepTags: { subjectId: 'bba-karnataka-business-law', topicIds: ['colaw-mod2-indian-contract-act'], stream: 'law', program: 'bba' },
+  },
+  { id: 'q-colaw-03', questionText: 'Breach of condition gives the buyer right to:', options: [
+      'Claim damages only',
+      'Reject the goods',
+      'Both',
+      'None'
+    ], correctIndex: 1, explanation: 'Breach of condition → right to reject goods.', difficulty: 'basic', status: 'approved', pyqTag: { university: 'Bangalore University (BU)', year: 2024, marks: 2, semester: 4 }, prepTags: { subjectId: 'bba-karnataka-business-law', topicIds: ['colaw-mod3-sale-of-goods-act'], stream: 'law', program: 'bba' },
+  },
+  { id: 'q-colaw-04', questionText: 'Caveat emptor means:', options: [
+      'Buyer beware',
+      'Seller beware',
+      'Buyer beware with exceptions',
+      'None'
+    ], correctIndex: 0, explanation: 'Caveat emptor = buyer beware, subject to exceptions.', difficulty: 'basic', status: 'approved', pyqTag: { university: 'Mysore University (UOM)', year: 2023, marks: 2, semester: 4 }, prepTags: { subjectId: 'bba-karnataka-business-law', topicIds: ['colaw-mod3-sale-of-goods-act'], stream: 'law', program: 'bba' },
+  },
+  { id: 'q-colaw-05', questionText: 'A cheque is a:', options: [
+      'Bill of exchange',
+      'Promissory note',
+      'Contract',
+      'None'
+    ], correctIndex: 0, explanation: 'A cheque is a bill of exchange drawn on a specified banker and payable on demand.', difficulty: 'basic', status: 'approved', pyqTag: { university: 'Bangalore University (BU)', year: 2024, marks: 2, semester: 4 }, prepTags: { subjectId: 'bba-karnataka-business-law', topicIds: ['colaw-mod4-negotiable-instruments-act'], stream: 'law', program: 'bba' },
+  },
+  { id: 'q-colaw-06', questionText: 'Holder in Due Course must:', options: [
+      'Be a holder',
+      'Give consideration',
+      'Take in good faith',
+      'All of the above'
+    ], correctIndex: 3, explanation: 'HDC must be a holder, for consideration, in good faith, before maturity.', difficulty: 'basic', status: 'approved', pyqTag: { university: 'Mysore University (UOM)', year: 2023, marks: 2, semester: 4 }, prepTags: { subjectId: 'bba-karnataka-business-law', topicIds: ['colaw-mod4-negotiable-instruments-act'], stream: 'law', program: 'bba' },
+  },
+  { id: 'q-colaw-07', questionText: 'Which is NOT a consumer right under CPA 2019?', options: [
+      'Right to safety',
+      'Right to information',
+      'Right to profit',
+      'Right to redressal'
+    ], correctIndex: 2, explanation: 'Right to profit is not a consumer right.', difficulty: 'basic', status: 'approved', pyqTag: { university: 'Bangalore University (BU)', year: 2024, marks: 2, semester: 4 }, prepTags: { subjectId: 'bba-karnataka-business-law', topicIds: ['colaw-mod5-consumer-protection-act'], stream: 'law', program: 'bba' },
+  },
+  { id: 'q-colaw-08', questionText: 'District Consumer Disputes Redressal Commission handles complaints up to:', options: [
+      '₹20 lakh',
+      '₹1 crore',
+      '₹10 crore',
+      '₹50 lakh'
+    ], correctIndex: 2, explanation: 'District Commission handles complaints up to ₹1 crore (under CPA 2019).', difficulty: 'core', status: 'approved', pyqTag: { university: 'Mysore University (UOM)', year: 2023, marks: 5, semester: 4 }, prepTags: { subjectId: 'bba-karnataka-business-law', topicIds: ['colaw-mod5-consumer-protection-act'], stream: 'law', program: 'bba' },
+  },
+  { id: 'q-fmngt-01', questionText: '₹10,000 at 10% for 2 years. FV = ?', options: [
+      '₹11,000',
+      '₹12,000',
+      '₹12,100',
+      '₹13,310'
+    ], correctIndex: 2, explanation: 'FV = 10,000 × 1.10² = ₹12,100.', difficulty: 'basic', status: 'approved', pyqTag: { university: 'Bangalore University (BU)', year: 2024, marks: 2, semester: 4 }, prepTags: { subjectId: 'bba-karnataka-fin-mgmt', topicIds: ['fm-mngt-mod1-time-value-of-money'], stream: 'finance', program: 'bba' },
+  },
+  { id: 'q-fmngt-02', questionText: 'PV of ₹12,100 due in 2 years at 10%?', options: [
+      '₹10,000',
+      '₹10,500',
+      '₹11,000',
+      '₹11,500'
+    ], correctIndex: 0, explanation: 'PV = 12,100 ÷ 1.10² = ₹10,000.', difficulty: 'basic', status: 'approved', pyqTag: { university: 'Mysore University (UOM)', year: 2023, marks: 2, semester: 4 }, prepTags: { subjectId: 'bba-karnataka-fin-mgmt', topicIds: ['fm-mngt-mod1-time-value-of-money'], stream: 'finance', program: 'bba' },
+  },
+  { id: 'q-fmngt-03', questionText: 'Working Capital = ?', options: [
+      'CA − CL',
+      'CA + CL',
+      'CL − CA',
+      'CA × CL'
+    ], correctIndex: 0, explanation: 'Working capital = Current assets − Current liabilities.', difficulty: 'basic', status: 'approved', pyqTag: { university: 'Bangalore University (BU)', year: 2024, marks: 2, semester: 4 }, prepTags: { subjectId: 'bba-karnataka-fin-mgmt', topicIds: ['fm-mngt-mod4-dividend-decision'], stream: 'finance', program: 'bba' },
+  },
+  { id: 'q-fmngt-04', questionText: 'CA ₹5,00,000; CL ₹3,00,000. Working capital?', options: [
+      '₹2,00,000',
+      '₹3,00,000',
+      '₹5,00,000',
+      '₹8,00,000'
+    ], correctIndex: 0, explanation: '₹5,00,000 − ₹3,00,000 = ₹2,00,000.', difficulty: 'basic', status: 'approved', pyqTag: { university: 'Mysore University (UOM)', year: 2023, marks: 2, semester: 4 }, prepTags: { subjectId: 'bba-karnataka-fin-mgmt', topicIds: ['fm-mngt-mod4-dividend-decision'], stream: 'finance', program: 'bba' },
+  },
+  { id: 'q-fmngt-05', questionText: 'NPV decision rule: accept if NPV is:', options: [
+      'Positive',
+      'Negative',
+      'Zero',
+      'None'
+    ], correctIndex: 0, explanation: 'NPV > 0 means accept the project.', difficulty: 'basic', status: 'approved', pyqTag: { university: 'Bangalore University (BU)', year: 2024, marks: 2, semester: 4 }, prepTags: { subjectId: 'bba-karnataka-fin-mgmt', topicIds: ['fm-mngt-mod5-capital-budgeting'], stream: 'finance', program: 'bba' },
+  },
+  { id: 'q-fmngt-06', questionText: 'Payback period measures:', options: [
+      'Profitability',
+      'Time to recover investment',
+      'IRR',
+      'NPV'
+    ], correctIndex: 1, explanation: 'Payback period = time to recover initial investment.', difficulty: 'basic', status: 'approved', pyqTag: { university: 'Mysore University (UOM)', year: 2023, marks: 2, semester: 4 }, prepTags: { subjectId: 'bba-karnataka-fin-mgmt', topicIds: ['fm-mngt-mod5-capital-budgeting'], stream: 'finance', program: 'bba' },
+  },
+  { id: 'q-hrm-01b', questionText: 'HRM stands for:', options: [
+      'Human Resource Management',
+      'Human Relations Management',
+      'Human Resource Manufacturing',
+      'None'
+    ], correctIndex: 0, explanation: 'HRM = Human Resource Management.', difficulty: 'basic', status: 'approved', pyqTag: { university: 'Bangalore University (BU)', year: 2024, marks: 2, semester: 4 }, prepTags: { subjectId: 'bba-karnataka-hrm', topicIds: ['hrm-mod1-introduction-hrm-functions'], stream: 'management', program: 'bba' },
+  },
+  { id: 'q-hrm-02', questionText: 'Job analysis includes:', options: [
+      'Job description',
+      'Job specification',
+      'Both',
+      'None'
+    ], correctIndex: 2, explanation: 'Job analysis produces both job description and job specification.', difficulty: 'basic', status: 'approved', pyqTag: { university: 'Mysore University (UOM)', year: 2023, marks: 2, semester: 4 }, prepTags: { subjectId: 'bba-karnataka-hrm', topicIds: ['hrm-mod1-introduction-hrm-functions'], stream: 'management', program: 'bba' },
+  },
+  { id: 'q-hrm-03', questionText: 'On-the-job training method:', options: [
+      'Job rotation',
+      'Lectures',
+      'Case study',
+      'Conference'
+    ], correctIndex: 0, explanation: 'Job rotation is an on-the-job training method.', difficulty: 'basic', status: 'approved', pyqTag: { university: 'Bangalore University (BU)', year: 2024, marks: 2, semester: 4 }, prepTags: { subjectId: 'bba-karnataka-hrm', topicIds: ['hrm-mod3-training-development'], stream: 'management', program: 'bba' },
+  },
+  { id: 'q-hrm-04', questionText: 'Performance appraisal evaluates:', options: [
+      'Past performance',
+      'Future potential',
+      'Both',
+      'None'
+    ], correctIndex: 2, explanation: 'Performance appraisal evaluates past performance and future potential.', difficulty: 'basic', status: 'approved', pyqTag: { university: 'Mysore University (UOM)', year: 2023, marks: 2, semester: 4 }, prepTags: { subjectId: 'bba-karnataka-hrm', topicIds: ['hrm-mod3-training-development'], stream: 'management', program: 'bba' },
+  },
+  { id: 'q-hrm-05', questionText: 'Direct compensation includes:', options: [
+      'Wages',
+      'Salary',
+      'Both',
+      'None'
+    ], correctIndex: 2, explanation: 'Direct compensation includes wages and salary.', difficulty: 'basic', status: 'approved', pyqTag: { university: 'Bangalore University (BU)', year: 2024, marks: 2, semester: 4 }, prepTags: { subjectId: 'bba-karnataka-hrm', topicIds: ['hrm-mod4-compensation-benefits'], stream: 'management', program: 'bba' },
+  },
+  { id: 'q-hrm-06', questionText: 'Employee benefits are:', options: [
+      'Direct compensation',
+      'Indirect compensation',
+      'Both',
+      'None'
+    ], correctIndex: 1, explanation: 'Benefits are indirect compensation.', difficulty: 'basic', status: 'approved', pyqTag: { university: 'Mysore University (UOM)', year: 2023, marks: 2, semester: 4 }, prepTags: { subjectId: 'bba-karnataka-hrm', topicIds: ['hrm-mod4-compensation-benefits'], stream: 'management', program: 'bba' },
+  },
+  { id: 'q-hrm-07', questionText: 'Collective bargaining is:', options: [
+      'Negotiation between union and management',
+      'Individual negotiation',
+      'Legal dispute',
+      'None'
+    ], correctIndex: 0, explanation: 'Collective bargaining is negotiation between union and management.', difficulty: 'basic', status: 'approved', pyqTag: { university: 'Bangalore University (BU)', year: 2024, marks: 2, semester: 4 }, prepTags: { subjectId: 'bba-karnataka-hrm', topicIds: ['hrm-mod5-employee-relations-retention'], stream: 'management', program: 'bba' },
+  },
+  { id: 'q-hrm-08', questionText: 'Grievance handling is part of:', options: [
+      'Employee relations',
+      'Recruitment',
+      'Payroll',
+      'None'
+    ], correctIndex: 0, explanation: 'Grievance handling falls under employee relations.', difficulty: 'basic', status: 'approved', pyqTag: { university: 'Mysore University (UOM)', year: 2023, marks: 2, semester: 4 }, prepTags: { subjectId: 'bba-karnataka-hrm', topicIds: ['hrm-mod5-employee-relations-retention'], stream: 'management', program: 'bba' },
+  },
+  { id: 'q-mgmt-01', questionText: 'Current Ratio = ?', options: [
+      'CA ÷ CL',
+      'CL ÷ CA',
+      'CA × CL',
+      'CA + CL'
+    ], correctIndex: 0, explanation: 'Current Ratio = Current Assets ÷ Current Liabilities.', difficulty: 'basic', status: 'approved', pyqTag: { university: 'Bangalore University (BU)', year: 2024, marks: 2, semester: 5 }, prepTags: { subjectId: 'bba-karnataka-mgmt-accounting', topicIds: ['mgmt-mod1-financial-statement-analysis'], stream: 'accounting', program: 'bba' },
+  },
+  { id: 'q-mgmt-02', questionText: 'CA ₹4,00,000; CL ₹2,00,000. Current Ratio?', options: [
+      '1:1',
+      '2:1',
+      '3:1',
+      '0.5:1'
+    ], correctIndex: 1, explanation: '4,00,000 ÷ 2,00,000 = 2:1.', difficulty: 'basic', status: 'approved', pyqTag: { university: 'Mysore University (UOM)', year: 2023, marks: 2, semester: 5 }, prepTags: { subjectId: 'bba-karnataka-mgmt-accounting', topicIds: ['mgmt-mod1-financial-statement-analysis'], stream: 'accounting', program: 'bba' },
+  },
+  { id: 'q-mgmt-03', questionText: 'Cash flow from operating activities includes:', options: [
+      'Cash receipts from customers',
+      'Purchase of land',
+      'Issue of shares',
+      'Repayment of loan'
+    ], correctIndex: 0, explanation: 'Cash receipts from customers is operating activity.', difficulty: 'basic', status: 'approved', pyqTag: { university: 'Bangalore University (BU)', year: 2024, marks: 2, semester: 5 }, prepTags: { subjectId: 'bba-karnataka-mgmt-accounting', topicIds: ['mgmt-mod2-fund-flow-cash-flow'], stream: 'accounting', program: 'bba' },
+  },
+  { id: 'q-mgmt-04', questionText: 'Issue of shares is:', options: [
+      'Operating activity',
+      'Investing activity',
+      'Financing activity',
+      'None'
+    ], correctIndex: 2, explanation: 'Issue of shares is a financing activity.', difficulty: 'basic', status: 'approved', pyqTag: { university: 'Mysore University (UOM)', year: 2023, marks: 2, semester: 5 }, prepTags: { subjectId: 'bba-karnataka-mgmt-accounting', topicIds: ['mgmt-mod2-fund-flow-cash-flow'], stream: 'accounting', program: 'bba' },
+  },
+  { id: 'q-mgmt-05', questionText: 'Zero-based budgeting starts from:', options: [
+      'Previous year budget',
+      'Zero',
+      'Last actuals',
+      'None'
+    ], correctIndex: 1, explanation: 'ZBB starts from zero — every expense must be justified.', difficulty: 'basic', status: 'approved', pyqTag: { university: 'Bangalore University (BU)', year: 2024, marks: 2, semester: 5 }, prepTags: { subjectId: 'bba-karnataka-mgmt-accounting', topicIds: ['mgmt-mod4-budgetary-control'], stream: 'accounting', program: 'bba' },
+  },
+  { id: 'q-mgmt-06', questionText: 'Flexible budget changes with:', options: [
+      'Activity level',
+      'Time',
+      'Inflation',
+      'None'
+    ], correctIndex: 0, explanation: 'Flexible budget adjusts for different activity levels.', difficulty: 'basic', status: 'approved', pyqTag: { university: 'Mysore University (UOM)', year: 2023, marks: 2, semester: 5 }, prepTags: { subjectId: 'bba-karnataka-mgmt-accounting', topicIds: ['mgmt-mod4-budgetary-control'], stream: 'accounting', program: 'bba' },
+  },
+  { id: 'q-mgmt-07', questionText: 'Sales ₹1,00,000; Variable Cost ₹60,000. P/V Ratio?', options: [
+      '40%',
+      '60%',
+      '50%',
+      '30%'
+    ], correctIndex: 0, explanation: 'Contribution = 40,000; P/V Ratio = 40,000 ÷ 1,00,000 × 100 = 40%.', difficulty: 'core', status: 'approved', pyqTag: { university: 'Bangalore University (BU)', year: 2024, marks: 5, semester: 5 }, prepTags: { subjectId: 'bba-karnataka-mgmt-accounting', topicIds: ['mgmt-mod5-marginal-costing-decision-making'], stream: 'accounting', program: 'bba' },
+  },
+  { id: 'q-mgmt-08', questionText: 'Contribution = ?', options: [
+      'Sales − Variable Cost',
+      'Sales − Fixed Cost',
+      'Fixed Cost − Variable Cost',
+      'None'
+    ], correctIndex: 0, explanation: 'Contribution = Sales − Variable Cost.', difficulty: 'basic', status: 'approved', pyqTag: { university: 'Mysore University (UOM)', year: 2023, marks: 2, semester: 5 }, prepTags: { subjectId: 'bba-karnataka-mgmt-accounting', topicIds: ['mgmt-mod5-marginal-costing-decision-making'], stream: 'accounting', program: 'bba' },
+  },
+  { id: 'q-tax1-01', questionText: 'Assessment Year follows:', options: [
+      'Previous year',
+      'Current year',
+      'Next year',
+      'None'
+    ], correctIndex: 0, explanation: 'Assessment Year immediately follows Previous Year.', difficulty: 'basic', status: 'approved', pyqTag: { university: 'Bangalore University (BU)', year: 2024, marks: 2, semester: 5 }, prepTags: { subjectId: 'bba-karnataka-income-tax-1', topicIds: ['tax1-mod1-basic-concepts-residential-status'], stream: 'commerce', program: 'bba' },
+  },
+  { id: 'q-tax1-02', questionText: 'Resident individual stays in India for:', options: [
+      '182 days or more',
+      'Less than 182 days',
+      '60 days',
+      '365 days'
+    ], correctIndex: 0, explanation: '182 days or more in the previous year makes an individual resident.', difficulty: 'basic', status: 'approved', pyqTag: { university: 'Mysore University (UOM)', year: 2023, marks: 2, semester: 5 }, prepTags: { subjectId: 'bba-karnataka-income-tax-1', topicIds: ['tax1-mod1-basic-concepts-residential-status'], stream: 'commerce', program: 'bba' },
+  },
+  { id: 'q-tax1-03', questionText: 'GTI ₹6,00,000; 80C deduction ₹1,50,000. Total Income?', options: [
+      '₹4,50,000',
+      '₹6,00,000',
+      '₹7,50,000',
+      '₹1,50,000'
+    ], correctIndex: 0, explanation: 'Total Income = 6,00,000 − 1,50,000 = ₹4,50,000.', difficulty: 'core', status: 'approved', pyqTag: { university: 'Bangalore University (BU)', year: 2024, marks: 5, semester: 5 }, prepTags: { subjectId: 'bba-karnataka-income-tax-1', topicIds: ['tax1-mod4-computation-total-income'], stream: 'commerce', program: 'bba' },
+  },
+  { id: 'q-tax1-04', questionText: 'Section 80C deduction limit is:', options: [
+      '₹1,00,000',
+      '₹1,50,000',
+      '₹2,00,000',
+      '₹2,50,000'
+    ], correctIndex: 1, explanation: 'Section 80C limit is ₹1,50,000.', difficulty: 'basic', status: 'approved', pyqTag: { university: 'Mysore University (UOM)', year: 2023, marks: 2, semester: 5 }, prepTags: { subjectId: 'bba-karnataka-income-tax-1', topicIds: ['tax1-mod4-computation-total-income'], stream: 'commerce', program: 'bba' },
+  },
+  { id: 'q-tax1-05', questionText: 'Tax evasion is:', options: [
+      'Legal',
+      'Illegal',
+      'Both',
+      'None'
+    ], correctIndex: 1, explanation: 'Tax evasion is illegal — it involves concealment and fraud.', difficulty: 'basic', status: 'approved', pyqTag: { university: 'Bangalore University (BU)', year: 2024, marks: 2, semester: 5 }, prepTags: { subjectId: 'bba-karnataka-income-tax-1', topicIds: ['tax1-mod5-tax-planning-avoidance-evasion'], stream: 'commerce', program: 'bba' },
+  },
+  { id: 'q-tax1-06', questionText: 'Legitimate tax planning involves:', options: [
+      'Arranging affairs to minimise tax',
+      'Concealing income',
+      'False deductions',
+      'None'
+    ], correctIndex: 0, explanation: 'Tax planning arranges affairs legally to minimise tax.', difficulty: 'basic', status: 'approved', pyqTag: { university: 'Mysore University (UOM)', year: 2023, marks: 2, semester: 5 }, prepTags: { subjectId: 'bba-karnataka-income-tax-1', topicIds: ['tax1-mod5-tax-planning-avoidance-evasion'], stream: 'commerce', program: 'bba' },
+  },
+  { id: 'q-ops-01b', questionText: 'Operations management transforms:', options: [
+      'Inputs into outputs',
+      'Money into profit',
+      'People into products',
+      'None'
+    ], correctIndex: 0, explanation: 'OM transforms inputs into goods and services.', difficulty: 'basic', status: 'approved', pyqTag: { university: 'Bangalore University (BU)', year: 2024, marks: 2, semester: 5 }, prepTags: { subjectId: 'bba-karnataka-operations-mgmt', topicIds: ['ops-mod1-production-operations-intro'], stream: 'management', program: 'bba' },
+  },
+  { id: 'q-ops-02', questionText: 'Which production system is for mass production?', options: [
+      'Job shop',
+      'Batch',
+      'Mass/continuous',
+      'Project'
+    ], correctIndex: 2, explanation: 'Mass/continuous production is for high-volume standardised products.', difficulty: 'basic', status: 'approved', pyqTag: { university: 'Mysore University (UOM)', year: 2023, marks: 2, semester: 5 }, prepTags: { subjectId: 'bba-karnataka-operations-mgmt', topicIds: ['ops-mod1-production-operations-intro'], stream: 'management', program: 'bba' },
+  },
+  { id: 'q-ops-03', questionText: 'ABC analysis classifies items by:', options: [
+      'Value',
+      'Quantity',
+      'Weight',
+      'Size'
+    ], correctIndex: 0, explanation: 'ABC analysis classifies by annual consumption value.', difficulty: 'basic', status: 'approved', pyqTag: { university: 'Bangalore University (BU)', year: 2024, marks: 2, semester: 5 }, prepTags: { subjectId: 'bba-karnataka-operations-mgmt', topicIds: ['ops-mod3-inventory-management'], stream: 'management', program: 'bba' },
+  },
+  { id: 'q-ops-04', questionText: 'EOQ minimizes:', options: [
+      'Ordering cost only',
+      'Holding cost only',
+      'Total inventory cost',
+      'None'
+    ], correctIndex: 2, explanation: 'EOQ minimises total inventory cost (ordering + holding).', difficulty: 'basic', status: 'approved', pyqTag: { university: 'Mysore University (UOM)', year: 2023, marks: 2, semester: 5 }, prepTags: { subjectId: 'bba-karnataka-operations-mgmt', topicIds: ['ops-mod3-inventory-management'], stream: 'management', program: 'bba' },
+  },
+  { id: 'q-ops-05', questionText: 'TQM stands for:', options: [
+      'Total Quality Management',
+      'Total Quantity Management',
+      'Technical Quality Management',
+      'None'
+    ], correctIndex: 0, explanation: 'TQM = Total Quality Management.', difficulty: 'basic', status: 'approved', pyqTag: { university: 'Bangalore University (BU)', year: 2024, marks: 2, semester: 5 }, prepTags: { subjectId: 'bba-karnataka-operations-mgmt', topicIds: ['ops-mod4-quality-management'], stream: 'management', program: 'bba' },
+  },
+  { id: 'q-ops-06', questionText: 'ISO 9000 is related to:', options: [
+      'Quality management',
+      'Environmental management',
+      'Safety management',
+      'None'
+    ], correctIndex: 0, explanation: 'ISO 9000 family relates to quality management.', difficulty: 'basic', status: 'approved', pyqTag: { university: 'Mysore University (UOM)', year: 2023, marks: 2, semester: 5 }, prepTags: { subjectId: 'bba-karnataka-operations-mgmt', topicIds: ['ops-mod4-quality-management'], stream: 'management', program: 'bba' },
+  },
+  { id: 'q-ops-07', questionText: 'Supply chain starts with:', options: [
+      'Supplier',
+      'Customer',
+      'Manufacturer',
+      'Retailer'
+    ], correctIndex: 0, explanation: 'Supply chain starts with the supplier.', difficulty: 'basic', status: 'approved', pyqTag: { university: 'Bangalore University (BU)', year: 2024, marks: 2, semester: 5 }, prepTags: { subjectId: 'bba-karnataka-operations-mgmt', topicIds: ['ops-mod5-supply-chain-logistics'], stream: 'management', program: 'bba' },
+  },
+  { id: 'q-ops-08', questionText: 'Reverse logistics deals with:', options: [
+      'Product returns',
+      'Forward delivery',
+      'Manufacturing',
+      'None'
+    ], correctIndex: 0, explanation: 'Reverse logistics handles product returns and recycling.', difficulty: 'basic', status: 'approved', pyqTag: { university: 'Mysore University (UOM)', year: 2023, marks: 2, semester: 5 }, prepTags: { subjectId: 'bba-karnataka-operations-mgmt', topicIds: ['ops-mod5-supply-chain-logistics'], stream: 'management', program: 'bba' },
+  },
+  { id: 'q-strat-01b', questionText: 'Strategy at the highest level is:', options: [
+      'Corporate-level',
+      'Business-level',
+      'Functional-level',
+      'Operational'
+    ], correctIndex: 0, explanation: 'Corporate-level strategy is the highest level.', difficulty: 'basic', status: 'approved', pyqTag: { university: 'Bangalore University (BU)', year: 2024, marks: 2, semester: 6 }, prepTags: { subjectId: 'bba-karnataka-strategic-mgmt', topicIds: ['strat-mod1-introduction-strategic-management'], stream: 'management', program: 'bba' },
+  },
+  { id: 'q-strat-02', questionText: 'Vision statement describes:', options: [
+      'Desired future state',
+      'Current operations',
+      'Daily tasks',
+      'None'
+    ], correctIndex: 0, explanation: 'Vision describes the desired future state of the organisation.', difficulty: 'basic', status: 'approved', pyqTag: { university: 'Mysore University (UOM)', year: 2023, marks: 2, semester: 6 }, prepTags: { subjectId: 'bba-karnataka-strategic-mgmt', topicIds: ['strat-mod1-introduction-strategic-management'], stream: 'management', program: 'bba' },
+  },
+  { id: 'q-strat-03', questionText: 'SWOT Strengths and Weaknesses are:', options: [
+      'Internal',
+      'External',
+      'Both',
+      'None'
+    ], correctIndex: 0, explanation: 'Strengths and weaknesses are internal to the organisation.', difficulty: 'basic', status: 'approved', pyqTag: { university: 'Bangalore University (BU)', year: 2024, marks: 2, semester: 6 }, prepTags: { subjectId: 'bba-karnataka-strategic-mgmt', topicIds: ['strat-mod3-swot-pestle-analysis'], stream: 'management', program: 'bba' },
+  },
+  { id: 'q-strat-04', questionText: 'PESTLE “P” stands for:', options: [
+      'Political',
+      'Product',
+      'Price',
+      'Promotion'
+    ], correctIndex: 0, explanation: 'PESTLE P = Political.', difficulty: 'basic', status: 'approved', pyqTag: { university: 'Mysore University (UOM)', year: 2023, marks: 2, semester: 6 }, prepTags: { subjectId: 'bba-karnataka-strategic-mgmt', topicIds: ['strat-mod3-swot-pestle-analysis'], stream: 'management', program: 'bba' },
+  },
+  { id: 'q-strat-05', questionText: 'Balanced Scorecard perspectives:', options: [
+      'Financial, Customer, Process, Learning',
+      'Financial only',
+      'Customer only',
+      'None'
+    ], correctIndex: 0, explanation: 'BSC has four perspectives: Financial, Customer, Internal Process, Learning & Growth.', difficulty: 'basic', status: 'approved', pyqTag: { university: 'Bangalore University (BU)', year: 2024, marks: 2, semester: 6 }, prepTags: { subjectId: 'bba-karnataka-strategic-mgmt', topicIds: ['strat-mod4-strategy-implementation'], stream: 'management', program: 'bba' },
+  },
+  { id: 'q-strat-06', questionText: 'Strategic control includes:', options: [
+      'Performance measurement',
+      'Corrective action',
+      'Both',
+      'None'
+    ], correctIndex: 2, explanation: 'Strategic control includes monitoring and corrective action.', difficulty: 'basic', status: 'approved', pyqTag: { university: 'Mysore University (UOM)', year: 2023, marks: 2, semester: 6 }, prepTags: { subjectId: 'bba-karnataka-strategic-mgmt', topicIds: ['strat-mod4-strategy-implementation'], stream: 'management', program: 'bba' },
+  },
+  { id: 'q-strat-07', questionText: 'BCG “Stars” are:', options: [
+      'High growth, high share',
+      'Low growth, high share',
+      'High growth, low share',
+      'Low growth, low share'
+    ], correctIndex: 0, explanation: 'Stars = high market growth + high relative market share.', difficulty: 'basic', status: 'approved', pyqTag: { university: 'Bangalore University (BU)', year: 2024, marks: 2, semester: 6 }, prepTags: { subjectId: 'bba-karnataka-strategic-mgmt', topicIds: ['strat-mod5-corporate-level-strategies'], stream: 'management', program: 'bba' },
+  },
+  { id: 'q-strat-08', questionText: 'Divestment is a:', options: [
+      'Growth strategy',
+      'Stability strategy',
+      'Retrenchment strategy',
+      'None'
+    ], correctIndex: 2, explanation: 'Divestment is selling a business unit — retrenchment strategy.', difficulty: 'basic', status: 'approved', pyqTag: { university: 'Mysore University (UOM)', year: 2023, marks: 2, semester: 6 }, prepTags: { subjectId: 'bba-karnataka-strategic-mgmt', topicIds: ['strat-mod5-corporate-level-strategies'], stream: 'management', program: 'bba' },
+  },
+  { id: 'q-gst-01b', questionText: 'Intra-state supply attracts:', options: [
+      'CGST + SGST',
+      'IGST only',
+      'UTGST only',
+      'None'
+    ], correctIndex: 0, explanation: 'Intra-state supply attracts both CGST and SGST.', difficulty: 'basic', status: 'approved', pyqTag: { university: 'Bangalore University (BU)', year: 2024, marks: 2, semester: 6 }, prepTags: { subjectId: 'bba-karnataka-gst', topicIds: ['gst-mod2-gst-registration-compliance'], stream: 'commerce', program: 'bba' },
+  },
+  { id: 'q-gst-02b', questionText: 'GST was implemented in India on:', options: [
+      '1 July 2017',
+      '1 April 2017',
+      '1 January 2017',
+      '1 October 2017'
+    ], correctIndex: 0, explanation: 'GST was implemented on 1 July 2017.', difficulty: 'basic', status: 'approved', pyqTag: { university: 'Mysore University (UOM)', year: 2023, marks: 2, semester: 6 }, prepTags: { subjectId: 'bba-karnataka-gst', topicIds: ['gst-mod2-gst-registration-compliance'], stream: 'commerce', program: 'bba' },
+  },
+  { id: 'q-gst-03', questionText: 'GSTR-9 is:', options: [
+      'Monthly return',
+      'Quarterly return',
+      'Annual return',
+      'None'
+    ], correctIndex: 2, explanation: 'GSTR-9 is the annual GST return.', difficulty: 'basic', status: 'approved', pyqTag: { university: 'Bangalore University (BU)', year: 2024, marks: 2, semester: 6 }, prepTags: { subjectId: 'bba-karnataka-gst', topicIds: ['gst-mod4-gst-returns-assessment'], stream: 'commerce', program: 'bba' },
+  },
+  { id: 'q-gst-04', questionText: 'Input Tax Credit can be claimed on:', options: [
+      'Business use',
+      'Personal use',
+      'Both',
+      'None'
+    ], correctIndex: 0, explanation: 'ITC is available only for business purposes.', difficulty: 'basic', status: 'approved', pyqTag: { university: 'Mysore University (UOM)', year: 2023, marks: 2, semester: 6 }, prepTags: { subjectId: 'bba-karnataka-gst', topicIds: ['gst-mod4-gst-returns-assessment'], stream: 'commerce', program: 'bba' },
+  },
+  { id: 'q-gst-05', questionText: 'Customs duty is levied on:', options: [
+      'Import of goods',
+      'Export of goods',
+      'Both',
+      'Domestic sale'
+    ], correctIndex: 2, explanation: 'Customs duty applies to both import and export of goods.', difficulty: 'basic', status: 'approved', pyqTag: { university: 'Bangalore University (BU)', year: 2024, marks: 2, semester: 6 }, prepTags: { subjectId: 'bba-karnataka-gst', topicIds: ['gst-mod5-customs-law-basics'], stream: 'commerce', program: 'bba' },
+  },
+  { id: 'q-gst-06', questionText: 'Basic Customs Duty is levied on:', options: [
+      'Imported goods',
+      'Exported goods',
+      'Both',
+      'Domestic goods'
+    ], correctIndex: 0, explanation: 'BCD is primarily levied on imported goods.', difficulty: 'basic', status: 'approved', pyqTag: { university: 'Mysore University (UOM)', year: 2023, marks: 2, semester: 6 }, prepTags: { subjectId: 'bba-karnataka-gst', topicIds: ['gst-mod5-customs-law-basics'], stream: 'commerce', program: 'bba' },
+  },
+  { id: 'q-ent-01b', questionText: 'An entrepreneur is:', options: [
+      'Risk bearer',
+      'Employee',
+      'Government official',
+      'None'
+    ], correctIndex: 0, explanation: 'An entrepreneur organises and bears the risks of business.', difficulty: 'basic', status: 'approved', pyqTag: { university: 'Bangalore University (BU)', year: 2024, marks: 2, semester: 6 }, prepTags: { subjectId: 'bba-karnataka-entrepreneurship', topicIds: ['ent-mod1-introduction-entrepreneurship'], stream: 'management', program: 'bba' },
+  },
+  { id: 'q-ent-02', questionText: 'Entrepreneurship contributes to:', options: [
+      'Economic development',
+      'Employment generation',
+      'Both',
+      'None'
+    ], correctIndex: 2, explanation: 'Entrepreneurship drives economic development and employment.', difficulty: 'basic', status: 'approved', pyqTag: { university: 'Mysore University (UOM)', year: 2023, marks: 2, semester: 6 }, prepTags: { subjectId: 'bba-karnataka-entrepreneurship', topicIds: ['ent-mod1-introduction-entrepreneurship'], stream: 'management', program: 'bba' },
+  },
+  { id: 'q-ent-03', questionText: 'Business plan includes:', options: [
+      'Market analysis',
+      'Financial projections',
+      'Both',
+      'None'
+    ], correctIndex: 2, explanation: 'A business plan includes market analysis and financial projections.', difficulty: 'basic', status: 'approved', pyqTag: { university: 'Bangalore University (BU)', year: 2024, marks: 2, semester: 6 }, prepTags: { subjectId: 'bba-karnataka-entrepreneurship', topicIds: ['ent-mod3-business-plan-preparation'], stream: 'management', program: 'bba' },
+  },
+  { id: 'q-ent-04', questionText: 'Executive summary is:', options: [
+      'First section of plan',
+      'Last section',
+      'Optional',
+      'None'
+    ], correctIndex: 0, explanation: 'Executive summary is typically the first section of a business plan.', difficulty: 'basic', status: 'approved', pyqTag: { university: 'Mysore University (UOM)', year: 2023, marks: 2, semester: 6 }, prepTags: { subjectId: 'bba-karnataka-entrepreneurship', topicIds: ['ent-mod3-business-plan-preparation'], stream: 'management', program: 'bba' },
+  },
+  { id: 'q-ent-05', questionText: 'Bootstrapping means:', options: [
+      'Self-funding',
+      'Bank loan',
+      'VC funding',
+      'IPO'
+    ], correctIndex: 0, explanation: 'Bootstrapping = self-funding from personal savings and revenue.', difficulty: 'basic', status: 'approved', pyqTag: { university: 'Bangalore University (BU)', year: 2024, marks: 2, semester: 6 }, prepTags: { subjectId: 'bba-karnataka-entrepreneurship', topicIds: ['ent-mod4-finance-sources-startup'], stream: 'management', program: 'bba' },
+  },
+  { id: 'q-ent-06', questionText: 'Angel investors invest in:', options: [
+      'Early-stage startups',
+      'Public companies',
+      'Government projects',
+      'None'
+    ], correctIndex: 0, explanation: 'Angel investors typically invest in early-stage startups.', difficulty: 'basic', status: 'approved', pyqTag: { university: 'Mysore University (UOM)', year: 2023, marks: 2, semester: 6 }, prepTags: { subjectId: 'bba-karnataka-entrepreneurship', topicIds: ['ent-mod4-finance-sources-startup'], stream: 'management', program: 'bba' },
+  },
+  { id: 'q-ent-07', questionText: 'Startup India tax holiday is for:', options: [
+      '3 years',
+      '5 years',
+      '7 years',
+      '10 years'
+    ], correctIndex: 0, explanation: 'Startup India provides tax holiday for 3 years out of first 7 years.', difficulty: 'basic', status: 'approved', pyqTag: { university: 'Bangalore University (BU)', year: 2024, marks: 2, semester: 6 }, prepTags: { subjectId: 'bba-karnataka-entrepreneurship', topicIds: ['ent-mod5-startup-ecosystem-india'], stream: 'management', program: 'bba' },
+  },
+  { id: 'q-ent-08', questionText: 'MSME stands for:', options: [
+      'Micro, Small & Medium Enterprises',
+      'Medium & Small Manufacturing Enterprises',
+      'None',
+      'All of the above'
+    ], correctIndex: 0, explanation: 'MSME = Micro, Small & Medium Enterprises.', difficulty: 'basic', status: 'approved', pyqTag: { university: 'Mysore University (UOM)', year: 2023, marks: 2, semester: 6 }, prepTags: { subjectId: 'bba-karnataka-entrepreneurship', topicIds: ['ent-mod5-startup-ecosystem-india'], stream: 'management', program: 'bba' },
+  },
+  { id: 'q-claw-01', questionText: 'MOA stands for:', options: [
+      'Memorandum of Association',
+      'Articles of Association',
+      'Certificate of Incorporation',
+      'None'
+    ], correctIndex: 0, explanation: 'MOA = Memorandum of Association.', difficulty: 'basic', status: 'approved', pyqTag: { university: 'Bangalore University (BU)', year: 2024, marks: 2, semester: 6 }, prepTags: { subjectId: 'bba-karnataka-company-law', topicIds: ['colaw-mod2-companies-act-incorporation'], stream: 'law', program: 'bba' },
+  },
+  { id: 'q-claw-02', questionText: 'OPC means:', options: [
+      'One Person Company',
+      'One Public Company',
+      'One Private Company',
+      'None'
+    ], correctIndex: 0, explanation: 'OPC = One Person Company.', difficulty: 'basic', status: 'approved', pyqTag: { university: 'Mysore University (UOM)', year: 2023, marks: 2, semester: 6 }, prepTags: { subjectId: 'bba-karnataka-company-law', topicIds: ['colaw-mod2-companies-act-incorporation'], stream: 'law', program: 'bba' },
+  },
+  { id: 'q-claw-03', questionText: 'Preference shareholders get:', options: [
+      'Fixed dividend',
+      'Voting rights',
+      'Both',
+      'None'
+    ], correctIndex: 0, explanation: 'Preference shares carry fixed dividend but generally no voting rights.', difficulty: 'basic', status: 'approved', pyqTag: { university: 'Bangalore University (BU)', year: 2024, marks: 2, semester: 6 }, prepTags: { subjectId: 'bba-karnataka-company-law', topicIds: ['colaw-mod3-shares-debentures'], stream: 'law', program: 'bba' },
+  },
+  { id: 'q-claw-04', questionText: 'Issue of shares at premium means:', options: [
+      'Above face value',
+      'Below face value',
+      'At face value',
+      'None'
+    ], correctIndex: 0, explanation: 'Shares issued at premium are priced above face value.', difficulty: 'basic', status: 'approved', pyqTag: { university: 'Mysore University (UOM)', year: 2023, marks: 2, semester: 6 }, prepTags: { subjectId: 'bba-karnataka-company-law', topicIds: ['colaw-mod3-shares-debentures'], stream: 'law', program: 'bba' },
+  },
+  { id: 'q-claw-05', questionText: 'AGM must be held within:', options: [
+      '6 months of year-end',
+      '3 months',
+      '1 month',
+      'None'
+    ], correctIndex: 0, explanation: 'AGM within 6 months of financial year-end.', difficulty: 'basic', status: 'approved', pyqTag: { university: 'Bangalore University (BU)', year: 2024, marks: 2, semester: 6 }, prepTags: { subjectId: 'bba-karnataka-company-law', topicIds: ['colaw-mod4-company-management-directors'], stream: 'law', program: 'bba' },
+  },
+  { id: 'q-claw-06', questionText: 'Directors are appointed by:', options: [
+      'Shareholders',
+      'Government',
+      'SEBI',
+      'RBI'
+    ], correctIndex: 0, explanation: 'Shareholders appoint directors.', difficulty: 'basic', status: 'approved', pyqTag: { university: 'Mysore University (UOM)', year: 2023, marks: 2, semester: 6 }, prepTags: { subjectId: 'bba-karnataka-company-law', topicIds: ['colaw-mod4-company-management-directors'], stream: 'law', program: 'bba' },
+  },
+  { id: 'q-claw-07', questionText: 'IBC stands for:', options: [
+      'Insolvency and Bankruptcy Code',
+      'Indian Business Code',
+      'None',
+      'All of the above'
+    ], correctIndex: 0, explanation: 'IBC = Insolvency and Bankruptcy Code.', difficulty: 'basic', status: 'approved', pyqTag: { university: 'Bangalore University (BU)', year: 2024, marks: 2, semester: 6 }, prepTags: { subjectId: 'bba-karnataka-company-law', topicIds: ['colaw-mod5-winding-up-insolvency'], stream: 'law', program: 'bba' },
+  },
+  { id: 'q-claw-08', questionText: 'Voluntary winding up is initiated by:', options: [
+      'Shareholders',
+      'Creditors',
+      'Court',
+      'None'
+    ], correctIndex: 0, explanation: 'Voluntary winding up is initiated by shareholders.', difficulty: 'basic', status: 'approved', pyqTag: { university: 'Mysore University (UOM)', year: 2023, marks: 2, semester: 6 }, prepTags: { subjectId: 'bba-karnataka-company-law', topicIds: ['colaw-mod5-winding-up-insolvency'], stream: 'law', program: 'bba' },
+  },
+  { id: 'q-tax2-01b', questionText: 'Standard deduction under Section 16 is:', options: [
+      '₹50,000',
+      '₹40,000',
+      '₹30,000',
+      '₹1,00,000'
+    ], correctIndex: 0, explanation: 'Standard deduction under Section 16 is ₹50,000.', difficulty: 'basic', status: 'approved', pyqTag: { university: 'Bangalore University (BU)', year: 2024, marks: 2, semester: 6 }, prepTags: { subjectId: 'bba-karnataka-income-tax-2', topicIds: ['tax2-mod1-heads-of-income-salary'], stream: 'commerce', program: 'bba' },
+  },
+  { id: 'q-tax2-02', questionText: 'HRA is:', options: [
+      'Fully taxable',
+      'Fully exempt',
+      'Partially exempt',
+      'None'
+    ], correctIndex: 2, explanation: 'HRA is partially exempt under Section 10(13A).', difficulty: 'basic', status: 'approved', pyqTag: { university: 'Mysore University (UOM)', year: 2023, marks: 2, semester: 6 }, prepTags: { subjectId: 'bba-karnataka-income-tax-2', topicIds: ['tax2-mod1-heads-of-income-salary'], stream: 'commerce', program: 'bba' },
+  },
+  { id: 'q-tax2-03', questionText: 'Standard deduction under Section 24(a) is:', options: [
+      '30% of NAV',
+      '30% of GAV',
+      '20% of NAV',
+      'None'
+    ], correctIndex: 0, explanation: 'Standard deduction = 30% of Net Annual Value.', difficulty: 'basic', status: 'approved', pyqTag: { university: 'Bangalore University (BU)', year: 2024, marks: 2, semester: 6 }, prepTags: { subjectId: 'bba-karnataka-income-tax-2', topicIds: ['tax2-mod2-income-from-house-property'], stream: 'commerce', program: 'bba' },
+  },
+  { id: 'q-tax2-04', questionText: 'GAV ₹2,40,000; Municipal tax ₹20,000. NAV?', options: [
+      '₹2,20,000',
+      '₹2,40,000',
+      '₹2,00,000',
+      '₹2,60,000'
+    ], correctIndex: 0, explanation: 'NAV = 2,40,000 − 20,000 = ₹2,20,000.', difficulty: 'core', status: 'approved', pyqTag: { university: 'Mysore University (UOM)', year: 2023, marks: 5, semester: 6 }, prepTags: { subjectId: 'bba-karnataka-income-tax-2', topicIds: ['tax2-mod2-income-from-house-property'], stream: 'commerce', program: 'bba' },
+  },
+  { id: 'q-tax2-05', questionText: 'Section 44AD presumptive rate is:', options: [
+      '8% of turnover',
+      '10% of turnover',
+      '6% of turnover',
+      'None'
+    ], correctIndex: 0, explanation: 'Section 44AD: 8% (non-digital) or 6% (digital) of turnover.', difficulty: 'basic', status: 'approved', pyqTag: { university: 'Bangalore University (BU)', year: 2024, marks: 2, semester: 6 }, prepTags: { subjectId: 'bba-karnataka-income-tax-2', topicIds: ['tax2-mod3-profit-gains-business-profession'], stream: 'commerce', program: 'bba' },
+  },
+  { id: 'q-tax2-06', questionText: 'Depreciation is claimed under:', options: [
+      'Section 32',
+      'Section 80C',
+      'Section 24',
+      'Section 16'
+    ], correctIndex: 0, explanation: 'Depreciation is claimed under Section 32 of the Income Tax Act.', difficulty: 'basic', status: 'approved', pyqTag: { university: 'Mysore University (UOM)', year: 2023, marks: 2, semester: 6 }, prepTags: { subjectId: 'bba-karnataka-income-tax-2', topicIds: ['tax2-mod3-profit-gains-business-profession'], stream: 'commerce', program: 'bba' },
+  },
+  { id: 'q-tax2-07', questionText: 'LTCG on listed equity above ₹1 lakh is taxed at:', options: [
+      '10%',
+      '15%',
+      '20%',
+      '30%'
+    ], correctIndex: 0, explanation: 'LTCG above ₹1 lakh on listed equity is taxed at 10%.', difficulty: 'basic', status: 'approved', pyqTag: { university: 'Bangalore University (BU)', year: 2024, marks: 2, semester: 6 }, prepTags: { subjectId: 'bba-karnataka-income-tax-2', topicIds: ['tax2-mod5-capital-gains-income-other-sources'], stream: 'commerce', program: 'bba' },
+  },
+  { id: 'q-tax2-08', questionText: 'Income from other sources includes:', options: [
+      'Interest income',
+      'Dividend income',
+      'Both',
+      'None'
+    ], correctIndex: 2, explanation: 'Interest and dividend are both income from other sources.', difficulty: 'basic', status: 'approved', pyqTag: { university: 'Mysore University (UOM)', year: 2023, marks: 2, semester: 6 }, prepTags: { subjectId: 'bba-karnataka-income-tax-2', topicIds: ['tax2-mod5-capital-gains-income-other-sources'], stream: 'commerce', program: 'bba' },
+  },
+
 ]
