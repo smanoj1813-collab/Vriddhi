@@ -496,20 +496,37 @@ MBO is a collaborative management system where superiors and subordinates jointl
         'Delegation vs Decentralization'
       ], explanationMd: `# Organizing: Structure, Departmentation & Authority
 
-Organizing structures roles, responsibilities, and authority.
+### Core Concept
+**Organizing** converts plans into an operating structure: grouping activities, assigning duties, delegating authority and fixing responsibility. KSHEC Module 3 covers structure types, departmentation, and the authority-responsibility-delegation triangle. Karnataka example: delivery organisations such as Infosys or Wipro organise by function and by client account to keep command chains clear.
 
-![Mpa Mod3 Organizing Diagram](org-structure.png)
+---
 
-`,
-      formulas: [
-        { id: 'formula-mpa-mod3-organizing-1', label: 'Key Formula', formula: 'Formula placeholder', exampleQ: 'Example question', exampleA: 'Example answer' },
-      ],
-      tricks: [
-        { id: 'trick-mpa-m3-1', title: 'Span of Control Rule', trick: 'Ideal span = 5–8 subordinates per manager.', whenToUse: 'Answer questions about optimal span of control.' },
-      ],
-      howToSolve: [
-        { id: 'solve-mpa-m3-1', step: 'Step 1: Define organizing.', detail: 'Structuring roles and authority.', questionType: 'Organizing Structure Theory Question' },
-      ]
+### Key Framework
+1. **Structure types**: Line (simple chain of command), Functional (specialist bosses), Line and Staff (line decides, staff advises), Matrix (dual reporting).
+2. **Departmentation**: Functional, Product, Geographic, Customer, Process.
+3. **Authority, responsibility, accountability**: authority is the right to command; responsibility is the duty to perform; accountability cannot be delegated.
+4. **Delegation vs decentralisation**: delegation is person-to-person; decentralisation is organisation-wide policy. Span of management: narrow (tall) versus wide (flat).
+
+---
+
+### Exam Focus
+**Line vs Matrix**: line has single command; matrix has dual command (functional plus project), faster but conflict-prone.
+
+![Organizing Structure Diagram](org-structure.png)`,
+            formulas: [
+              { id: 'formula-mpa-mod3-organizing-1', label: 'Delegation formula', formula: 'Authority delegated = Total authority minus Authority retained', exampleQ: 'Manager holds Rs 1 lakh sanction power, retains Rs 20k.', exampleA: 'Delegates Rs 80k.' },
+              { id: 'formula-mpa-mod3-organizing-2', label: 'Span of management', formula: 'Number of direct reports a manager supervises', exampleQ: 'Manager A has 6 subordinates.', exampleA: 'Span = 6; wide spans make flat structures.' },
+            ],
+            tricks: [
+              { id: 'trick-mpa-mod3-organizing-1', title: 'Scalar chain', trick: 'Scalar chain is the ladder of authority; Fayol gang plank allows direct contact across levels in emergencies.', whenToUse: 'Unity of command questions.' },
+              { id: 'trick-mpa-mod3-organizing-2', title: 'Decentralisation test', trick: 'If top management keeps routine decisions too, it is centralised; pushing them down is decentralisation.', whenToUse: 'Case-study classification.' },
+            ],
+            howToSolve: [
+              { id: 'solve-mpa-mod3-organizing-1', step: 'Step 1: state the purpose of organising (structure for plans)', detail: 'state the purpose of organising (structure for plans).', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-mpa-mod3-organizing-2', step: 'Step 2: identify the structure type in the case and its span of management', detail: 'identify the structure type in the case and its span of management.', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-mpa-mod3-organizing-3', step: 'Step 3: map authority, responsibility and accountability of the persons involved', detail: 'map authority, responsibility and accountability of the persons involved.', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-mpa-mod3-organizing-4', step: 'Step 4: conclude whether delegation/decentralisation is proper and name the d...', detail: 'conclude whether delegation/decentralisation is proper and name the departmentation basis.', questionType: 'Problem Solving / 5 to 10 Marks' },
+            ],
     },
     { id: 'mpa-mod4-staffing-leadership-motivation', subjectId: 'bba-karnataka-mpa', title: 'Staffing, Leadership & Motivation', moduleNumber: 4, moduleName: 'Module 4: Staffing, Leadership & Motivation', order: 4, difficulty: 'core', tier: 'free', status: 'published', examFrequency: 'high', generatedBy: 'curator', contentVersion: 1, publishedAt: '2026-09-16T12:00:00.000Z', featuredQuestionIds: ['q-mpa-04', 'q-mpa-04b'], subtopics: [
         'Staffing: Meaning, Process & Importance',
@@ -517,16 +534,37 @@ Organizing structures roles, responsibilities, and authority.
         'Motivation: Maslow’s Hierarchy, Herzberg’s Two-Factor'
       ], explanationMd: `# Staffing, Leadership & Motivation
 
-Staffing fills positions with competent people.`,
-      formulas: [
-        { id: 'formula-mpa-mod4-staffing-leadership-motivation-1', label: 'Key Formula', formula: 'Formula placeholder', exampleQ: 'Example question', exampleA: 'Example answer' },
-      ],
-      tricks: [
-        { id: 'trick-mpa-m4-1', title: 'Maslow Mnemonic', trick: 'Physiological → Safety → Social → Esteem → Self-actualization.', whenToUse: 'Recall Maslow’s five-level hierarchy.' },
-      ],
-      howToSolve: [
-        { id: 'solve-mpa-m4-1', step: 'Step 1: Define staffing.', detail: 'Recruitment and selection process.', questionType: 'Staffing & Motivation Theory Question' },
-      ]
+### Core Concept
+**Staffing** fills positions with competent people: manpower planning, recruitment, selection, placement, training and appraisal. **Leadership** influences people toward goals; styles: Autocratic (decide alone), Democratic (participative), Laissez-faire (free rein). **Motivation** energises effort: Maslow hierarchy and Herzberg two-factor theory dominate the syllabus. Karnataka IT and manufacturing firms compete on retention, so motivation theory is practical, not academic.
+
+---
+
+### Key Framework
+1. **Staffing process**: manpower planning, recruitment (internal/external), selection (tests, interviews, medical), placement and induction, training, performance appraisal, promotion/transfer.
+2. **Leadership styles**: Autocratic: fast, low creativity; Democratic: high morale, slower; Laissez-faire: suits expert teams only.
+3. **Maslow**: five needs in order: Physiological, Safety, Social, Esteem, Self-actualisation; a satisfied need stops motivating.
+4. **Herzberg**: Hygiene factors (salary, conditions) prevent dissatisfaction; Motivators (achievement, recognition) create satisfaction.
+
+---
+
+### Exam Focus
+**Maslow vs Herzberg**: Maslow is a need hierarchy; Herzberg splits the same needs into hygiene versus motivator factors.
+
+![Leadership Motivation Diagram](leadership-motivation.png)`,
+            formulas: [
+              { id: 'formula-mpa-mod4-staffing-leadership-motivation-1', label: 'Staffing gap', formula: 'Manpower gap = Required manpower minus Available manpower', exampleQ: 'Need 150 staff, available 120.', exampleA: 'Gap = 30: recruit or train 30.' },
+              { id: 'formula-mpa-mod4-staffing-leadership-motivation-2', label: 'Motivation fit', formula: 'Match the leadership style to team maturity: high maturity suits laissez-faire; new teams need direction.', exampleQ: 'Scenario: expert R&D team.', exampleA: 'Use laissez-faire or democratic style.' },
+            ],
+            tricks: [
+              { id: 'trick-mpa-mod4-staffing-leadership-motivation-1', title: 'Two-factor split', trick: 'Hygiene = context (pay, policy, conditions); Motivator = content (growth, recognition).', whenToUse: 'Essay structuring trick.' },
+              { id: 'trick-mpa-mod4-staffing-leadership-motivation-2', title: 'Style pick', trick: 'Autocratic for crisis/routine; democratic for skilled committed teams; laissez-faire for experts.', whenToUse: 'Case-study one-liners.' },
+            ],
+            howToSolve: [
+              { id: 'solve-mpa-mod4-staffing-leadership-motivation-1', step: 'Step 1: diagnose the staffing stage asked (planning/recruitment/selection/app...', detail: 'diagnose the staffing stage asked (planning/recruitment/selection/appraisal).', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-mpa-mod4-staffing-leadership-motivation-2', step: 'Step 2: match leadership style to the team and task in the scenario', detail: 'match leadership style to the team and task in the scenario.', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-mpa-mod4-staffing-leadership-motivation-3', step: 'Step 3: apply Maslow to identify the unmet need level, or Herzberg to classif...', detail: 'apply Maslow to identify the unmet need level, or Herzberg to classify factors as hygiene or motivator.', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-mpa-mod4-staffing-leadership-motivation-4', step: 'Step 4: recommend one action (job enrichment, recognition, participation) wit...', detail: 'recommend one action (job enrichment, recognition, participation) with the theory behind it.', questionType: 'Problem Solving / 5 to 10 Marks' },
+            ],
     },
     { id: 'mpa-mod5-directing-coordination-control', subjectId: 'bba-karnataka-mpa', title: 'Directing, Coordination & Control', moduleNumber: 5, moduleName: 'Module 5: Directing, Coordination & Control', order: 5, difficulty: 'core', tier: 'free', status: 'published', examFrequency: 'high', generatedBy: 'curator', contentVersion: 1, publishedAt: '2026-09-16T12:00:00.000Z', featuredQuestionIds: ['q-mpa-05', 'q-mpa-05b'], subtopics: [
         'Directing: Meaning, Principles & Importance',
@@ -534,16 +572,37 @@ Staffing fills positions with competent people.`,
         'Control Techniques: Budgetary, Non-Budgetary, PERT/CPM'
       ], explanationMd: `# Directing, Coordination & Control
 
-Directing activates employees toward goals.`,
-      formulas: [
-        { id: 'formula-mpa-mod5-directing-coordination-control-1', label: 'Key Formula', formula: 'Formula placeholder', exampleQ: 'Example question', exampleA: 'Example answer' },
-      ],
-      tricks: [
-        { id: 'trick-mpa-m5-1', title: 'Control Process Steps', trick: 'Set standards → Measure → Compare → Corrective action.', whenToUse: 'Recall the control process sequence.' },
-      ],
-      howToSolve: [
-        { id: 'solve-mpa-m5-1', step: 'Step 1: Define control process.', detail: 'Four steps of control.', questionType: 'Directing & Control Theory Question' },
-      ]
+### Core Concept
+**Directing** initiates action: communication, motivation, supervision and leadership. **Coordination** harmonises efforts across units. **Control** ensures results match plans: set standards, measure, compare, correct. Fayol called directing the bridge between planning and doing; without control, plans drift. Every Karnataka plant runs daily production boards: that is operational control in practice.
+
+---
+
+### Key Framework
+1. **Elements of directing**: communication (formal/informal channels, barriers), motivation, supervision, leadership.
+2. **Coordination**: continuous process; techniques: liaison officers, committees, integrators; Balancing of pooled interdependence.
+3. **Control process**: (1) Set standards, (2) Measure performance, (3) Compare with standards, (4) Take corrective action.
+4. **Control techniques**: budgetary control, ratio analysis, break-even analysis, PERT/CPM, internal audit, management by exception.
+
+---
+
+### Exam Focus
+**Planning vs controlling**: planning is forward-looking (sets goals); controlling is backward-looking (measures and corrects), yet both feed each other.
+
+![Directing Control Diagram](directing-control.png)`,
+            formulas: [
+              { id: 'formula-mpa-mod5-directing-coordination-control-1', label: 'Control deviation', formula: 'Deviation = Actual performance minus Standard performance', exampleQ: 'Standard 1,000 units, actual 920.', exampleA: 'Deviation = minus 80 units: corrective action needed.' },
+              { id: 'formula-mpa-mod5-directing-coordination-control-2', label: 'Break-even point', formula: 'BEP units = Fixed cost / (Selling price minus Variable cost per unit)', exampleQ: 'FC Rs 40,000; SP Rs 100; VC Rs 60.', exampleA: 'BEP = 40,000 / 40 = 1,000 units.' },
+            ],
+            tricks: [
+              { id: 'trick-mpa-mod5-directing-coordination-control-1', title: 'Communication span', trick: 'Effective downward communication falls sharply as levels grow; keep channels short.', whenToUse: 'Design question on barriers.' },
+              { id: 'trick-mpa-mod5-directing-coordination-control-2', title: 'Control order', trick: 'Standard, measure, compare, correct: never skip the comparison step.', whenToUse: 'Process sequence answers.' },
+            ],
+            howToSolve: [
+              { id: 'solve-mpa-mod5-directing-coordination-control-1', step: 'Step 1: state the directing elements relevant to the scenario (communication...', detail: 'state the directing elements relevant to the scenario (communication barrier, supervision gap).', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-mpa-mod5-directing-coordination-control-2', step: 'Step 2: identify the coordination mechanism missing (committee, liaison)', detail: 'identify the coordination mechanism missing (committee, liaison).', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-mpa-mod5-directing-coordination-control-3', step: 'Step 3: walk the control process with the given numbers: standard, actual, de...', detail: 'walk the control process with the given numbers: standard, actual, deviation.', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-mpa-mod5-directing-coordination-control-4', step: 'Step 4: recommend the corrective action and the control technique (budget, ra...', detail: 'recommend the corrective action and the control technique (budget, ratio, exception reporting).', questionType: 'Problem Solving / 5 to 10 Marks' },
+            ],
     },
 ],
 
@@ -776,32 +835,37 @@ Depreciation is calculated on the reducing book value at the beginning of each p
         'Suspense Account: Meaning & Rectification'
       ], explanationMd: `# Journal, Ledger & Trial Balance
 
-The double-entry system records every transaction in a journal, posts to ledger accounts, and verifies arithmetical accuracy through a trial balance.
+### Core Concept
+Accounting records flow **Journal (book of original entry) to Ledger (classified accounts) to Trial Balance (arithmetical check)**. The golden rules: personal accounts (debit the receiver, credit the giver), real accounts (debit what comes in, credit what goes out), nominal accounts (debit expenses/losses, credit incomes/gains). KSHEC tests journalising, posting and trial-balance preparation with suspense accounts.
 
-### Journal Entries
-Every transaction affects at least two accounts — one debited, one credited.
-- Personal: Debit the receiver, Credit the giver
-- Real: Debit what comes in, Credit what goes out
-- Nominal: Debit all expenses/losses, Credit all incomes/gains
+---
 
-### Ledger Posting
-Transfer journal entries to individual ledger accounts.
+### Key Framework
+1. **Journal**: chronological record: date, particulars (with narration), LF, debit, credit; every transaction has two equal effects (double entry).
+2. **Ledger**: posting from journal to T-accounts; balancing: debit side total versus credit side total.
+3. **Trial balance**: extract of ledger balances; methods: balance method (net) and total method (gross); totals must agree.
+4. **Errors**: errors of omission, commission, principle, compensating; one-sided errors go to the suspense account.
 
-### Trial Balance
-A statement listing all ledger account balances.
+---
 
-![Acc Mod2 Journal Ledger Trial Balance Diagram](financial-statements.png)
+### Exam Focus
+**Error of principle vs commission**: principle: wrong account head (capital treated as revenue); commission: right head, wrong person/amount.
 
-`,
-      formulas: [
-        { id: 'formula-acc-m2-1', label: 'Accounting Equation', formula: 'Assets = Liabilities + Owner’s Equity', exampleQ: 'If capital is ₹2,00,000 and liabilities are ₹50,000, what are total assets?', exampleA: 'Assets = 2,00,000 + 50,000 = ₹2,50,000.' },
-      ],
-      tricks: [
-        { id: 'trick-acc-m2-1', title: 'Debit/Credit Quick Reference', trick: 'Assets/Expenses ↑ = Debit; Liabilities/Capital/Income ↑ = Credit.', whenToUse: 'Apply instantly while passing journal entries in exams.' },
-      ],
-      howToSolve: [
-        { id: 'solve-acc-m2-1', step: 'Step 1: Identify accounts affected.', detail: 'Classify each account (Personal/Real/Nominal).', questionType: 'Journal Entry & Trial Balance Problem' },
-      ]
+![Journal Ledger Trial Balance Diagram](financial-statements.png)`,
+            formulas: [
+              { id: 'formula-acc-mod2-journal-ledger-trial-balance-1', label: 'Journal entry', formula: 'Debit the receiver and credit the giver for personal accounts', exampleQ: 'Purchased goods Rs 10,000 from Ram on credit.', exampleA: 'Debit Purchases A/c Rs 10,000; Credit Ram A/c Rs 10,000.' },
+              { id: 'formula-acc-mod2-journal-ledger-trial-balance-2', label: 'Trial balance check', formula: 'Sum of debit balances must equal Sum of credit balances', exampleQ: 'Debit total Rs 5,20,000; credit total Rs 5,15,000.', exampleA: 'Difference Rs 5,000 goes to Suspense A/c until located.' },
+            ],
+            tricks: [
+              { id: 'trick-acc-mod2-journal-ledger-trial-balance-1', title: 'Golden rules', trick: 'Personal: receiver/giver; Real: comes in/goes out; Nominal: expense-loss/income-gain.', whenToUse: 'Speeds up journalising.' },
+              { id: 'trick-acc-mod2-journal-ledger-trial-balance-2', title: 'Suspense rule', trick: 'Only one-sided errors land in suspense; two-sided errors self-cancel or need rectification entries.', whenToUse: 'Rectification questions.' },
+            ],
+            howToSolve: [
+              { id: 'solve-acc-mod2-journal-ledger-trial-balance-1', step: 'Step 1: identify the account heads affected and classify them (personal/real/...', detail: 'identify the account heads affected and classify them (personal/real/nominal).', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-acc-mod2-journal-ledger-trial-balance-2', step: 'Step 2: apply the golden rules and write the journal entry with narration', detail: 'apply the golden rules and write the journal entry with narration.', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-acc-mod2-journal-ledger-trial-balance-3', step: 'Step 3: post to ledger T-accounts and compute balances', detail: 'post to ledger T-accounts and compute balances.', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-acc-mod2-journal-ledger-trial-balance-4', step: 'Step 4: prepare the trial balance; if totals differ, open a suspense account...', detail: 'prepare the trial balance; if totals differ, open a suspense account and note the error type.', questionType: 'Problem Solving / 5 to 10 Marks' },
+            ],
     },
     { id: 'acc-mod5-final-accounts-adjustments', subjectId: 'bba-karnataka-accounting', title: 'Final Accounts & Adjustments', moduleNumber: 5, moduleName: 'Module 5: Final Accounts & Adjustments', order: 5, difficulty: 'core', tier: 'free', status: 'published', examFrequency: 'very_high', generatedBy: 'curator', contentVersion: 1, publishedAt: '2026-09-16T12:00:00.000Z', featuredQuestionIds: ['q-acc-05', 'q-acc-05b'], subtopics: [
         'Trading Account: Gross Profit/Loss Determination',
@@ -811,29 +875,37 @@ A statement listing all ledger account balances.
         'Depreciation, Bad Debts & Provision for Doubtful Debts'
       ], explanationMd: `# Final Accounts & Adjustments
 
-Final accounts are prepared from the trial balance after incorporating adjustments.
+### Core Concept
+Final accounts of a trading concern: **Trading Account** (gross profit), **Profit and Loss Account** (net profit), **Balance Sheet** (financial position). Adjustments (closing stock, outstanding and prepaid expenses, depreciation, bad debts and provisions, drawings) must appear twice: in the P&L/trading figures and in the balance sheet. This dual-entry rule is the highest-frequency exam trap.
 
-### Trading Account
-Opens with opening stock, records purchases and direct expenses, closes with closing stock.
+---
 
-### Profit & Loss Account
-Starts with gross profit, records indirect expenses and incomes.
+### Key Framework
+1. **Trading account**: Net sales minus Cost of goods sold (Opening stock + Purchases + Direct expenses minus Closing stock) = Gross profit.
+2. **P&L account**: Gross profit plus other incomes minus indirect expenses (office, selling, financial) = Net profit.
+3. **Adjustments**: closing stock (credit trading, asset side); outstanding expenses (add to expense, liability side); prepaid (minus expense, asset side); depreciation (add to expense, minus from asset).
+4. **Balance sheet**: assets (fixed, current, fictitious) versus liabilities (capital minus drawings plus profit, long-term, current).
 
-### Balance Sheet
-Statement of financial position.
+---
 
-![Acc Mod5 Final Accounts Adjustments Diagram](financial-statements.png)
+### Exam Focus
+**Every adjustment passes two effects**: one in the nominal account (trading/P&L) and one in the balance sheet. Forgetting the second loses marks.
 
-`,
-      formulas: [
-        { id: 'formula-acc-m5-1', label: 'Gross Profit', formula: 'Gross Profit = Net Sales − Cost of Goods Sold', exampleQ: 'Sales ₹5,00,000, COGS ₹3,50,000. Gross Profit?', exampleA: 'Gross Profit = 5,00,000 − 3,50,000 = ₹1,50,000.' },
-      ],
-      tricks: [
-        { id: 'trick-acc-m5-1', title: 'Adjustments Rule of Thumb', trick: 'Every adjustment affects TWO places: once in final account and once in Balance Sheet.', whenToUse: 'Never forget the Balance Sheet effect of any adjustment.' },
-      ],
-      howToSolve: [
-        { id: 'solve-acc-m5-1', step: 'Step 1: Prepare Trading A/c.', detail: 'Include opening stock, purchases, direct expenses, closing stock.', questionType: 'Final Accounts with Adjustments Problem' },
-      ]
+![Final Accounts Diagram](financial-statements.png)`,
+            formulas: [
+              { id: 'formula-acc-mod5-final-accounts-adjustments-1', label: 'Gross profit', formula: 'GP = Net sales minus (Opening stock + Purchases + Direct expenses minus Closing stock)', exampleQ: 'Opening stock Rs 20k, purchases Rs 80k, direct expenses Rs 5k, closing stock Rs 15k.', exampleA: 'COGS = 90k; GP = Sales minus Rs 90k.' },
+              { id: 'formula-acc-mod5-final-accounts-adjustments-2', label: 'Net profit', formula: 'NP = Gross profit plus other incomes minus indirect expenses', exampleQ: 'GP Rs 1,20,000; indirect Rs 70,000; other income Rs 10,000.', exampleA: 'NP = Rs 60,000.' },
+            ],
+            tricks: [
+              { id: 'trick-acc-mod5-final-accounts-adjustments-1', title: 'Closing stock twice', trick: 'Credit trading account; show as current asset. Never adjust purchases directly.', whenToUse: 'Most common error trap.' },
+              { id: 'trick-acc-mod5-final-accounts-adjustments-2', title: 'Outstanding vs prepaid', trick: 'Outstanding: add expense and show liability. Prepaid: minus expense and show asset.', whenToUse: 'Adjustment pair memorisation.' },
+            ],
+            howToSolve: [
+              { id: 'solve-acc-mod5-final-accounts-adjustments-1', step: 'Step 1: prepare the Trading account with opening stock, purchases and direct...', detail: 'prepare the Trading account with opening stock, purchases and direct expenses; deduct closing stock to get gross profit.', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-acc-mod5-final-accounts-adjustments-2', step: 'Step 2: prepare P&L: deduct indirect expenses, add other incomes', detail: 'prepare P&L: deduct indirect expenses, add other incomes.', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-acc-mod5-final-accounts-adjustments-3', step: 'Step 3: apply each adjustment twice: once in the relevant account, once in th...', detail: 'apply each adjustment twice: once in the relevant account, once in the balance sheet.', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-acc-mod5-final-accounts-adjustments-4', step: 'Step 4: draft the balance sheet: capital adjusted for drawings and net profit...', detail: 'draft the balance sheet: capital adjusted for drawings and net profit; list liabilities and assets in order of permanence.', questionType: 'Problem Solving / 5 to 10 Marks' },
+            ],
     },
 ],
 
@@ -988,16 +1060,37 @@ The **Product Life Cycle (PLC)** describes the sales and profit trajectory of a 
         'Marketing vs Selling: Key Differences'
       ], explanationMd: `# Marketing Concepts & 4Ps Marketing Mix
 
-Marketing is the process of identifying customer needs and satisfying them profitably.`,
-      formulas: [
-        { id: 'formula-mkt-mod1-marketing-concepts-4ps-1', label: 'Key Formula', formula: 'Formula placeholder', exampleQ: 'Example question', exampleA: 'Example answer' },
-      ],
-      tricks: [
-        { id: 'trick-mkt-m1-1', title: '4Ps Mnemonic', trick: 'Product, Price, Place, Promotion.', whenToUse: 'Recall all four mix elements instantly.' },
-      ],
-      howToSolve: [
-        { id: 'solve-mkt-m1-1', step: 'Step 1: Define marketing.', detail: 'Satisfying customer needs profitably.', questionType: 'Marketing Concepts Theory Question' },
-      ]
+### Core Concept
+Marketing is the activity that creates, communicates and delivers value to customers. The evolution: production concept (availability), selling concept (push), marketing concept (customer satisfaction first), societal concept (welfare too). The **marketing mix 4Ps**: Product, Price, Place, Promotion: the controllable toolkit applied to a target market reached through STP. Karnataka examples: Nandini (KMF) dairy and Mysore Sandal Soap build value with local brand trust.
+
+---
+
+### Key Framework
+1. **Concepts**: production, product, selling, marketing, societal; marketing myopia (Levitt): focusing on product, not customer need.
+2. **4Ps**: Product (features, quality, branding, packaging, life cycle), Price (skimming, penetration, discounts), Place (channels, coverage, logistics), Promotion (advertising, personal selling, sales promotion, PR).
+3. **STP link**: Segmentation (bases: geographic, demographic, psychographic, behavioural), Targeting, Positioning.
+4. **Customer value**: value = benefits minus cost; satisfaction = expectation versus perception.
+
+---
+
+### Exam Focus
+**Selling vs marketing concept**: selling starts with the factory and pushes what is made; marketing starts with the market and makes what is wanted.
+
+![Marketing Mix 4Ps Diagram](marketing-mix-4ps.png)`,
+            formulas: [
+              { id: 'formula-mkt-mod1-marketing-concepts-4ps-1', label: 'Marketing mix', formula: 'Marketing programme = Product + Price + Place + Promotion aligned to target market', exampleQ: 'Launch of a new health drink for students.', exampleA: 'Product: small pack; Price: penetration; Place: campus retail; Promotion: social media.' },
+              { id: 'formula-mkt-mod1-marketing-concepts-4ps-2', label: 'Customer value', formula: 'Perceived value = Total benefits minus Total cost (monetary plus time plus effort)', exampleQ: 'Benefits Rs 500, cost Rs 400.', exampleA: 'Value = Rs 100; positive value drives repeat purchase.' },
+            ],
+            tricks: [
+              { id: 'trick-mkt-mod1-marketing-concepts-4ps-1', title: '4Ps recall', trick: 'Product, Price, Place, Promotion: any marketing case maps to these four levers.', whenToUse: 'Essay structuring.' },
+              { id: 'trick-mkt-mod1-marketing-concepts-4ps-2', title: 'Myopia trap', trick: 'Railways defined themselves as railroads, not transport: the classic marketing myopia example.', whenToUse: 'Case-study opener.' },
+            ],
+            howToSolve: [
+              { id: 'solve-mkt-mod1-marketing-concepts-4ps-1', step: 'Step 1: identify the marketing concept at play in the case (selling vs market...', detail: 'identify the marketing concept at play in the case (selling vs marketing vs societal).', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-mkt-mod1-marketing-concepts-4ps-2', step: 'Step 2: segment the market and name the target segment', detail: 'segment the market and name the target segment.', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-mkt-mod1-marketing-concepts-4ps-3', step: 'Step 3: design the 4Ps for that segment: product features, pricing method, di...', detail: 'design the 4Ps for that segment: product features, pricing method, distribution intensity, promotion blend.', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-mkt-mod1-marketing-concepts-4ps-4', step: 'Step 4: close with customer value and satisfaction measurement (feedback, rep...', detail: 'close with customer value and satisfaction measurement (feedback, repeat purchase).', questionType: 'Problem Solving / 5 to 10 Marks' },
+            ],
     },
     { id: 'mkt-mod4-distribution-channels-retailing', subjectId: 'bba-karnataka-marketing', title: 'Distribution Channels & Retailing', moduleNumber: 4, moduleName: 'Module 4: Distribution & Retailing', order: 4, difficulty: 'core', tier: 'free', status: 'published', examFrequency: 'moderate', generatedBy: 'curator', contentVersion: 1, publishedAt: '2026-09-16T12:00:00.000Z', featuredQuestionIds: ['q-mkt-04', 'q-mkt-04b'], subtopics: [
         'Distribution Channels: Meaning, Types & Functions',
@@ -1007,16 +1100,37 @@ Marketing is the process of identifying customer needs and satisfying them profi
         'Organized vs Unorganized Retailing in India'
       ], explanationMd: `# Distribution Channels & Retailing
 
-Distribution makes products available to customers through channels.`,
-      formulas: [
-        { id: 'formula-mkt-mod4-distribution-channels-retailing-1', label: 'Key Formula', formula: 'Formula placeholder', exampleQ: 'Example question', exampleA: 'Example answer' },
-      ],
-      tricks: [
-        { id: 'trick-mkt-m4-1', title: 'Channel Levels Mnemonic', trick: 'Count intermediaries between maker and buyer.', whenToUse: 'Identify channel level quickly.' },
-      ],
-      howToSolve: [
-        { id: 'solve-mkt-m4-1', step: 'Step 1: Define distribution channel.', detail: 'Channels move products from manufacturer to customer.', questionType: 'Distribution Channel Theory Question' },
-      ]
+### Core Concept
+**Place** decisions select channels that move goods from producer to consumer. Channel levels: zero (direct), one (retailer), two (wholesaler plus retailer), three (agent plus wholesaler plus retailer). Intermediaries add value: sorting, bulk-breaking, financing, risk-bearing, information. Retailing covers store types (departmental, supermarket, specialty, convenience) and non-store (e-tail, direct selling). Karnataka example: Nandini outlets and FMCG distributors run multi-level chains.
+
+---
+
+### Key Framework
+1. **Channel levels**: direct sales, one-level, two-level, three-level; intensive vs selective vs exclusive distribution.
+2. **Intermediary functions**: transactional (buying/selling), logistical (transport, storage), facilitating (finance, grading, information).
+3. **Retail types**: departmental store (wide assortment), supermarket (self-service food), specialty store (narrow deep line), convenience store (near, limited), discount store, e-commerce.
+4. **Channel management**: conflict (vertical/horizontal), cooperation, power sources; franchising as a modern hybrid.
+
+---
+
+### Exam Focus
+**Intensive vs exclusive distribution**: intensive: every outlet (FMCG); exclusive: single outlet per area (luxury/specialty).
+
+![Distribution Channels Diagram](distribution-channels.png)`,
+            formulas: [
+              { id: 'formula-mkt-mod4-distribution-channels-retailing-1', label: 'Channel margin', formula: 'Margin percent = (Selling price minus Cost price) / Selling price x 100', exampleQ: 'Retailer buys at Rs 80, sells at Rs 100.', exampleA: 'Margin = 20%.' },
+              { id: 'formula-mkt-mod4-distribution-channels-retailing-2', label: 'Channel levels', formula: 'Count the intermediaries between producer and consumer: 0 to 3 levels', exampleQ: 'Manufacturer to wholesaler to retailer to consumer.', exampleA: 'Two-level channel (two intermediaries).' },
+            ],
+            tricks: [
+              { id: 'trick-mkt-mod4-distribution-channels-retailing-1', title: 'Power map', trick: 'Channel power sits with whoever controls scarce assets: brand, shelf space, or customer data.', whenToUse: 'Conflict case questions.' },
+              { id: 'trick-mkt-mod4-distribution-channels-retailing-2', title: 'Bulk breaking', trick: 'Wholesalers buy bulk and break into retailer-sized lots: one of their core utilities.', whenToUse: 'Function-matching MCQs.' },
+            ],
+            howToSolve: [
+              { id: 'solve-mkt-mod4-distribution-channels-retailing-1', step: 'Step 1: identify the product type and the distribution intensity required (in...', detail: 'identify the product type and the distribution intensity required (intensive/selective/exclusive).', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-mkt-mod4-distribution-channels-retailing-2', step: 'Step 2: draw the channel chain and count levels; justify each intermediary fu...', detail: 'draw the channel chain and count levels; justify each intermediary function.', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-mkt-mod4-distribution-channels-retailing-3', step: 'Step 3: choose retail formats for the target customers', detail: 'choose retail formats for the target customers.', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-mkt-mod4-distribution-channels-retailing-4', step: 'Step 4: address channel management: margins, conflict and control in the reco...', detail: 'address channel management: margins, conflict and control in the recommendation.', questionType: 'Problem Solving / 5 to 10 Marks' },
+            ],
     },
     { id: 'mkt-mod5-promotion-mix-advertising', subjectId: 'bba-karnataka-marketing', title: 'Promotion Mix & Advertising', moduleNumber: 5, moduleName: 'Module 5: Promotion & Advertising', order: 5, difficulty: 'core', tier: 'free', status: 'published', examFrequency: 'high', generatedBy: 'curator', contentVersion: 1, publishedAt: '2026-09-16T12:00:00.000Z', featuredQuestionIds: ['q-mkt-05', 'q-mkt-05b'], subtopics: [
         'Promotion Mix: Advertising, Personal Selling, Sales Promotion, Public Relations',
@@ -1024,16 +1138,37 @@ Distribution makes products available to customers through channels.`,
         'Sales Promotion: Tools, Techniques, Consumer vs Trade'
       ], explanationMd: `# Promotion Mix & Advertising
 
-Promotion communicates product value to customers.`,
-      formulas: [
-        { id: 'formula-mkt-mod5-promotion-mix-advertising-1', label: 'Key Formula', formula: 'Formula placeholder', exampleQ: 'Example question', exampleA: 'Example answer' },
-      ],
-      tricks: [
-        { id: 'trick-mkt-m5-1', title: 'Promotion Mix Mnemonic', trick: 'APP Sells — Advertising, Personal selling, Promotion, Public relations.', whenToUse: 'List all promotion mix elements instantly.' },
-      ],
-      howToSolve: [
-        { id: 'solve-mkt-m5-1', step: 'Step 1: Define promotion mix.', detail: 'Advertising, personal selling, sales promotion, PR.', questionType: 'Promotion Mix Theory Question' },
-      ]
+### Core Concept
+**Promotion** communicates value: the blend of advertising (paid, mass, impersonal), personal selling (face-to-face, relationship), sales promotion (short-term incentives), public relations (credibility) and direct marketing (targeted). The AIDA model (Attention, Interest, Desire, Action) frames message design. Push strategy (trade channel focus) versus pull strategy (consumer advertising) decides where the rupee goes.
+
+---
+
+### Key Framework
+1. **Promotion mix elements**: advertising, personal selling, sales promotion, publicity/PR, direct/digital marketing.
+2. **AIDA**: Attention, Interest, Desire, Action: stages a buyer passes through.
+3. **Advertising decisions**: objectives (inform, persuade, remind), media choice (TV, print, digital, outdoor), message strategy, budget methods (percentage of sales, competitive parity, objective-task).
+4. **Push vs pull**: push pushes stock through channel incentives; pull creates consumer demand that drags product through.
+
+---
+
+### Exam Focus
+**Advertising vs personal selling**: advertising is mass, one-way, low cost per contact; personal selling is individual, two-way, high cost but closes sales.
+
+![Promotion Mix Diagram](promotion-mix.png)`,
+            formulas: [
+              { id: 'formula-mkt-mod5-promotion-mix-advertising-1', label: 'Promotion budget', formula: 'Objective-task budget = Sum of costs of all activities needed to meet the objective', exampleQ: 'Campaign needs Rs 5 lakh media plus Rs 3 lakh events.', exampleA: 'Budget = Rs 8 lakh.' },
+              { id: 'formula-mkt-mod5-promotion-mix-advertising-2', label: 'Cost per contact', formula: 'Cost per contact = Total media cost / Number of contacts reached', exampleQ: 'TV Rs 20 lakh reaching 40 lakh viewers.', exampleA: 'Cost per contact = Rs 0.50.' },
+            ],
+            tricks: [
+              { id: 'trick-mkt-mod5-promotion-mix-advertising-1', title: 'AIDA ladder', trick: 'Move the buyer: Attention, Interest, Desire, Action: tag each ad element to a stage.', whenToUse: 'Message-design questions.' },
+              { id: 'trick-mkt-mod5-promotion-mix-advertising-2', title: 'Push-pull pick', trick: 'Push for industrial/low-awareness goods via channel; pull for branded consumer goods.', whenToUse: 'Strategy selection one-liners.' },
+            ],
+            howToSolve: [
+              { id: 'solve-mkt-mod5-promotion-mix-advertising-1', step: 'Step 1: set the promotion objective (inform/persuade/remind)', detail: 'set the promotion objective (inform/persuade/remind).', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-mkt-mod5-promotion-mix-advertising-2', step: 'Step 2: choose the mix: mass advertising for awareness, personal selling for...', detail: 'choose the mix: mass advertising for awareness, personal selling for industrial sales, sales promotion for short bursts, PR for credibility.', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-mkt-mod5-promotion-mix-advertising-3', step: 'Step 3: design the message using AIDA and pick media with cost-per-contact logic', detail: 'design the message using AIDA and pick media with cost-per-contact logic.', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-mkt-mod5-promotion-mix-advertising-4', step: 'Step 4: decide push versus pull and justify with the budget method used', detail: 'decide push versus pull and justify with the budget method used.', questionType: 'Problem Solving / 5 to 10 Marks' },
+            ],
     },
 ],
 
@@ -1120,18 +1255,39 @@ If any single component is zero, total motivational drive collapses to zero!`,
         'Perception: Process, Factors & Perceptual Errors',
         'Attitudes: Components, Formation & Job Satisfaction',
         'Values, Emotions & Emotional Intelligence at Work'
-      ], explanationMd: `# Individual Behaviour & Personality
+      ], explanationMd: `# Individual Behaviour & Personality: Big Five & Perception
 
-Individual behaviour is the foundation of organizational behaviour.`,
-      formulas: [
-        { id: 'formula-ob-mod1-individual-behaviour-personality-1', label: 'Key Formula', formula: 'Formula placeholder', exampleQ: 'Example question', exampleA: 'Example answer' },
-      ],
-      tricks: [
-        { id: 'trick-ob-m1-1', title: 'OCEAN Mnemonic', trick: 'Openness, Conscientiousness, Extraversion, Agreeableness, Neuroticism.', whenToUse: 'Recall all five personality traits.' },
-      ],
-      howToSolve: [
-        { id: 'solve-ob-m1-1', step: 'Step 1: Define individual behaviour.', detail: 'Explain Big Five and perception.', questionType: 'Individual Behaviour Theory Question' },
-      ]
+### Core Concept
+Organisational behaviour studies how people act in organisations. Individual behaviour is driven by **perception, personality, learning, attitudes and values**. The Big Five (OCEAN): Openness, Conscientiousness, Extraversion, Agreeableness, Neuroticism: the accepted personality taxonomy. Personality is relatively stable; situations still moderate behaviour (interactionist view). Karnataka corporate example: team fit at product companies like Freshworks depends on conscientiousness and agreeableness.
+
+---
+
+### Key Framework
+1. **Determinants of behaviour**: personal (biography, personality), environmental (organisation, culture), interaction of both.
+2. **Big Five**: Openness (creative), Conscientiousness (disciplined), Extraversion (sociable), Agreeableness (cooperative), Neuroticism (emotional instability).
+3. **Personality determinants**: heredity, environment, situation; self-concept and locus of control (internal vs external).
+4. **Myers-Briggs**: introvert/extrovert, sensing/intuition, thinking/feeling, judging/perceiving (a popular alternative).
+
+---
+
+### Exam Focus
+**Personality vs perception**: personality is the enduring disposition; perception is the process of interpreting stimuli (detailed in Module 2).
+
+![Big Five Personality Diagram](big-five-personality.png)`,
+            formulas: [
+              { id: 'formula-ob-mod1-individual-behaviour-personality-1', label: 'Big Five recall', formula: 'OCEAN: Openness, Conscientiousness, Extraversion, Agreeableness, Neuroticism', exampleQ: 'Which trait predicts job performance best?', exampleA: 'Conscientiousness is the strongest predictor.' },
+              { id: 'formula-ob-mod1-individual-behaviour-personality-2', label: 'Locus of control', formula: 'Internal: outcomes from own effort; External: outcomes from luck/powerful others', exampleQ: 'Employee blames market for missed targets.', exampleA: 'External locus of control.' },
+            ],
+            tricks: [
+              { id: 'trick-ob-mod1-individual-behaviour-personality-1', title: 'OCEAN mnemonic', trick: 'O-C-E-A-N spells the five traits in order.', whenToUse: 'MCQ speed-up.' },
+              { id: 'trick-ob-mod1-individual-behaviour-personality-2', title: 'Interactionist view', trick: 'Behaviour = f(Personality, Situation): neither alone explains it.', whenToUse: 'Balanced essay answers.' },
+            ],
+            howToSolve: [
+              { id: 'solve-ob-mod1-individual-behaviour-personality-1', step: 'Step 1: identify the level of analysis (individual, group, organisation)', detail: 'identify the level of analysis (individual, group, organisation).', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-ob-mod1-individual-behaviour-personality-2', step: 'Step 2: name the individual determinants involved (personality, perception, l...', detail: 'name the individual determinants involved (personality, perception, learning, attitude).', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-ob-mod1-individual-behaviour-personality-3', step: 'Step 3: apply the Big Five to describe the person and predict work behaviour', detail: 'apply the Big Five to describe the person and predict work behaviour.', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-ob-mod1-individual-behaviour-personality-4', step: 'Step 4: conclude with the interactionist caveat: the situation moderates pers...', detail: 'conclude with the interactionist caveat: the situation moderates personality effects.', questionType: 'Problem Solving / 5 to 10 Marks' },
+            ],
     },
     { id: 'ob-mod2-perception-learning-attitudes', subjectId: 'bba-karnataka-ob', title: 'Perception, Learning Theories & Attitude Formation', moduleNumber: 2, moduleName: 'Module 2: Perception & Learning', order: 2, difficulty: 'basic', tier: 'free', status: 'published', examFrequency: 'moderate', generatedBy: 'curator', contentVersion: 1, publishedAt: '2026-09-16T12:00:00.000Z', featuredQuestionIds: ['q-ob-03', 'q-ob-03b'], subtopics: [
         'Perception: Process & Factors',
@@ -1141,16 +1297,37 @@ Individual behaviour is the foundation of organizational behaviour.`,
         'Job Satisfaction & Organizational Commitment'
       ], explanationMd: `# Perception, Learning Theories & Attitude Formation
 
-Perception organizes and interprets sensory impressions.`,
-      formulas: [
-        { id: 'formula-ob-mod2-perception-learning-attitudes-1', label: 'Key Formula', formula: 'Formula placeholder', exampleQ: 'Example question', exampleA: 'Example answer' },
-      ],
-      tricks: [
-        { id: 'trick-ob-m2-1', title: 'Learning Types', trick: 'Classical = stimulus-response; Operant = behavior-consequence.', whenToUse: 'Distinguish learning theories.' },
-      ],
-      howToSolve: [
-        { id: 'solve-ob-m2-1', step: 'Step 1: Define perception.', detail: 'Explain learning theories and attitude components.', questionType: 'Perception & Learning Theory Question' },
-      ]
+### Core Concept
+**Perception** is the process by which people select, organise and interpret stimuli. It distorts reality via selective perception, stereotyping, halo and horn effects. **Learning** changes behaviour through experience: classical conditioning (Pavlov), operant conditioning (Skinner reinforcement), social learning (Bandura modelling). **Attitude** has three components: affect (feeling), cognition (belief), behaviour (action); cognitive dissonance (Festinger) drives attitude change.
+
+---
+
+### Key Framework
+1. **Perceptual process**: environment, stimuli, selection, organisation, interpretation, perception, behaviour.
+2. **Distortions**: stereotyping, halo effect (one trait colours all), projection, contrast, self-fulfilling prophecy (Pygmalion).
+3. **Learning theories**: classical (stimulus pairing), operant (consequence reinforcement: positive/negative, punishment/extinction), social (observation and imitation).
+4. **Attitudes**: ABC components; job satisfaction, organisational commitment; cognitive dissonance reduction.
+
+---
+
+### Exam Focus
+**Halo vs horn**: halo: one good trait inflates the whole rating; horn: one bad trait deflates everything.
+
+![Perception Learning Diagram](perception-learning.png)`,
+            formulas: [
+              { id: 'formula-ob-mod2-perception-learning-attitudes-1', label: 'Dissonance ratio', formula: 'Dissonance rises with (importance x number of conflicting cognitions) / (adjustable cognitions)', exampleQ: 'Important decision with few alternatives.', exampleA: 'High dissonance: person changes attitude to match behaviour.' },
+              { id: 'formula-ob-mod2-perception-learning-attitudes-2', label: 'Reinforcement map', formula: 'Positive adds a reward; negative removes discomfort; punishment suppresses; extinction withdraws reinforcement.', exampleQ: 'Employee praised for punctuality.', exampleA: 'Positive reinforcement increases punctuality.' },
+            ],
+            tricks: [
+              { id: 'trick-ob-mod2-perception-learning-attitudes-1', title: 'Perception shortcuts', trick: 'Stereotype, halo, horn, projection, contrast: one-line definitions each.', whenToUse: 'Definitions earn easy marks.' },
+              { id: 'trick-ob-mod2-perception-learning-attitudes-2', title: 'Social learning', trick: 'Modelling plus vicarious reinforcement: people copy observed rewarded behaviour.', whenToUse: 'Training design relevance.' },
+            ],
+            howToSolve: [
+              { id: 'solve-ob-mod2-perception-learning-attitudes-1', step: 'Step 1: trace the perceptual process for the scenario and identify the distor...', detail: 'trace the perceptual process for the scenario and identify the distortion (stereotype/halo/horn).', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-ob-mod2-perception-learning-attitudes-2', step: 'Step 2: name the learning mechanism: classical pairing, operant consequence o...', detail: 'name the learning mechanism: classical pairing, operant consequence or social model.', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-ob-mod2-perception-learning-attitudes-3', step: 'Step 3: analyse the attitude using the ABC components', detail: 'analyse the attitude using the ABC components.', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-ob-mod2-perception-learning-attitudes-4', step: 'Step 4: if behaviour and attitude clash, explain cognitive dissonance and the...', detail: 'if behaviour and attitude clash, explain cognitive dissonance and the likely adjustment.', questionType: 'Problem Solving / 5 to 10 Marks' },
+            ],
     },
     { id: 'ob-mod4-groups-teams-conflict', subjectId: 'bba-karnataka-ob', title: 'Groups, Teams & Conflict Management', moduleNumber: 4, moduleName: 'Module 4: Groups & Conflict', order: 4, difficulty: 'core', tier: 'free', status: 'published', examFrequency: 'high', generatedBy: 'curator', contentVersion: 1, publishedAt: '2026-09-16T12:00:00.000Z', featuredQuestionIds: ['q-ob-04', 'q-ob-05'], subtopics: [
         'Groups: Types, Stages, Group Decision Making',
@@ -1160,16 +1337,38 @@ Perception organizes and interprets sensory impressions.`,
         'Tuckman\'s Stages of Group Development'
       ], explanationMd: `# Groups, Teams & Conflict Management
 
-Groups and teams differ in structure and purpose.`,
-      formulas: [
-        { id: 'formula-ob-mod4-groups-teams-conflict-1', label: 'Key Formula', formula: 'Formula placeholder', exampleQ: 'Example question', exampleA: 'Example answer' },
-      ],
-      tricks: [
-        { id: 'trick-ob-m4-1', title: 'Tuckman\'s Stages', trick: 'Forming → Storming → Norming → Performing → Adjourning.', whenToUse: 'Recall group development stages.' },
-      ],
-      howToSolve: [
-        { id: 'solve-ob-m4-1', step: 'Step 1: Define groups vs teams.', detail: 'Explain conflict types and resolution styles.', questionType: 'Groups & Conflict Theory Question' },
-      ]
+### Core Concept
+A **group** shares goals and interaction; a **team** adds collective accountability and complementary skills. Tuckman stages: Forming, Storming, Norming, Performing, Adjourning. Group dynamics: roles, norms, cohesiveness, social loafing. **Conflict** is natural: task, relationship or process conflict; resolution styles range from avoiding to collaborating (Thomas-Kilmann grid). Indian family businesses and IT delivery teams show both cohesion and role conflict.
+
+---
+
+### Key Framework
+1. **Group formation**: forming, storming, norming, performing, adjourning; formal vs informal groups.
+2. **Group dynamics**: role perception, norms, cohesiveness (high cohesion boosts satisfaction; effect on performance depends on norms), groupthink.
+3. **Teams**: problem-solving, self-managed, cross-functional, virtual; team effectiveness: clear goals, right skills, trust, accountability.
+4. **Conflict**: causes (scarce resources, goal divergence, ambiguity); styles: avoiding, competing, compromising, accommodating, collaborating.
+
+---
+
+### Exam Focus
+**Group vs team**: a group shares information; a team shares collective performance goals and mutual accountability.
+
+![Teams Conflict Diagram](teams-conflict.png)`,
+            formulas: [
+              { id: 'formula-ob-mod4-groups-teams-conflict-1', label: 'Team balance', formula: 'Team performance = f(Ability x Motivation x Opportunity)', exampleQ: 'Skilled team, low morale, poor tools.', exampleA: 'Fix motivation and tools first: they are the constraints.' },
+              { id: 'formula-ob-mod4-groups-teams-conflict-2', label: 'Conflict cost', formula: 'Conflict cost = Lost output + Delay cost + Relationship damage', exampleQ: 'Deadlock loses 3 days at Rs 20k per day.', exampleA: 'Cost = Rs 60k plus morale damage.' },
+            ],
+            tricks: [
+              { id: 'trick-ob-mod4-groups-teams-conflict-1', title: 'Cohesion trade-off', trick: 'High cohesion with pro-performance norms raises output; with anti-performance norms it lowers it.', whenToUse: 'Case analysis shortcut.' },
+              { id: 'trick-ob-mod4-groups-teams-conflict-2', title: 'Tuckman order', trick: 'Forming, Storming, Norming, Performing, Adjourning: the 5-stage lifecycle.', whenToUse: 'Sequence questions.' },
+              { id: 'trick-ob-mod4-groups-teams-conflict-3', title: 'Collaborate conditions', trick: 'Collaborating works when both concerns matter and time permits; compromising splits the difference.', whenToUse: 'Style-selection logic.' },
+            ],
+            howToSolve: [
+              { id: 'solve-ob-mod4-groups-teams-conflict-1', step: 'Step 1: classify the group: formal/informal and the Tuckman stage it sits in', detail: 'classify the group: formal/informal and the Tuckman stage it sits in.', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-ob-mod4-groups-teams-conflict-2', step: 'Step 2: diagnose group dynamics (norms, cohesion, role conflict, social loafing)', detail: 'diagnose group dynamics (norms, cohesion, role conflict, social loafing).', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-ob-mod4-groups-teams-conflict-3', step: 'Step 3: identify the conflict type (task/relationship/process) and its cause', detail: 'identify the conflict type (task/relationship/process) and its cause.', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-ob-mod4-groups-teams-conflict-4', step: 'Step 4: select the resolution style from the grid and justify; outline team-b...', detail: 'select the resolution style from the grid and justify; outline team-building steps.', questionType: 'Problem Solving / 5 to 10 Marks' },
+            ],
     },
     { id: 'ob-mod5-organisational-culture-change', subjectId: 'bba-karnataka-ob', title: 'Organisational Culture, Climate & Change Management', moduleNumber: 5, moduleName: 'Module 5: Culture & Change', order: 5, difficulty: 'core', tier: 'free', status: 'published', examFrequency: 'high', generatedBy: 'curator', contentVersion: 1, publishedAt: '2026-09-16T12:00:00.000Z', featuredQuestionIds: ['q-ob-05b', 'q-ob-05c'], subtopics: [
         'Organisational Culture: Levels, Characteristics',
@@ -1179,16 +1378,38 @@ Groups and teams differ in structure and purpose.`,
         'Resistance to Change: Causes & Overcoming'
       ], explanationMd: `# Organisational Culture, Climate & Change Management
 
-Culture is how we do things around here.`,
-      formulas: [
-        { id: 'formula-ob-mod5-organisational-culture-change-1', label: 'Key Formula', formula: 'Formula placeholder', exampleQ: 'Example question', exampleA: 'Example answer' },
-      ],
-      tricks: [
-        { id: 'trick-ob-m5-1', title: 'Kotter\'s 8 Steps', trick: 'Urgency → Coalition → Vision → Communicate → Empower → Wins → Consolidate → Anchor.', whenToUse: 'Recall change management steps.' },
-      ],
-      howToSolve: [
-        { id: 'solve-ob-m5-1', step: 'Step 1: Define organisational culture.', detail: 'Explain Lewin\'s and Kotter\'s change models.', questionType: 'Culture & Change Theory Question' },
-      ]
+### Core Concept
+**Culture** is the shared assumptions, values and artefacts that shape behaviour (Schein: three layers). Types (Competing Values): clan, adhocracy, market, hierarchy. **Climate** is the perceived atmosphere (openness, trust). **Change management**: Lewin (unfreeze-change-refreeze), force field analysis (driving vs restraining forces), resistance sources and overcoming tactics; OD interventions: process consultation, team building, survey feedback.
+
+---
+
+### Key Framework
+1. **Culture layers**: artefacts (visible symbols), espoused values (stated beliefs), basic assumptions (deep, unconscious).
+2. **Culture types**: clan (collaborate), adhocracy (create), market (compete), hierarchy (control).
+3. **Lewin**: Unfreeze (create readiness), Change (move), Refreeze (stabilise); force field analysis maps drivers and resistors.
+4. **Resistance**: individual (fear, habit, security), organisational (structure, culture); overcome: communication, participation, facilitation, negotiation, coercion (last resort).
+
+---
+
+### Exam Focus
+**Culture vs climate**: culture is deep and enduring; climate is the surface perception that can change quickly.
+
+![Culture Change Diagram](culture-change.png)`,
+            formulas: [
+              { id: 'formula-ob-mod5-organisational-culture-change-1', label: 'Force field', formula: 'Net change readiness = Sum of driving forces minus Sum of restraining forces', exampleQ: 'Drives total 8, restraints 5.', exampleA: 'Net = 3: change feasible; weaken restraints to raise it.' },
+              { id: 'formula-ob-mod5-organisational-culture-change-2', label: 'Cost of resistance', formula: 'Lost productivity = Resistance hours x Output value per hour', exampleQ: '200 lost hours at Rs 500 per hour.', exampleA: 'Cost = Rs 1,00,000.' },
+            ],
+            tricks: [
+              { id: 'trick-ob-mod5-organisational-culture-change-1', title: 'Lewin order', trick: 'Unfreeze, Change, Refreeze: skipping refreeze causes relapse.', whenToUse: 'Change programme sequence.' },
+              { id: 'trick-ob-mod5-organisational-culture-change-2', title: 'Schein layers', trick: 'Artefacts, values, assumptions: dig deepest for the real culture.', whenToUse: 'Culture audit questions.' },
+              { id: 'trick-ob-mod5-organisational-culture-change-3', title: 'Resistance first', trick: 'Participation and communication beat coercion; coercion only in crisis.', whenToUse: 'Managerial judgement answers.' },
+            ],
+            howToSolve: [
+              { id: 'solve-ob-mod5-organisational-culture-change-1', step: 'Step 1: describe the culture using Schein layers and the Competing Values type', detail: 'describe the culture using Schein layers and the Competing Values type.', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-ob-mod5-organisational-culture-change-2', step: 'Step 2: diagnose the climate (trust, openness)', detail: 'diagnose the climate (trust, openness).', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-ob-mod5-organisational-culture-change-3', step: 'Step 3: apply force field analysis: list drivers and restraints for the propo...', detail: 'apply force field analysis: list drivers and restraints for the proposed change.', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-ob-mod5-organisational-culture-change-4', step: 'Step 4: run Lewin: unfreeze with communication/participation, implement chang...', detail: 'run Lewin: unfreeze with communication/participation, implement change, refreeze via policy and reinforcement.', questionType: 'Problem Solving / 5 to 10 Marks' },
+            ],
     },
 ],
 
@@ -1335,18 +1556,41 @@ Linear Programming is an operations research optimization tool used to allocate 
         'Partnership: Profit Sharing Ratio',
         'Ratio & Proportion',
         'Percentage & Its Applications'
-      ], explanationMd: `# Commercial Arithmetic
+      ], explanationMd: `# Commercial Arithmetic: Profit, Loss, Discount & Partnership
 
-Profit and loss percentages are always computed on Cost Price.`,
-      formulas: [
-        { id: 'formula-math-m2-1', label: 'Profit Percentage', formula: 'Profit % = (Selling Price − Cost Price) ÷ Cost Price × 100', exampleQ: 'Goods bought for ₹400 sold for ₹500. Profit %?', exampleA: 'Profit % = 100/400 × 100 = 25%.' },
-      ],
-      tricks: [
-        { id: 'trick-math-m2-1', title: 'Profit/Loss Base', trick: 'Profit and loss percentages are ALWAYS computed on Cost Price.', whenToUse: 'Avoid common error in profit-loss MCQs.' },
-      ],
-      howToSolve: [
-        { id: 'solve-math-m2-1', step: 'Step 1: Identify CP and SP.', detail: 'Apply profit/loss formula.', questionType: 'Commercial Arithmetic Problem' },
-      ]
+### Core Concept
+Commercial arithmetic computes **profit and loss percentages, successive discounts and partnership profit shares**. Base relations: Profit = SP minus CP; Loss = CP minus SP; percentages are computed on cost unless stated otherwise. Partnership shares profit in the ratio of capital multiplied by time when capitals are invested for different periods. These are the highest-scoring, formula-direct questions in the paper.
+
+---
+
+### Key Framework
+1. **Profit/loss**: Profit percent = Profit / CP x 100; Loss percent = Loss / CP x 100.
+2. **Discount**: Net price after discount = MP x (1 minus d/100); two successive discounts d1 and d2: single equivalent = d1 + d2 minus (d1 x d2 / 100).
+3. **Partnership**: profit-sharing ratio = (Capital x Time) for each partner; guarantee clauses adjust shortfalls first.
+4. **Cost-price forms**: SP = CP x (1 + profit/100); CP = SP x 100 / (100 + profit).
+
+---
+
+### Exam Focus
+**Profit percent is on cost price; discount percent is on marked price.** Mixing the bases is the classic error.
+
+![Profit Loss Partnership Diagram](profit-loss-partnership.png)`,
+            formulas: [
+              { id: 'formula-math-mod2-commercial-arithmetic-1', label: 'Profit percent', formula: 'Profit % = (SP minus CP) / CP x 100', exampleQ: 'CP Rs 250, SP Rs 300.', exampleA: 'Profit % = 50/250 x 100 = 20%.' },
+              { id: 'formula-math-mod2-commercial-arithmetic-2', label: 'Successive discount', formula: 'Equivalent single discount = d1 + d2 minus (d1 x d2 / 100)', exampleQ: 'Discounts 20% and 10%.', exampleA: 'Equivalent = 20 + 10 minus 2 = 28%.' },
+              { id: 'formula-math-mod2-commercial-arithmetic-3', label: 'CP from SP', formula: 'CP = SP x 100 / (100 + profit%)', exampleQ: 'SP Rs 330 at 10% profit.', exampleA: 'CP = 330 x 100 / 110 = Rs 300.' },
+              { id: 'formula-math-mod2-commercial-arithmetic-4', label: 'Partnership ratio', formula: 'Share ratio = (Capital x Time) for each partner', exampleQ: 'A Rs 60k x 12 months vs B Rs 40k x 6 months.', exampleA: 'Ratio = 720 : 240 = 3 : 1.' },
+            ],
+            tricks: [
+              { id: 'trick-math-mod2-commercial-arithmetic-1', title: 'Base trap', trick: 'Discount percent is on marked price; profit percent is on cost price.', whenToUse: 'Classic error trap.' },
+              { id: 'trick-math-mod2-commercial-arithmetic-2', title: 'Guarantee first', trick: 'Adjust profit guarantees before applying the final ratio.', whenToUse: 'Partnership guarantee problems.' },
+            ],
+            howToSolve: [
+              { id: 'solve-math-mod2-commercial-arithmetic-1', step: 'Step 1: fix the base (CP for profit/loss; MP for discount) and convert everyt...', detail: 'fix the base (CP for profit/loss; MP for discount) and convert everything to one currency level.', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-math-mod2-commercial-arithmetic-2', step: 'Step 2: apply the percentage formulas step by step; for successive discounts...', detail: 'apply the percentage formulas step by step; for successive discounts collapse to one equivalent discount.', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-math-mod2-commercial-arithmetic-3', step: 'Step 3: for partnership, compute capital x time for each partner and simplify...', detail: 'for partnership, compute capital x time for each partner and simplify the ratio.', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-math-mod2-commercial-arithmetic-4', step: 'Step 4: distribute the profit, adjusting guarantees first, and verify the sha...', detail: 'distribute the profit, adjusting guarantees first, and verify the shares sum to total profit.', questionType: 'Problem Solving / 5 to 10 Marks' },
+            ],
     },
     { id: 'math-mod3-interest-annuities', subjectId: 'bba-karnataka-math', title: 'Simple & Compound Interest, Annuities', moduleNumber: 3, moduleName: 'Module 3: Interest & Annuities', order: 3, difficulty: 'core', tier: 'free', status: 'published', examFrequency: 'high', generatedBy: 'curator', contentVersion: 1, publishedAt: '2026-09-16T12:00:00.000Z', featuredQuestionIds: ['q-math-03', 'q-math-04'], subtopics: [
         'Simple Interest: Formula & Computation',
@@ -1356,16 +1600,37 @@ Profit and loss percentages are always computed on Cost Price.`,
         'Present Value & Future Value'
       ], explanationMd: `# Simple & Compound Interest, Annuities
 
-CI grows faster than SI due to compounding.`,
-      formulas: [
-        { id: 'formula-math-m3-1', label: 'Compound Interest', formula: 'A = P(1 + R/100)^n ; CI = A − P', exampleQ: '₹10,000 at 10% p.a. compounded annually for 2 years. Amount?', exampleA: 'A = 10,000(1.10)^2 = ₹12,100.' },
-      ],
-      tricks: [
-        { id: 'trick-math-m3-1', title: 'CI − SI for 2 years', trick: 'CI − SI for 2 years = P × (R÷100)^2.', whenToUse: 'Quick shortcut for 2-year SI/CI difference.' },
-      ],
-      howToSolve: [
-        { id: 'solve-math-m3-1', step: 'Step 1: Identify P, R, n.', detail: 'Apply SI or CI formula.', questionType: 'Interest Computation Problem' },
-      ]
+### Core Concept
+**Simple interest** grows linearly: interest on the original principal only. **Compound interest** grows exponentially: interest earns interest each period. **Annuities** are equal cash flows at fixed intervals: future value (accumulation) and present value (discounting). Applications: loans, sinking funds, insurance premia. KSHEC questions combine formulas with log/table values.
+
+---
+
+### Key Framework
+1. **Simple interest**: SI = P x n x r / 100; Amount = P + SI.
+2. **Compound interest**: Amount = P x (1 + r/100)^n; CI = Amount minus P; for half-yearly compounding use r/2 and 2n periods.
+3. **Annuity FV**: FV = A x ((1 + r)^n minus 1) / r (payments at period end); annuity due multiplies by (1 + r).
+4. **Annuity PV**: PV = A x (1 minus (1 + r)^(-n)) / r. Perpetuity PV = A / r.
+
+---
+
+### Exam Focus
+**SI vs CI difference for 2 years**: Difference = P x (r/100)^2; for 3 years: P x (r/100)^2 x (3 + r/100).
+
+![Interest Annuities Diagram](interest-annuities.png)`,
+            formulas: [
+              { id: 'formula-math-mod3-interest-annuities-1', label: 'Compound amount', formula: 'Amount = P x (1 + r/100)^n', exampleQ: 'Rs 20,000 at 10% for 3 years.', exampleA: 'Amount = 20000 x 1.331 = Rs 26,620; CI = Rs 6,620.' },
+              { id: 'formula-math-mod3-interest-annuities-2', label: 'Annuity FV', formula: 'FV = A x ((1 + r)^n minus 1) / r', exampleQ: 'Rs 10,000 yearly for 4 years at 8%.', exampleA: 'FV = 10000 x 4.5061 = Rs 45,061.' },
+            ],
+            tricks: [
+              { id: 'trick-math-mod3-interest-annuities-1', title: 'Two-year trick', trick: 'CI minus SI for 2 years = P(r/100)^2: instant answer.', whenToUse: 'Difference questions.' },
+              { id: 'trick-math-mod3-interest-annuities-2', title: 'Half-yearly flip', trick: 'Halve the rate and double the periods: r/2 and 2n.', whenToUse: 'Compounding-frequency traps.' },
+            ],
+            howToSolve: [
+              { id: 'solve-math-mod3-interest-annuities-1', step: 'Step 1: write P, r, n with the compounding period consistent (yearly/half-yea...', detail: 'write P, r, n with the compounding period consistent (yearly/half-yearly).', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-math-mod3-interest-annuities-2', step: 'Step 2: simple interest: direct formula; compound interest: amount formula mi...', detail: 'simple interest: direct formula; compound interest: amount formula minus principal.', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-math-mod3-interest-annuities-3', step: 'Step 3: annuities: identify ordinary or due, then apply FV or PV formula', detail: 'annuities: identify ordinary or due, then apply FV or PV formula.', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-math-mod3-interest-annuities-4', step: 'Step 4: mixed problems: compute SI/CI separately and subtract; verify with th...', detail: 'mixed problems: compute SI/CI separately and subtract; verify with the 2-year difference shortcut.', questionType: 'Problem Solving / 5 to 10 Marks' },
+            ],
     },
     { id: 'math-mod4-calculus-optimization', subjectId: 'bba-karnataka-math', title: 'Calculus: Differentiation & Optimization', moduleNumber: 4, moduleName: 'Module 4: Calculus & Optimization', order: 4, difficulty: 'advanced', tier: 'free', status: 'published', examFrequency: 'moderate', generatedBy: 'curator', contentVersion: 1, publishedAt: '2026-09-16T12:00:00.000Z', featuredQuestionIds: ['q-math-05', 'q-math-06'], subtopics: [
         'Derivatives: Rules & Applications',
@@ -1375,16 +1640,37 @@ CI grows faster than SI due to compounding.`,
         'Integration: Basic Concepts'
       ], explanationMd: `# Calculus: Differentiation & Optimization
 
-f''(x) < 0 confirms maximum; f''(x) > 0 confirms minimum.`,
-      formulas: [
-        { id: 'formula-math-m4-1', label: 'Profit Maximization', formula: 'MR = MC', exampleQ: 'Profit maximisation occurs where?', exampleA: 'Where Marginal Revenue equals Marginal Cost.' },
-      ],
-      tricks: [
-        { id: 'trick-math-m4-1', title: 'Second Order Condition', trick: 'f\'\'(x) < 0 for maximum; f\'\'(x) > 0 for minimum.', whenToUse: 'Confirm maxima vs minima.' },
-      ],
-      howToSolve: [
-        { id: 'solve-math-m4-1', step: 'Step 1: Find first derivative.', detail: 'Set to zero, check second order condition.', questionType: 'Calculus Optimization Problem' },
-      ]
+### Core Concept
+**Differentiation** measures rate of change; managers use it to optimise: marginal cost is the derivative of total cost, elasticity uses derivatives, and profit maximisation solves where the derivative of profit is zero. Core rules: power, product, quotient, chain. Optimization: find critical points (first derivative zero), classify with the second derivative (positive = minimum, negative = maximum).
+
+---
+
+### Key Framework
+1. **Rules**: d/dx (x^n) = n x^(n-1); product rule (uv); quotient rule (u/v); chain rule for composites.
+2. **Marginals**: MC = d(TC)/dQ; MR = d(TR)/dQ; profit max where MC = MR.
+3. **Elasticity**: E = (dQ/dP) x (P/Q); E greater than 1 means elastic demand.
+4. **Optimization steps**: form the function, differentiate, solve f'(x) = 0, test f''(x) for max/min, answer in context.
+
+---
+
+### Exam Focus
+**First derivative zero gives the stationary point; the second derivative tells whether it is a peak or a valley.**
+
+![Calculus Optimization Diagram](calculus-optimization.png)`,
+            formulas: [
+              { id: 'formula-math-mod4-calculus-optimization-1', label: 'Power rule', formula: 'd/dx (x^n) = n x^(n-1)', exampleQ: 'Differentiate y = 4x^3.', exampleA: 'dy/dx = 12x^2.' },
+              { id: 'formula-math-mod4-calculus-optimization-2', label: 'Profit max', formula: 'Set MR = MC: solve d(TR)/dQ = d(TC)/dQ for Q', exampleQ: 'TR = 120Q minus 2Q^2; TC = 20Q + 100.', exampleA: 'MR = 120 minus 4Q = MC 20: Q = 25 units.' },
+            ],
+            tricks: [
+              { id: 'trick-math-mod4-calculus-optimization-1', title: 'Second derivative', trick: 'f(x) greater than 0 = minimum; f(x) less than 0 = maximum.', whenToUse: 'Classification without graphing.' },
+              { id: 'trick-math-mod4-calculus-optimization-2', title: 'Elasticity shortcut', trick: 'E = slope x (P/Q): always compute at the given price point.', whenToUse: 'Demand elasticity problems.' },
+            ],
+            howToSolve: [
+              { id: 'solve-math-mod4-calculus-optimization-1', step: 'Step 1: write the objective function (profit, cost, revenue) in one variable', detail: 'write the objective function (profit, cost, revenue) in one variable.', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-math-mod4-calculus-optimization-2', step: 'Step 2: differentiate using power/product/quotient/chain rules', detail: 'differentiate using power/product/quotient/chain rules.', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-math-mod4-calculus-optimization-3', step: 'Step 3: set the first derivative to zero and solve for the critical value', detail: 'set the first derivative to zero and solve for the critical value.', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-math-mod4-calculus-optimization-4', step: 'Step 4: classify with the second derivative and interpret: optimal quantity,...', detail: 'classify with the second derivative and interpret: optimal quantity, maximum profit, or minimum cost.', questionType: 'Problem Solving / 5 to 10 Marks' },
+            ],
     },
 ],
 
@@ -1467,20 +1753,37 @@ $$\\text{Price Elasticity} (E_p) = \\frac{\\% \\Delta Q}{\\% \\Delta P} = \\frac
         'Cost Concepts: TC, AC, MC, AFC, AVC'
       ], explanationMd: `# Production Functions & Cost Analysis
 
-When MP > AP, AP is rising.
+### Core Concept
+The **production function** Q = f(L, K) shows output from inputs in a given technology. Short run: law of variable proportions (TP, MP, AP); MP first rises, then falls, then turns negative. Long run: returns to scale (increasing, constant, decreasing) and isoquant-isocost analysis. Cost analysis follows: costs derive from the production function. Karnataka example: garment units near Bengaluru optimise labour shifts against machine capacity.
 
-![Eco Mod2 Production Functions Diagram](supply-demand-curve.png)
+---
 
-`,
-      formulas: [
-        { id: 'formula-eco-m2-1', label: 'Marginal Product', formula: 'MP = ΔTP ÷ ΔL', exampleQ: 'TP with 3 workers = 30; TP with 4 workers = 38. MP of 4th worker?', exampleA: 'MP = (38 − 30) ÷ (4 − 3) = 8 units.' },
-      ],
-      tricks: [
-        { id: 'trick-eco-m2-1', title: 'MP > AP Rule', trick: 'When MP > AP, AP is rising; when MP < AP, AP is falling.', whenToUse: 'Determine AP direction quickly.' },
-      ],
-      howToSolve: [
-        { id: 'solve-eco-m2-1', step: 'Step 1: Compute TP at different labor levels.', detail: 'MP = ΔTP ÷ ΔL.', questionType: 'Production Function Problem' },
-      ]
+### Key Framework
+1. **Law of variable proportions**: Stage I (MP rising to AP max), Stage II (MP falling but positive: rational zone), Stage III (MP negative).
+2. **TP/MP/AP**: MP = change in TP / change in input; AP = TP / input.
+3. **Returns to scale**: increasing (output grows faster), constant (proportional), decreasing (slower); isoquants slope = MRTS.
+4. **Economies of scale**: internal (technical, managerial, purchasing) and external (industry growth); diseconomies beyond optimum size.
+
+---
+
+### Exam Focus
+**MP vs AP**: when MP is above AP, AP rises; when MP falls below AP, AP falls; MP cuts AP at its maximum.
+
+![Production Functions Diagram](supply-demand-curve.png)`,
+            formulas: [
+              { id: 'formula-eco-mod2-production-functions-1', label: 'MP and AP', formula: 'MP = Change in TP / Change in input; AP = TP / Total input', exampleQ: 'TP rises from 80 to 110 as labour goes 4 to 5.', exampleA: 'MP = 30; AP at 5 units = 22.' },
+              { id: 'formula-eco-mod2-production-functions-2', label: 'Stage detection', formula: 'Stage II runs from AP maximum (MP = AP) to MP = 0', exampleQ: 'MP = AP at 5 units, MP = 0 at 9 units.', exampleA: 'Rational production zone: 5 to 9 units.' },
+            ],
+            tricks: [
+              { id: 'trick-eco-mod2-production-functions-1', title: 'Returns to scale', trick: 'Doubling inputs: output more than doubles (IRS), doubles (CRS), less (DRS).', whenToUse: 'Quick classification.' },
+              { id: 'trick-eco-mod2-production-functions-2', title: 'MRTS', trick: 'MRTS = MP(L) / MP(K): the slope of the isoquant at a point.', whenToUse: 'Isoquant tangency questions.' },
+            ],
+            howToSolve: [
+              { id: 'solve-eco-mod2-production-functions-1', step: 'Step 1: compute TP/MP/AP schedules from the given data', detail: 'compute TP/MP/AP schedules from the given data.', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-eco-mod2-production-functions-2', step: 'Step 2: identify the production stage and the zone of rational operation', detail: 'identify the production stage and the zone of rational operation.', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-eco-mod2-production-functions-3', step: 'Step 3: classify returns to scale from an input-output doubling test', detail: 'classify returns to scale from an input-output doubling test.', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-eco-mod2-production-functions-4', step: 'Step 4: link to costs: derive cost behaviour and locate economies/diseconomie...', detail: 'link to costs: derive cost behaviour and locate economies/diseconomies of scale.', questionType: 'Problem Solving / 5 to 10 Marks' },
+            ],
     },
     { id: 'eco-mod3-cost-curves', subjectId: 'bba-karnataka-economics', title: 'Cost Curves & Revenue Concepts', moduleNumber: 3, moduleName: 'Module 3: Cost Curves', order: 3, difficulty: 'core', tier: 'free', status: 'published', examFrequency: 'high', generatedBy: 'curator', contentVersion: 1, publishedAt: '2026-09-16T12:00:00.000Z', featuredQuestionIds: ['q-eco-03', 'q-eco-04'], subtopics: [
         'Short Run & Long Run Cost Curves',
@@ -1490,20 +1793,37 @@ When MP > AP, AP is rising.
         'Equilibrium of Firm'
       ], explanationMd: `# Cost Curves & Revenue Concepts
 
-MC cuts AC at its minimum point.
+### Core Concept
+Costs split **fixed (TFC, constant) and variable (TVC, output-linked)**: TC = TFC + TVC. Average and marginal curves have characteristic shapes: AC and MC are U-shaped; MC cuts AC and AVC at their minimum points. Revenue: TR = P x Q; AR = TR/Q equals price; MR is the change in TR. Profit maximisation: MR = MC (with MC rising). The diagram of interlocking cost curves is a standard exam figure.
 
-![Eco Mod3 Cost Curves Diagram](cost-curves.png)
+---
 
-`,
-      formulas: [
-        { id: 'formula-eco-m3-1', label: 'Marginal Cost', formula: 'MC = ΔTC ÷ ΔQ', exampleQ: 'TC at 10 units = ₹500; TC at 11 units = ₹545. MC of 11th unit?', exampleA: 'MC = (545 − 500) ÷ (11 − 10) = ₹45.' },
-      ],
-      tricks: [
-        { id: 'trick-eco-m3-1', title: 'MC-AC Intersection', trick: 'MC cuts AC at its minimum point.', whenToUse: 'Identify AC minimum quickly.' },
-      ],
-      howToSolve: [
-        { id: 'solve-eco-m3-1', step: 'Step 1: Compute TC at different output levels.', detail: 'MC = ΔTC ÷ ΔQ.', questionType: 'Cost Curve Problem' },
-      ]
+### Key Framework
+1. **Cost curves**: TFC horizontal; TVC rises with output; TC = TFC + TVC (parallel to TVC).
+2. **Averages**: AC = TC/Q; AVC = TVC/Q; AFC = TFC/Q (falls continuously); MC = change in TC / change in Q.
+3. **Revenue**: TR = P x Q; AR = P; MR = change in TR / change in Q. Under perfect competition AR = MR = P; under monopoly MR lies below AR.
+4. **Profit max**: MR = MC and MC rising; shut-down point: P below minimum AVC.
+
+---
+
+### Exam Focus
+**MC cuts AC at the minimum of AC**: to the left AC falls, to the right AC rises. This intersection is the most-tested diagram point.
+
+![Cost Curves Diagram](cost-curves.png)`,
+            formulas: [
+              { id: 'formula-eco-mod3-cost-curves-1', label: 'Cost identity', formula: 'TC = TFC + TVC; AC = AFC + AVC', exampleQ: 'TFC Rs 500, TVC Rs 1,200 at 60 units.', exampleA: 'TC = Rs 1,700; AC = Rs 28.3.' },
+              { id: 'formula-eco-mod3-cost-curves-2', label: 'Profit max rule', formula: 'Set MR = MC and check MC is rising', exampleQ: 'MR = 100 minus 2Q; MC = 20.', exampleA: '100 minus 2Q = 20: Q = 40 units.' },
+            ],
+            tricks: [
+              { id: 'trick-eco-mod3-cost-curves-1', title: 'AFC shape', trick: 'AFC falls continuously as output rises (rectangular hyperbola).', whenToUse: 'Diagram question anchor.' },
+              { id: 'trick-eco-mod3-cost-curves-2', title: 'Shut-down point', trick: 'In the short run produce only if price covers AVC; below min AVC, shut down.', whenToUse: 'Decision-rule MCQs.' },
+            ],
+            howToSolve: [
+              { id: 'solve-eco-mod3-cost-curves-1', step: 'Step 1: build the cost schedule: TFC, TVC, TC, AFC, AVC, AC, MC from the data', detail: 'build the cost schedule: TFC, TVC, TC, AFC, AVC, AC, MC from the data.', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-eco-mod3-cost-curves-2', step: 'Step 2: plot the curves: TFC flat, TVC rising, TC parallel; U-shaped AC/MC', detail: 'plot the curves: TFC flat, TVC rising, TC parallel; U-shaped AC/MC.', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-eco-mod3-cost-curves-3', step: 'Step 3: mark the intersections (MC through AC min and AVC min)', detail: 'mark the intersections (MC through AC min and AVC min).', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-eco-mod3-cost-curves-4', step: 'Step 4: for revenue, compute TR/AR/MR and locate the MR = MC output; state th...', detail: 'for revenue, compute TR/AR/MR and locate the MR = MC output; state the shut-down condition.', questionType: 'Problem Solving / 5 to 10 Marks' },
+            ],
     },
     { id: 'eco-mod4-market-structures', subjectId: 'bba-karnataka-economics', title: 'Market Structures: Perfect Competition & Monopoly', moduleNumber: 4, moduleName: 'Module 4: Market Structures', order: 4, difficulty: 'core', tier: 'free', status: 'published', examFrequency: 'high', generatedBy: 'curator', contentVersion: 1, publishedAt: '2026-09-16T12:00:00.000Z', featuredQuestionIds: ['q-eco-05', 'q-eco-06'], subtopics: [
         'Perfect Competition: Features & Equilibrium',
@@ -1511,22 +1831,39 @@ MC cuts AC at its minimum point.
         'Monopolistic Competition: Features',
         'Oligopoly: Features & Kinked Demand Curve',
         'Price Discrimination: Types & Conditions'
-      ], explanationMd: `# Market Structures
+      ], explanationMd: `# Market Structures: Perfect Competition & Monopoly
 
-A single seller with no close substitutes defines monopoly.
+### Core Concept
+Market structure is set by number of firms, product differentiation, entry barriers and information. **Perfect competition**: many firms, identical products, price takers, free entry; demand perfectly elastic (AR = MR). **Monopoly**: single seller, unique product, blocked entry, price maker; demand slopes down (MR below AR). Long-run equilibrium and price discrimination extend the analysis. Indian context: agricultural mandis approximate perfect competition; railways are a natural monopoly.
 
-![Eco Mod4 Market Structures Diagram](market-structures.png)
+---
 
-`,
-      formulas: [
-        { id: 'formula-eco-mod4-market-structures-1', label: 'Key Formula', formula: 'Formula placeholder', exampleQ: 'Example question', exampleA: 'Example answer' },
-      ],
-      tricks: [
-        { id: 'trick-eco-m4-1', title: 'Market Structure Identification', trick: 'Single seller, unique product, high barriers = Monopoly.', whenToUse: 'Identify market structure quickly.' },
-      ],
-      howToSolve: [
-        { id: 'solve-eco-m4-1', step: 'Step 1: Identify number of sellers.', detail: 'Check product differentiation and entry barriers.', questionType: 'Market Structure Theory Question' },
-      ]
+### Key Framework
+1. **Perfect competition**: firm demand is horizontal at market price; equilibrium where P = MC = minimum AC in long run; only normal profit survives.
+2. **Monopoly**: equilibrate at MR = MC with price from the demand curve; profits can persist long run due to barriers.
+3. **Price discrimination**: degrees (first, second, third); conditions: market power, segmentation, no resale.
+4. **Comparative**: allocative efficiency (P = MC) in competition; monopoly restricts output and raises price (deadweight loss).
+
+---
+
+### Exam Focus
+**Perfect competition vs monopoly demand**: competition: firm faces a horizontal demand curve; monopoly: downward-sloping market demand with MR below AR.
+
+![Market Structures Diagram](market-structures.png)`,
+            formulas: [
+              { id: 'formula-eco-mod4-market-structures-1', label: 'Monopoly price', formula: 'Set MR = MC, then read price from the demand curve', exampleQ: 'Demand P = 200 minus 2Q; MC = 40.', exampleA: 'MR = 200 minus 4Q = 40: Q = 40; P = Rs 120.' },
+              { id: 'formula-eco-mod4-market-structures-2', label: 'Lerner index', formula: 'L = (P minus MC) / P: measures monopoly power', exampleQ: 'P Rs 120, MC Rs 40.', exampleA: 'L = 80/120 = 0.67.' },
+            ],
+            tricks: [
+              { id: 'trick-eco-mod4-market-structures-1', title: 'Long-run rule', trick: 'Perfect competition: P = min AC (normal profit only); monopoly can earn supernormal profit indefinitely.', whenToUse: 'Comparison essays.' },
+              { id: 'trick-eco-mod4-market-structures-2', title: 'Deadweight loss', trick: 'Monopoly output below competitive level creates deadweight loss to society.', whenToUse: 'Welfare analysis one-liner.' },
+            ],
+            howToSolve: [
+              { id: 'solve-eco-mod4-market-structures-1', step: 'Step 1: identify the structure from the features (number of firms, entry, pro...', detail: 'identify the structure from the features (number of firms, entry, product).', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-eco-mod4-market-structures-2', step: 'Step 2: draw demand/MR/AR curves appropriate to the structure', detail: 'draw demand/MR/AR curves appropriate to the structure.', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-eco-mod4-market-structures-3', step: 'Step 3: equate MR = MC for output; set price from the demand curve (perfect c...', detail: 'equate MR = MC for output; set price from the demand curve (perfect competition: price is given).', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-eco-mod4-market-structures-4', step: 'Step 4: analyse profit in short and long run and comment on efficiency (P ver...', detail: 'analyse profit in short and long run and comment on efficiency (P versus MC, deadweight loss).', questionType: 'Problem Solving / 5 to 10 Marks' },
+            ],
     },
     { id: 'eco-mod5-managerial-pricing', subjectId: 'bba-karnataka-economics', title: 'Managerial Pricing Methods', moduleNumber: 5, moduleName: 'Module 5: Pricing Methods', order: 5, difficulty: 'core', tier: 'free', status: 'published', examFrequency: 'moderate', generatedBy: 'curator', contentVersion: 1, publishedAt: '2026-09-16T12:00:00.000Z', featuredQuestionIds: ['q-eco-07', 'q-eco-08'], subtopics: [
         'Pricing Objectives & Factors',
@@ -1536,20 +1873,37 @@ A single seller with no close substitutes defines monopoly.
         'Differential Pricing'
       ], explanationMd: `# Managerial Pricing Methods
 
-Penetration pricing sets a low initial price to capture market share quickly.
+### Core Concept
+Firms set prices using **cost-based, competition-based and value-based (demand-based) methods**. Cost-plus: add markup to average cost. Competition: going-rate or sealed-bid. Demand: price skimming (high then lower), penetration (low to gain share), price discrimination, psychological pricing. Pricing objectives: survival, profit max, market share, product-quality leadership. Karnataka IT services firms price per seat or outcome; FMCG uses penetration and bundle pricing.
 
-![Eco Mod5 Managerial Pricing Diagram](supply-demand-curve.png)
+---
 
-`,
-      formulas: [
-        { id: 'formula-eco-mod5-managerial-pricing-1', label: 'Key Formula', formula: 'Formula placeholder', exampleQ: 'Example question', exampleA: 'Example answer' },
-      ],
-      tricks: [
-        { id: 'trick-eco-m5-1', title: 'Pricing Strategy Choice', trick: 'Penetration = low price for market share; Skimming = high price for innovative products.', whenToUse: 'Choose pricing strategy quickly.' },
-      ],
-      howToSolve: [
-        { id: 'solve-eco-m5-1', step: 'Step 1: Identify pricing objective.', detail: 'Select appropriate pricing method.', questionType: 'Pricing Method Theory Question' },
-      ]
+### Key Framework
+1. **Cost-based**: cost-plus/full-cost markup, marginal-cost pricing, target-return pricing (price = AC + target ROI x investment / output).
+2. **Competition-based**: going-rate pricing, bid pricing (lowest qualified wins).
+3. **Demand-based**: skimming, penetration, value pricing, psychological pricing (Rs 99), bundle pricing.
+4. **Product-mix pricing**: product line, optional-product, captive, by-product, product-bundle pricing.
+
+---
+
+### Exam Focus
+**Skimming vs penetration**: skimming starts high (recover R&D, premium segment); penetration starts low (fast share, price-sensitive market).
+
+![Managerial Pricing Diagram](supply-demand-curve.png)`,
+            formulas: [
+              { id: 'formula-eco-mod5-managerial-pricing-1', label: 'Markup price', formula: 'Price = Unit cost / (1 minus desired markup on selling price)', exampleQ: 'Unit cost Rs 60, markup 25% on selling price.', exampleA: 'Price = 60 / 0.75 = Rs 80.' },
+              { id: 'formula-eco-mod5-managerial-pricing-2', label: 'Target return', formula: 'Price = AC + (Target ROI x Investment) / Unit sales', exampleQ: 'AC Rs 50, investment Rs 10L, target 20%, sales 10,000 units.', exampleA: 'Price = 50 + (200000 / 10000) = Rs 70.' },
+            ],
+            tricks: [
+              { id: 'trick-eco-mod5-managerial-pricing-1', title: 'Skim signals', trick: 'Use skimming when: innovation, prestige, capacity limits, little competition.', whenToUse: 'Method selection logic.' },
+              { id: 'trick-eco-mod5-managerial-pricing-2', title: 'Penetration signals', trick: 'Use penetration when: price-sensitive mass market, economies of scale, easy entry to block.', whenToUse: 'Method selection logic.' },
+            ],
+            howToSolve: [
+              { id: 'solve-eco-mod5-managerial-pricing-1', step: 'Step 1: identify the pricing objective (survival/profit/share/quality)', detail: 'identify the pricing objective (survival/profit/share/quality).', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-eco-mod5-managerial-pricing-2', step: 'Step 2: compute cost-based price (cost-plus markup or target return)', detail: 'compute cost-based price (cost-plus markup or target return).', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-eco-mod5-managerial-pricing-3', step: 'Step 3: adjust for competition and demand: skimming/penetration/psychological...', detail: 'adjust for competition and demand: skimming/penetration/psychological cues.', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-eco-mod5-managerial-pricing-4', step: 'Step 4: check product-mix effects (bundles, captive items) and state the fina...', detail: 'check product-mix effects (bundles, captive items) and state the final price with justification.', questionType: 'Problem Solving / 5 to 10 Marks' },
+            ],
     },
 ],
 
@@ -1784,16 +2138,37 @@ Under Karnataka State Higher Education Council (KSHEC) NEP Sem-3 examinations, c
         'Labour Turnover'
       ], explanationMd: `# Material, Labour & Overheads Costing
 
-EOQ minimises total inventory costs.`,
-      formulas: [
-        { id: 'formula-cost-m3-1', label: 'EOQ', formula: 'EOQ = √(2 × Annual Demand × Ordering Cost ÷ Carrying Cost)', exampleQ: 'Annual demand 10,000 units, ordering cost ₹50, carrying cost ₹2/unit. EOQ?', exampleA: 'EOQ = √(2 × 10,000 × 50 ÷ 2) = √500,000 ≈ 707 units.' },
-      ],
-      tricks: [
-        { id: 'trick-cost-m3-1', title: 'EOQ shortcut', trick: 'EOQ = √(2DO/C) where D=demand, O=ordering cost, C=carrying cost per unit.', whenToUse: 'Quick EOQ calculation.' },
-      ],
-      howToSolve: [
-        { id: 'solve-cost-m3-1', step: 'Step 1: Identify D, O, C values.', detail: 'Apply EOQ formula.', questionType: 'Inventory Costing Problem' },
-      ]
+### Core Concept
+This module covers the three cost elements of production. **Material** (stock valuation, issue pricing), **Labour** (wage computation, incentive schemes) and **Overheads** (collection, allocation, apportionment and absorption). KSHEC expects full working of a cost sheet with all three elements; a Bengaluru manufacturing unit such as a Hosur/Bengaluru auto-component plant gives realistic numbers.
+
+---
+
+### Key Framework
+1. **Material**: stock levels: Minimum = Re-order level minus Normal consumption during lead time; Re-order level = Minimum stock + Lead-time usage.
+2. **Issue pricing**: FIFO, LIFO, Weighted Average, Simple Average.
+3. **Labour**: time-rate vs piece-rate; Halsey premium = Time taken x Rate + 50% of time saved x Rate; Rowan premium = Time taken x Rate + (Time saved/Time allowed) x Time taken x Rate.
+4. **Overheads**: primary distribution then secondary (repeated, continuous, trial-and-error); absorption via Machine Hour Rate or Direct Labour percentage.
+
+---
+
+### Exam Focus
+**Halsey vs Rowan**: Rowan gives a smaller bonus when time saved is large; Halsey gives a fixed 50% share.
+
+![Material Labour Overheads Diagram](material-labour-overheads.png)`,
+            formulas: [
+              { id: 'formula-cost-mod3-material-labour-overheads-1', label: 'Re-order level', formula: 'ROL = Minimum stock + (Normal usage x Lead time)', exampleQ: 'Min stock 200 units, usage 50/day, lead 6 days. Find ROL.', exampleA: 'ROL = 200 + (50 x 6) = 500 units.' },
+              { id: 'formula-cost-mod3-material-labour-overheads-2', label: 'Halsey premium', formula: 'Earnings = (Time taken x Rate) + (50% x Time saved x Rate)', exampleQ: 'Job allows 10 hrs at Rs 20/hr; done in 8 hrs.', exampleA: 'Earnings = (8 x 20) + (0.5 x 2 x 20) = Rs 180.' },
+            ],
+            tricks: [
+              { id: 'trick-cost-mod3-material-labour-overheads-1', title: 'Stock level shortcut', trick: 'Min = ROL minus lead-time usage; Max = Min + Re-order quantity.', whenToUse: 'Quick stock-level problems.' },
+              { id: 'trick-cost-mod3-material-labour-overheads-2', title: 'Overhead absorption', trick: 'Machine Hour Rate = (Standing charges + Running charges) / Machine hours.', whenToUse: 'When machine-intensive departments dominate.' },
+            ],
+            howToSolve: [
+              { id: 'solve-cost-mod3-material-labour-overheads-1', step: 'Step 1: compute material cost using the given issue-price method', detail: 'compute material cost using the given issue-price method.', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-cost-mod3-material-labour-overheads-2', step: 'Step 2: compute wages (time or piece rate; add Halsey/Rowan premium if asked)', detail: 'compute wages (time or piece rate; add Halsey/Rowan premium if asked).', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-cost-mod3-material-labour-overheads-3', step: 'Step 3: allocate overheads: primary to departments on fair bases (area, headc...', detail: 'allocate overheads: primary to departments on fair bases (area, headcount, machine hours), then secondary redistribution.', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-cost-mod3-material-labour-overheads-4', step: 'Step 4: absorb into products via machine hour rate or labour percentage', detail: 'absorb into products via machine hour rate or labour percentage. Present a cost sheet showing prime cost, works cost, cost of production.', questionType: 'Problem Solving / 5 to 10 Marks' },
+            ],
     },
     { id: 'cost-mod5-variance-analysis-budgetary-control', subjectId: 'bba-karnataka-cost-accounting', title: 'Variance Analysis & Budgetary Control', moduleNumber: 5, moduleName: 'Module 5: Variance Analysis & Budgetary Control', order: 5, difficulty: 'core', tier: 'free', status: 'published', examFrequency: 'high', generatedBy: 'curator', contentVersion: 1, publishedAt: '2026-09-16T12:00:00.000Z', featuredQuestionIds: ['q-cost-03b', 'q-cost-04'], subtopics: [
         'Budgetary Control: Types & Process',
@@ -1803,16 +2178,38 @@ EOQ minimises total inventory costs.`,
         'Sales Variances'
       ], explanationMd: `# Variance Analysis & Budgetary Control
 
-Variance = Actual − Standard.`,
-      formulas: [
-        { id: 'formula-cost-m5-1', label: 'Material Price Variance', formula: 'MPV = (Standard Price − Actual Price) × Actual Quantity', exampleQ: 'SP ₹50, AP ₹55, AQ 1000 units. MPV?', exampleA: 'MPV = (50 − 55) × 1000 = −₹5,000 (Adverse).' },
-      ],
-      tricks: [
-        { id: 'trick-cost-m5-1', title: 'Variance sign', trick: 'Actual > Standard price/rate = Adverse; Actual < Standard = Favourable.', whenToUse: 'Determine variance direction instantly.' },
-      ],
-      howToSolve: [
-        { id: 'solve-cost-m5-1', step: 'Step 1: Compute Standard Cost and Actual Cost.', detail: 'Variance = Standard − Actual (or vice versa based on convention).', questionType: 'Variance Analysis Problem' },
-      ]
+### Core Concept
+**Variance analysis** compares standard (budgeted) cost with actual cost and explains the gap element by element. **Budgetary control** is the system of setting budgets, comparing with actuals and acting on variances. Together they are the control arm of cost accounting; every textile or steel plant in Karnataka runs monthly variance reviews.
+
+---
+
+### Key Framework
+1. **Material variances**: Cost variance = (Std qty x Std price) minus (Actual qty x Actual price); split into Price and Usage (Mix + Yield when several materials combine).
+2. **Labour variances**: Rate variance = (Std rate minus Actual rate) x Actual hours; Efficiency variance = (Std hours minus Actual hours) x Std rate.
+3. **Overhead variances**: Variable expenditure/efficiency; Fixed expenditure, volume (capacity + efficiency).
+4. **Budgets**: fixed vs flexible; zero-based budgeting builds from scratch each period.
+
+---
+
+### Exam Focus
+**Favourable (F) vs Adverse (A)**: actual cost below standard is F; always state F or A with each variance.
+
+![Variance Analysis Diagram](variance-analysis.png)`,
+            formulas: [
+              { id: 'formula-cost-mod5-variance-analysis-budgetary-control-1', label: 'Material cost variance', formula: 'MCV = (SQ x SP) minus (AQ x AP)', exampleQ: 'SQ 100 kg @ Rs 10; used 110 kg @ Rs 9.', exampleA: 'Std cost Rs 1,000 minus Actual Rs 990 = Rs 10 (F).' },
+              { id: 'formula-cost-mod5-variance-analysis-budgetary-control-2', label: 'Labour efficiency variance', formula: 'LEV = (Standard hours minus Actual hours) x Std rate', exampleQ: 'Std 500 hrs, actual 520 hrs, rate Rs 20/hr.', exampleA: 'LEV = (500 minus 520) x 20 = Rs 400 (A).' },
+            ],
+            tricks: [
+              { id: 'trick-cost-mod5-variance-analysis-budgetary-control-1', title: 'Sign convention', trick: 'Compute always as Standard minus Actual; positive is favourable.', whenToUse: 'Avoids sign confusion in exams.' },
+              { id: 'trick-cost-mod5-variance-analysis-budgetary-control-2', title: 'Mix vs Yield', trick: 'Mix variance = total actual qty x (Revised std mix minus Actual mix) prices; Yield = (Std output minus Actual output) x Std cost/unit.', whenToUse: 'Multi-material problems.' },
+            ],
+            howToSolve: [
+              { id: 'solve-cost-mod5-variance-analysis-budgetary-control-1', step: 'Step 1: write Std and Actual quantities and prices in two columns', detail: 'write Std and Actual quantities and prices in two columns.', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-cost-mod5-variance-analysis-budgetary-control-2', step: 'Step 2: compute the total (cost/rate) variance first', detail: 'compute the total (cost/rate) variance first.', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-cost-mod5-variance-analysis-budgetary-control-3', step: 'Step 3: split into price and usage/efficiency variances using the standard fo...', detail: 'split into price and usage/efficiency variances using the standard formulas.', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-cost-mod5-variance-analysis-budgetary-control-4', step: 'Step 4: where materials are mixed, compute revised standard mix, then Mix and...', detail: 'where materials are mixed, compute revised standard mix, then Mix and Yield.', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-cost-mod5-variance-analysis-budgetary-control-5', step: 'Step 5: check that sub-variances reconcile to the total', detail: 'check that sub-variances reconcile to the total. Label every answer F or A.', questionType: 'Problem Solving / 5 to 10 Marks' },
+            ],
     },
 ],
 
@@ -1968,16 +2365,38 @@ $$r = \\frac{N \\sum XY - (\\sum X)(\\sum Y)}{\\sqrt{[N \\sum X^2 - (\\sum X)^2]
         'Diagrammatic & Graphic Presentation'
       ], explanationMd: `# Collection, Classification & Presentation of Data
 
-Primary data is collected first-hand; secondary data already exists.`,
-      formulas: [
-        { id: 'formula-stats-mod1-collection-classification-presentation-1', label: 'Key Formula', formula: 'Formula placeholder', exampleQ: 'Example question', exampleA: 'Example answer' },
-      ],
-      tricks: [
-        { id: 'trick-stats-m1-1', title: 'Primary vs Secondary', trick: 'Primary = collected for first time; Secondary = already published.', whenToUse: 'Classify data source quickly.' },
-      ],
-      howToSolve: [
-        { id: 'solve-stats-m1-1', step: 'Step 1: Identify data type.', detail: 'Classify as primary or secondary data.', questionType: 'Statistics Theory Question' },
-      ]
+### Core Concept
+Statistics begins with **data**: primary (collected firsthand, e.g. a survey of Mysuru retailers) or secondary (Census, RBI bulletins). Classification condenses raw data into frequency distributions; presentation makes it visual: tables, histograms, ogives, pie charts. KSHEC questions mix tabulation with diagram reading.
+
+---
+
+### Key Framework
+1. **Collection**: primary methods: questionnaire, interview, observation; secondary sources: published/unpublished.
+2. **Classification**: chronological, geographical, qualitative, quantitative (exclusive/inclusive classes).
+3. **Frequency density** = Frequency / Class width (use when class widths differ).
+4. **Diagrams**: histogram (continuous), bar chart (discrete), ogive (cumulative, gives median), pie chart (component share, angle = share x 360 degrees).
+
+---
+
+### Exam Focus
+**Histogram vs Bar chart**: bars touch in a histogram (continuous classes) but stand apart in a bar chart.
+
+![Data Presentation Diagram](data-presentation.png)`,
+            formulas: [
+              { id: 'formula-stats-mod1-collection-classification-presentation-1', label: 'Pie chart angle', formula: 'Angle = (Component value / Total value) x 360 degrees', exampleQ: 'Component Rs 6,000 of total Rs 24,000.', exampleA: 'Angle = (6000/24000) x 360 = 90 degrees.' },
+              { id: 'formula-stats-mod1-collection-classification-presentation-2', label: 'Class mid-point', formula: 'Mid-point = (Lower limit + Upper limit) / 2', exampleQ: 'Class 20-30.', exampleA: 'Mid-point = (20 + 30) / 2 = 25.' },
+            ],
+            tricks: [
+              { id: 'trick-stats-mod1-collection-classification-presentation-1', title: 'Ogive reads median', trick: 'Median = x-value where the cumulative curve crosses N/2.', whenToUse: 'Quick median from a graph.' },
+              { id: 'trick-stats-mod1-collection-classification-presentation-2', title: 'Exclusive classes', trick: '20-30, 30-40: upper limit belongs to the next class; use continuity before drawing histograms.', whenToUse: 'Converting inclusive to exclusive classes.' },
+            ],
+            howToSolve: [
+              { id: 'solve-stats-mod1-collection-classification-presentation-1', step: 'Step 1: identify data type (primary/secondary, discrete/continuous)', detail: 'identify data type (primary/secondary, discrete/continuous).', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-stats-mod1-collection-classification-presentation-2', step: 'Step 2: decide class width and form a frequency distribution (exclusive classes)', detail: 'decide class width and form a frequency distribution (exclusive classes).', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-stats-mod1-collection-classification-presentation-3', step: 'Step 3: compute mid-points and cumulative frequencies', detail: 'compute mid-points and cumulative frequencies.', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-stats-mod1-collection-classification-presentation-4', step: 'Step 4: choose the diagram: histogram for distribution shape, ogive for perce...', detail: 'choose the diagram: histogram for distribution shape, ogive for percentiles, pie for composition.', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-stats-mod1-collection-classification-presentation-5', step: 'Step 5: read values from the diagram as asked (median from ogive, mode from h...', detail: 'read values from the diagram as asked (median from ogive, mode from histogram peak).', questionType: 'Problem Solving / 5 to 10 Marks' },
+            ],
     },
     { id: 'stats-mod4-time-series-analysis', subjectId: 'bba-karnataka-statistics', title: 'Time Series Analysis', moduleNumber: 4, moduleName: 'Module 4: Time Series', order: 4, difficulty: 'core', tier: 'free', status: 'published', examFrequency: 'moderate', generatedBy: 'curator', contentVersion: 1, publishedAt: '2026-09-16T12:00:00.000Z', featuredQuestionIds: ['q-stats-03', 'q-stats-04'], subtopics: [
         'Time Series: Components & Models',
@@ -1987,16 +2406,36 @@ Primary data is collected first-hand; secondary data already exists.`,
         'Seasonal Variations'
       ], explanationMd: `# Time Series Analysis
 
-Time series = Secular trend + Seasonal + Cyclical + Irregular variations.`,
-      formulas: [
-        { id: 'formula-stats-m4-1', label: 'Moving Average', formula: '3-year MA = (Y1 + Y2 + Y3) ÷ 3', exampleQ: 'Sales: 100, 120, 110. 3-year moving average?', exampleA: '(100 + 120 + 110) ÷ 3 = 110.' },
-      ],
-      tricks: [
-        { id: 'trick-stats-m4-1', title: 'Moving Average Centering', trick: 'For even-period MA, centre the averages by taking average of two successive MA values.', whenToUse: 'Centre moving averages for even periods.' },
-      ],
-      howToSolve: [
-        { id: 'solve-stats-m4-1', step: 'Step 1: Compute successive averages.', detail: 'Centre if even period.', questionType: 'Time Series Problem' },
-      ]
+### Core Concept
+A **time series** records a variable over successive periods (monthly Nandini sales, quarterly IT exports from Bengaluru). Analysis separates four components: **Trend (T)**, **Seasonal (S)**, **Cyclical (C)** and **Irregular (I)**. Models: additive (Y = T + S + C + I) when seasonal swings stay constant; multiplicative (Y = T x S x C x I) when they grow with the series.
+
+---
+
+### Key Framework
+1. **Measurement of trend**: freehand curve, semi-averages, moving averages, method of least squares (Y = a + bX).
+2. **Least squares**: normal equations: Sum(Y) = nA + B Sum(X); Sum(XY) = A Sum(X) + B Sum(X squared). Shift origin so Sum(X) = 0.
+3. **Link relatives method** for seasonal indices: seasonal index = average of link relatives; adjust so the four (or twelve) indices average 100.
+4. **Uses**: forecasting, isolating cyclical behaviour, planning capacity.
+
+---
+
+### Exam Focus
+**Additive vs Multiplicative**: use multiplicative when seasonal variation rises and falls with the trend level.
+
+![Time Series Diagram](time-series.png)`,
+            formulas: [
+              { id: 'formula-stats-mod4-time-series-analysis-1', label: 'Least squares trend', formula: 'Y = A + B X, with Sum(Y) = nA + B Sum(X) and Sum(XY) = A Sum(X) + B Sum(X squared)', exampleQ: 'Years 2021-2025 with odd number of years, coded X = -2,-1,0,1,2.', exampleA: 'Sum(X) = 0 gives A = Sum(Y)/n and B = Sum(XY)/Sum(X squared) directly.' },
+              { id: 'formula-stats-mod4-time-series-analysis-2', label: 'Simple moving average', formula: 'MA of 3 years = (Y1 + Y2 + Y3) / 3', exampleQ: 'Sales 100, 120, 140.', exampleA: 'MA = 120.' },
+            ],
+            tricks: [
+              { id: 'trick-stats-mod4-time-series-analysis-1', title: 'Shift the origin', trick: 'With coded years Sum(X) = 0, the normal equations collapse to one-line answers.', whenToUse: 'Saves 5 minutes in exams.' },
+              { id: 'trick-stats-mod4-time-series-analysis-2', title: 'Odd period MA', trick: 'Centre the moving average on the middle period; even periods need a second centring step.', whenToUse: 'Quarterly data (4-period MA).' },
+            ],
+            howToSolve: [
+              { id: 'solve-stats-mod4-time-series-analysis-1', step: 'Step 1: code years (X = -2,-1,0,1,2 for 5 years)', detail: 'code years (X = -2,-1,0,1,2 for 5 years).', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-stats-mod4-time-series-analysis-2', step: 'Step 2: compute Sum(Y), Sum(XY), Sum(X squared)', detail: 'compute Sum(Y), Sum(XY), Sum(X squared).', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-stats-mod4-time-series-analysis-3', step: 'Step 3: write the trend line Y = A + B X and estimate for the required year', detail: 'write the trend line Y = A + B X and estimate for the required year. For seasonal indices: step 4: compute link relatives (current / previous x 100), average by period, then scale so the mean index = 100.', questionType: 'Problem Solving / 5 to 10 Marks' },
+            ],
     },
     { id: 'stats-mod5-index-numbers', subjectId: 'bba-karnataka-statistics', title: 'Index Numbers', moduleNumber: 5, moduleName: 'Module 5: Index Numbers', order: 5, difficulty: 'core', tier: 'free', status: 'published', examFrequency: 'moderate', generatedBy: 'curator', contentVersion: 1, publishedAt: '2026-09-16T12:00:00.000Z', featuredQuestionIds: ['q-stats-05', 'q-stats-06'], subtopics: [
         'Index Numbers: Meaning & Types',
@@ -2006,16 +2445,37 @@ Time series = Secular trend + Seasonal + Cyclical + Irregular variations.`,
         'Chain Base Index'
       ], explanationMd: `# Index Numbers
 
-Fisher’s Ideal Index = √(Laspeyres × Paasche).`,
-      formulas: [
-        { id: 'formula-stats-m5-1', label: 'Fisher’s Ideal Index', formula: 'Fisher = √(L × P)', exampleQ: 'Laspeyres = 120, Paasche = 110. Fisher?', exampleA: 'Fisher = √(120 × 110) = √13200 ≈ 114.89.' },
-      ],
-      tricks: [
-        { id: 'trick-stats-m5-1', title: 'Fisher’s Ideal', trick: 'Fisher’s Ideal Index is the geometric mean of Laspeyres and Paasche.', whenToUse: 'Compute Fisher quickly.' },
-      ],
-      howToSolve: [
-        { id: 'solve-stats-m5-1', step: 'Step 1: Compute Laspeyres and Paasche.', detail: 'Take geometric mean.', questionType: 'Index Number Problem' },
-      ]
+### Core Concept
+An **index number** measures the relative change in a variable (price, quantity, value) between periods. **CPI** (inflation feel), **WPI**, **BSE Sensex** (market) and cost-of-living indices are everyday examples; RBI policy reacts to CPI numbers every quarter. Aggregates: unweighted vs weighted.
+
+---
+
+### Key Framework
+1. **Unweighted**: simple average of price relatives: Index = Sum(P1/P0 x 100) / n.
+2. **Weighted**: Laspeyres uses base-year weights (fixed basket), Paasche uses current-year weights, Fisher is their geometric mean (ideal).
+3. **Tests of adequacy**: Time Reversal and Factor Reversal; Fisher satisfies both; Laspeyres/Paasche fail one each.
+4. **CPI construction**: Family Budget Method vs Aggregate Expenditure Method.
+
+---
+
+### Exam Focus
+**Laspeyres vs Paasche**: Laspeyres overstates inflation when consumers substitute cheaper goods; Paasche understates it.
+
+![Index Numbers Diagram](index-numbers.png)`,
+            formulas: [
+              { id: 'formula-stats-mod5-index-numbers-1', label: 'Laspeyres index', formula: 'L = Sum(P1 x Q0) / Sum(P0 x Q0) x 100', exampleQ: 'P0: Rs 10, Q0: 5; P1: Rs 12.', exampleA: 'L = (12 x 5) / (10 x 5) x 100 = 120.' },
+              { id: 'formula-stats-mod5-index-numbers-2', label: 'Fisher ideal index', formula: 'F = Square root of (Laspeyres x Paasche)', exampleQ: 'L = 120, P = 115.', exampleA: 'F = Square root of (120 x 115) = 117.5.' },
+            ],
+            tricks: [
+              { id: 'trick-stats-mod5-index-numbers-1', title: 'Price relative shortcut', trick: 'Index = Sum of (P1/P0 x 100) divided by n when weights are absent.', whenToUse: 'Unweighted questions are one-liners.' },
+              { id: 'trick-stats-mod5-index-numbers-2', title: 'Real income', trick: 'Real wage index = Money wage index / Price index x 100.', whenToUse: 'Cost-of-living adjustment problems.' },
+            ],
+            howToSolve: [
+              { id: 'solve-stats-mod5-index-numbers-1', step: 'Step 1: tabulate P0, P1, Q0, Q1', detail: 'tabulate P0, P1, Q0, Q1.', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-stats-mod5-index-numbers-2', step: 'Step 2: choose the formula: unweighted (relatives), Laspeyres (base weights),...', detail: 'choose the formula: unweighted (relatives), Laspeyres (base weights), Paasche (current weights), Fisher (both).', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-stats-mod5-index-numbers-3', step: 'Step 3: compute the numerator and denominator totals separately, divide, mult...', detail: 'compute the numerator and denominator totals separately, divide, multiply by 100.', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-stats-mod5-index-numbers-4', step: 'Step 4: check the result against the tests if asked (time reversal: swap 0 an...', detail: 'check the result against the tests if asked (time reversal: swap 0 and 1; the product of the two indices should be 10000).', questionType: 'Problem Solving / 5 to 10 Marks' },
+            ],
     },
 ],
 
@@ -2096,18 +2556,39 @@ The **Money Market** deals in short-term debt instruments having a maturity peri
         'Primary vs Secondary Market',
         'Role of RBI & SEBI',
         'Financial Intermediaries'
-      ], explanationMd: `# Indian Financial System
+      ], explanationMd: `# Indian Financial System: Structure & Components
 
-RBI regulates money market; SEBI regulates capital market.`,
-      formulas: [
-        { id: 'formula-fm-mod1-indian-financial-system-1', label: 'Key Formula', formula: 'Formula placeholder', exampleQ: 'Example question', exampleA: 'Example answer' },
-      ],
-      tricks: [
-        { id: 'trick-fm-m1-1', title: 'RBI vs SEBI', trick: 'RBI = money market & banking; SEBI = capital market & securities.', whenToUse: 'Identify regulator quickly.' },
-      ],
-      howToSolve: [
-        { id: 'solve-fm-m1-1', step: 'Step 1: Identify market type.', detail: 'Determine regulator and market segment.', questionType: 'Financial System Theory Question' },
-      ]
+### Core Concept
+The financial system channels savings into investment through **financial institutions, markets, instruments and services**. In India it splits into organised (RBI-regulated) and unorganised sectors, and into money market (short term) versus capital market (long term). Bodies: RBI (monetary authority), SEBI (securities), IRDAI (insurance), PFRDA (pensions).
+
+---
+
+### Key Framework
+1. **Components**: financial assets (money, bonds, equity), institutions (banks, NBFCs, mutual funds), markets (money/capital/forex/derivatives), services (leasing, factoring, credit rating).
+2. **Regulators**: RBI: banks & money supply; SEBI: capital markets; IRDAI: insurance; PFRDA: NPS/pensions.
+3. **Flow of funds**: savers (households) to borrowers (firms/government) via direct (disintermediated, e.g. IPO) or indirect (bank deposits) channels.
+4. **Recent reforms**: UPI/digital payments, inflation targeting, IBC resolution.
+
+---
+
+### Exam Focus
+**Money market vs Capital market**: money market deals in near-money (T-bills, CPs) with maturity under a year; capital market deals in equity and long-term debt.
+
+![Indian Financial System Diagram](financial-system.png)`,
+            formulas: [
+              { id: 'formula-fm-mod1-indian-financial-system-1', label: 'Financial intermediation', formula: 'Net funds mobilised = Deposits/borrowings minus Idle cash and reserves', exampleQ: 'Bank deposits Rs 500 cr, reserves Rs 50 cr.', exampleA: 'Deployable funds = Rs 450 cr.' },
+              { id: 'formula-fm-mod1-indian-financial-system-2', label: 'Savings rate', formula: 'Gross savings rate = Gross savings / GDP x 100', exampleQ: 'Savings Rs 80 cr, GDP Rs 400 cr.', exampleA: 'Rate = 20%.' },
+            ],
+            tricks: [
+              { id: 'trick-fm-mod1-indian-financial-system-1', title: 'Regulator map', trick: 'RBI banks, SEBI securities, IRDAI insurance, PFRDA pensions: one line each.', whenToUse: 'MCQ-heavy section.' },
+              { id: 'trick-fm-mod1-indian-financial-system-2', title: 'Direct vs indirect', trick: 'Direct: securities sold to savers (IPO). Indirect: bank sits in between (FD).', whenToUse: 'Short-answer distinction.' },
+            ],
+            howToSolve: [
+              { id: 'solve-fm-mod1-indian-financial-system-1', step: 'Step 1: classify the item asked as institution, market, instrument or service', detail: 'classify the item asked as institution, market, instrument or service.', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-fm-mod1-indian-financial-system-2', step: 'Step 2: name the regulator and its instrument (repo rate, CRR for RBI; margin...', detail: 'name the regulator and its instrument (repo rate, CRR for RBI; margin rules for SEBI).', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-fm-mod1-indian-financial-system-3', step: 'Step 3: for flow-of-funds problems, draw the saver-intermediary-borrower chai...', detail: 'for flow-of-funds problems, draw the saver-intermediary-borrower chain and compute net mobilisation.', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-fm-mod1-indian-financial-system-4', step: 'Step 4: write a short reform/current-context note (UPI, IBC) for full marks', detail: 'write a short reform/current-context note (UPI, IBC) for full marks.', questionType: 'Problem Solving / 5 to 10 Marks' },
+            ],
     },
     { id: 'fm-mod3-capital-market-instruments', subjectId: 'bba-karnataka-fin-markets', title: 'Capital Market: Instruments & Functioning', moduleNumber: 3, moduleName: 'Module 3: Capital Market Instruments', order: 3, difficulty: 'core', tier: 'free', status: 'published', examFrequency: 'high', generatedBy: 'curator', contentVersion: 1, publishedAt: '2026-09-16T12:00:00.000Z', featuredQuestionIds: ['q-fm-03', 'q-fm-04'], subtopics: [
         'Equity Shares: Features & Types',
@@ -2117,16 +2598,37 @@ RBI regulates money market; SEBI regulates capital market.`,
         'Bonds & Government Securities'
       ], explanationMd: `# Capital Market: Instruments & Functioning
 
-Equity shares represent ownership; debentures represent debt.`,
-      formulas: [
-        { id: 'formula-fm-mod3-capital-market-instruments-1', label: 'Key Formula', formula: 'Formula placeholder', exampleQ: 'Example question', exampleA: 'Example answer' },
-      ],
-      tricks: [
-        { id: 'trick-fm-m3-1', title: 'Equity vs Debt', trick: 'Equity = ownership + voting rights; Debentures = creditor + fixed interest.', whenToUse: 'Distinguish instruments quickly.' },
-      ],
-      howToSolve: [
-        { id: 'solve-fm-m3-1', step: 'Step 1: Identify instrument type.', detail: 'Classify as equity, debt or hybrid.', questionType: 'Capital Market Theory Question' },
-      ]
+### Core Concept
+The **capital market** mobilises long-term funds through equity and debt instruments traded on BSE/NSE, governed by SEBI. Primary market: new issues (IPO, FPO, rights, private placement). Secondary market: trading of existing securities through stock exchanges with T+1 settlement.
+
+---
+
+### Key Framework
+1. **Instruments**: equity shares, preference shares, debentures/bonds, convertible bonds, ADR/GDR, mutual fund units, derivatives (futures/options).
+2. **Primary methods**: offer for sale, book building (price band discovery), rights issue (existing shareholders), private placement.
+3. **Secondary market**: trading members, clearing corporation, depositories (NSDL/CDSL), demat settlement.
+4. **SEBI framework**: listing obligations, insider trading prohibition, takeover code.
+
+---
+
+### Exam Focus
+**Equity vs Debenture**: equity carries voting rights and variable dividend; debentures carry fixed interest and a charge on assets.
+
+![Capital Market Diagram](capital-market.png)`,
+            formulas: [
+              { id: 'formula-fm-mod3-capital-market-instruments-1', label: 'Rights issue value', formula: 'Theoretical ex-rights price = (Old shares x Market price + New shares x Issue price) / Total shares', exampleQ: '1,000 shares at Rs 120; 200 new at Rs 100.', exampleA: 'TERP = (120000 + 20000) / 1200 = Rs 116.67.' },
+              { id: 'formula-fm-mod3-capital-market-instruments-2', label: 'Bond price', formula: 'Price = Interest x PV annuity factor + Redemption x PV factor', exampleQ: 'Rs 100 bond, 10% coupon, 2 yrs, 12% discount rate.', exampleA: 'Price = 10 x 1.690 + 100 x 0.797 = Rs 96.6.' },
+            ],
+            tricks: [
+              { id: 'trick-fm-mod3-capital-market-instruments-1', title: 'Book building band', trick: 'Floor price = minimum, cap price = maximum; discovered by demand at each price band.', whenToUse: 'IPO pricing MCQs.' },
+              { id: 'trick-fm-mod3-capital-market-instruments-2', title: 'Demat basics', trick: 'Shares held electronically via depository participants; settlement T+1.', whenToUse: 'One-line current-context answers.' },
+            ],
+            howToSolve: [
+              { id: 'solve-fm-mod3-capital-market-instruments-1', step: 'Step 1: identify primary vs secondary market in the question', detail: 'identify primary vs secondary market in the question.', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-fm-mod3-capital-market-instruments-2', step: 'Step 2: for pricing problems, draw the cash flows (interest/dividend/redemption)', detail: 'for pricing problems, draw the cash flows (interest/dividend/redemption).', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-fm-mod3-capital-market-instruments-3', step: 'Step 3: discount at the required rate using the given PV factors', detail: 'discount at the required rate using the given PV factors.', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-fm-mod3-capital-market-instruments-4', step: 'Step 4: for rights issues, compute the ex-rights price and the value of a rig...', detail: 'for rights issues, compute the ex-rights price and the value of a right (TERP minus issue price).', questionType: 'Problem Solving / 5 to 10 Marks' },
+            ],
     },
     { id: 'fm-mod4-sebi-regulations', subjectId: 'bba-karnataka-fin-markets', title: 'SEBI Regulations & Investor Protection', moduleNumber: 4, moduleName: 'Module 4: SEBI & Investor Protection', order: 4, difficulty: 'core', tier: 'free', status: 'published', examFrequency: 'moderate', generatedBy: 'curator', contentVersion: 1, publishedAt: '2026-09-16T12:00:00.000Z', featuredQuestionIds: ['q-fm-05', 'q-fm-06'], subtopics: [
         'SEBI: Powers & Functions',
@@ -2136,16 +2638,37 @@ Equity shares represent ownership; debentures represent debt.`,
         'Prohibition of Fraudulent & Unfair Trade Practices'
       ], explanationMd: `# SEBI Regulations & Investor Protection
 
-SEBI protects investor interests in securities market.`,
-      formulas: [
-        { id: 'formula-fm-mod4-sebi-regulations-1', label: 'Key Formula', formula: 'Formula placeholder', exampleQ: 'Example question', exampleA: 'Example answer' },
-      ],
-      tricks: [
-        { id: 'trick-fm-m4-1', title: 'SEBI Role', trick: 'SEBI = regulator, developer and protector of Indian securities market.', whenToUse: 'Recall SEBI’s triple role.' },
-      ],
-      howToSolve: [
-        { id: 'solve-fm-m4-1', step: 'Step 1: Identify SEBI function.', detail: 'Categorise as regulatory, developmental or protective.', questionType: 'SEBI Theory Question' },
-      ]
+### Core Concept
+**SEBI** (Securities and Exchange Board of India, statutory since 1992) protects investors, regulates securities markets and promotes development. It has quasi-legislative, quasi-judicial and quasi-executive powers. Recent measures: T+1 settlement, ASBA, SCORES grievance portal, margin trading framework.
+
+---
+
+### Key Framework
+1. **Objectives**: protect investors; regulate the market; promote development; reduce malpractices.
+2. **Key regulations**: SEBI (LODR) 2015: listing norms; SEBI (PFUTP) 2003: fraudulent/unfair trade practices; SEBI (ICDR) 2018: issue regulations; SEBI (SAST) 2011: takeovers; SEBI (PIT) 1992: insider trading.
+3. **Investor protection**: SCORES complaint system, Investor Protection and Education Fund, investor seminars, demat safety, two-factor authentication.
+4. **Enforcement**: search and seizure, disgorgement of profits, monetary penalties, market bans.
+
+---
+
+### Exam Focus
+**Insider trading vs fraudulent practice**: insider trading uses unpublished price-sensitive information; fraud includes misleading statements and market manipulation.
+
+![SEBI Investor Protection Diagram](sebi-investor.png)`,
+            formulas: [
+              { id: 'formula-fm-mod4-sebi-regulations-1', label: 'Takeover trigger', formula: 'Open offer required at 25% acquisition; creeping acquisition limit 5% per financial year (25-75% band).', exampleQ: 'Promoter holds 30%, buys 4% more in a year.', exampleA: 'Within the 5% creeping limit: no open offer.' },
+              { id: 'formula-fm-mod4-sebi-regulations-2', label: 'Disgorgement', formula: 'Amount to disgorge = Illegal gains made from the unfair trade practice.', exampleQ: 'Gain Rs 5 cr from manipulation.', exampleA: 'SEBI orders refund of Rs 5 cr plus interest.' },
+            ],
+            tricks: [
+              { id: 'trick-fm-mod4-sebi-regulations-1', title: 'SCORES first', trick: 'Any investor grievance question: complain on SCORES before litigation.', whenToUse: 'Practical answer for case studies.' },
+              { id: 'trick-fm-mod4-sebi-regulations-2', title: 'Regulation mnemonics', trick: 'LODR listing, PFUTP fraud, ICDR issues, SAST takeovers, PIT insider trading.', whenToUse: 'Match-the-following questions.' },
+            ],
+            howToSolve: [
+              { id: 'solve-fm-mod4-sebi-regulations-1', step: 'Step 1: identify the market segment (issue, trading, takeover, grievance)', detail: 'identify the market segment (issue, trading, takeover, grievance).', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-fm-mod4-sebi-regulations-2', step: 'Step 2: name the exact SEBI regulation and the prohibited conduct', detail: 'name the exact SEBI regulation and the prohibited conduct.', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-fm-mod4-sebi-regulations-3', step: 'Step 3: state the investor protection mechanism (SCORES, IPEF, disgorgement)', detail: 'state the investor protection mechanism (SCORES, IPEF, disgorgement).', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-fm-mod4-sebi-regulations-4', step: 'Step 4: conclude with the penalty SEBI can impose (fine, ban, disgorgement, s...', detail: 'conclude with the penalty SEBI can impose (fine, ban, disgorgement, suspension).', questionType: 'Problem Solving / 5 to 10 Marks' },
+            ],
     },
     { id: 'fm-mod5-money-market-instruments', subjectId: 'bba-karnataka-fin-markets', title: 'Money Market: Instruments & Participants', moduleNumber: 5, moduleName: 'Module 5: Money Market', order: 5, difficulty: 'core', tier: 'free', status: 'published', examFrequency: 'moderate', generatedBy: 'curator', contentVersion: 1, publishedAt: '2026-09-16T12:00:00.000Z', featuredQuestionIds: ['q-fm-07', 'q-fm-08'], subtopics: [
         'Call Money Market',
@@ -2155,16 +2678,37 @@ SEBI protects investor interests in securities market.`,
         'Commercial Bills'
       ], explanationMd: `# Money Market: Instruments & Participants
 
-Money market deals in short-term funds (up to 1 year).`,
-      formulas: [
-        { id: 'formula-fm-mod5-money-market-instruments-1', label: 'Key Formula', formula: 'Formula placeholder', exampleQ: 'Example question', exampleA: 'Example answer' },
-      ],
-      tricks: [
-        { id: 'trick-fm-m5-1', title: 'Money Market Tenor', trick: 'Money market instruments have maturity up to 1 year.', whenToUse: 'Identify money market instruments quickly.' },
-      ],
-      howToSolve: [
-        { id: 'solve-fm-m5-1', step: 'Step 1: Identify instrument maturity.', detail: 'Classify as money market or capital market.', questionType: 'Money Market Theory Question' },
-      ]
+### Core Concept
+The **money market** deals in short-term funds (maturity up to one year) in near-money instruments, wholesale in size and traded over the counter. RBI conducts monetary policy here via repo and reverse repo. Instruments: Treasury Bills, Commercial Paper, Certificate of Deposit, Call/Notice money, CBLO, Tri-party Repo.
+
+---
+
+### Key Framework
+1. **T-bills**: issued by RBI on behalf of the government at a discount (91, 182, 364 days); no coupon.
+2. **CP/CD**: CP: short-term unsecured corporate paper (min Rs 5 lakh); CD: negotiable bank deposit receipt.
+3. **Call money**: 1-day borrowing/lending between banks; notice money: 2-14 days.
+4. **Repo**: RBI lends to banks against securities; reverse repo: RBI absorbs liquidity. MSF and Bank Rate are the corridor edges.
+
+---
+
+### Exam Focus
+**T-bill vs CD**: T-bill is sovereign and discount-issued; CD is a bank liability with a stated yield.
+
+![Money Market Diagram](money-market.png)`,
+            formulas: [
+              { id: 'formula-fm-mod5-money-market-instruments-1', label: 'T-bill price', formula: 'Price = Face value x (1 minus Discount rate x Days / 360)', exampleQ: 'Rs 1,00,000 T-bill, 91 days, 6% discount.', exampleA: 'Price = 100000 x (1 minus 0.06 x 91/360) = Rs 98,483.' },
+              { id: 'formula-fm-mod5-money-market-instruments-2', label: 'Repo rate effect', formula: 'Cost of funds rises when repo rate rises; money market yields track the repo rate.', exampleQ: 'RBI raises repo by 0.5%.', exampleA: 'Short-term rates rise by roughly 0.5%.' },
+            ],
+            tricks: [
+              { id: 'trick-fm-mod5-money-market-instruments-1', title: 'Discount math', trick: 'Discount instruments quote yield on a 360-day base: Price = FV minus (FV x r x d/360).', whenToUse: 'All T-bill/CP pricing questions.' },
+              { id: 'trick-fm-mod5-money-market-instruments-2', title: 'Liquidity absorption', trick: 'Reverse repo and MSF mop up liquidity; repo and OMO injections add it.', whenToUse: 'Monetary policy MCQs.' },
+            ],
+            howToSolve: [
+              { id: 'solve-fm-mod5-money-market-instruments-1', step: 'Step 1: note the instrument, its issuer and maturity bucket', detail: 'note the instrument, its issuer and maturity bucket.', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-fm-mod5-money-market-instruments-2', step: 'Step 2: for discount instruments compute Price = FV minus discount for the da...', detail: 'for discount instruments compute Price = FV minus discount for the day-count.', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-fm-mod5-money-market-instruments-3', step: 'Step 3: compute the annualised yield = (FV minus Price)/Price x 360/days', detail: 'compute the annualised yield = (FV minus Price)/Price x 360/days.', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-fm-mod5-money-market-instruments-4', step: 'Step 4: link to policy: repo rate, reverse repo, MSF, OMO in a short concludi...', detail: 'link to policy: repo rate, reverse repo, MSF, OMO in a short concluding line.', questionType: 'Problem Solving / 5 to 10 Marks' },
+            ],
     },
 ],
 
@@ -2241,18 +2785,39 @@ All contracts are agreements, but all agreements are not contracts (e.g. social 
         'Capacity & Free Consent',
         'Legality of Object',
         'Performance & Discharge of Contract'
-      ], explanationMd: `# Indian Contract Act 1872
+      ], explanationMd: `# Indian Contract Act 1872: Essentials & Performance
 
-A contract is an agreement enforceable by law.`,
-      formulas: [
-        { id: 'formula-colaw-mod2-indian-contract-act-1', label: 'Key Formula', formula: 'Formula placeholder', exampleQ: 'Example question', exampleA: 'Example answer' },
-      ],
-      tricks: [
-        { id: 'trick-colaw-m2-1', title: 'Valid Contract', trick: 'Offer + Acceptance + Consideration + Capacity + Free Consent + Legal Object = Valid Contract.', whenToUse: 'Check all six essentials.' },
-      ],
-      howToSolve: [
-        { id: 'solve-colaw-m2-1', step: 'Step 1: Identify missing essential.', detail: 'Check offer, acceptance, consideration, capacity, consent, object.', questionType: 'Contract Law Theory Question' },
-      ]
+### Core Concept
+A **contract** is an agreement enforceable by law (Section 2(h)). Essentials: offer and acceptance, lawful consideration, capacity, free consent, lawful object, certainty, and not expressly void. The Act governs formation, performance, breach and indemnity/penalty. Case illustrations from Indian courts (Carlill v Carbolic Smoke Ball, Mohori Bibee v Dharmodas Ghose) are standard exam content.
+
+---
+
+### Key Framework
+1. **Offer**: must be definite and communicated; ends on revocation, lapse of time, death, conditional failure.
+2. **Consent**: free consent is absent under coercion, undue influence, fraud, misrepresentation, mistake.
+3. **Consideration**: something in return; need not be adequate but must be real and lawful.
+4. **Performance**: tender of performance; joint promises; time is essential only when stipulated. Breach remedies: damages (remoteness rule in Hadley v Baxendale), specific performance, injunction.
+
+---
+
+### Exam Focus
+**Agreement vs Contract**: every contract is an agreement, but an agreement without enforceability (e.g. a social promise) is not a contract.
+
+![Contract Act Diagram](contract-act.png)`,
+            formulas: [
+              { id: 'formula-colaw-mod2-indian-contract-act-1', label: 'Contract = f(essentials)', formula: 'Contract = Valid offer + Acceptance + Consideration + Capacity + Free consent + Lawful object', exampleQ: 'A promises to sell his car to B for Rs 1 lakh; B accepts and pays.', exampleA: 'All essentials present: valid contract; B can sue for delivery.' },
+              { id: 'formula-colaw-mod2-indian-contract-act-2', label: 'Damages ceiling', formula: 'Compensation = Loss that arose naturally or was in the contemplation of both parties', exampleQ: 'Seller breaches delivery of a machine needed for a special order disclosed.', exampleA: 'Loss of disclosed special profit is recoverable.' },
+            ],
+            tricks: [
+              { id: 'trick-colaw-mod2-indian-contract-act-1', title: 'Voidable vs void', trick: 'Voidable: at the option of one party (coerced consent). Void: no legal effect at all (minor agreement).', whenToUse: 'MCQ favourite.' },
+              { id: 'trick-colaw-mod2-indian-contract-act-2', title: 'Offer vs invitation', trick: 'A price list/advertisement display is an invitation to offer; the customer offers at the counter.', whenToUse: 'Carlill-style problems.' },
+            ],
+            howToSolve: [
+              { id: 'solve-colaw-mod2-indian-contract-act-1', step: 'Step 1: list the facts as offer, acceptance, consideration, consent, capacity...', detail: 'list the facts as offer, acceptance, consideration, consent, capacity, object.', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-colaw-mod2-indian-contract-act-2', step: 'Step 2: test each essential and flag the defect (minor, coercion, public policy)', detail: 'test each essential and flag the defect (minor, coercion, public policy).', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-colaw-mod2-indian-contract-act-3', step: 'Step 3: conclude: valid, voidable or void agreement', detail: 'conclude: valid, voidable or void agreement.', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-colaw-mod2-indian-contract-act-4', step: 'Step 4: if breach is asked, state the remedy and quantify damages under the r...', detail: 'if breach is asked, state the remedy and quantify damages under the remoteness rule.', questionType: 'Problem Solving / 5 to 10 Marks' },
+            ],
     },
     { id: 'colaw-mod3-sale-of-goods-act', subjectId: 'bba-karnataka-business-law', title: 'Sale of Goods Act 1930', moduleNumber: 3, moduleName: 'Module 3: Sale of Goods Act', order: 3, difficulty: 'core', tier: 'free', status: 'published', examFrequency: 'high', generatedBy: 'curator', contentVersion: 1, publishedAt: '2026-09-16T12:00:00.000Z', featuredQuestionIds: ['q-colaw-03', 'q-colaw-04'], subtopics: [
         'Contract of Sale: Essentials',
@@ -2262,16 +2827,37 @@ A contract is an agreement enforceable by law.`,
         'Auction Sale'
       ], explanationMd: `# Sale of Goods Act 1930
 
-A condition is essential to the main purpose of the contract; a warranty is collateral.`,
-      formulas: [
-        { id: 'formula-colaw-mod3-sale-of-goods-act-1', label: 'Key Formula', formula: 'Formula placeholder', exampleQ: 'Example question', exampleA: 'Example answer' },
-      ],
-      tricks: [
-        { id: 'trick-colaw-m3-1', title: 'Condition vs Warranty', trick: 'Breach of condition → right to reject; breach of warranty → right to claim damages only.', whenToUse: 'Distinguish condition from warranty.' },
-      ],
-      howToSolve: [
-        { id: 'solve-colaw-m3-1', step: 'Step 1: Classify stipulation.', detail: 'Determine if condition or warranty.', questionType: 'Sale of Goods Theory Question' },
-      ]
+### Core Concept
+A **contract of sale of goods** transfers property in goods from seller to buyer for a price (Section 4). Conditions and warranties decide the buyer's remedies: breach of a condition lets the buyer repudiate; breach of a warranty limits the buyer to damages. Concepts of goods, price, property (ownership) passing, and delivery are exam staples.
+
+---
+
+### Key Framework
+1. **Conditions vs warranties**: condition goes to the root; warranty is collateral. The buyer may treat a breach of condition as a breach of warranty (Section 13).
+2. **Property passing**: ascertained and unconditional goods: passes when the parties intend; rules in Sections 18-24 (specific goods, unascertained, approval/sale-or-return).
+3. **Rights of unpaid seller**: lien, stoppage in transit, resale, suit for price/damages.
+4. **Caveat emptor** (let the buyer beware) with exceptions: fraud, latent defect, fitness for purpose.
+
+---
+
+### Exam Focus
+**Condition vs warranty**: a breach of condition gives repudiation plus damages; a breach of warranty gives damages only.
+
+![Sale of Goods Diagram](sale-of-goods.png)`,
+            formulas: [
+              { id: 'formula-colaw-mod3-sale-of-goods-act-1', label: 'Price determination', formula: 'Price may be fixed by the contract, determined by a third party, or a reasonable price implied (Section 9)', exampleQ: 'Contract silent on price for goods delivered.', exampleA: 'Buyer must pay a reasonable price.' },
+              { id: 'formula-colaw-mod3-sale-of-goods-act-2', label: 'Unpaid seller lien', formula: 'Lien exists while goods are in possession and the price is unpaid, unless credit was given.', exampleQ: 'Seller holds goods after non-payment.', exampleA: 'Seller may retain goods until payment.' },
+            ],
+            tricks: [
+              { id: 'trick-colaw-mod3-sale-of-goods-act-1', title: 'Caveat emptor exceptions', trick: 'Fraud, latent defect not discoverable, fitness-for-purpose reliance on seller.', whenToUse: 'Any consumer-goods problem.' },
+              { id: 'trick-colaw-mod3-sale-of-goods-act-2', title: 'Sale vs agreement to sell', trick: 'Sale: property passes now. Agreement to sell: passes on a future condition.', whenToUse: 'Ownership/risk questions.' },
+            ],
+            howToSolve: [
+              { id: 'solve-colaw-mod3-sale-of-goods-act-1', step: 'Step 1: classify the goods (specific, unascertained, future) and the contract...', detail: 'classify the goods (specific, unascertained, future) and the contract (sale vs agreement to sell).', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-colaw-mod3-sale-of-goods-act-2', step: 'Step 2: apply the property-passing rules to decide who owns them and bears risk', detail: 'apply the property-passing rules to decide who owns them and bears risk.', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-colaw-mod3-sale-of-goods-act-3', step: 'Step 3: identify the breached term as condition or warranty', detail: 'identify the breached term as condition or warranty.', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-colaw-mod3-sale-of-goods-act-4', step: 'Step 4: state the buyer remedy (repudiate + damages, or damages only) and any...', detail: 'state the buyer remedy (repudiate + damages, or damages only) and any unpaid seller rights (lien, stoppage, resale).', questionType: 'Problem Solving / 5 to 10 Marks' },
+            ],
     },
     { id: 'colaw-mod4-negotiable-instruments-act', subjectId: 'bba-karnataka-business-law', title: 'Negotiable Instruments Act 1881', moduleNumber: 4, moduleName: 'Module 4: Negotiable Instruments', order: 4, difficulty: 'core', tier: 'free', status: 'published', examFrequency: 'moderate', generatedBy: 'curator', contentVersion: 1, publishedAt: '2026-09-16T12:00:00.000Z', featuredQuestionIds: ['q-colaw-05', 'q-colaw-06'], subtopics: [
         'Negotiable Instruments: Meaning & Features',
@@ -2281,16 +2867,37 @@ A condition is essential to the main purpose of the contract; a warranty is coll
         'Dishonour of Cheque'
       ], explanationMd: `# Negotiable Instruments Act 1881
 
-A cheque is a bill of exchange drawn on a specified banker and payable on demand.`,
-      formulas: [
-        { id: 'formula-colaw-mod4-negotiable-instruments-act-1', label: 'Key Formula', formula: 'Formula placeholder', exampleQ: 'Example question', exampleA: 'Example answer' },
-      ],
-      tricks: [
-        { id: 'trick-colaw-m4-1', title: 'HDC Rights', trick: 'Holder in Due Course gets better title than the transferor.', whenToUse: 'Recall HDC privileges.' },
-      ],
-      howToSolve: [
-        { id: 'solve-colaw-m4-1', step: 'Step 1: Identify instrument type.', detail: 'Classify as promissory note, bill or cheque.', questionType: 'Negotiable Instruments Theory Question' },
-      ]
+### Core Concept
+A **negotiable instrument** (Section 13) is a promissory note, bill of exchange or cheque payable to order or bearer, transferring freely with good title. The Act covers holder/holder-in-due-course, endorsement, presentment, dishonour and the special summary remedy for cheque dishonour (Section 138, NI Act, made punishable).
+
+---
+
+### Key Framework
+1. **Three instruments**: Promissory note (promise to pay); Bill of exchange (order to pay); Cheque (bill drawn on a banker, always payable on demand).
+2. **Holder in due course (HDC)**: takes for value, in good faith, before maturity, without defect; gets a better title than the transferor.
+3. **Endorsement**: blank (only signature), special (named), restrictive (no further negotiation), qualified (without recourse).
+4. **Dishonour (Section 138)**: cheque returned for insufficient funds; payee must demand in 30 days; drawer gets 15 days to pay; complaint within 1 month; punishment up to 2 years or fine up to twice the amount.
+
+---
+
+### Exam Focus
+**Holder vs HDC**: an HDC acquires a good title even if the transferor had a defective one.
+
+![Negotiable Instruments Diagram](negotiable-instruments.png)`,
+            formulas: [
+              { id: 'formula-colaw-mod4-negotiable-instruments-act-1', label: 'Cheque validity', formula: 'Cheque valid for 3 months from the date of issue (RBI rule).', exampleQ: 'Cheque dated 1 Jan.', exampleA: 'Present by 31 Mar or it becomes stale.' },
+              { id: 'formula-colaw-mod4-negotiable-instruments-act-2', label: 'Section 138 timeline', formula: 'Demand within 30 days of return; 15 days for payment; complaint within 1 month after.', exampleQ: 'Cheque returned 1 Apr, notice 10 Apr.', exampleA: 'Drawer must pay by 25 Apr; complaint by 25 May.' },
+            ],
+            tricks: [
+              { id: 'trick-colaw-mod4-negotiable-instruments-act-1', title: 'Maturity computation', trick: 'Bill maturity = sight date + 3 grace days; no grace on demand instruments.', whenToUse: 'Date arithmetic questions.' },
+              { id: 'trick-colaw-mod4-negotiable-instruments-act-2', title: 'Sans recourse', trick: 'Qualified endorsement excludes the endorser liability on dishonour.', whenToUse: 'Endorsement MCQs.' },
+            ],
+            howToSolve: [
+              { id: 'solve-colaw-mod4-negotiable-instruments-act-1', step: 'Step 1: identify the instrument and its parties (drawer, drawee, payee, endor...', detail: 'identify the instrument and its parties (drawer, drawee, payee, endorser).', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-colaw-mod4-negotiable-instruments-act-2', step: 'Step 2: check negotiation requirements: delivery, endorsement, maturity', detail: 'check negotiation requirements: delivery, endorsement, maturity.', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-colaw-mod4-negotiable-instruments-act-3', step: 'Step 3: for dishonour, map the Section 138 timeline (30/15/1 month)', detail: 'for dishonour, map the Section 138 timeline (30/15/1 month).', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-colaw-mod4-negotiable-instruments-act-4', step: 'Step 4: state the remedy: summary prosecution plus a suit for the amount', detail: 'state the remedy: summary prosecution plus a suit for the amount.', questionType: 'Problem Solving / 5 to 10 Marks' },
+            ],
     },
     { id: 'colaw-mod5-consumer-protection-act', subjectId: 'bba-karnataka-business-law', title: 'Consumer Protection Act 2019', moduleNumber: 5, moduleName: 'Module 5: Consumer Protection', order: 5, difficulty: 'core', tier: 'free', status: 'published', examFrequency: 'moderate', generatedBy: 'curator', contentVersion: 1, publishedAt: '2026-09-16T12:00:00.000Z', featuredQuestionIds: ['q-colaw-07', 'q-colaw-08'], subtopics: [
         'Consumer Rights: Six Rights',
@@ -2300,16 +2907,37 @@ A cheque is a bill of exchange drawn on a specified banker and payable on demand
         'E-commerce Consumer Protection'
       ], explanationMd: `# Consumer Protection Act 2019
 
-Consumer has right to safety, information, choice, hearing, redressal and consumer education.`,
-      formulas: [
-        { id: 'formula-colaw-mod5-consumer-protection-act-1', label: 'Key Formula', formula: 'Formula placeholder', exampleQ: 'Example question', exampleA: 'Example answer' },
-      ],
-      tricks: [
-        { id: 'trick-colaw-m5-1', title: 'Consumer Rights', trick: 'Safety, Information, Choice, Hearing, Redressal, Education.', whenToUse: 'List all six consumer rights.' },
-      ],
-      howToSolve: [
-        { id: 'solve-colaw-m5-1', step: 'Step 1: Identify violated right.', detail: 'Determine which consumer right was infringed.', questionType: 'Consumer Protection Theory Question' },
-      ]
+### Core Concept
+The 2019 Act replaces the 1986 law and covers **e-commerce and product liability** too. A consumer is anyone buying goods or services for consideration (not for resale). Six consumer rights are recognised. The Act establishes a three-tier quasi-judicial structure: District, State and National Commissions, plus CCPA (Central Consumer Protection Authority) for class actions and misleading ads.
+
+---
+
+### Key Framework
+1. **Consumer rights**: safety, information, choice, be heard, redressal, consumer education.
+2. **Complaint grounds**: unfair trade practice, restrictive trade practice, defective goods, deficiency in services, overcharging, hazardous goods.
+3. **Jurisdiction**: District: up to Rs 50 lakh; State: Rs 50 lakh to Rs 2 crore; National: above Rs 2 crore.
+4. **Product liability**: manufacturer, seller and service provider all liable for defective goods or deficient services; e-commerce entities have disclosure duties. Mediation cells speed settlement.
+
+---
+
+### Exam Focus
+**Consumer vs customer**: a consumer includes any user of goods/services with the approval of the buyer; not just the person who paid.
+
+![Consumer Protection Diagram](consumer-protection.png)`,
+            formulas: [
+              { id: 'formula-colaw-mod5-consumer-protection-act-1', label: 'Pecuniary test', formula: 'District forum: claim up to Rs 50 lakh; State: up to Rs 2 crore; National: above Rs 2 crore', exampleQ: 'Claim of Rs 60 lakh.', exampleA: 'File before the State Commission.' },
+              { id: 'formula-colaw-mod5-consumer-protection-act-2', label: 'Limitation period', formula: 'Complaint within 2 years from the cause of action (condonable on sufficient cause).', exampleQ: 'Deficiency noticed 1 Jun 2024.', exampleA: 'Complaint by 1 Jun 2026.' },
+            ],
+            tricks: [
+              { id: 'trick-colaw-mod5-consumer-protection-act-1', title: 'CCPA powers', trick: 'CCPA can order recall, refund, and ban misleading advertisements; class complaints on behalf of consumers.', whenToUse: 'Product-safety case studies.' },
+              { id: 'trick-colaw-mod5-consumer-protection-act-2', title: 'E-commerce clause', trick: 'Marketplace must disclose seller details, return policy and grievance officer.', whenToUse: 'Online-shopping questions.' },
+            ],
+            howToSolve: [
+              { id: 'solve-colaw-mod5-consumer-protection-act-1', step: 'Step 1: confirm consumer status (consideration paid, purpose personal use)', detail: 'confirm consumer status (consideration paid, purpose personal use).', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-colaw-mod5-consumer-protection-act-2', step: 'Step 2: classify the grievance (defect, deficiency, unfair practice, overcharge)', detail: 'classify the grievance (defect, deficiency, unfair practice, overcharge).', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-colaw-mod5-consumer-protection-act-3', step: 'Step 3: compute the claim value to fix jurisdiction (District/State/National)', detail: 'compute the claim value to fix jurisdiction (District/State/National).', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-colaw-mod5-consumer-protection-act-4', step: 'Step 4: note limitation (2 years) and relief sought (refund, compensation, re...', detail: 'note limitation (2 years) and relief sought (refund, compensation, removal of defect, punitive damages).', questionType: 'Problem Solving / 5 to 10 Marks' },
+            ],
     },
 ],
 
@@ -2460,20 +3088,37 @@ Capital Budgeting involves planning and evaluating long-term capital investments
         'Perpetuity'
       ], explanationMd: `# Time Value of Money
 
-Money today is worth more than the same amount in future.
+### Core Concept
+A rupee today is worth more than a rupee tomorrow because it can earn interest. **Compounding** moves present money forward; **discounting** brings future money back. This module builds FV/PV of single cash flows, annuities and perpetuities: the base for capital budgeting, valuation and loan maths.
 
-![Fm Mngt Mod1 Time Value Of Money Diagram](break-even-analysis.png)
+---
 
-`,
-      formulas: [
-        { id: 'formula-fmngt-m1-1', label: 'Future Value', formula: 'FV = PV × (1 + r)^n', exampleQ: '₹10,000 at 10% for 2 years. FV?', exampleA: 'FV = 10,000 × 1.10² = ₹12,100.' },
-      ],
-      tricks: [
-        { id: 'trick-fmngt-m1-1', title: 'TVM rule', trick: 'Money has time value — ₹100 today > ₹100 next year.', whenToUse: 'Apply discounting for future cash flows.' },
-      ],
-      howToSolve: [
-        { id: 'solve-fmngt-m1-1', step: 'Step 1: Identify PV, r, n.', detail: 'Apply FV or PV formula.', questionType: 'TVM Problem' },
-      ]
+### Key Framework
+1. **Single amount**: FV = PV x (1 + r)^n; PV = FV / (1 + r)^n.
+2. **Annuity (ordinary)**: FV = A x [((1 + r)^n minus 1) / r]; PV = A x [(1 minus (1 + r)^(-n)) / r]. Annuity due = ordinary x (1 + r).
+3. **Perpetuity**: PV = A / r.
+4. **Effective rate**: EAR = (1 + r/m)^m minus 1 for m compounding periods a year.
+
+---
+
+### Exam Focus
+**Annuity vs perpetuity**: annuity runs for a fixed n; perpetuity runs forever (PV = A/r).
+
+![Time Value of Money Diagram](break-even-analysis.png)`,
+            formulas: [
+              { id: 'formula-fm-mngt-mod1-time-value-of-money-1', label: 'PV of single sum', formula: 'PV = FV / (1 + r)^n', exampleQ: 'FV Rs 10,000 due in 3 years at 10%.', exampleA: 'PV = 10000 / 1.331 = Rs 7,513.' },
+              { id: 'formula-fm-mngt-mod1-time-value-of-money-2', label: 'Annuity FV', formula: 'FV = A x ((1 + r)^n minus 1) / r', exampleQ: 'Rs 5,000 saved yearly, 5 years, 8%.', exampleA: 'FV = 5000 x 5.8666 = Rs 29,333.' },
+            ],
+            tricks: [
+              { id: 'trick-fm-mngt-mod1-time-value-of-money-1', title: 'Rule of 72', trick: 'Doubling years approx 72 / (interest rate in percent).', whenToUse: 'Quick MCQ checks: 8% doubles in about 9 years.' },
+              { id: 'trick-fm-mngt-mod1-time-value-of-money-2', title: 'Annuity due bump', trick: 'Multiply ordinary annuity result by (1 + r) when payments start at the beginning.', whenToUse: 'Rent/advance-payment problems.' },
+            ],
+            howToSolve: [
+              { id: 'solve-fm-mngt-mod1-time-value-of-money-1', step: 'Step 1: draw a timeline and mark cash flows with their years', detail: 'draw a timeline and mark cash flows with their years.', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-fm-mngt-mod1-time-value-of-money-2', step: 'Step 2: identify the pattern: single sum, annuity, perpetuity', detail: 'identify the pattern: single sum, annuity, perpetuity.', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-fm-mngt-mod1-time-value-of-money-3', step: 'Step 3: choose formula (FV for compounding forward, PV for discounting) and s...', detail: 'choose formula (FV for compounding forward, PV for discounting) and select the correct rate per period.', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-fm-mngt-mod1-time-value-of-money-4', step: 'Step 4: for mixed streams, value each part and add; for annuity due multiply...', detail: 'for mixed streams, value each part and add; for annuity due multiply by (1 + r).', questionType: 'Problem Solving / 5 to 10 Marks' },
+            ],
     },
     { id: 'fm-mngt-mod4-dividend-decision', subjectId: 'bba-karnataka-fin-mgmt', title: 'Dividend Decision & Working Capital', moduleNumber: 4, moduleName: 'Module 4: Dividend Decision & Working Capital', order: 4, difficulty: 'core', tier: 'free', status: 'published', examFrequency: 'moderate', generatedBy: 'curator', contentVersion: 1, publishedAt: '2026-09-16T12:00:00.000Z', featuredQuestionIds: ['q-fmngt-03', 'q-fmngt-04'], subtopics: [
         'Dividend Policy: Types',
@@ -2483,16 +3128,37 @@ Money today is worth more than the same amount in future.
         'Working Capital Management'
       ], explanationMd: `# Dividend Decision & Working Capital
 
-Working capital = Current assets − Current liabilities.`,
-      formulas: [
-        { id: 'formula-fmngt-m4-1', label: 'Working Capital', formula: 'Working Capital = Current Assets − Current Liabilities', exampleQ: 'CA ₹5,00,000; CL ₹3,00,000. Working capital?', exampleA: '₹5,00,000 − ₹3,00,000 = ₹2,00,000.' },
-      ],
-      tricks: [
-        { id: 'trick-fmngt-m4-1', title: 'Working Capital', trick: 'Working capital = Current assets − Current liabilities.', whenToUse: 'Quick working capital calculation.' },
-      ],
-      howToSolve: [
-        { id: 'solve-fmngt-m4-1', step: 'Step 1: Identify current assets and liabilities.', detail: 'Subtract CL from CA.', questionType: 'Working Capital Problem' },
-      ]
+### Core Concept
+**Dividend decision** balances distributing profit versus reinvesting; theories: Walter, Gordon (bird-in-hand), Modigliani-Miller (dividend irrelevance with perfect markets). **Working capital management** ensures day-to-day liquidity: current assets versus current liabilities, cash, receivables and inventory cycles.
+
+---
+
+### Key Framework
+1. **Dividend theories**: MM: value depends on earnings, not payout; Gordon: value rises with payout when growth is low; Walter: optimal payout depends on return versus cost of capital.
+2. **Working capital cycle**: Cash to raw material to WIP to finished goods to receivables to cash; shorter cycle, better liquidity.
+3. **Estimation methods**: operating cycle method; percentage of sales; regression.
+4. **Receivables/inventory control**: credit policy (5 Cs), EOQ, safety stock; cash budgeting.
+
+---
+
+### Exam Focus
+**Gordon vs MM**: Gordon says higher payout raises value (risk aversion); MM says payout is irrelevant in perfect markets.
+
+![Dividend and Working Capital Diagram](dividend-working-capital.png)`,
+            formulas: [
+              { id: 'formula-fm-mngt-mod4-dividend-decision-1', label: 'Gordon value', formula: 'P0 = D1 / (k minus g) where g = retention ratio x return on equity', exampleQ: 'D1 = Rs 5, k = 12%, g = 4%.', exampleA: 'P0 = 5 / 0.08 = Rs 62.5.' },
+              { id: 'formula-fm-mngt-mod4-dividend-decision-2', label: 'Working capital need', formula: 'Gross WC = Current assets; Net WC = Current assets minus Current liabilities', exampleQ: 'CA Rs 8 lakh, CL Rs 3 lakh.', exampleA: 'Net WC = Rs 5 lakh.' },
+            ],
+            tricks: [
+              { id: 'trick-fm-mngt-mod4-dividend-decision-1', title: 'Operating cycle', trick: 'Cycle days = RM days + WIP days + FG days + Receivable days minus Payable days.', whenToUse: 'Convert to a rupee estimate for the answer.' },
+              { id: 'trick-fm-mngt-mod4-dividend-decision-2', title: 'Dividend dates', trick: 'Declaration, record, ex-dividend, payment: value falls on the ex-dividend date.', whenToUse: 'Timeline MCQs.' },
+            ],
+            howToSolve: [
+              { id: 'solve-fm-mngt-mod4-dividend-decision-1', step: 'Step 1: for dividend theory questions state the assumptions of each theory be...', detail: 'for dividend theory questions state the assumptions of each theory before applying.', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-fm-mngt-mod4-dividend-decision-2', step: 'Step 2: compute Gordon value with g = b x r', detail: 'compute Gordon value with g = b x r.', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-fm-mngt-mod4-dividend-decision-3', step: 'Step 3: for working capital, draw the operating cycle and convert days to rup...', detail: 'for working capital, draw the operating cycle and convert days to rupees using annual cost/365.', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-fm-mngt-mod4-dividend-decision-4', step: 'Step 4: recommend the policy (conservative/aggressive/moderate) with the liqu...', detail: 'recommend the policy (conservative/aggressive/moderate) with the liquidity-profitability trade-off.', questionType: 'Problem Solving / 5 to 10 Marks' },
+            ],
     },
     { id: 'fm-mngt-mod5-capital-budgeting', subjectId: 'bba-karnataka-fin-mgmt', title: 'Capital Budgeting: NPV, IRR & Payback', moduleNumber: 5, moduleName: 'Module 5: Capital Budgeting', order: 5, difficulty: 'core', tier: 'free', status: 'published', examFrequency: 'high', generatedBy: 'curator', contentVersion: 1, publishedAt: '2026-09-16T12:00:00.000Z', featuredQuestionIds: ['q-fmngt-05', 'q-fmngt-06'], subtopics: [
         'Capital Budgeting: Meaning & Importance',
@@ -2500,22 +3166,40 @@ Working capital = Current assets − Current liabilities.`,
         'Net Present Value (NPV)',
         'Internal Rate of Return (IRR)',
         'Profitability Index'
-      ], explanationMd: `# Capital Budgeting
+      ], explanationMd: `# Capital Budgeting: NPV, IRR & Payback
 
-Accept project if NPV > 0.
+### Core Concept
+**Capital budgeting** appraises long-term investment proposals. Methods: Payback (speed of recovery), Accounting Rate of Return (accounting profit), **NPV** (value added, the theoretically correct rule) and **IRR** (the break-even discount rate). Mutually exclusive projects: prefer NPV; conflicts with IRR arise from scale or timing differences.
 
-![Fm Mngt Mod5 Capital Budgeting Diagram](break-even-analysis.png)
+---
 
-`,
-      formulas: [
-        { id: 'formula-fmngt-m5-1', label: 'NPV', formula: 'NPV = Σ (Cash flows ÷ (1+r)^t) − Initial Investment', exampleQ: 'Investment ₹1,00,000; cash inflow ₹30,000/yr for 5 years at 10%. NPV?', exampleA: 'NPV ≈ ₹13,723 (positive — accept).' },
-      ],
-      tricks: [
-        { id: 'trick-fmngt-m5-1', title: 'NPV decision rule', trick: 'NPV > 0 accept; NPV < 0 reject; NPV = 0 indifferent.', whenToUse: 'Apply NPV decision rule instantly.' },
-      ],
-      howToSolve: [
-        { id: 'solve-fmngt-m5-1', step: 'Step 1: Compute present value of cash flows.', detail: 'Subtract initial investment.', questionType: 'Capital Budgeting Problem' },
-      ]
+### Key Framework
+1. **NPV**: Sum of discounted cash flows minus initial outlay; accept if NPV > 0.
+2. **IRR**: the rate where NPV = 0; interpolate between two trial rates: IRR = r1 + [NPV1 / (NPV1 minus NPV2)] x (r2 minus r1).
+3. **Payback**: years to recover outlay; discounted payback discounts each inflow first.
+4. **Profitability Index** = PV of inflows / outlay; PI > 1 acceptable (useful under capital rationing).
+
+---
+
+### Exam Focus
+**NPV vs IRR**: NPV measures wealth created; IRR is a percentage break-even. At conflicts, trust NPV.
+
+![Capital Budgeting Diagram](break-even-analysis.png)`,
+            formulas: [
+              { id: 'formula-fm-mngt-mod5-capital-budgeting-1', label: 'NPV', formula: 'NPV = Sum of [CFt / (1 + r)^t] minus Initial investment', exampleQ: 'Outlay Rs 50,000; inflows Rs 20,000 for 3 yrs at 10%.', exampleA: 'PV = 20000 x 2.4869 = Rs 49,738; NPV = minus Rs 262.' },
+              { id: 'formula-fm-mngt-mod5-capital-budgeting-2', label: 'IRR interpolation', formula: 'IRR = r1 + (NPV1 / (NPV1 minus NPV2)) x (r2 minus r1)', exampleQ: 'NPV 10% = +2,000; NPV 12% = minus 500.', exampleA: 'IRR = 10 + (2000/2500) x 2 = 11.6%.' },
+            ],
+            tricks: [
+              { id: 'trick-fm-mngt-mod5-capital-budgeting-1', title: 'NPV sign check', trick: 'If NPV at the lower rate is positive and at the higher rate is negative, the true IRR lies between them.', whenToUse: 'Interpolation validity check.' },
+              { id: 'trick-fm-mngt-mod5-capital-budgeting-2', title: 'Depreciation shield', trick: 'Use after-tax cash flows: add back depreciation after taxing profit.', whenToUse: 'Tax-adjusted problems.' },
+            ],
+            howToSolve: [
+              { id: 'solve-fm-mngt-mod5-capital-budgeting-1', step: 'Step 1: list cash flows year by year (include outlay as negative at year 0)', detail: 'list cash flows year by year (include outlay as negative at year 0).', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-fm-mngt-mod5-capital-budgeting-2', step: 'Step 2: compute NPV with the given discount rate using PV factors', detail: 'compute NPV with the given discount rate using PV factors.', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-fm-mngt-mod5-capital-budgeting-3', step: 'Step 3: for IRR pick two rates that bracket zero NPV and interpolate', detail: 'for IRR pick two rates that bracket zero NPV and interpolate.', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-fm-mngt-mod5-capital-budgeting-4', step: 'Step 4: compute payback cumulatively (discounted version: discount each inflo...', detail: 'compute payback cumulatively (discounted version: discount each inflow first).', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-fm-mngt-mod5-capital-budgeting-5', step: 'Step 5: rank projects; for mutually exclusive choices prefer NPV', detail: 'rank projects; for mutually exclusive choices prefer NPV.', questionType: 'Problem Solving / 5 to 10 Marks' },
+            ],
     },
 ],
 
@@ -2588,18 +3272,39 @@ Accept project if NPV > 0.
         'Human Resource Planning',
         'Job Analysis & Job Design',
         'Recruitment & Selection'
-      ], explanationMd: `# Introduction to HRM
+      ], explanationMd: `# Introduction to HRM & HR Functions
 
-HRM is the process of managing people in organizations.`,
-      formulas: [
-        { id: 'formula-hrm-mod1-introduction-hrm-functions-1', label: 'Key Formula', formula: 'Formula placeholder', exampleQ: 'Example question', exampleA: 'Example answer' },
-      ],
-      tricks: [
-        { id: 'trick-hrm-m1-1', title: 'HRM Functions', trick: 'Acquisition, Development, Compensation, Maintenance, Integration.', whenToUse: 'Recall core HRM functions.' },
-      ],
-      howToSolve: [
-        { id: 'solve-hrm-m1-1', step: 'Step 1: Define HRM.', detail: 'Explain objectives and functions.', questionType: 'HRM Theory Question' },
-      ]
+### Core Concept
+**Human Resource Management** plans, acquires, develops, motivates and retains employees to achieve organisational goals. It evolved from welfare/industrial relations to strategic HRM (people as capital). HR functions: job analysis, recruitment, selection, training, appraisal, compensation, employee relations, and compliance with labour law.
+
+---
+
+### Key Framework
+1. **HRM vs personnel management**: HRM is strategic and people-development oriented; personnel administration is routine and rule-driven.
+2. **Functions**: procurement (job analysis, recruitment, selection), development (training, career), compensation (wage, benefits), integration (motivation, communication), maintenance (health, welfare).
+3. **HR planning**: demand forecasting (trend, workload ratio), supply forecasting (Markov/succession); gap analysis.
+4. **Strategic link**: HR scorecard, competency mapping, employer branding; Karnataka IT firms compete on retention and culture.
+
+---
+
+### Exam Focus
+**Recruitment vs selection**: recruitment is a positive process of generating applicants; selection is a negative process of rejecting mismatches.
+
+![HRM Functions Diagram](hrm-functions.png)`,
+            formulas: [
+              { id: 'formula-hrm-mod1-introduction-hrm-functions-1', label: 'HR gap', formula: 'Gap = Forecasted demand minus Projected supply', exampleQ: 'Need 120 staff, supply 90.', exampleA: 'Gap = 30; recruit or redeploy 30.' },
+              { id: 'formula-hrm-mod1-introduction-hrm-functions-2', label: 'Cost per hire', formula: 'Cost per hire = Total recruitment cost / Number of hires', exampleQ: 'Spend Rs 2 lakh, 20 hires.', exampleA: 'Rs 10,000 per hire.' },
+            ],
+            tricks: [
+              { id: 'trick-hrm-mod1-introduction-hrm-functions-1', title: 'Job analysis twin', trick: 'Job description = duties of the job; job specification = qualities of the person.', whenToUse: 'Classic 2-mark distinction.' },
+              { id: 'trick-hrm-mod1-introduction-hrm-functions-2', title: 'HR planning order', trick: 'Forecast demand, forecast supply, compare gap, plan action, monitor.', whenToUse: 'Process questions earn steps marks.' },
+            ],
+            howToSolve: [
+              { id: 'solve-hrm-mod1-introduction-hrm-functions-1', step: 'Step 1: define HRM and contrast it with personnel management', detail: 'define HRM and contrast it with personnel management.', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-hrm-mod1-introduction-hrm-functions-2', step: 'Step 2: list the five functional areas with one-line examples', detail: 'list the five functional areas with one-line examples.', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-hrm-mod1-introduction-hrm-functions-3', step: 'Step 3: for scenario questions, apply the correct concept (recruitment vs sel...', detail: 'for scenario questions, apply the correct concept (recruitment vs selection, description vs specification).', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-hrm-mod1-introduction-hrm-functions-4', step: 'Step 4: quantify any planning problem (demand minus supply gap) and close wit...', detail: 'quantify any planning problem (demand minus supply gap) and close with the strategic HRM angle.', questionType: 'Problem Solving / 5 to 10 Marks' },
+            ],
     },
     { id: 'hrm-mod3-training-development', subjectId: 'bba-karnataka-hrm', title: 'Training & Development', moduleNumber: 3, moduleName: 'Module 3: Training & Development', order: 3, difficulty: 'core', tier: 'free', status: 'published', examFrequency: 'high', generatedBy: 'curator', contentVersion: 1, publishedAt: '2026-09-16T12:00:00.000Z', featuredQuestionIds: ['q-hrm-03', 'q-hrm-04'], subtopics: [
         'Training: Meaning & Need',
@@ -2609,16 +3314,37 @@ HRM is the process of managing people in organizations.`,
         'Career Development'
       ], explanationMd: `# Training & Development
 
-Training improves current job performance; development prepares for future roles.`,
-      formulas: [
-        { id: 'formula-hrm-mod3-training-development-1', label: 'Key Formula', formula: 'Formula placeholder', exampleQ: 'Example question', exampleA: 'Example answer' },
-      ],
-      tricks: [
-        { id: 'trick-hrm-m3-1', title: 'Training vs Development', trick: 'Training = current job; Development = future roles.', whenToUse: 'Distinguish training from development.' },
-      ],
-      howToSolve: [
-        { id: 'solve-hrm-m3-1', step: 'Step 1: Identify training need.', detail: 'Select appropriate training method.', questionType: 'Training Theory Question' },
-      ]
+### Core Concept
+**Training** builds current-job skills (short term); **development** builds future capabilities (long term, managerial). The cycle: needs assessment (organisation, task, person), design, delivery, evaluation. On-the-job: apprenticeship, job rotation, coaching; off-the-job: lectures, case study, role play, vestibule, sensitivity training.
+
+---
+
+### Key Framework
+1. **Needs analysis**: organisational (strategy gaps), task (skill matrix), individual (appraisal gaps).
+2. **Methods**: on-the-job (job rotation, coaching, apprenticeship) vs off-the-job (conference, case, simulation, e-learning).
+3. **Evaluation (Kirkpatrick)**: Reaction, Learning, Behaviour, Results; ROI = (Benefit minus Cost) / Cost x 100.
+4. **Management development**: MDPs, job rotation, action learning, assessment centres, mentoring.
+
+---
+
+### Exam Focus
+**Training vs development**: training is for present jobs and non-managers mainly; development is career-long and manager-focused.
+
+![Training and Development Diagram](training-development.png)`,
+            formulas: [
+              { id: 'formula-hrm-mod3-training-development-1', label: 'Training ROI', formula: 'ROI = (Monetary benefit minus Training cost) / Training cost x 100', exampleQ: 'Benefit Rs 5 lakh, cost Rs 2 lakh.', exampleA: 'ROI = (5L minus 2L)/2L x 100 = 150%.' },
+              { id: 'formula-hrm-mod3-training-development-2', label: 'Kirkpatrick order', formula: '4 levels: Reaction, Learning, Behaviour, Results (RLBR)', exampleQ: 'Evaluate a program that cost Rs 1 lakh.', exampleA: 'Check satisfaction first, then skill gain, then workplace behaviour, then output/ROI.' },
+            ],
+            tricks: [
+              { id: 'trick-hrm-mod3-training-development-1', title: 'Vestibule = replica', trick: 'Vestibule training uses a replica of the work station off the floor.', whenToUse: 'Method-matching MCQs.' },
+              { id: 'trick-hrm-mod3-training-development-2', title: 'ADDIE', trick: 'Analysis, Design, Development, Implementation, Evaluation: the training design cycle.', whenToUse: 'Process questions.' },
+            ],
+            howToSolve: [
+              { id: 'solve-hrm-mod3-training-development-1', step: 'Step 1: diagnose the training need at three levels (organisation/task/individ...', detail: 'diagnose the training need at three levels (organisation/task/individual).', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-hrm-mod3-training-development-2', step: 'Step 2: choose method: on-the-job for procedural skills, off-the-job for conc...', detail: 'choose method: on-the-job for procedural skills, off-the-job for conceptual/managerial skills.', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-hrm-mod3-training-development-3', step: 'Step 3: design objectives and content', detail: 'design objectives and content.', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-hrm-mod3-training-development-4', step: 'Step 4: evaluate with Kirkpatrick levels and compute ROI if numbers are given', detail: 'evaluate with Kirkpatrick levels and compute ROI if numbers are given.', questionType: 'Problem Solving / 5 to 10 Marks' },
+            ],
     },
     { id: 'hrm-mod4-compensation-benefits', subjectId: 'bba-karnataka-hrm', title: 'Compensation & Benefits', moduleNumber: 4, moduleName: 'Module 4: Compensation & Benefits', order: 4, difficulty: 'core', tier: 'free', status: 'published', examFrequency: 'moderate', generatedBy: 'curator', contentVersion: 1, publishedAt: '2026-09-16T12:00:00.000Z', featuredQuestionIds: ['q-hrm-05', 'q-hrm-06'], subtopics: [
         'Compensation: Meaning & Components',
@@ -2628,16 +3354,37 @@ Training improves current job performance; development prepares for future roles
         'Pay Structure'
       ], explanationMd: `# Compensation & Benefits
 
-Compensation includes direct (wages, salary) and indirect (benefits) components.`,
-      formulas: [
-        { id: 'formula-hrm-mod4-compensation-benefits-1', label: 'Key Formula', formula: 'Formula placeholder', exampleQ: 'Example question', exampleA: 'Example answer' },
-      ],
-      tricks: [
-        { id: 'trick-hrm-m4-1', title: 'Direct vs Indirect', trick: 'Direct = wages/salary; Indirect = benefits/perquisites.', whenToUse: 'Classify compensation components.' },
-      ],
-      howToSolve: [
-        { id: 'solve-hrm-m4-1', step: 'Step 1: Identify compensation type.', detail: 'Classify as direct or indirect.', questionType: 'Compensation Theory Question' },
-      ]
+### Core Concept
+**Compensation** is everything an employee receives: direct pay (basic, DA, incentives, bonuses) and indirect benefits (PF, ESI, gratuity, leave, insurance). Design balances equity (internal/external), incentive and compliance with the Payment of Wages Act, Minimum Wages Act, Payment of Bonus Act and EPF Act.
+
+---
+
+### Key Framework
+1. **Components**: basic salary, dearness allowance, house rent allowance, incentives (individual/team), profit sharing, ESOPs.
+2. **Wage theories**: subsistence (Ricardo), residual claimant (Walker), bargaining (Dunlop), productivity.
+3. **Job evaluation methods**: ranking, job classification, point method, factor comparison.
+4. **Statutory benefits**: PF (12% employee + 12% employer), ESI, gratuity (15 days wages per year after 5 years), bonus (8.33%-20%).
+
+---
+
+### Exam Focus
+**Compensation vs benefits**: compensation is direct monetary payment; benefits are indirect, often non-wage and tax-advantaged.
+
+![Compensation and Benefits Diagram](compensation-benefits.png)`,
+            formulas: [
+              { id: 'formula-hrm-mod4-compensation-benefits-1', label: 'Gratuity', formula: 'Gratuity = (Last basic + DA) / 26 x 15 x Years of service', exampleQ: 'Basic+DA Rs 26,000/month, 10 years.', exampleA: 'Gratuity = 1000 x 15 x 10 = Rs 1,50,000.' },
+              { id: 'formula-hrm-mod4-compensation-benefits-2', label: 'Dearness allowance', formula: 'DA = Basic x DA percentage / 100', exampleQ: 'Basic Rs 20,000, DA 42%.', exampleA: 'DA = Rs 8,400; total = Rs 28,400.' },
+            ],
+            tricks: [
+              { id: 'trick-hrm-mod4-compensation-benefits-1', title: 'Point method winner', trick: 'Point-rating is the most widely used job evaluation method (quantitative, comparable).', whenToUse: 'Method MCQs.' },
+              { id: 'trick-hrm-mod4-compensation-benefits-2', title: 'Bonus floor', trick: 'Statutory bonus: minimum 8.33%, maximum 20% of wages (Payment of Bonus Act).', whenToUse: 'Compliance questions.' },
+            ],
+            howToSolve: [
+              { id: 'solve-hrm-mod4-compensation-benefits-1', step: 'Step 1: break the pay package into direct and indirect components', detail: 'break the pay package into direct and indirect components.', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-hrm-mod4-compensation-benefits-2', step: 'Step 2: compute statutory items: PF on basic+DA, gratuity formula, bonus range', detail: 'compute statutory items: PF on basic+DA, gratuity formula, bonus range.', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-hrm-mod4-compensation-benefits-3', step: 'Step 3: for job evaluation, name the method and one merit/demerit', detail: 'for job evaluation, name the method and one merit/demerit.', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-hrm-mod4-compensation-benefits-4', step: 'Step 4: end with equity: internal (same job, same pay) and external (market b...', detail: 'end with equity: internal (same job, same pay) and external (market benchmark).', questionType: 'Problem Solving / 5 to 10 Marks' },
+            ],
     },
     { id: 'hrm-mod5-employee-relations-retention', subjectId: 'bba-karnataka-hrm', title: 'Employee Relations & Retention', moduleNumber: 5, moduleName: 'Module 5: Employee Relations & Retention', order: 5, difficulty: 'core', tier: 'free', status: 'published', examFrequency: 'moderate', generatedBy: 'curator', contentVersion: 1, publishedAt: '2026-09-16T12:00:00.000Z', featuredQuestionIds: ['q-hrm-07', 'q-hrm-08'], subtopics: [
         'Employee Relations: Meaning',
@@ -2647,16 +3394,37 @@ Compensation includes direct (wages, salary) and indirect (benefits) components.
         'Trade Unions & Collective Bargaining'
       ], explanationMd: `# Employee Relations & Retention
 
-Grievance handling resolves employee complaints systematically.`,
-      formulas: [
-        { id: 'formula-hrm-mod5-employee-relations-retention-1', label: 'Key Formula', formula: 'Formula placeholder', exampleQ: 'Example question', exampleA: 'Example answer' },
-      ],
-      tricks: [
-        { id: 'trick-hrm-m5-1', title: 'Retention Strategy', trick: 'Retention = compensation + growth + work-life balance + recognition.', whenToUse: 'Design retention programs.' },
-      ],
-      howToSolve: [
-        { id: 'solve-hrm-m5-1', step: 'Step 1: Identify retention factor.', detail: 'Address employee concerns.', questionType: 'Employee Relations Theory Question' },
-      ]
+### Core Concept
+**Employee relations** covers union-management dynamics, dispute resolution and participation; **retention** keeps valuable employees through engagement, career paths and culture. Industrial Disputes Act 1947 governs strikes, lockouts, layoff, retrenchment and adjudication (works committee, conciliation, arbitration, labour court).
+
+---
+
+### Key Framework
+1. **Participation**: works committees, joint management councils, quality circles, worker directors.
+2. **Dispute machinery**: conciliation, arbitration (voluntary), adjudication (labourt tribunal/court), collective bargaining.
+3. **Retention drivers**: competitive pay, growth, recognition, work-life balance, leadership quality; costs of turnover: replacement, training, lost productivity.
+4. **Exit management**: exit interviews, notice period, full-and-final settlement; engagement surveys (eNPS).
+
+---
+
+### Exam Focus
+**Conciliation vs adjudication**: conciliation is a mediation attempt by a government officer; adjudication is binding decision by a labour court/tribunal.
+
+![Employee Relations Diagram](employee-relations.png)`,
+            formulas: [
+              { id: 'formula-hrm-mod5-employee-relations-retention-1', label: 'Turnover cost', formula: 'Cost of turnover = Replacement + Training + Lost productivity cost', exampleQ: 'Replacement Rs 50k, training Rs 30k, productivity loss Rs 20k.', exampleA: 'Total = Rs 1 lakh per exit.' },
+              { id: 'formula-hrm-mod5-employee-relations-retention-2', label: 'Retrenchment condition', formula: 'Retrenchment needs 1 month notice plus 15 days wages per year of service (Section 25F).', exampleQ: 'Worker on Rs 30,000, 8 years.', exampleA: 'Notice + gratuity-style compensation = 15/30 x 30,000 x 8 = Rs 1,20,000.' },
+            ],
+            tricks: [
+              { id: 'trick-hrm-mod5-employee-relations-retention-1', title: 'Participation ladder', trick: 'Works committee (grievances) to JMC (policy) to worker director (board): rising involvement.', whenToUse: 'Match the level to the body.' },
+              { id: 'trick-hrm-mod5-employee-relations-retention-2', title: 'eNPS', trick: 'eNPS = % promoters minus % detractors from engagement surveys.', whenToUse: 'Retention metric questions.' },
+            ],
+            howToSolve: [
+              { id: 'solve-hrm-mod5-employee-relations-retention-1', step: 'Step 1: classify the issue: grievance, dispute, or turnover problem', detail: 'classify the issue: grievance, dispute, or turnover problem.', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-hrm-mod5-employee-relations-retention-2', step: 'Step 2: for disputes, walk the legal route (conciliation, arbitration, adjudi...', detail: 'for disputes, walk the legal route (conciliation, arbitration, adjudication) with the correct body.', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-hrm-mod5-employee-relations-retention-3', step: 'Step 3: for retention, compute the cost of losing an employee and recommend t...', detail: 'for retention, compute the cost of losing an employee and recommend two evidence-based interventions.', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-hrm-mod5-employee-relations-retention-4', step: 'Step 4: close with the participative mechanism that fits the scenario', detail: 'close with the participative mechanism that fits the scenario.', questionType: 'Problem Solving / 5 to 10 Marks' },
+            ],
     },
 ],
 
@@ -2737,16 +3505,37 @@ Marginal Costing is a managerial technique that distinguishes between fixed cost
         'DuPont Analysis'
       ], explanationMd: `# Financial Statement Analysis
 
-Ratio analysis expresses relationships between financial statement items.`,
-      formulas: [
-        { id: 'formula-mgmt-m1-1', label: 'Current Ratio', formula: 'Current Ratio = Current Assets ÷ Current Liabilities', exampleQ: 'CA ₹4,00,000; CL ₹2,00,000. Current Ratio?', exampleA: 'Current Ratio = 4,00,000 ÷ 2,00,000 = 2:1.' },
-      ],
-      tricks: [
-        { id: 'trick-mgmt-m1-1', title: 'Current Ratio benchmark', trick: 'Ideal current ratio is 2:1.', whenToUse: 'Assess short-term solvency quickly.' },
-      ],
-      howToSolve: [
-        { id: 'solve-mgmt-m1-1', step: 'Step 1: Identify CA and CL.', detail: 'Compute ratio.', questionType: 'Ratio Analysis Problem' },
-      ]
+### Core Concept
+Analysis of the **balance sheet and P&L** to judge profitability, liquidity, solvency and efficiency. Tools: ratio analysis, comparative statements, common-size statements and trend analysis. Users: investors (returns), creditors (liquidity), management (control), regulators.
+
+---
+
+### Key Framework
+1. **Liquidity**: Current ratio = CA/CL (ideal 2:1); Quick ratio = (CA minus Inventory)/CL (ideal 1:1).
+2. **Leverage**: Debt-equity = Total debt/Equity; Interest coverage = EBIT/Interest.
+3. **Profitability**: Net profit margin = Net profit/Sales x 100; ROE = PAT/Equity; EPS = PAT minus Preference dividend / Equity shares.
+4. **Activity/efficiency**: Stock turnover = COGS/Average stock; Debtors turnover = Credit sales/Average debtors.
+
+---
+
+### Exam Focus
+**Current vs quick ratio**: quick ratio strips inventory because it is the least liquid current asset.
+
+![Ratio Analysis Diagram](ratio-analysis.png)`,
+            formulas: [
+              { id: 'formula-mgmt-mod1-financial-statement-analysis-1', label: 'Current ratio', formula: 'CR = Current assets / Current liabilities', exampleQ: 'CA Rs 6 lakh, CL Rs 3 lakh.', exampleA: 'CR = 2:1.' },
+              { id: 'formula-mgmt-mod1-financial-statement-analysis-2', label: 'ROE', formula: 'ROE = PAT / Shareholders equity x 100', exampleQ: 'PAT Rs 2 lakh, equity Rs 10 lakh.', exampleA: 'ROE = 20%.' },
+            ],
+            tricks: [
+              { id: 'trick-mgmt-mod1-financial-statement-analysis-1', title: 'DuPont view', trick: 'ROE = Net margin x Asset turnover x Equity multiplier.', whenToUse: 'Decomposition questions.' },
+              { id: 'trick-mgmt-mod1-financial-statement-analysis-2', title: 'Window dressing', trick: 'Year-end CA/CL shifts can flatter ratios; read 2 years together.', whenToUse: 'Analytical answers earn marks.' },
+            ],
+            howToSolve: [
+              { id: 'solve-mgmt-mod1-financial-statement-analysis-1', step: 'Step 1: pick the ratio family asked (liquidity/solvency/profitability/activity)', detail: 'pick the ratio family asked (liquidity/solvency/profitability/activity).', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-mgmt-mod1-financial-statement-analysis-2', step: 'Step 2: pull the figures from the statements (use averages for turnover ratios)', detail: 'pull the figures from the statements (use averages for turnover ratios).', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-mgmt-mod1-financial-statement-analysis-3', step: 'Step 3: compute and compare with the ideal (2:1, 1:1) or industry benchmark', detail: 'compute and compare with the ideal (2:1, 1:1) or industry benchmark.', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-mgmt-mod1-financial-statement-analysis-4', step: 'Step 4: write a one-line interpretation: what it says about the firm and one...', detail: 'write a one-line interpretation: what it says about the firm and one caution.', questionType: 'Problem Solving / 5 to 10 Marks' },
+            ],
     },
     { id: 'mgmt-mod2-fund-flow-cash-flow', subjectId: 'bba-karnataka-mgmt-accounting', title: 'Fund Flow & Cash Flow Statement', moduleNumber: 2, moduleName: 'Module 2: Fund Flow & Cash Flow', order: 2, difficulty: 'core', tier: 'free', status: 'published', examFrequency: 'high', generatedBy: 'curator', contentVersion: 1, publishedAt: '2026-09-16T12:00:00.000Z', featuredQuestionIds: ['q-mgmt-03', 'q-mgmt-04'], subtopics: [
         'Fund Flow Statement: Meaning & Preparation',
@@ -2756,16 +3545,37 @@ Ratio analysis expresses relationships between financial statement items.`,
         'Fund Flow vs Cash Flow'
       ], explanationMd: `# Fund Flow & Cash Flow Statement
 
-Cash flow shows actual cash movements; fund flow shows working capital changes.`,
-      formulas: [
-        { id: 'formula-mgmt-mod2-fund-flow-cash-flow-1', label: 'Key Formula', formula: 'Formula placeholder', exampleQ: 'Example question', exampleA: 'Example answer' },
-      ],
-      tricks: [
-        { id: 'trick-mgmt-m2-1', title: 'Cash Flow Activities', trick: 'Operating = daily business; Investing = assets; Financing = capital structure.', whenToUse: 'Classify cash flows correctly.' },
-      ],
-      howToSolve: [
-        { id: 'solve-mgmt-m2-1', step: 'Step 1: Classify each cash flow.', detail: 'Operating/investing/financing.', questionType: 'Cash Flow Problem' },
-      ]
+### Core Concept
+**Fund flow** tracks changes in working capital between two balance sheet dates (sources vs applications). **Cash flow (AS-3)** tracks actual cash movement in three activities: operating, investing, financing. Funds flow uses accrual data; cash flow is strictly cash-based, and the direct and indirect methods reconcile to the same closing cash.
+
+---
+
+### Key Framework
+1. **Fund flow**: Sources: issue of shares/debentures, sale of fixed assets, profit from operations. Applications: redemption, asset purchase, dividend, tax.
+2. **Cash flow operating (indirect)**: Start with PAT, add back non-cash items (depreciation, goodwill amortisation), add losses/minus gains on asset sale, adjust working capital changes (increase in CA = outflow).
+3. **Investing**: purchase/sale of assets, investments, interest/dividend received. **Financing**: shares/debentures issued/redeemed, dividend paid, tax.
+4. **AS-3 scope**: excludes cash equivalents like marketable securities.
+
+---
+
+### Exam Focus
+**Increase in current asset = cash outflow; increase in current liability = cash inflow** in the operating section.
+
+![Fund Flow and Cash Flow Diagram](fund-flow-cash-flow.png)`,
+            formulas: [
+              { id: 'formula-mgmt-mod2-fund-flow-cash-flow-1', label: 'Cash flow indirect', formula: 'Net operating cash = PAT + Non-cash charges + Losses minus Gains plus Decrease in CA plus Increase in CL', exampleQ: 'PAT Rs 50k, depreciation Rs 10k, debtors up Rs 5k.', exampleA: 'Operating cash = 50k + 10k minus 5k = Rs 55k.' },
+              { id: 'formula-mgmt-mod2-fund-flow-cash-flow-2', label: 'Change in funds', formula: 'Change in working capital = Change in current assets minus change in current liabilities', exampleQ: 'CA +Rs 20k, CL +Rs 8k.', exampleA: 'WC increases by Rs 12k (funds applied).' },
+            ],
+            tricks: [
+              { id: 'trick-mgmt-mod2-fund-flow-cash-flow-1', title: 'Debtors rule', trick: 'Increase in debtors means sales booked but cash not received: subtract it.', whenToUse: 'Adjustment traps.' },
+              { id: 'trick-mgmt-mod2-fund-flow-cash-flow-2', title: 'Preliminary expenses', trick: 'Writing off intangibles is a non-cash add-back in the operating section.', whenToUse: 'Adjustment questions.' },
+            ],
+            howToSolve: [
+              { id: 'solve-mgmt-mod2-fund-flow-cash-flow-1', step: 'Step 1: for fund flow, prepare a change-in-working-capital schedule from two...', detail: 'for fund flow, prepare a change-in-working-capital schedule from two balance sheets.', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-mgmt-mod2-fund-flow-cash-flow-2', step: 'Step 2: classify each change into source or application', detail: 'classify each change into source or application.', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-mgmt-mod2-fund-flow-cash-flow-3', step: 'Step 3: for cash flow, start PAT, add non-cash items, reverse asset-sale gain...', detail: 'for cash flow, start PAT, add non-cash items, reverse asset-sale gains/losses.', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-mgmt-mod2-fund-flow-cash-flow-4', step: 'Step 4: adjust working capital movements, then list investing and financing f...', detail: 'adjust working capital movements, then list investing and financing flows; reconcile the opening and closing cash.', questionType: 'Problem Solving / 5 to 10 Marks' },
+            ],
     },
     { id: 'mgmt-mod4-budgetary-control', subjectId: 'bba-karnataka-mgmt-accounting', title: 'Budgetary Control', moduleNumber: 4, moduleName: 'Module 4: Budgetary Control', order: 4, difficulty: 'core', tier: 'free', status: 'published', examFrequency: 'moderate', generatedBy: 'curator', contentVersion: 1, publishedAt: '2026-09-16T12:00:00.000Z', featuredQuestionIds: ['q-mgmt-05', 'q-mgmt-06'], subtopics: [
         'Budget: Meaning & Types',
@@ -2775,16 +3585,37 @@ Cash flow shows actual cash movements; fund flow shows working capital changes.`
         'Production Budget'
       ], explanationMd: `# Budgetary Control
 
-A flexible budget adjusts for different levels of activity.`,
-      formulas: [
-        { id: 'formula-mgmt-mod4-budgetary-control-1', label: 'Key Formula', formula: 'Formula placeholder', exampleQ: 'Example question', exampleA: 'Example answer' },
-      ],
-      tricks: [
-        { id: 'trick-mgmt-m4-1', title: 'Fixed vs Flexible', trick: 'Fixed budget = one activity level; Flexible budget = multiple activity levels.', whenToUse: 'Choose budget type correctly.' },
-      ],
-      howToSolve: [
-        { id: 'solve-mgmt-m4-1', step: 'Step 1: Identify budget type.', detail: 'Prepare budget for activity level.', questionType: 'Budgeting Problem' },
-      ]
+### Core Concept
+A **budget** is a quantitative plan for a period; **budgetary control** is setting budgets, comparing with actuals, computing variances and correcting action. Types: sales (starting point), production, material, labour, cash, flexible budgets. Zero-based budgeting justifies every rupee from zero each year.
+
+---
+
+### Key Framework
+1. **Preparation flow**: sales budget to production budget to material/labour/overhead budgets to master budget to cash budget.
+2. **Flexible budget**: adjusts for activity level: variable costs scale per unit; fixed costs stay total. Formula: Budgeted cost = Fixed cost + (Variable rate x Actual units).
+3. **ZBB**: every activity justified from scratch; useful for discretionary costs.
+4. **Advantages**: coordination, cost consciousness, delegation; limitations: rigidity, gaming (budget padding), time cost.
+
+---
+
+### Exam Focus
+**Fixed vs flexible budget**: fixed is one activity level; flexible restates costs for the actual level, isolating true efficiency.
+
+![Budgetary Control Diagram](budgetary-control.png)`,
+            formulas: [
+              { id: 'formula-mgmt-mod4-budgetary-control-1', label: 'Flexible budget', formula: 'Total cost = Fixed cost + (Variable cost per unit x Actual output)', exampleQ: 'Fixed Rs 50,000; variable Rs 20/unit; actual 3,000 units.', exampleA: 'Budget = 50,000 + 60,000 = Rs 1,10,000.' },
+              { id: 'formula-mgmt-mod4-budgetary-control-2', label: 'Cash budget', formula: 'Closing cash = Opening cash + Receipts minus Payments', exampleQ: 'Open Rs 40k; receipts Rs 1.2L; payments Rs 1.1L.', exampleA: 'Closing cash = Rs 50k.' },
+            ],
+            tricks: [
+              { id: 'trick-mgmt-mod4-budgetary-control-1', title: 'Master order', trick: 'Sales budget is the cornerstone; everything else derives from it.', whenToUse: 'Process sequence questions.' },
+              { id: 'trick-mgmt-mod4-budgetary-control-2', title: 'Budget padding', trick: 'Managers inflate estimates to create slack: a known limitation.', whenToUse: 'Discussion answers.' },
+            ],
+            howToSolve: [
+              { id: 'solve-mgmt-mod4-budgetary-control-1', step: 'Step 1: start from the sales budget and derive production, then material/labo...', detail: 'start from the sales budget and derive production, then material/labour/overheads.', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-mgmt-mod4-budgetary-control-2', step: 'Step 2: build the cash budget month by month (receipts, payments, opening/clo...', detail: 'build the cash budget month by month (receipts, payments, opening/closing).', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-mgmt-mod4-budgetary-control-3', step: 'Step 3: for flexible budget problems, separate fixed and variable elements an...', detail: 'for flexible budget problems, separate fixed and variable elements and restate for actual output.', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-mgmt-mod4-budgetary-control-4', step: 'Step 4: compute variances (budget minus actual) and recommend corrective action', detail: 'compute variances (budget minus actual) and recommend corrective action.', questionType: 'Problem Solving / 5 to 10 Marks' },
+            ],
     },
     { id: 'mgmt-mod5-marginal-costing-decision-making', subjectId: 'bba-karnataka-mgmt-accounting', title: 'Marginal Costing & Decision Making', moduleNumber: 5, moduleName: 'Module 5: Marginal Costing', order: 5, difficulty: 'core', tier: 'free', status: 'published', examFrequency: 'high', generatedBy: 'curator', contentVersion: 1, publishedAt: '2026-09-16T12:00:00.000Z', featuredQuestionIds: ['q-mgmt-07', 'q-mgmt-08'], subtopics: [
         'Marginal Costing: Concept',
@@ -2794,20 +3625,37 @@ A flexible budget adjusts for different levels of activity.`,
         'Cost-Volume-Profit Analysis'
       ], explanationMd: `# Marginal Costing & Decision Making
 
-Contribution = Sales − Variable Cost.
+### Core Concept
+**Marginal costing** treats only variable costs as product costs; fixed costs are period costs. Contribution = Sales minus Variable cost. **Break-even point** is where contribution equals fixed cost. Managers use it for make-or-buy, key factor, pricing and shut-down decisions.
 
-![Mgmt Mod5 Marginal Costing Decision Making Diagram](break-even-analysis.png)
+---
 
-`,
-      formulas: [
-        { id: 'formula-mgmt-m5-1', label: 'P/V Ratio', formula: 'P/V Ratio = Contribution ÷ Sales × 100', exampleQ: 'Sales ₹1,00,000; Variable Cost ₹60,000. P/V Ratio?', exampleA: 'Contribution = 40,000; P/V Ratio = 40,000 ÷ 1,00,000 × 100 = 40%.' },
-      ],
-      tricks: [
-        { id: 'trick-mgmt-m5-1', title: 'BEP formula', trick: 'BEP (units) = Fixed Cost ÷ Contribution per unit.', whenToUse: 'Quick break-even calculation.' },
-      ],
-      howToSolve: [
-        { id: 'solve-mgmt-m5-1', step: 'Step 1: Compute contribution.', detail: 'BEP = Fixed Cost ÷ Contribution per unit.', questionType: 'Marginal Costing Problem' },
-      ]
+### Key Framework
+1. **Contribution**: C = S minus V per unit; P/V ratio = C/S x 100.
+2. **BEP**: BEP (units) = Fixed cost / C per unit; BEP (value) = Fixed cost / P/V ratio.
+3. **Margin of safety** = Actual sales minus BEP sales; MOS% = MOS/Actual sales x 100.
+4. **Decision rules**: accept an order if contribution is positive and capacity is idle; make-or-buy: compare variable cost with purchase price; key factor: rank by contribution per limiting factor.
+
+---
+
+### Exam Focus
+**Absorption vs marginal costing**: profit differs when production differs from sales because absorption defers fixed overheads into closing stock.
+
+![Marginal Costing Diagram](break-even-analysis.png)`,
+            formulas: [
+              { id: 'formula-mgmt-mod5-marginal-costing-decision-making-1', label: 'BEP units', formula: 'BEP = Fixed cost / (Selling price minus Variable cost per unit)', exampleQ: 'FC Rs 60,000; SP Rs 50; VC Rs 30.', exampleA: 'BEP = 60,000 / 20 = 3,000 units.' },
+              { id: 'formula-mgmt-mod5-marginal-costing-decision-making-2', label: 'P/V ratio', formula: 'P/V ratio = Contribution / Sales x 100', exampleQ: 'Sales Rs 2L, VC Rs 1.2L.', exampleA: 'P/V = 80,000/2,00,000 x 100 = 40%.' },
+            ],
+            tricks: [
+              { id: 'trick-mgmt-mod5-marginal-costing-decision-making-1', title: 'C/S quick', trick: 'P/V ratio = (Sales minus Variable cost)/Sales; also = Contribution per unit / SP per unit.', whenToUse: 'All BEP value questions.' },
+              { id: 'trick-mgmt-mod5-marginal-costing-decision-making-2', title: 'Key factor ranking', trick: 'Rank products by contribution per unit of the scarce resource, not by contribution per unit.', whenToUse: 'Limiting-factor decisions.' },
+            ],
+            howToSolve: [
+              { id: 'solve-mgmt-mod5-marginal-costing-decision-making-1', step: 'Step 1: split costs into fixed and variable; compute contribution per unit', detail: 'split costs into fixed and variable; compute contribution per unit.', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-mgmt-mod5-marginal-costing-decision-making-2', step: 'Step 2: compute P/V ratio and BEP (units and value)', detail: 'compute P/V ratio and BEP (units and value).', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-mgmt-mod5-marginal-costing-decision-making-3', step: 'Step 3: build the profit statement: Contribution minus Fixed cost = Profit', detail: 'build the profit statement: Contribution minus Fixed cost = Profit.', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-mgmt-mod5-marginal-costing-decision-making-4', step: 'Step 4: for decisions (special order, make-or-buy, product mix), compare incr...', detail: 'for decisions (special order, make-or-buy, product mix), compare incremental contribution and state the recommendation.', questionType: 'Problem Solving / 5 to 10 Marks' },
+            ],
     },
 ],
 
@@ -2975,16 +3823,37 @@ $$\\text{Salary for HRA} = \\text{Basic Pay} + \\text{Dearness Allowance (Enter 
         'Tax Incidence'
       ], explanationMd: `# Basic Concepts & Residential Status
 
-Residential status determines tax incidence in India.`,
-      formulas: [
-        { id: 'formula-tax1-mod1-basic-concepts-residential-status-1', label: 'Key Formula', formula: 'Formula placeholder', exampleQ: 'Example question', exampleA: 'Example answer' },
-      ],
-      tricks: [
-        { id: 'trick-tax1-m1-1', title: 'Resident test', trick: '182 days in India in PY = Resident.', whenToUse: 'Determine residential status quickly.' },
-      ],
-      howToSolve: [
-        { id: 'solve-tax1-m1-1', step: 'Step 1: Count days in India.', detail: 'Apply resident/non-resident test.', questionType: 'Income Tax Theory Question' },
-      ]
+### Core Concept
+Income tax is charged on the **total income** of every person whose status is Resident and Ordinarily Resident (ROR), Resident but Not Ordinarily Resident (RNOR), or Non-Resident (NR). Residential status, not citizenship, decides the scope of taxable income. The Finance Act rules use the number of days of stay in India.
+
+---
+
+### Key Framework
+1. **Section 6 conditions**: Resident if in India 182+ days in the previous year, OR 60+ days this year plus 365+ days in the preceding 4 years (exceptions for citizens/OCI on leave or crew).
+2. **RNOR**: additionally: non-resident in 9 of the preceding 10 years, OR stay under 730 days in the preceding 7 years.
+3. **Scope**: ROR: global income; RNOR: Indian income plus income from business/foreign sources controlled from India; NR: Indian-source income only.
+4. **Assessment year vs previous year**: income earned in the PY (1 Apr to 31 Mar) is assessed in the AY.
+
+---
+
+### Exam Focus
+**Deemed resident (Section 6(1A))**: Indian citizens with total income over Rs 15 lakh (other than foreign-source) are deemed RNOR if not liable to tax elsewhere.
+
+![Residential Status Diagram](residential-status.png)`,
+            formulas: [
+              { id: 'formula-tax1-mod1-basic-concepts-residential-status-1', label: 'Day count', formula: 'Resident if stay in India >= 182 days in the PY, or >= 60 days in PY plus >= 365 days in preceding 4 years', exampleQ: 'Stay 200 days in the PY.', exampleA: 'Resident; then test RNOR conditions.' },
+              { id: 'formula-tax1-mod1-basic-concepts-residential-status-2', label: 'Scope of income', formula: 'ROR: global income taxable; NR: only Indian income; RNOR: Indian income plus foreign business income controlled from India', exampleQ: 'RNOR with UK rental income.', exampleA: 'UK rent is not taxable in India; Indian salary is.' },
+            ],
+            tricks: [
+              { id: 'trick-tax1-mod1-basic-concepts-residential-status-1', title: '182 first', trick: 'Test the 182-day condition first; only if it fails, apply the 60/365 rule.', whenToUse: 'Saves exam time.' },
+              { id: 'trick-tax1-mod1-basic-concepts-residential-status-2', title: 'PY vs AY', trick: 'PY 2025-26 income is assessed in AY 2026-27; never mix the two years.', whenToUse: 'Common error trap.' },
+            ],
+            howToSolve: [
+              { id: 'solve-tax1-mod1-basic-concepts-residential-status-1', step: 'Step 1: compute days of stay in India in the previous year', detail: 'compute days of stay in India in the previous year.', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-tax1-mod1-basic-concepts-residential-status-2', step: 'Step 2: apply Section 6(1)(a) or (b) to fix Resident/Non-Resident', detail: 'apply Section 6(1)(a) or (b) to fix Resident/Non-Resident.', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-tax1-mod1-basic-concepts-residential-status-3', step: 'Step 3: if Resident, test RNOR conditions (9/10 years rule and 730-day rule)', detail: 'if Resident, test RNOR conditions (9/10 years rule and 730-day rule).', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-tax1-mod1-basic-concepts-residential-status-4', step: 'Step 4: map each income item to its scope (global vs Indian-source) and concl...', detail: 'map each income item to its scope (global vs Indian-source) and conclude what is taxable.', questionType: 'Problem Solving / 5 to 10 Marks' },
+            ],
     },
     { id: 'tax1-mod4-computation-total-income', subjectId: 'bba-karnataka-income-tax-1', title: 'Computation of Total Income & Tax Liability', moduleNumber: 4, moduleName: 'Module 4: Computation of Total Income', order: 4, difficulty: 'core', tier: 'free', status: 'published', examFrequency: 'high', generatedBy: 'curator', contentVersion: 1, publishedAt: '2026-09-16T12:00:00.000Z', featuredQuestionIds: ['q-tax1-03', 'q-tax1-04'], subtopics: [
         'Gross Total Income',
@@ -2992,18 +3861,39 @@ Residential status determines tax incidence in India.`,
         'Total Income',
         'Tax Liability & Rebates',
         'Advance Tax & TDS'
-      ], explanationMd: `# Computation of Total Income
+      ], explanationMd: `# Computation of Total Income & Tax Liability
 
-Total Income = Gross Total Income − Deductions under Chapter VI-A.`,
-      formulas: [
-        { id: 'formula-tax1-m4-1', label: 'Total Income', formula: 'Total Income = Gross Total Income − Chapter VI-A Deductions', exampleQ: 'GTI ₹6,00,000; Section 80C deduction ₹1,50,000. Total Income?', exampleA: 'Total Income = 6,00,000 − 1,50,000 = ₹4,50,000.' },
-      ],
-      tricks: [
-        { id: 'trick-tax1-m4-1', title: 'Section 80C limit', trick: 'Section 80C deduction limit is ₹1,50,000 per year.', whenToUse: 'Apply 80C limit quickly.' },
-      ],
-      howToSolve: [
-        { id: 'solve-tax1-m4-1', step: 'Step 1: Compute GTI.', detail: 'Subtract Chapter VI-A deductions.', questionType: 'Tax Computation Problem' },
-      ]
+### Core Concept
+Total income is computed under five heads: **Salaries, House Property, Business or Profession, Capital Gains, Other Sources**, after clubbing, set-off and carry-forward of losses, and Chapter VI-A deductions (Sections 80C to 80U). Tax is then charged at slab rates with cess and rebate.
+
+---
+
+### Key Framework
+1. **Order of set-off**: inter-head set-off first (e.g. house property loss up to Rs 2 lakh against other heads), then intra-head; carry forward unabsorbed losses for 8 years (business loss).
+2. **Deductions**: 80C (Rs 1.5 lakh: PPF, LIC, ELSS, tuition fees), 80CCD(1B) NPS Rs 50,000, 80D health insurance, 80TTA/TTB interest deduction.
+3. **Rebate (new regime)**: Section 87A: taxable income up to Rs 7 lakh gets full rebate; marginal relief near the limit.
+4. **Cess**: 4% health and education cess on tax; surcharge on income above Rs 50 lakh.
+
+---
+
+### Exam Focus
+**Gross total income vs total income**: deductions under Chapter VI-A are subtracted from GTI to get total income.
+
+![Total Income Diagram](total-income.png)`,
+            formulas: [
+              { id: 'formula-tax1-mod4-computation-total-income-1', label: 'Total income', formula: 'Total income = Gross total income minus Chapter VI-A deductions', exampleQ: 'GTI Rs 9L; 80C Rs 1.5L, 80D Rs 25k.', exampleA: 'Total income = 9L minus 1.75L = Rs 7.25L.' },
+              { id: 'formula-tax1-mod4-computation-total-income-2', label: 'Tax liability', formula: 'Tax = Slab tax + Surcharge minus Rebate, then add 4% cess', exampleQ: 'Tax Rs 50,000 after rebate.', exampleA: 'Payable = 50,000 x 1.04 = Rs 52,000.' },
+            ],
+            tricks: [
+              { id: 'trick-tax1-mod4-computation-total-income-1', title: 'House property cap', trick: 'Loss from house property set off against other heads is capped at Rs 2 lakh a year.', whenToUse: 'Loss-set-off questions.' },
+              { id: 'trick-tax1-mod4-computation-total-income-2', title: '80C ceiling', trick: '80C plus 80CCD(1B) combined planning: Rs 1.5L + Rs 50k NPS.', whenToUse: 'Deduction planning answers.' },
+            ],
+            howToSolve: [
+              { id: 'solve-tax1-mod4-computation-total-income-1', step: 'Step 1: compute income under each of the five heads with prescribed rules (st...', detail: 'compute income under each of the five heads with prescribed rules (standard deduction for salary, 30% net value for house property).', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-tax1-mod4-computation-total-income-2', step: 'Step 2: club incomes and set off losses: inter-head then intra-head, respecti...', detail: 'club incomes and set off losses: inter-head then intra-head, respecting the Rs 2 lakh house-property cap.', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-tax1-mod4-computation-total-income-3', step: 'Step 3: apply Chapter VI-A deductions to get total income', detail: 'apply Chapter VI-A deductions to get total income.', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-tax1-mod4-computation-total-income-4', step: 'Step 4: apply slab rates, rebate 87A, surcharge and 4% cess', detail: 'apply slab rates, rebate 87A, surcharge and 4% cess.', questionType: 'Problem Solving / 5 to 10 Marks' },
+            ],
     },
     { id: 'tax1-mod5-tax-planning-avoidance-evasion', subjectId: 'bba-karnataka-income-tax-1', title: 'Tax Planning, Avoidance & Evasion', moduleNumber: 5, moduleName: 'Module 5: Tax Planning', order: 5, difficulty: 'core', tier: 'free', status: 'published', examFrequency: 'moderate', generatedBy: 'curator', contentVersion: 1, publishedAt: '2026-09-16T12:00:00.000Z', featuredQuestionIds: ['q-tax1-05', 'q-tax1-06'], subtopics: [
         'Tax Planning: Meaning & Objectives',
@@ -3013,16 +3903,37 @@ Total Income = Gross Total Income − Deductions under Chapter VI-A.`,
         'Penalties for Tax Evasion'
       ], explanationMd: `# Tax Planning, Avoidance & Evasion
 
-Tax planning is legal; tax evasion is illegal.`,
-      formulas: [
-        { id: 'formula-tax1-mod5-tax-planning-avoidance-evasion-1', label: 'Key Formula', formula: 'Formula placeholder', exampleQ: 'Example question', exampleA: 'Example answer' },
-      ],
-      tricks: [
-        { id: 'trick-tax1-m5-1', title: 'Planning vs Evasion', trick: 'Tax planning = legal; Tax evasion = illegal (concealment, fraud).', whenToUse: 'Distinguish planning from evasion.' },
-      ],
-      howToSolve: [
-        { id: 'solve-tax1-m5-1', step: 'Step 1: Identify activity type.', detail: 'Classify as planning, avoidance or evasion.', questionType: 'Tax Planning Theory Question' },
-      ]
+### Core Concept
+**Tax planning** uses lawful provisions to minimise tax (investing under 80C, choosing the right regime, timing income). **Tax avoidance** exploits loopholes within the letter but against the spirit (aggressive structuring; GAAR can strike it down). **Tax evasion** is illegal concealment (suppressing income, fake claims): punishable with penalty and prosecution.
+
+---
+
+### Key Framework
+1. **Planning areas**: investment planning (80C/80D/80CCD), retirement planning (NPS, pension), remuneration planning (HRA, LTA), timing of income and capital gains (indexation, holding period).
+2. **Avoidance**: treaty shopping, shell structures, misuse of exemptions; anti-avoidance: GAAR (Sections 95-102), transfer pricing, POEM.
+3. **Evasion**: concealment, falsification, non-filing; consequences: penalty up to 200% of tax, prosecution, interest under 234A/B/C.
+4. **Ethics**: legitimate planning versus evasion boundary: the taxpayer may choose the least-taxed lawful path (accepted in CIT v A Raman).
+
+---
+
+### Exam Focus
+**Avoidance vs evasion**: avoidance is legal-but-aggressive (taxed via GAAR recharacterisation); evasion is a criminal offence.
+
+![Tax Planning Diagram](tax-planning.png)`,
+            formulas: [
+              { id: 'formula-tax1-mod5-tax-planning-avoidance-evasion-1', label: 'Savings example', formula: 'Tax saved = Deduction amount x Marginal tax rate', exampleQ: 'Invest Rs 1.5L under 80C at 30% slab.', exampleA: 'Tax saved = Rs 45,000.' },
+              { id: 'formula-tax1-mod5-tax-planning-avoidance-evasion-2', label: 'Penalty for concealment', formula: 'Penalty = 50% to 200% of tax sought to be evaded (Section 270A)', exampleQ: 'Tax evaded Rs 1L.', exampleA: 'Penalty Rs 50,000 to Rs 2L plus tax and interest.' },
+            ],
+            tricks: [
+              { id: 'trick-tax1-mod5-tax-planning-avoidance-evasion-1', title: 'GAAR test', trick: 'GAAR applies only to impermissible avoidance arrangements (tax benefit main purpose + lacking commercial substance).', whenToUse: 'Case-study framing.' },
+              { id: 'trick-tax1-mod5-tax-planning-avoidance-evasion-2', title: 'Holding period', trick: 'Listed equity: 12 months for long-term; unlisted/property: 24 months (pre-budget rates).', whenToUse: 'Capital gains planning.' },
+            ],
+            howToSolve: [
+              { id: 'solve-tax1-mod5-tax-planning-avoidance-evasion-1', step: 'Step 1: classify the action as planning, avoidance or evasion with the defini...', detail: 'classify the action as planning, avoidance or evasion with the defining test (lawful, loophole, illegal).', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-tax1-mod5-tax-planning-avoidance-evasion-2', step: 'Step 2: for planning problems, quantify the tax saved (deduction x marginal r...', detail: 'for planning problems, quantify the tax saved (deduction x marginal rate).', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-tax1-mod5-tax-planning-avoidance-evasion-3', step: 'Step 3: for avoidance, explain GAAR and the recharacterisation power', detail: 'for avoidance, explain GAAR and the recharacterisation power.', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-tax1-mod5-tax-planning-avoidance-evasion-4', step: 'Step 4: for evasion, list consequences: tax, interest, penalty, prosecution', detail: 'for evasion, list consequences: tax, interest, penalty, prosecution.', questionType: 'Problem Solving / 5 to 10 Marks' },
+            ],
     },
 ],
 
@@ -3095,16 +4006,37 @@ Plant layout involves configuring departments, workstations, machines, and mater
         'Operations Strategy'
       ], explanationMd: `# Introduction to Production & Operations Management
 
-OM transforms inputs into goods and services.`,
-      formulas: [
-        { id: 'formula-ops-mod1-production-operations-intro-1', label: 'Key Formula', formula: 'Formula placeholder', exampleQ: 'Example question', exampleA: 'Example answer' },
-      ],
-      tricks: [
-        { id: 'trick-ops-m1-1', title: 'OM Transformation', trick: 'Inputs → Transformation Process → Outputs (goods/services).', whenToUse: 'Recall OM transformation model.' },
-      ],
-      howToSolve: [
-        { id: 'solve-ops-m1-1', step: 'Step 1: Define operations management.', detail: 'Explain transformation process.', questionType: 'Operations Theory Question' },
-      ]
+### Core Concept
+**POM** designs and controls the process that transforms inputs (men, material, machine, money, method) into outputs (goods/services). Decisions span product design, process choice, capacity, layout, location, quality and scheduling. The operations strategy must align with corporate strategy; Karnataka clusters (Bengaluru IT, Hubballi foundries) illustrate location and process choices.
+
+---
+
+### Key Framework
+1. **Systems view**: Input to Transformation to Output, with feedback control loops.
+2. **Process types**: job, batch, mass, continuous; service processes differ (intangibility, simultaneity).
+3. **Operations decisions**: product, process, capacity, inventory, quality, scheduling (the structural and infrastructural layers).
+4. **Productivity**: Output / Input; partial (labour) versus total factor productivity. Competitiveness: cost, quality, delivery speed/reliability, flexibility.
+
+---
+
+### Exam Focus
+**Goods vs services**: services are intangible, inseparable, perishable and heterogeneous: operations design changes accordingly.
+
+![POM Introduction Diagram](pom-intro.png)`,
+            formulas: [
+              { id: 'formula-ops-mod1-production-operations-intro-1', label: 'Productivity', formula: 'Productivity = Output / Input', exampleQ: 'Output 500 units using 250 labour hours.', exampleA: 'Labour productivity = 2 units/hour.' },
+              { id: 'formula-ops-mod1-production-operations-intro-2', label: 'Break-even volume for capacity', formula: 'BEP units = Fixed cost / (Price minus Variable cost per unit)', exampleQ: 'FC Rs 2L, price Rs 100, VC Rs 60.', exampleA: 'BEP = 2,00,000/40 = 5,000 units.' },
+            ],
+            tricks: [
+              { id: 'trick-ops-mod1-production-operations-intro-1', title: 'Transformation shorthand', trick: 'POM = Input to Transformation to Output with feedback; every operations question maps to a stage.', whenToUse: 'Framework answers.' },
+              { id: 'trick-ops-mod1-production-operations-intro-2', title: 'Process match', trick: 'Job (custom), batch (small runs), mass (standard), continuous (flow: chemicals/power).', whenToUse: 'Matching MCQs.' },
+            ],
+            howToSolve: [
+              { id: 'solve-ops-mod1-production-operations-intro-1', step: 'Step 1: frame the system: inputs, transformation, outputs', detail: 'frame the system: inputs, transformation, outputs.', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-ops-mod1-production-operations-intro-2', step: 'Step 2: classify the process type and note its trade-offs (flexibility vs cost)', detail: 'classify the process type and note its trade-offs (flexibility vs cost).', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-ops-mod1-production-operations-intro-3', step: 'Step 3: address the decision area asked (capacity, layout, quality, schedulin...', detail: 'address the decision area asked (capacity, layout, quality, scheduling) with the right tool.', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-ops-mod1-production-operations-intro-4', step: 'Step 4: quantify productivity or BEP where numbers appear and link to competi...', detail: 'quantify productivity or BEP where numbers appear and link to competitiveness.', questionType: 'Problem Solving / 5 to 10 Marks' },
+            ],
     },
     { id: 'ops-mod3-inventory-management', subjectId: 'bba-karnataka-operations-mgmt', title: 'Inventory Management', moduleNumber: 3, moduleName: 'Module 3: Inventory Management', order: 3, difficulty: 'core', tier: 'free', status: 'published', examFrequency: 'high', generatedBy: 'curator', contentVersion: 1, publishedAt: '2026-09-16T12:00:00.000Z', featuredQuestionIds: ['q-ops-03', 'q-ops-04'], subtopics: [
         'Inventory: Meaning & Types',
@@ -3114,20 +4046,37 @@ OM transforms inputs into goods and services.`,
         'Safety Stock & Reorder Level'
       ], explanationMd: `# Inventory Management
 
-ABC analysis classifies items by value: A (high value), B (medium), C (low value).
+### Core Concept
+**Inventory** buffers supply and demand: raw material, WIP, finished goods, spares. Costs: ordering, carrying and shortage. The aim: minimise total cost while avoiding stock-outs. Tools: EOQ, reorder levels, ABC/FSN/VED analysis, just-in-time. Karnataka agri-supply chains (Nandini milk distribution) show why cycle and safety stock matter.
 
-![Ops Mod3 Inventory Management Diagram](org-structure.png)
+---
 
-`,
-      formulas: [
-        { id: 'formula-ops-m3-1', label: 'EOQ', formula: 'EOQ = √(2 × Demand × Ordering Cost ÷ Holding Cost)', exampleQ: 'Annual demand 10,000, ordering cost ₹50, holding cost ₹2. EOQ?', exampleA: 'EOQ = √(2 × 10,000 × 50 ÷ 2) ≈ 707 units.' },
-      ],
-      tricks: [
-        { id: 'trick-ops-m3-1', title: 'ABC Classification', trick: 'A-items: high value, low quantity (70-80% value, 10-20% items).', whenToUse: 'Prioritise A-items for tight control.' },
-      ],
-      howToSolve: [
-        { id: 'solve-ops-m3-1', step: 'Step 1: Identify D, ordering cost, holding cost.', detail: 'Apply EOQ formula.', questionType: 'Inventory Problem' },
-      ]
+### Key Framework
+1. **EOQ**: economic order quantity minimises ordering plus carrying cost: EOQ = Square root of (2 x Annual demand x Ordering cost / Carrying cost per unit).
+2. **Total cost at EOQ**: TC = Purchase + Ordering + Carrying; at EOQ, ordering cost = carrying cost.
+3. **Stock levels**: Minimum = safety stock; Maximum = Minimum + Re-order quantity; Re-order level = Minimum + lead-time usage.
+4. **ABC analysis**: A items (10% items, 70% value) get tight control; JIT reduces inventory to need-based flow.
+
+---
+
+### Exam Focus
+**Ordering vs carrying cost**: as order size rises, ordering cost falls but carrying cost rises; EOQ is the balance point.
+
+![Inventory Management Diagram](org-structure.png)`,
+            formulas: [
+              { id: 'formula-ops-mod3-inventory-management-1', label: 'EOQ', formula: 'EOQ = Square root of (2 D O / C)', exampleQ: 'D = 10,000 units, O = Rs 50/order, C = Rs 2/unit/year.', exampleA: 'EOQ = Square root of (2 x 10000 x 50 / 2) = 707 units.' },
+              { id: 'formula-ops-mod3-inventory-management-2', label: 'Total inventory cost', formula: 'TC = (D/Q) x O + (Q/2) x C + D x Unit price', exampleQ: 'Q = 707, D = 10,000, O = 50, C = 2.', exampleA: 'Ordering Rs 707 + Carrying Rs 707 = Rs 1,414 + purchase cost.' },
+            ],
+            tricks: [
+              { id: 'trick-ops-mod3-inventory-management-1', title: 'EOQ equality', trick: 'At EOQ, annual ordering cost equals annual carrying cost: use it to verify answers.', whenToUse: 'Self-check trick.' },
+              { id: 'trick-ops-mod3-inventory-management-2', title: 'ABC by value', trick: 'A: 70% value/10% items; B: 20/30; C: 10/60: control intensity follows value.', whenToUse: 'Classification questions.' },
+            ],
+            howToSolve: [
+              { id: 'solve-ops-mod3-inventory-management-1', step: 'Step 1: list demand, ordering cost and carrying cost per unit per year', detail: 'list demand, ordering cost and carrying cost per unit per year.', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-ops-mod3-inventory-management-2', step: 'Step 2: compute EOQ', detail: 'compute EOQ.', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-ops-mod3-inventory-management-3', step: 'Step 3: compute total cost at the given/EOQ quantity (ordering + carrying + p...', detail: 'compute total cost at the given/EOQ quantity (ordering + carrying + purchase).', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-ops-mod3-inventory-management-4', step: 'Step 4: compute reorder level with lead-time usage and recommend the stock po...', detail: 'compute reorder level with lead-time usage and recommend the stock policy (Q system or P system).', questionType: 'Problem Solving / 5 to 10 Marks' },
+            ],
     },
     { id: 'ops-mod4-quality-management', subjectId: 'bba-karnataka-operations-mgmt', title: 'Quality Management & TQM', moduleNumber: 4, moduleName: 'Module 4: Quality Management', order: 4, difficulty: 'core', tier: 'free', status: 'published', examFrequency: 'moderate', generatedBy: 'curator', contentVersion: 1, publishedAt: '2026-09-16T12:00:00.000Z', featuredQuestionIds: ['q-ops-05', 'q-ops-06'], subtopics: [
         'Quality: Meaning & Dimensions',
@@ -3137,16 +4086,37 @@ ABC analysis classifies items by value: A (high value), B (medium), C (low value
         'Six Sigma'
       ], explanationMd: `# Quality Management & TQM
 
-TQM is a management approach centred on quality, customer satisfaction and continuous improvement.`,
-      formulas: [
-        { id: 'formula-ops-mod4-quality-management-1', label: 'Key Formula', formula: 'Formula placeholder', exampleQ: 'Example question', exampleA: 'Example answer' },
-      ],
-      tricks: [
-        { id: 'trick-ops-m4-1', title: 'ISO 9000', trick: 'ISO 9000 is a family of quality management standards.', whenToUse: 'Recall ISO quality standards.' },
-      ],
-      howToSolve: [
-        { id: 'solve-ops-m4-1', step: 'Step 1: Define TQM.', detail: 'Explain continuous improvement.', questionType: 'Quality Management Theory Question' },
-      ]
+### Core Concept
+**Quality** is fitness for use (Juran), conformance to requirements (Crosby). **TQM** is organisation-wide continuous improvement with customer focus, involving every employee. Tools: quality circles, Six Sigma (3.4 defects per million), ISO 9001, Kaizen, 5S, poka-yoke. Quality gurus: Deming (14 points, PDCA), Juran (trilogy), Crosby (zero defects), Ishikawa (fishbone).
+
+---
+
+### Key Framework
+1. **TQM pillars**: customer focus, total participation, process approach, continuous improvement, fact-based decisions.
+2. **Seven tools**: cause-and-effect (fishbone) diagram, check sheet, histogram, Pareto chart, scatter, control chart, stratification.
+3. **Six Sigma DMAIC**: Define, Measure, Analyse, Improve, Control; sigma level measures process capability.
+4. **Cost of quality**: prevention, appraisal, internal failure, external failure: prevention and appraisal reduce the failure costs.
+
+---
+
+### Exam Focus
+**Inspection vs quality assurance**: inspection detects defects after making; QA builds quality into the process.
+
+![Quality and TQM Diagram](quality-tqm.png)`,
+            formulas: [
+              { id: 'formula-ops-mod4-quality-management-1', label: 'Six Sigma level', formula: 'DPMO = (Defects / Opportunities) x 1,000,000', exampleQ: '12 defects in 40,000 opportunities.', exampleA: 'DPMO = (12/40000) x 10^6 = 300.' },
+              { id: 'formula-ops-mod4-quality-management-2', label: 'Pareto rule', formula: 'Roughly 80% of problems come from 20% of causes: fix the tall bars first.', exampleQ: 'A defect list with 5 causes; top 2 cause 80% of defects.', exampleA: 'Attack the top 2 causes first.' },
+            ],
+            tricks: [
+              { id: 'trick-ops-mod4-quality-management-1', title: 'DMAIC order', trick: 'Define, Measure, Analyse, Improve, Control: the Six Sigma project cycle.', whenToUse: 'Sequence questions.' },
+              { id: 'trick-ops-mod4-quality-management-2', title: 'Fishbone categories', trick: '6 Ms: Man, Machine, Material, Method, Measurement, Mother-nature (environment).', whenToUse: 'Root-cause exercises.' },
+            ],
+            howToSolve: [
+              { id: 'solve-ops-mod4-quality-management-1', step: 'Step 1: define the quality problem and its cost-of-quality category (preventi...', detail: 'define the quality problem and its cost-of-quality category (prevention/appraisal/failure).', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-ops-mod4-quality-management-2', step: 'Step 2: pick the tool: fishbone for root cause, Pareto for vital few, histogr...', detail: 'pick the tool: fishbone for root cause, Pareto for vital few, histogram for distribution, control chart for stability.', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-ops-mod4-quality-management-3', step: 'Step 3: apply TQM or Six Sigma steps (DMAIC) as the improvement route', detail: 'apply TQM or Six Sigma steps (DMAIC) as the improvement route.', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-ops-mod4-quality-management-4', step: 'Step 4: measure effect (DPMO, defect rate) and standardise via control plans', detail: 'measure effect (DPMO, defect rate) and standardise via control plans.', questionType: 'Problem Solving / 5 to 10 Marks' },
+            ],
     },
     { id: 'ops-mod5-supply-chain-logistics', subjectId: 'bba-karnataka-operations-mgmt', title: 'Supply Chain & Logistics Management', moduleNumber: 5, moduleName: 'Module 5: Supply Chain & Logistics', order: 5, difficulty: 'core', tier: 'free', status: 'published', examFrequency: 'moderate', generatedBy: 'curator', contentVersion: 1, publishedAt: '2026-09-16T12:00:00.000Z', featuredQuestionIds: ['q-ops-07', 'q-ops-08'], subtopics: [
         'Supply Chain: Meaning & Components',
@@ -3156,16 +4126,37 @@ TQM is a management approach centred on quality, customer satisfaction and conti
         'Reverse Logistics'
       ], explanationMd: `# Supply Chain & Logistics Management
 
-Supply chain covers the flow from raw materials to end customer.`,
-      formulas: [
-        { id: 'formula-ops-mod5-supply-chain-logistics-1', label: 'Key Formula', formula: 'Formula placeholder', exampleQ: 'Example question', exampleA: 'Example answer' },
-      ],
-      tricks: [
-        { id: 'trick-ops-m5-1', title: 'Supply Chain Flow', trick: 'Supplier → Manufacturer → Distributor → Retailer → Customer.', whenToUse: 'Trace supply chain flow.' },
-      ],
-      howToSolve: [
-        { id: 'solve-ops-m5-1', step: 'Step 1: Identify supply chain stage.', detail: 'Map the flow of goods.', questionType: 'Supply Chain Theory Question' },
-      ]
+### Core Concept
+A **supply chain** links suppliers, manufacturers, distributors, retailers and customers with flows of material, information and money. Logistics covers transportation, warehousing, inventory and order fulfilment. Objectives: minimise cost while maximising service level; the bullwhip effect shows how demand distortion amplifies upstream.
+
+---
+
+### Key Framework
+1. **Flows**: product (upstream to downstream), information (both ways), cash (downstream to upstream).
+2. **Bullwhip effect**: small demand swings at retail grow into large swings at raw-material level; cures: shared POS data, EDI, VMI, everyday-low-pricing.
+3. **Design decisions**: network design, facility location, sourcing (single vs multiple), distribution strategy (direct, cross-docking, milk runs).
+4. **Performance**: inventory turns, order fill rate, lead time, total logistics cost; models: QR, ECR, postponement, cross-docking.
+
+---
+
+### Exam Focus
+**Push vs pull supply chain**: push produces to forecast (make-to-stock); pull produces to confirmed demand (make-to-order); hybrids use decoupling points.
+
+![Supply Chain Diagram](supply-chain.png)`,
+            formulas: [
+              { id: 'formula-ops-mod5-supply-chain-logistics-1', label: 'Bullwhip measure', formula: 'Bullwhip ratio = Variance of orders / Variance of demand (greater than 1 means amplification)', exampleQ: 'Order variance 450, demand variance 100.', exampleA: 'Ratio = 4.5: significant distortion.' },
+              { id: 'formula-ops-mod5-supply-chain-logistics-2', label: 'Logistics cost share', formula: 'Logistics cost % = Total logistics cost / Sales x 100', exampleQ: 'Cost Rs 12L, sales Rs 1 crore.', exampleA: '12%.' },
+            ],
+            tricks: [
+              { id: 'trick-ops-mod5-supply-chain-logistics-1', title: 'EDI/VMI cure', trick: 'Information sharing (EDI), vendor-managed inventory and stable pricing tame the bullwhip effect.', whenToUse: 'Case-study cures.' },
+              { id: 'trick-ops-mod5-supply-chain-logistics-2', title: 'Cross-docking', trick: 'Goods move inbound to outbound with little storage: cuts warehousing and lead time.', whenToUse: 'Distribution design questions.' },
+            ],
+            howToSolve: [
+              { id: 'solve-ops-mod5-supply-chain-logistics-1', step: 'Step 1: map the chain: suppliers to customers with the three flows', detail: 'map the chain: suppliers to customers with the three flows.', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-ops-mod5-supply-chain-logistics-2', step: 'Step 2: identify the pain point (bullwhip, stock-outs, high logistics cost)', detail: 'identify the pain point (bullwhip, stock-outs, high logistics cost).', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-ops-mod5-supply-chain-logistics-3', step: 'Step 3: apply the fix: information sharing, network redesign, postponement or...', detail: 'apply the fix: information sharing, network redesign, postponement or cross-docking.', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-ops-mod5-supply-chain-logistics-4', step: 'Step 4: measure with service and cost KPIs (fill rate, turns, total cost %) a...', detail: 'measure with service and cost KPIs (fill rate, turns, total cost %) and justify the design choice.', questionType: 'Problem Solving / 5 to 10 Marks' },
+            ],
     },
 ],
 
@@ -3249,16 +4240,37 @@ Module 2 in the 6th Semester Karnataka BBA syllabus tests analytical skills in m
         'Levels of Strategy'
       ], explanationMd: `# Introduction to Strategic Management
 
-Strategic management involves formulation and implementation of major goals.`,
-      formulas: [
-        { id: 'formula-strat-mod1-introduction-strategic-management-1', label: 'Key Formula', formula: 'Formula placeholder', exampleQ: 'Example question', exampleA: 'Example answer' },
-      ],
-      tricks: [
-        { id: 'trick-strat-m1-1', title: 'Strategy Levels', trick: 'Corporate → Business → Functional strategy levels.', whenToUse: 'Identify strategy level quickly.' },
-      ],
-      howToSolve: [
-        { id: 'solve-strat-m1-1', step: 'Step 1: Define strategic management.', detail: 'Explain formulation and implementation.', questionType: 'Strategy Theory Question' },
-      ]
+### Core Concept
+**Strategy** is the pattern of decisions defining an organisation goals and resource allocation over time (Andrews, Chandler, Mintzberg). Strategic management: environmental scanning (external/internal), strategy formulation, implementation and control. Levels: corporate, business (competitive), functional. Vision and mission set direction; objectives convert it into measurable targets.
+
+---
+
+### Key Framework
+1. **Process**: Vision/mission, environmental analysis, strategy formulation, implementation, evaluation/control.
+2. **Levels**: corporate (what businesses), business (how to compete), functional (how to support).
+3. **Frameworks preview**: SWOT, PESTLE, Porter five forces, BCG, Ansoff, value chain.
+4. **Strategic decisions**: long-term, resource-committing, cross-functional, externally driven (Mintzberg: 5 Ps: Plan, Ploy, Pattern, Position, Perspective).
+
+---
+
+### Exam Focus
+**Strategy vs tactic**: strategy is long-term and directional; tactics are short-term moves that execute it.
+
+![Strategic Management Process Diagram](strategic-process.png)`,
+            formulas: [
+              { id: 'formula-strat-mod1-introduction-strategic-management-1', label: 'Ansoff growth', formula: 'Growth vector = Existing/New product x Existing/New market (4 strategies)', exampleQ: 'Existing product in a new market.', exampleA: 'Market development.' },
+              { id: 'formula-strat-mod1-introduction-strategic-management-2', label: 'ROI check', formula: 'ROI = Net profit / Investment x 100', exampleQ: 'Profit Rs 5 cr on Rs 50 cr investment.', exampleA: 'ROI = 10%.' },
+            ],
+            tricks: [
+              { id: 'trick-strat-mod1-introduction-strategic-management-1', title: '5 Ps', trick: 'Plan, Ploy, Pattern, Position, Perspective: Mintzberg view of strategy.', whenToUse: 'Definitions in MCQs.' },
+              { id: 'trick-strat-mod1-introduction-strategic-management-2', title: 'Hierarchy order', trick: 'Corporate strategy defines scope; business strategy defines advantage; functional strategy executes.', whenToUse: 'Structure questions.' },
+            ],
+            howToSolve: [
+              { id: 'solve-strat-mod1-introduction-strategic-management-1', step: 'Step 1: state vision/mission and objectives', detail: 'state vision/mission and objectives.', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-strat-mod1-introduction-strategic-management-2', step: 'Step 2: scan the environment (external: PESTLE/forces; internal: value chain/...', detail: 'scan the environment (external: PESTLE/forces; internal: value chain/resources).', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-strat-mod1-introduction-strategic-management-3', step: 'Step 3: formulate at all three levels and pick the growth route (Ansoff/BCG)', detail: 'formulate at all three levels and pick the growth route (Ansoff/BCG).', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-strat-mod1-introduction-strategic-management-4', step: 'Step 4: outline implementation (structure, culture, controls) and evaluation...', detail: 'outline implementation (structure, culture, controls) and evaluation (balanced scorecard, budgets).', questionType: 'Problem Solving / 5 to 10 Marks' },
+            ],
     },
     { id: 'strat-mod3-swot-pestle-analysis', subjectId: 'bba-karnataka-strategic-mgmt', title: 'SWOT & PESTLE Analysis', moduleNumber: 3, moduleName: 'Module 3: Environmental Analysis', order: 3, difficulty: 'core', tier: 'free', status: 'published', examFrequency: 'high', generatedBy: 'curator', contentVersion: 1, publishedAt: '2026-09-16T12:00:00.000Z', featuredQuestionIds: ['q-strat-03', 'q-strat-04'], subtopics: [
         'Environmental Scanning',
@@ -3268,20 +4280,37 @@ Strategic management involves formulation and implementation of major goals.`,
         'Competitor Analysis'
       ], explanationMd: `# SWOT & PESTLE Analysis
 
-SWOT is internal (S, W) and external (O, T); PESTLE is macro-environmental.
+### Core Concept
+**SWOT** pairs internal Strengths and Weaknesses with external Opportunities and Threats: the base for strategy generation. **PESTLE** scans the macro-environment: Political, Economic, Social, Technological, Legal, Environmental. Sound analysis converts lists into matched strategies: SO (use strengths to capture opportunities), WO, ST, WT.
 
-![Strat Mod3 Swot Pestle Analysis Diagram](swot-analysis.png)
+---
 
-`,
-      formulas: [
-        { id: 'formula-strat-mod3-swot-pestle-analysis-1', label: 'Key Formula', formula: 'Formula placeholder', exampleQ: 'Example question', exampleA: 'Example answer' },
-      ],
-      tricks: [
-        { id: 'trick-strat-m3-1', title: 'SWOT vs PESTLE', trick: 'SWOT = internal + immediate external; PESTLE = macro environment only.', whenToUse: 'Choose analysis framework.' },
-      ],
-      howToSolve: [
-        { id: 'solve-strat-m3-1', step: 'Step 1: Identify internal vs external factors.', detail: 'Classify as S/W/O/T or PESTLE.', questionType: 'Environmental Analysis Problem' },
-      ]
+### Key Framework
+1. **SWOT**: internal: resources, capabilities, brand, cost position; external: market growth, competitor moves, regulation.
+2. **PESTLE**: P: policy/taxation; E: inflation/rates; S: demographics/trends; T: automation/digital; L: labour/consumer law; E: sustainability norms.
+3. **Matching**: SO: aggressive growth; WO: fix weakness to grab opportunity; ST: defend using strengths; WT: retreat/diversify/risk mitigation.
+4. **Use**: launch decisions, entry strategies, turnaround diagnosis; Karnataka example: EV policy boost for auto clusters (opportunity) vs chip shortage (threat).
+
+---
+
+### Exam Focus
+**SWOT vs PESTLE**: SWOT covers both internal and external factors; PESTLE only scans the external macro-environment.
+
+![SWOT PESTLE Diagram](swot-analysis.png)`,
+            formulas: [
+              { id: 'formula-strat-mod3-swot-pestle-analysis-1', label: 'TOWS matrix', formula: 'Strategies = SO, WO, ST, WT pairings of internal and external factors', exampleQ: 'Strength: distribution; Opportunity: export demand.', exampleA: 'SO strategy: push exports via existing distribution.' },
+              { id: 'formula-strat-mod3-swot-pestle-analysis-2', label: 'PESTLE coverage', formula: '6 lenses: Political, Economic, Social, Technological, Legal, Environmental', exampleQ: 'Audit a policy change (e.g. GST rate cut).', exampleA: 'Economic (tax) and Political (policy) lenses apply first.' },
+            ],
+            tricks: [
+              { id: 'trick-strat-mod3-swot-pestle-analysis-1', title: 'Internal vs external', trick: 'Strengths/Weaknesses are internal; Opportunities/Threats are external: misclassification loses marks.', whenToUse: 'Classification trap.' },
+              { id: 'trick-strat-mod3-swot-pestle-analysis-2', title: 'Quantify lists', trick: 'Rate each factor by impact and likelihood before matching.', whenToUse: 'Turns a list into a decision tool.' },
+            ],
+            howToSolve: [
+              { id: 'solve-strat-mod3-swot-pestle-analysis-1', step: 'Step 1: list internal strengths and weaknesses (resources, capabilities)', detail: 'list internal strengths and weaknesses (resources, capabilities).', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-strat-mod3-swot-pestle-analysis-2', step: 'Step 2: list external opportunities and threats (scan PESTLE for macro items)', detail: 'list external opportunities and threats (scan PESTLE for macro items).', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-strat-mod3-swot-pestle-analysis-3', step: 'Step 3: build the TOWS matrix and write one strategy per quadrant (SO/WO/ST/WT)', detail: 'build the TOWS matrix and write one strategy per quadrant (SO/WO/ST/WT).', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-strat-mod3-swot-pestle-analysis-4', step: 'Step 4: prioritise strategies by impact and feasibility, and state one monito...', detail: 'prioritise strategies by impact and feasibility, and state one monitoring metric.', questionType: 'Problem Solving / 5 to 10 Marks' },
+            ],
     },
     { id: 'strat-mod4-strategy-implementation', subjectId: 'bba-karnataka-strategic-mgmt', title: 'Strategy Implementation & Control', moduleNumber: 4, moduleName: 'Module 4: Strategy Implementation', order: 4, difficulty: 'core', tier: 'free', status: 'published', examFrequency: 'high', generatedBy: 'curator', contentVersion: 1, publishedAt: '2026-09-16T12:00:00.000Z', featuredQuestionIds: ['q-strat-05', 'q-strat-06'], subtopics: [
         'Strategy Implementation: Steps',
@@ -3291,16 +4320,37 @@ SWOT is internal (S, W) and external (O, T); PESTLE is macro-environmental.
         'Corrective Action'
       ], explanationMd: `# Strategy Implementation & Control
 
-Implementation puts strategy into action through structure, resources and systems.`,
-      formulas: [
-        { id: 'formula-strat-mod4-strategy-implementation-1', label: 'Key Formula', formula: 'Formula placeholder', exampleQ: 'Example question', exampleA: 'Example answer' },
-      ],
-      tricks: [
-        { id: 'trick-strat-m4-1', title: 'Balanced Scorecard', trick: 'Financial, Customer, Internal Process, Learning & Growth.', whenToUse: 'Recall four BSC perspectives.' },
-      ],
-      howToSolve: [
-        { id: 'solve-strat-m4-1', step: 'Step 1: Align structure with strategy.', detail: 'Implement through resource allocation.', questionType: 'Strategy Implementation Theory Question' },
-      ]
+### Core Concept
+A brilliant strategy fails without execution. **Implementation** aligns structure, systems, culture, people and resources; **control** monitors performance and corrects drift. McKinsey 7-S, balanced scorecard and functional plans are standard tools. Barriers: wrong structure, culture mismatch, unclear communication, poor resourcing.
+
+---
+
+### Key Framework
+1. **7-S model**: Strategy, Structure, Systems, Style, Staff, Skills, Shared values (the hard three and soft four must align).
+2. **Balanced scorecard (Kaplan & Norton)**: Financial, Customer, Internal process, Learning and growth perspectives with objectives, measures and targets.
+3. **Control types**: strategic (BSC), operational (budgets, standards), tactical (milestones); feedback and concurrent control.
+4. **Structure choices**: functional, divisional, matrix, network: strategy follows structure or vice versa (Chandler: structure follows strategy).
+
+---
+
+### Exam Focus
+**Formulation vs implementation**: formulation decides what to do; implementation makes it happen through people, structure and controls.
+
+![Strategy Implementation Diagram](strategy-implementation.png)`,
+            formulas: [
+              { id: 'formula-strat-mod4-strategy-implementation-1', label: 'BSC perspectives', formula: '4 perspectives: Financial, Customer, Internal Process, Learning and Growth', exampleQ: 'A firm wants customer retention up.', exampleA: 'Customer perspective objective with retention % as the measure.' },
+              { id: 'formula-strat-mod4-strategy-implementation-2', label: 'ROI control', formula: 'ROI = Net profit / Investment x 100; compare with target ROI for drift', exampleQ: 'Actual 12% vs target 15%.', exampleA: 'Negative variance of 3 points: corrective action needed.' },
+            ],
+            tricks: [
+              { id: 'trick-strat-mod4-strategy-implementation-1', title: '7-S alignment', trick: 'If shared values and systems disagree with strategy, execution fails: check the soft S first.', whenToUse: 'Case diagnosis.' },
+              { id: 'trick-strat-mod4-strategy-implementation-2', title: 'Chandler', trick: 'Structure follows strategy: reorganise after strategic change.', whenToUse: 'One-line theory question.' },
+            ],
+            howToSolve: [
+              { id: 'solve-strat-mod4-strategy-implementation-1', step: 'Step 1: translate the chosen strategy into objectives and a balanced scorecard', detail: 'translate the chosen strategy into objectives and a balanced scorecard.', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-strat-mod4-strategy-implementation-2', step: 'Step 2: align the 7-S elements: restructure, retrain, redesign systems', detail: 'align the 7-S elements: restructure, retrain, redesign systems.', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-strat-mod4-strategy-implementation-3', step: 'Step 3: build functional plans with budgets and timelines', detail: 'build functional plans with budgets and timelines.', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-strat-mod4-strategy-implementation-4', step: 'Step 4: set controls: leading and lagging KPIs, review cadence, and correctiv...', detail: 'set controls: leading and lagging KPIs, review cadence, and corrective actions on variance.', questionType: 'Problem Solving / 5 to 10 Marks' },
+            ],
     },
     { id: 'strat-mod5-corporate-level-strategies', subjectId: 'bba-karnataka-strategic-mgmt', title: 'Corporate Level Strategies', moduleNumber: 5, moduleName: 'Module 5: Corporate Strategies', order: 5, difficulty: 'core', tier: 'free', status: 'published', examFrequency: 'moderate', generatedBy: 'curator', contentVersion: 1, publishedAt: '2026-09-16T12:00:00.000Z', featuredQuestionIds: ['q-strat-07', 'q-strat-08'], subtopics: [
         'Growth Strategies: Concentration, Integration, Diversification',
@@ -3310,20 +4360,37 @@ Implementation puts strategy into action through structure, resources and system
         'Mergers & Acquisitions'
       ], explanationMd: `# Corporate Level Strategies
 
-BCG Matrix classifies SBUs as Stars, Cash Cows, Question Marks, Dogs.
+### Core Concept
+Corporate strategy answers **which businesses to be in** and how to allocate capital across them. Options: growth (expansion, diversification, integration), stability, retrenchment, and combination. Tools: BCG growth-share matrix (cash cows fund stars/question marks; dogs exit), Ansoff matrix, GE nine-cell, and parenting advantage.
 
-![Strat Mod5 Corporate Level Strategies Diagram](bcg-matrix.png)
+---
 
-`,
-      formulas: [
-        { id: 'formula-strat-mod5-corporate-level-strategies-1', label: 'Key Formula', formula: 'Formula placeholder', exampleQ: 'Example question', exampleA: 'Example answer' },
-      ],
-      tricks: [
-        { id: 'trick-strat-m5-1', title: 'BCG Matrix', trick: 'Stars = high growth, high share; Cash Cows = low growth, high share.', whenToUse: 'Classify SBUs in BCG Matrix.' },
-      ],
-      howToSolve: [
-        { id: 'solve-strat-m5-1', step: 'Step 1: Identify growth rate and market share.', detail: 'Classify SBU in BCG matrix.', questionType: 'Corporate Strategy Problem' },
-      ]
+### Key Framework
+1. **Growth**: intensive (market penetration, development, product development), integrative (forward/backward/horizontal), diversification (concentric/conglomerate).
+2. **BCG matrix**: Stars (high growth/high share: invest), Cash Cows (low growth/high share: harvest), Question Marks (high growth/low share: selective), Dogs (low/low: divest).
+3. **Retrenchment**: turnaround, divestment, liquidation; stability: pause/profit strategies.
+4. **Bases for diversification**: economies of scope, risk reduction, market power; the parenting advantage test decides the corporate centre value.
+
+---
+
+### Exam Focus
+**Star vs Cash Cow**: stars need cash to grow; cash cows generate the cash that funds stars and question marks.
+
+![Corporate Level Strategies Diagram](bcg-matrix.png)`,
+            formulas: [
+              { id: 'formula-strat-mod5-corporate-level-strategies-1', label: 'BCG placement', formula: 'Market share relative to largest competitor; market growth above 10% counts as high', exampleQ: 'Business: share 0.6, growth 14%.', exampleA: 'Question Mark: high growth, low relative share.' },
+              { id: 'formula-strat-mod5-corporate-level-strategies-2', label: 'Ansoff cell', formula: 'Growth = Product (existing/new) x Market (existing/new)', exampleQ: 'New product in an existing market.', exampleA: 'Product development.' },
+            ],
+            tricks: [
+              { id: 'trick-strat-mod5-corporate-level-strategies-1', title: 'Dogs decision', trick: 'Dogs: liquidate or divest unless they support another business (linkage).', whenToUse: 'Portfolio cleanup questions.' },
+              { id: 'trick-strat-mod5-corporate-level-strategies-2', title: 'Cash cow role', trick: 'Harvest cash cows to fund stars and promising question marks.', whenToUse: 'Portfolio allocation logic.' },
+            ],
+            howToSolve: [
+              { id: 'solve-strat-mod5-corporate-level-strategies-1', step: 'Step 1: classify each business on growth rate and relative market share for t...', detail: 'classify each business on growth rate and relative market share for the BCG matrix.', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-strat-mod5-corporate-level-strategies-2', step: 'Step 2: label each SBU (Star/Cow/Question/Dog) and state the resource policy', detail: 'label each SBU (Star/Cow/Question/Dog) and state the resource policy.', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-strat-mod5-corporate-level-strategies-3', step: 'Step 3: choose the corporate route for the firm: growth (integration/diversif...', detail: 'choose the corporate route for the firm: growth (integration/diversification), stability or retrenchment, justified with the synergy test.', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-strat-mod5-corporate-level-strategies-4', step: 'Step 4: conclude with implementation and control notes', detail: 'conclude with implementation and control notes.', questionType: 'Problem Solving / 5 to 10 Marks' },
+            ],
     },
 ],
 
@@ -3486,16 +4553,37 @@ Even if used in business, ITC is strictly **denied** on:
         'Input Tax Credit: Eligibility & Conditions'
       ], explanationMd: `# GST Registration & Compliance
 
-IGST is levied on inter-state supplies; CGST + SGST on intra-state supplies.`,
-      formulas: [
-        { id: 'formula-gst-mod2-gst-registration-compliance-1', label: 'Key Formula', formula: 'Formula placeholder', exampleQ: 'Example question', exampleA: 'Example answer' },
-      ],
-      tricks: [
-        { id: 'trick-gst-m2-1', title: 'CGST+SGST vs IGST', trick: 'Intra-state = CGST + SGST; Inter-state = IGST.', whenToUse: 'Apply correct GST type.' },
-      ],
-      howToSolve: [
-        { id: 'solve-gst-m2-1', step: 'Step 1: Identify place of supply.', detail: 'Intra-state or inter-state.', questionType: 'GST Theory Question' },
-      ]
+### Core Concept
+**GST registration** is mandatory for businesses above the turnover threshold (Rs 40 lakh goods / Rs 20 lakh services in most states; Rs 10 lakh in special-category states including parts of the North-East and hill states). Registration is PAN-based, state-wise and GSTIN-coded (15 digits). Compliance includes invoices, e-way bills, returns and record keeping. Karnataka businesses register on the GST portal; GSTIN format: 2-digit state code + PAN + entity + check codes.
+
+---
+
+### Key Framework
+1. **Who registers**: suppliers above threshold, e-commerce sellers, interstate suppliers, casual taxable persons, agents; voluntary registration available for input credit.
+2. **GSTIN**: 15 characters: 2-digit state code (29 = Karnataka) + 10-digit PAN + entity number + 'Z' + check digit.
+3. **Compliance calendar**: invoices within 30 days, e-way bills for goods over Rs 50,000, books kept for 72 months.
+4. **Deemed registration**: if the officer does not act within 3 working days of application (REG-06), registration is deemed granted.
+
+---
+
+### Exam Focus
+**Casual taxable person**: registers for a limited period (max 90 days) for occasional supplies in a state where there is no fixed place.
+
+![GST Registration Diagram](gst-registration.png)`,
+            formulas: [
+              { id: 'formula-gst-mod2-gst-registration-compliance-1', label: 'Threshold', formula: 'Registration required when aggregate turnover exceeds Rs 40 lakh (goods) / Rs 20 lakh (services); Rs 10 lakh in special-category states', exampleQ: 'Bengaluru trader with Rs 45 lakh turnover of goods.', exampleA: 'Registration mandatory (Karnataka: Rs 40 lakh goods threshold).' },
+              { id: 'formula-gst-mod2-gst-registration-compliance-2', label: 'GSTIN check', formula: 'GSTIN = 2-digit state code + PAN + entity + Z + check digit (15 chars)', exampleQ: 'Karnataka entity of PAN ABCDE1234F.', exampleA: 'Starts with 29ABCDE1234F...' },
+            ],
+            tricks: [
+              { id: 'trick-gst-mod2-gst-registration-compliance-1', title: 'Deemed grant', trick: 'No officer action within 3 working days of REG-06: registration deemed granted.', whenToUse: 'Timeline MCQs.' },
+              { id: 'trick-gst-mod2-gst-registration-compliance-2', title: 'E-way bill', trick: 'E-way bill needed for goods movement above Rs 50,000 in value.', whenToUse: 'Logistics compliance questions.' },
+            ],
+            howToSolve: [
+              { id: 'solve-gst-mod2-gst-registration-compliance-1', step: 'Step 1: compute aggregate turnover (taxable + exempt + export, excluding GST)...', detail: 'compute aggregate turnover (taxable + exempt + export, excluding GST) and compare with the state threshold.', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-gst-mod2-gst-registration-compliance-2', step: 'Step 2: determine registration type (regular, casual, non-resident, composition)', detail: 'determine registration type (regular, casual, non-resident, composition).', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-gst-mod2-gst-registration-compliance-3', step: 'Step 3: list the compliance duties: invoice, e-way bill, returns, records ret...', detail: 'list the compliance duties: invoice, e-way bill, returns, records retention.', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-gst-mod2-gst-registration-compliance-4', step: 'Step 4: state consequences of non-registration: no input credit, penalties un...', detail: 'state consequences of non-registration: no input credit, penalties under Section 122.', questionType: 'Problem Solving / 5 to 10 Marks' },
+            ],
     },
     { id: 'gst-mod4-gst-returns-assessment', subjectId: 'bba-karnataka-gst', title: 'GST Returns, Assessment & Audit', moduleNumber: 4, moduleName: 'Module 4: GST Returns & Assessment', order: 4, difficulty: 'core', tier: 'free', status: 'published', examFrequency: 'moderate', generatedBy: 'curator', contentVersion: 1, publishedAt: '2026-09-16T12:00:00.000Z', featuredQuestionIds: ['q-gst-03', 'q-gst-04'], subtopics: [
         'GSTR-1, GSTR-3B, GSTR-9',
@@ -3503,18 +4591,39 @@ IGST is levied on inter-state supplies; CGST + SGST on intra-state supplies.`,
         'Audit under GST',
         'Demand & Recovery',
         'Refund under GST'
-      ], explanationMd: `# GST Returns, Assessment & Audit
+      ], explanationMd: `# GST Returns & Assessment
 
-GSTR-3B is a monthly summary return; GSTR-9 is annual return.`,
-      formulas: [
-        { id: 'formula-gst-mod4-gst-returns-assessment-1', label: 'Key Formula', formula: 'Formula placeholder', exampleQ: 'Example question', exampleA: 'Example answer' },
-      ],
-      tricks: [
-        { id: 'trick-gst-m4-1', title: 'GSTR Returns', trick: 'GSTR-1 = outward supplies; GSTR-3B = summary; GSTR-9 = annual.', whenToUse: 'Identify return type.' },
-      ],
-      howToSolve: [
-        { id: 'solve-gst-m4-1', step: 'Step 1: Identify return period.', detail: 'File appropriate GSTR form.', questionType: 'GST Compliance Question' },
-      ]
+### Core Concept
+GST runs on a **self-assessed return chain**: GSTR-1 (outward supplies), GSTR-3B (summary with payment), GSTR-9 (annual). The input tax credit flows only when the supplier files: invoice matching is the backbone. Assessment types: self-assessment, provisional, summary (Section 63), scrutiny, best judgement (Section 64). The GST Council periodically revises return filing frequency (QRMP for small taxpayers).
+
+---
+
+### Key Framework
+1. **Returns**: GSTR-1: outward supplies (monthly/QRMP); GSTR-3B: summary return with tax payment; GSTR-9: annual return; GSTR-9C: reconciliation statement (audit for turnover above Rs 5 crore).
+2. **ITC matching**: credit appears in GSTR-2B from supplier filings; mismatch blocks credit until corrected.
+3. **Assessment**: self (Section 59), provisional (Section 60), scrutiny (Section 61), best judgement (Section 64), summary when non-filers (Section 63).
+4. **Interest/late fee**: 18% per annum interest on delayed tax; late fee Rs 50/day (Rs 20/day for nil return), capped.
+
+---
+
+### Exam Focus
+**GSTR-1 vs GSTR-3B**: GSTR-1 reports invoices (who you sold to); GSTR-3B is the summary return where tax is actually paid.
+
+![GST Returns Diagram](gst-returns.png)`,
+            formulas: [
+              { id: 'formula-gst-mod4-gst-returns-assessment-1', label: 'Late fee', formula: 'Late fee = Rs 50 per day of delay (Rs 20 for nil returns), subject to the statutory cap', exampleQ: '10-day delay on a nil GSTR-3B.', exampleA: 'Late fee = 10 x 20 = Rs 200.' },
+              { id: 'formula-gst-mod4-gst-returns-assessment-2', label: 'Interest on delay', formula: 'Interest = Tax x 18% x (Days of delay / 365)', exampleQ: 'Tax Rs 30,000 delayed by 30 days.', exampleA: 'Interest = 30000 x 0.18 x 30/365 = Rs 444.' },
+            ],
+            tricks: [
+              { id: 'trick-gst-mod4-gst-returns-assessment-1', title: 'ITC gate', trick: 'Credit flows only when the supplier files: GSTR-2B shows matched credit.', whenToUse: 'ITC questions.' },
+              { id: 'trick-gst-mod4-gst-returns-assessment-2', title: 'QRMP', trick: 'Quarterly return with monthly payment for turnover up to Rs 5 crore.', whenToUse: 'Small-taxpayer compliance.' },
+            ],
+            howToSolve: [
+              { id: 'solve-gst-mod4-gst-returns-assessment-1', step: 'Step 1: identify the return due (outward, summary, annual) and the frequency...', detail: 'identify the return due (outward, summary, annual) and the frequency (monthly or QRMP).', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-gst-mod4-gst-returns-assessment-2', step: 'Step 2: compute the tax payable with ITC set-off order: IGST, then CGST/SGST...', detail: 'compute the tax payable with ITC set-off order: IGST, then CGST/SGST cross-utilisation rules.', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-gst-mod4-gst-returns-assessment-3', step: 'Step 3: apply late fee and interest for any delay', detail: 'apply late fee and interest for any delay.', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-gst-mod4-gst-returns-assessment-4', step: 'Step 4: name the assessment route if the return is missing (scrutiny for mism...', detail: 'name the assessment route if the return is missing (scrutiny for mismatch, best judgement for non-filing).', questionType: 'Problem Solving / 5 to 10 Marks' },
+            ],
     },
     { id: 'gst-mod5-customs-law-basics', subjectId: 'bba-karnataka-gst', title: 'Customs Law: Basics & Procedures', moduleNumber: 5, moduleName: 'Module 5: Customs Law', order: 5, difficulty: 'core', tier: 'free', status: 'published', examFrequency: 'moderate', generatedBy: 'curator', contentVersion: 1, publishedAt: '2026-09-16T12:00:00.000Z', featuredQuestionIds: ['q-gst-05', 'q-gst-06'], subtopics: [
         'Customs Act: Meaning & Scope',
@@ -3522,18 +4631,39 @@ GSTR-3B is a monthly summary return; GSTR-9 is annual return.`,
         'Valuation under Customs',
         'Import & Export Procedures',
         'Warehousing under Customs'
-      ], explanationMd: `# Customs Law
+      ], explanationMd: `# Customs Law Basics
 
-Customs duty is levied on import and export of goods.`,
-      formulas: [
-        { id: 'formula-gst-mod5-customs-law-basics-1', label: 'Key Formula', formula: 'Formula placeholder', exampleQ: 'Example question', exampleA: 'Example answer' },
-      ],
-      tricks: [
-        { id: 'trick-gst-m5-1', title: 'Customs Duty', trick: 'Basic Customs Duty is the primary duty on imported goods.', whenToUse: 'Recall customs duty types.' },
-      ],
-      howToSolve: [
-        { id: 'solve-gst-m5-1', step: 'Step 1: Identify import or export.', detail: 'Apply relevant customs provision.', questionType: 'Customs Law Theory Question' },
-      ]
+### Core Concept
+**Customs duty** governs import and export of goods: levied under the Customs Act 1962, collected at the port/airport. Core ideas: taxable value (CIF + landing charges), duty heads (Basic Customs Duty, IGST, compensation cess, social welfare surcharge), exemptions, and baggage rules. Export duty is rare (refund mechanisms dominate). Bengaluru airport and Mangaluru port handle Karnataka trade.
+
+---
+
+### Key Framework
+1. **Duty structure**: BCD (on assessable value), Social Welfare Surcharge (10% on BCD), IGST (on assessable value + BCD + cess), Compensation cess (on notified goods).
+2. **Assessable value**: transaction value (CIF: cost, insurance, freight) plus loading/landing charges.
+3. **Types of duty**: basic, countervailing (subsumed), anti-dumping, safeguard; exemptions via notifications.
+4. **Procedures**: bill of entry (import), shipping bill (export), warehousing, drawback, baggage rules (duty-free allowance).
+
+---
+
+### Exam Focus
+**CIF vs FOB**: CIF includes cost, insurance and freight (the customs valuation base); FOB excludes freight and insurance.
+
+![Customs Diagram](customs-basics.png)`,
+            formulas: [
+              { id: 'formula-gst-mod5-customs-law-basics-1', label: 'Landed value', formula: 'Assessable value = CIF value + Landing charges', exampleQ: 'CIF Rs 1,00,000; landing charges Rs 5,000.', exampleA: 'Assessable value = Rs 1,05,000.' },
+              { id: 'formula-gst-mod5-customs-law-basics-2', label: 'Duty stack', formula: 'Total duty = BCD + SWS (10% of BCD) + IGST on (AV + BCD + cess) + cess', exampleQ: 'AV Rs 1,05,000, BCD 20%, IGST 18%.', exampleA: 'BCD = 21,000; SWS = 2,100; IGST on 1,28,100 = 23,058; total = Rs 46,158.' },
+            ],
+            tricks: [
+              { id: 'trick-gst-mod5-customs-law-basics-1', title: 'Bill of entry', trick: 'Import: bill of entry; Export: shipping bill.', whenToUse: 'Document-matching MCQs.' },
+              { id: 'trick-gst-mod5-customs-law-basics-2', title: 'Drawback', trick: 'Duty drawback refunds duties paid on inputs when goods are exported.', whenToUse: 'Export relief questions.' },
+            ],
+            howToSolve: [
+              { id: 'solve-gst-mod5-customs-law-basics-1', step: 'Step 1: fix the assessable value (CIF plus landing charges)', detail: 'fix the assessable value (CIF plus landing charges).', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-gst-mod5-customs-law-basics-2', step: 'Step 2: compute BCD on assessable value; add social welfare surcharge at 10%...', detail: 'compute BCD on assessable value; add social welfare surcharge at 10% of BCD.', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-gst-mod5-customs-law-basics-3', step: 'Step 3: compute IGST on assessable value plus BCD plus cess', detail: 'compute IGST on assessable value plus BCD plus cess.', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-gst-mod5-customs-law-basics-4', step: 'Step 4: total the duties and note any exemption notification or drawback reli...', detail: 'total the duties and note any exemption notification or drawback relief applicable.', questionType: 'Problem Solving / 5 to 10 Marks' },
+            ],
     },
 ],
 
@@ -3611,16 +4741,37 @@ Bengaluru is recognized as the startup capital of India. Under the NEP 2020 BBA 
         'Role of Entrepreneurship in Economic Development'
       ], explanationMd: `# Introduction to Entrepreneurship
 
-An entrepreneur organises, manages and assumes risks of a business.`,
-      formulas: [
-        { id: 'formula-ent-mod1-introduction-entrepreneurship-1', label: 'Key Formula', formula: 'Formula placeholder', exampleQ: 'Example question', exampleA: 'Example answer' },
-      ],
-      tricks: [
-        { id: 'trick-ent-m1-1', title: 'Entrepreneur vs Manager', trick: 'Entrepreneur bears risk and owns the business; Manager is an employee.', whenToUse: 'Distinguish entrepreneur from manager.' },
-      ],
-      howToSolve: [
-        { id: 'solve-ent-m1-1', step: 'Step 1: Define entrepreneur.', detail: 'Explain role in economic development.', questionType: 'Entrepreneurship Theory Question' },
-      ]
+### Core Concept
+An **entrepreneur** innovates, organises resources and bears risk to create value. Theories: Schumpeter (innovation and creative destruction), Knight (risk-bearing), Kirzner (alertness to opportunity). Types: lifestyle, growth, social, intrapreneur, serial. Traits: achievement need, risk tolerance, internal locus, self-confidence. India context: MUDRA, Startup India and Karnataka's startup policy (Bengaluru ecosystem) support new ventures.
+
+---
+
+### Key Framework
+1. **Definitions**: entrepreneur (risk-bearing organiser), entrepreneurship (process), enterprise (venture).
+2. **Theories**: Schumpeter: innovation; Knight: uncertainty; Kirzner: arbitrage alertness; McClelland: achievement motivation.
+3. **Intrapreneurship**: entrepreneurship within a corporate structure; skunkworks teams.
+4. **Economic roles**: capital formation, employment, innovation, balanced regional development; MSME contribution to GDP and exports.
+
+---
+
+### Exam Focus
+**Entrepreneur vs manager**: the entrepreneur owns and bears risk for opportunity; the manager executes within delegation and draws a salary.
+
+![Entrepreneurship Intro Diagram](entrepreneurship-intro.png)`,
+            formulas: [
+              { id: 'formula-ent-mod1-introduction-entrepreneurship-1', label: 'Entrepreneurial opportunity', formula: 'Opportunity = Market gap + Resource availability + Founder capability', exampleQ: 'Gap in organic food supply; founder has retail experience.', exampleA: 'Opportunity score high: venture is viable.' },
+              { id: 'formula-ent-mod1-introduction-entrepreneurship-2', label: 'MSME share', formula: 'MSME share of GDP / exports: compute contribution percentage', exampleQ: 'MSME output Rs 30 cr of state output Rs 150 cr.', exampleA: 'Share = 20%.' },
+            ],
+            tricks: [
+              { id: 'trick-ent-mod1-introduction-entrepreneurship-1', title: 'Schumpeter tag', trick: 'Creative destruction: innovation disrupts existing markets and firms.', whenToUse: 'Theory matching MCQs.' },
+              { id: 'trick-ent-mod1-introduction-entrepreneurship-2', title: 'Traits recall', trick: 'Achievement motivation, risk tolerance, internal locus, self-confidence, leadership.', whenToUse: 'Short-answer lists.' },
+            ],
+            howToSolve: [
+              { id: 'solve-ent-mod1-introduction-entrepreneurship-1', step: 'Step 1: define the entrepreneur and contrast with the manager and the adminis...', detail: 'define the entrepreneur and contrast with the manager and the administrator.', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-ent-mod1-introduction-entrepreneurship-2', step: 'Step 2: apply the theory asked (Schumpeter innovation, Knight risk, McClellan...', detail: 'apply the theory asked (Schumpeter innovation, Knight risk, McClelland achievement).', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-ent-mod1-introduction-entrepreneurship-3', step: 'Step 3: classify the venture type (lifestyle/growth/social/intrapreneur)', detail: 'classify the venture type (lifestyle/growth/social/intrapreneur).', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-ent-mod1-introduction-entrepreneurship-4', step: 'Step 4: link to the support ecosystem (MUDRA, Startup India, state policy) an...', detail: 'link to the support ecosystem (MUDRA, Startup India, state policy) and economic role.', questionType: 'Problem Solving / 5 to 10 Marks' },
+            ],
     },
     { id: 'ent-mod3-business-plan-preparation', subjectId: 'bba-karnataka-entrepreneurship', title: 'Business Plan Preparation', moduleNumber: 3, moduleName: 'Module 3: Business Plan', order: 3, difficulty: 'core', tier: 'free', status: 'published', examFrequency: 'high', generatedBy: 'curator', contentVersion: 1, publishedAt: '2026-09-16T12:00:00.000Z', featuredQuestionIds: ['q-ent-03', 'q-ent-04'], subtopics: [
         'Business Plan: Meaning & Components',
@@ -3630,16 +4781,37 @@ An entrepreneur organises, manages and assumes risks of a business.`,
         'Risk Analysis'
       ], explanationMd: `# Business Plan Preparation
 
-A business plan is a roadmap for the venture.`,
-      formulas: [
-        { id: 'formula-ent-mod3-business-plan-preparation-1', label: 'Key Formula', formula: 'Formula placeholder', exampleQ: 'Example question', exampleA: 'Example answer' },
-      ],
-      tricks: [
-        { id: 'trick-ent-m3-1', title: 'Business Plan Components', trick: 'Executive summary, market analysis, operations, financials, risk.', whenToUse: 'Structure a business plan.' },
-      ],
-      howToSolve: [
-        { id: 'solve-ent-m3-1', step: 'Step 1: Identify business plan section.', detail: 'Draft appropriate section.', questionType: 'Business Plan Theory Question' },
-      ]
+### Core Concept
+A **business plan** is the venture written out: opportunity, product, market, operations, team, financials and funding ask. Sections: executive summary, company description, market analysis, marketing plan, operations, management, financial projections (P&L, cash flow, break-even), funding request, appendices. It serves as roadmap, pitch document and loan proposal. Investors scan team-size-market first.
+
+---
+
+### Key Framework
+1. **Structure**: executive summary (write last, read first), opportunity/problem, solution/product, market size (TAM-SAM-SOM), competition, business model, go-to-market.
+2. **Financials**: startup costs, sales forecast, P&L for 3-5 years, cash flow, break-even analysis, funding requirement and use of funds.
+3. **Market sizing**: TAM (total), SAM (serviceable), SOM (obtainable).
+4. **Presentation**: pitch deck (10-12 slides), elevator pitch (60-90 seconds); feasibility study precedes the plan (go/no-go).
+
+---
+
+### Exam Focus
+**Feasibility study vs business plan**: feasibility decides whether to proceed (go/no-go); the business plan guides how to execute.
+
+![Business Plan Diagram](business-plan.png)`,
+            formulas: [
+              { id: 'formula-ent-mod3-business-plan-preparation-1', label: 'TAM-SAM-SOM', formula: 'SOM = SAM x Expected market share percentage', exampleQ: 'SAM Rs 200 crore, expected share 2%.', exampleA: 'SOM = Rs 4 crore.' },
+              { id: 'formula-ent-mod3-business-plan-preparation-2', label: 'Break-even in plan', formula: 'BEP units = Fixed costs / (Price minus Variable cost per unit)', exampleQ: 'FC Rs 12 lakh; price Rs 300; VC Rs 180.', exampleA: 'BEP = 12,00,000 / 120 = 10,000 units.' },
+            ],
+            tricks: [
+              { id: 'trick-ent-mod3-business-plan-preparation-1', title: 'Summary last', trick: 'Write the executive summary after the plan is complete: it is the investor first impression.', whenToUse: 'Plan-quality tip.' },
+              { id: 'trick-ent-mod3-business-plan-preparation-2', title: 'TAM drill-down', trick: 'Top-down plus bottom-up sizing: show both to build credibility.', whenToUse: 'Market sizing questions.' },
+            ],
+            howToSolve: [
+              { id: 'solve-ent-mod3-business-plan-preparation-1', step: 'Step 1: run the feasibility check (product, market, technical, financial viab...', detail: 'run the feasibility check (product, market, technical, financial viability).', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-ent-mod3-business-plan-preparation-2', step: 'Step 2: draft the plan sections in order, ending with financial projections', detail: 'draft the plan sections in order, ending with financial projections.', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-ent-mod3-business-plan-preparation-3', step: 'Step 3: size the market (TAM-SAM-SOM) and show break-even', detail: 'size the market (TAM-SAM-SOM) and show break-even.', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-ent-mod3-business-plan-preparation-4', step: 'Step 4: state the funding requirement, use of funds and repayment/return logi...', detail: 'state the funding requirement, use of funds and repayment/return logic; polish the executive summary.', questionType: 'Problem Solving / 5 to 10 Marks' },
+            ],
     },
     { id: 'ent-mod4-finance-sources-startup', subjectId: 'bba-karnataka-entrepreneurship', title: 'Sources of Finance for Startups', moduleNumber: 4, moduleName: 'Module 4: Startup Finance', order: 4, difficulty: 'core', tier: 'free', status: 'published', examFrequency: 'moderate', generatedBy: 'curator', contentVersion: 1, publishedAt: '2026-09-16T12:00:00.000Z', featuredQuestionIds: ['q-ent-05', 'q-ent-06'], subtopics: [
         'Bootstrapping & Own Funds',
@@ -3647,18 +4819,39 @@ A business plan is a roadmap for the venture.`,
         'Venture Capital',
         'Bank Loans & Mudra',
         'Crowdfunding'
-      ], explanationMd: `# Sources of Finance for Startups
+      ], explanationMd: `# Finance Sources for Startups
 
-Bootstrapping means funding from personal savings and revenue.`,
-      formulas: [
-        { id: 'formula-ent-mod4-finance-sources-startup-1', label: 'Key Formula', formula: 'Formula placeholder', exampleQ: 'Example question', exampleA: 'Example answer' },
-      ],
-      tricks: [
-        { id: 'trick-ent-m4-1', title: 'Startup Funding Stages', trick: 'Bootstrap → Angel → VC → IPO.', whenToUse: 'Trace startup funding lifecycle.' },
-      ],
-      howToSolve: [
-        { id: 'solve-ent-m4-1', step: 'Step 1: Identify funding stage.', detail: 'Select appropriate source.', questionType: 'Startup Finance Theory Question' },
-      ]
+### Core Concept
+Startups fund themselves through a ladder: **bootstrapping, friends and family, angel investors, venture capital, government schemes, debt**. Each stage has instruments: equity, convertible notes, SAFE, venture debt. Government: MUDRA (Shishu/Kishore/Tarun), Startup India seed fund, CGTMSE (credit guarantee for collateral-free loans), SIDBI schemes. Karnataka startups also tap state IT/BT policies.
+
+---
+
+### Key Framework
+1. **Funding ladder**: bootstrapping to F&F to angel (seed) to VC (Series A/B) to private equity/IPO.
+2. **Instruments**: equity shares, convertible promissory notes, SAFEs, venture debt, working capital loans.
+3. **Government support**: MUDRA loans (up to Rs 10 lakh: Shishu 50k, Kishore 5 lakh, Tarun 10 lakh), CGTMSE guarantee cover, Stand-Up India (SC/ST/women), PMEGP.
+4. **Valuation basics**: pre-money vs post-money; dilution = investment / post-money.
+
+---
+
+### Exam Focus
+**Angel vs VC**: angels invest smaller personal funds at seed stage; VCs invest institutional funds at later stages with formal due diligence.
+
+![Startup Finance Diagram](startup-finance.png)`,
+            formulas: [
+              { id: 'formula-ent-mod4-finance-sources-startup-1', label: 'Post-money', formula: 'Post-money valuation = Pre-money valuation + New investment', exampleQ: 'Pre-money Rs 8 crore; investment Rs 2 crore.', exampleA: 'Post-money = Rs 10 crore; dilution = 20%.' },
+              { id: 'formula-ent-mod4-finance-sources-startup-2', label: 'MUDRA tier', formula: 'Shishu up to Rs 50,000; Kishore Rs 50k to Rs 5 lakh; Tarun Rs 5 lakh to Rs 10 lakh', exampleQ: 'Loan needed Rs 6 lakh.', exampleA: 'Tarun category (Rs 5-10 lakh).' },
+            ],
+            tricks: [
+              { id: 'trick-ent-mod4-finance-sources-startup-1', title: 'Dilution math', trick: 'Dilution % = Investment / Post-money valuation', whenToUse: 'Instant ownership calculations.' },
+              { id: 'trick-ent-mod4-finance-sources-startup-2', title: 'CGTMSE', trick: 'Credit guarantee enables collateral-free bank lending to micro/small units.', whenToUse: 'Scheme-selection MCQs.' },
+            ],
+            howToSolve: [
+              { id: 'solve-ent-mod4-finance-sources-startup-1', step: 'Step 1: identify the venture stage (idea/seed/growth) and the matching invest...', detail: 'identify the venture stage (idea/seed/growth) and the matching investor type.', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-ent-mod4-finance-sources-startup-2', step: 'Step 2: choose the instrument (equity, convertible note, debt) and compute di...', detail: 'choose the instrument (equity, convertible note, debt) and compute dilution or interest cost.', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-ent-mod4-finance-sources-startup-3', step: 'Step 3: map government schemes (MUDRA tier, CGTMSE, Stand-Up India) to the need', detail: 'map government schemes (MUDRA tier, CGTMSE, Stand-Up India) to the need.', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-ent-mod4-finance-sources-startup-4', step: 'Step 4: build a funding ask with use-of-funds and milestone linkage', detail: 'build a funding ask with use-of-funds and milestone linkage.', questionType: 'Problem Solving / 5 to 10 Marks' },
+            ],
     },
     { id: 'ent-mod5-startup-ecosystem-india', subjectId: 'bba-karnataka-entrepreneurship', title: 'Startup Ecosystem in India', moduleNumber: 5, moduleName: 'Module 5: Startup Ecosystem', order: 5, difficulty: 'core', tier: 'free', status: 'published', examFrequency: 'moderate', generatedBy: 'curator', contentVersion: 1, publishedAt: '2026-09-16T12:00:00.000Z', featuredQuestionIds: ['q-ent-07', 'q-ent-08'], subtopics: [
         'Startup India Scheme',
@@ -3668,16 +4861,37 @@ Bootstrapping means funding from personal savings and revenue.`,
         'Exit Strategies'
       ], explanationMd: `# Startup Ecosystem in India
 
-Startup India provides tax benefits and compliance relaxations.`,
-      formulas: [
-        { id: 'formula-ent-mod5-startup-ecosystem-india-1', label: 'Key Formula', formula: 'Formula placeholder', exampleQ: 'Example question', exampleA: 'Example answer' },
-      ],
-      tricks: [
-        { id: 'trick-ent-m5-1', title: 'Startup India', trick: 'Startup India offers tax holiday for 3 years in first 7 years.', whenToUse: 'Recall Startup India benefits.' },
-      ],
-      howToSolve: [
-        { id: 'solve-ent-m5-1', step: 'Step 1: Identify startup benefit.', detail: 'Explain registration options.', questionType: 'Startup Ecosystem Theory Question' },
-      ]
+### Core Concept
+India has the world third-largest startup ecosystem: **Startup India (2016)** offers recognition, tax benefits (3-year holiday under 80-IAC), self-certification, seed fund and faster exits (Section 54GB, insolvency windows). DPIIT recognition, Atal Innovation Mission, and state policies (Karnataka, Telangana, Gujarat) build incubators and clusters. Bengaluru is the top hub for IT, biotech and deep-tech ventures.
+
+---
+
+### Key Framework
+1. **Startup India pillars**: simplification (self-certify 9 labour laws), funding support (Fund of Funds, seed fund), tax benefits (80-IAC holiday, capital gains exemption).
+2. **DPIIT recognition**: 10-year window from incorporation, turnover under Rs 100 crore, entity not formed by splitting.
+3. **Ecosystem elements**: incubators (IIMB NSRCEL, T-Hub, Atal Tinkering Labs), accelerators, angel networks, VC funds, mentors.
+4. **Challenges**: funding winter, regulatory compliance, talent retention, market access; sector trends: fintech, edtech, SaaS, cleantech, healthtech.
+
+---
+
+### Exam Focus
+**80-IAC tax holiday**: eligible startups can claim 100% deduction on profits for 3 consecutive years out of the first 10 years.
+
+![Startup Ecosystem Diagram](startup-ecosystem.png)`,
+            formulas: [
+              { id: 'formula-ent-mod5-startup-ecosystem-india-1', label: 'Eligibility', formula: 'DPIIT recognition requires: incorporated within 10 years, turnover under Rs 100 crore, innovative product/process', exampleQ: 'Firm incorporated 6 years ago, turnover Rs 40 crore.', exampleA: 'Eligible for DPIIT recognition.' },
+              { id: 'formula-ent-mod5-startup-ecosystem-india-2', label: 'Tax holiday', formula: '80-IAC: 100% profit deduction for 3 consecutive years chosen from the first 10 years', exampleQ: 'Startup earns Rs 30 lakh profit in year 5.', exampleA: 'Can claim 100% deduction and pay zero tax on it.' },
+            ],
+            tricks: [
+              { id: 'trick-ent-mod5-startup-ecosystem-india-1', title: 'Self-certification', trick: 'Recognised startups self-certify 9 labour and environmental laws for 3-5 years.', whenToUse: 'Compliance-simplification questions.' },
+              { id: 'trick-ent-mod5-startup-ecosystem-india-2', title: 'Fund of Funds', trick: 'Government contributes to SEBI-registered AIFs that invest in startups: indirect funding route.', whenToUse: 'Policy-instrument MCQs.' },
+            ],
+            howToSolve: [
+              { id: 'solve-ent-mod5-startup-ecosystem-india-1', step: 'Step 1: check DPIIT eligibility (age, turnover, innovation)', detail: 'check DPIIT eligibility (age, turnover, innovation).', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-ent-mod5-startup-ecosystem-india-2', step: 'Step 2: list the benefits unlocked: tax holiday, self-certification, seed fun...', detail: 'list the benefits unlocked: tax holiday, self-certification, seed fund access, IPR support.', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-ent-mod5-startup-ecosystem-india-3', step: 'Step 3: identify ecosystem supports in the scenario (incubator, accelerator,...', detail: 'identify ecosystem supports in the scenario (incubator, accelerator, angel network).', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-ent-mod5-startup-ecosystem-india-4', step: 'Step 4: conclude with challenges and the policy measure that addresses each', detail: 'conclude with challenges and the policy measure that addresses each.', questionType: 'Problem Solving / 5 to 10 Marks' },
+            ],
     },
 ],
 
@@ -3757,18 +4971,39 @@ The "corporate veil" is the legal curtain separating the personality of the comp
         'Incorporation Process',
         'MOA & AOA',
         'Certificate of Incorporation'
-      ], explanationMd: `# Companies Act 2013
+      ], explanationMd: `# Companies Act: Incorporation & Formation
 
-A company is an artificial person created by law with separate legal entity.`,
-      formulas: [
-        { id: 'formula-colaw-mod2-companies-act-incorporation-1', label: 'Key Formula', formula: 'Formula placeholder', exampleQ: 'Example question', exampleA: 'Example answer' },
-      ],
-      tricks: [
-        { id: 'trick-claw-m2-1', title: 'MOA vs AOA', trick: 'MOA = charter/objects; AOA = internal rules/regulations.', whenToUse: 'Distinguish MOA from AOA.' },
-      ],
-      howToSolve: [
-        { id: 'solve-claw-m2-1', step: 'Step 1: Define company.', detail: 'Explain incorporation process.', questionType: 'Company Law Theory Question' },
-      ]
+### Core Concept
+A **company** is an artificial legal person separate from its members (Salomon v Salomon). Types: private (min 2 members, max 200, no public deposit/invitation), public (min 7 members), OPC, small company, Section 8 (not-for-profit). Incorporation under the Companies Act 2013: name reservation (RUN/SPICe), MOA (objects, capital, association) and AOA (internal rules), certificate of incorporation (conclusive evidence), and the corporate veil doctrine.
+
+---
+
+### Key Framework
+1. **Incorporation steps**: DSC and DIN of directors, name reservation, drafting MOA/AOA, filing SPICe+ with declarations, certificate of incorporation (Section 7).
+2. **MOA clauses**: name, registered office, objects, liability, capital, subscription; doctrines: ultra vires, constructive notice, indoor management (Turquand).
+3. **Corporate veil**: separate legal personality; lifted in fraud, agency, enemy character, or single-person abuse (Section 248/35 exceptions).
+4. **Private vs public**: minimum members 2 vs 7; maximum 200 vs unlimited; private restricts transfer and public invitation.
+
+---
+
+### Exam Focus
+**MOA vs AOA**: MOA is the charter binding the company with outsiders; AOA governs internal management and can be altered by special resolution.
+
+![Company Incorporation Diagram](company-incorporation.png)`,
+            formulas: [
+              { id: 'formula-colaw-mod2-companies-act-incorporation-1', label: 'Minimum members', formula: 'Private: 2 members and 2 directors; Public: 7 members and 3 directors', exampleQ: 'Group of 3 friends plus 2 investors forming a company.', exampleA: 'Private company is possible (2 to 200 members).' },
+              { id: 'formula-colaw-mod2-companies-act-incorporation-2', label: 'One Person Company', formula: 'OPC: one member, one nominee; max paid-up capital Rs 50 lakh and turnover Rs 2 crore (else convert)', exampleQ: 'Solo founder with turnover Rs 1 crore.', exampleA: 'OPC structure fits.' },
+            ],
+            tricks: [
+              { id: 'trick-colaw-mod2-companies-act-incorporation-1', title: 'Ultra vires', trick: 'Acts beyond MOA objects are void (ultra vires); outsiders can still use indoor management.', whenToUse: 'Doctrine questions.' },
+              { id: 'trick-colaw-mod2-companies-act-incorporation-2', title: 'Turquand rule', trick: 'Indoor management: outsider may assume internal procedures were followed.', whenToUse: 'Bargraph of MOA vs AOA table.' },
+            ],
+            howToSolve: [
+              { id: 'solve-colaw-mod2-companies-act-incorporation-1', step: 'Step 1: classify the company type from membership and activity', detail: 'classify the company type from membership and activity.', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-colaw-mod2-companies-act-incorporation-2', step: 'Step 2: walk incorporation: DSC/DIN, name, MOA/AOA, SPICe+ filing, certificate', detail: 'walk incorporation: DSC/DIN, name, MOA/AOA, SPICe+ filing, certificate.', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-colaw-mod2-companies-act-incorporation-3', step: 'Step 3: test the act in question against MOA (ultra vires) and AOA; apply the...', detail: 'test the act in question against MOA (ultra vires) and AOA; apply the veil-lifting doctrine if abuse is alleged.', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-colaw-mod2-companies-act-incorporation-4', step: 'Step 4: state the consequences: void act, liability of directors, or personal...', detail: 'state the consequences: void act, liability of directors, or personal liability.', questionType: 'Problem Solving / 5 to 10 Marks' },
+            ],
     },
     { id: 'colaw-mod3-shares-debentures', subjectId: 'bba-karnataka-company-law', title: 'Shares, Debentures & Share Capital', moduleNumber: 3, moduleName: 'Module 3: Share Capital', order: 3, difficulty: 'core', tier: 'free', status: 'published', examFrequency: 'high', generatedBy: 'curator', contentVersion: 1, publishedAt: '2026-09-16T12:00:00.000Z', featuredQuestionIds: ['q-claw-03', 'q-claw-04'], subtopics: [
         'Share Capital: Meaning & Types',
@@ -3776,18 +5011,39 @@ A company is an artificial person created by law with separate legal entity.`,
         'Issue of Shares: At Par, Premium, Discount',
         'Debentures: Types & Features',
         'Transfer & Transmission of Shares'
-      ], explanationMd: `# Shares, Debentures & Share Capital
+      ], explanationMd: `# Shares & Debentures
 
-Equity shareholders have voting rights; preference shareholders get fixed dividend.`,
-      formulas: [
-        { id: 'formula-colaw-mod3-shares-debentures-1', label: 'Key Formula', formula: 'Formula placeholder', exampleQ: 'Example question', exampleA: 'Example answer' },
-      ],
-      tricks: [
-        { id: 'trick-claw-m3-1', title: 'Equity vs Preference', trick: 'Equity = voting rights + variable dividend; Preference = fixed dividend + no vote.', whenToUse: 'Distinguish share types.' },
-      ],
-      howToSolve: [
-        { id: 'solve-claw-m3-1', step: 'Step 1: Identify share type.', detail: 'Explain rights and features.', questionType: 'Share Capital Theory Question' },
-      ]
+### Core Concept
+**Share capital** is ownership funding (equity with voting, preference with fixed dividend priority); **debentures** are loan funding with fixed interest and a charge on assets. The Companies Act 2013 governs issue, transfer and redemption: private placement, rights issue, bonus issue, ESOPs; deposits rules for public borrowing. Key distinctions: dividend versus interest, floating versus fixed charge, convertible versus non-convertible debentures.
+
+---
+
+### Key Framework
+1. **Share types**: equity (voting, variable dividend, residual claim), preference (fixed dividend, priority in winding up; can be cumulative, participating, convertible).
+2. **Debentures**: secured/unsecured, redeemable/irredeemable, convertible/non-convertible; trust deed for secured issues; charge registration (CHG-1 within 30 days).
+3. **Issue mechanics**: prospectus (public), private placement (PAS-3), rights (Section 62), bonus (Section 63 from reserves), buy-back (Section 68 limits: 25% of paid-up).
+4. **Deposits**: Section 73-76: public companies need RBI-bonded rules; acceptance limits and deposit repayment reserve (20% maturing within a year).
+
+---
+
+### Exam Focus
+**Share vs debenture**: a share is ownership with variable dividend; a debenture is debt with fixed interest and priority over shareholders.
+
+![Shares and Debentures Diagram](shares-debentures.png)`,
+            formulas: [
+              { id: 'formula-colaw-mod3-shares-debentures-1', label: 'Bonus issue', formula: 'Bonus shares are issued free from reserves; bonus = Reserves available / Face value of new shares', exampleQ: 'Free reserves Rs 50 lakh, face value Rs 10.', exampleA: 'Bonus shares = 5,00,000 shares.' },
+              { id: 'formula-colaw-mod3-shares-debentures-2', label: 'Buy-back limit', formula: 'Buy-back limited to 25% of total paid-up capital plus free reserves; 1-year gap between buy-backs', exampleQ: 'Paid-up plus reserves Rs 20 crore.', exampleA: 'Max buy-back = Rs 5 crore.' },
+            ],
+            tricks: [
+              { id: 'trick-colaw-mod3-shares-debentures-1', title: 'Charge registration', trick: 'Register charge (CHG-1) within 30 days of creation; delay attracts penalty and lender loses priority.', whenToUse: 'Timeline MCQs.' },
+              { id: 'trick-colaw-mod3-shares-debentures-2', title: 'Preference dividend', trick: 'Cumulative preference dividend accumulates if skipped; equity gets nothing until preference is paid.', whenToUse: 'Dividend-order questions.' },
+            ],
+            howToSolve: [
+              { id: 'solve-colaw-mod3-shares-debentures-1', step: 'Step 1: classify the instrument (equity/preference share or debenture type)', detail: 'classify the instrument (equity/preference share or debenture type).', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-colaw-mod3-shares-debentures-2', step: 'Step 2: check the issue route and compliance (prospectus, PAS-3, Section 62/63)', detail: 'check the issue route and compliance (prospectus, PAS-3, Section 62/63).', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-colaw-mod3-shares-debentures-3', step: 'Step 3: for debentures, verify charge creation and trust deed', detail: 'for debentures, verify charge creation and trust deed.', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-colaw-mod3-shares-debentures-4', step: 'Step 4: compute dividend/interest obligations and priority in payment or wind...', detail: 'compute dividend/interest obligations and priority in payment or winding up.', questionType: 'Problem Solving / 5 to 10 Marks' },
+            ],
     },
     { id: 'colaw-mod4-company-management-directors', subjectId: 'bba-karnataka-company-law', title: 'Company Management: Directors & Meetings', moduleNumber: 4, moduleName: 'Module 4: Directors & Meetings', order: 4, difficulty: 'core', tier: 'free', status: 'published', examFrequency: 'moderate', generatedBy: 'curator', contentVersion: 1, publishedAt: '2026-09-16T12:00:00.000Z', featuredQuestionIds: ['q-claw-05', 'q-claw-06'], subtopics: [
         'Directors: Appointment & Removal',
@@ -3795,18 +5051,39 @@ Equity shareholders have voting rights; preference shareholders get fixed divide
         'Board Meetings & Resolutions',
         'Annual General Meeting',
         'Extraordinary General Meeting'
-      ], explanationMd: `# Company Management
+      ], explanationMd: `# Company Management & Directors
 
-Directors manage the company; shareholders own it.`,
-      formulas: [
-        { id: 'formula-colaw-mod4-company-management-directors-1', label: 'Key Formula', formula: 'Formula placeholder', exampleQ: 'Example question', exampleA: 'Example answer' },
-      ],
-      tricks: [
-        { id: 'trick-claw-m4-1', title: 'AGM frequency', trick: 'AGM must be held once every year, within 6 months of year-end.', whenToUse: 'Recall AGM timing.' },
-      ],
-      howToSolve: [
-        { id: 'solve-claw-m4-1', step: 'Step 1: Identify meeting type.', detail: 'Explain meeting requirements.', questionType: 'Company Management Theory Question' },
-      ]
+### Core Concept
+**Directors** manage the company as agents and fiduciaries of the members. The Act 2013 fixes board composition (independent directors, woman director for listed/large companies), DIN requirement, appointment (Section 160-169), duties (Section 166: fiduciary duty, care, no conflict), disqualifications (Section 164), removal (Section 169), and key managerial personnel (CEO, CFO, CS). Board meetings, committees (audit, nomination/remuneration, CSR under Section 135) complete the governance map.
+
+---
+
+### Key Framework
+1. **Appointment**: DIN mandatory; general meeting appoints (Section 160 right to stand); additional directors (Section 161) hold only till the next AGM.
+2. **Duties (Section 166)**: act in good faith, care and diligence, avoid conflict of interest, not achieve undue gain; breach: personal liability and disgorgement.
+3. **Composition**: independent directors (1/3 of board for listed), woman director (listed + paid-up above Rs 100 crore), small shareholder director.
+4. **Disqualification (Section 164)**: unsound mind, undischarged insolvent, convicted (5-year bar), unpaid shares, disqualified under 167. Rotation: 2/3 of directors retire by rotation in public companies.
+
+---
+
+### Exam Focus
+**Additional vs alternate director**: additional (Section 161) is appointed between AGMs; alternate director acts in the original director absence for 3 months or more.
+
+![Company Directors Diagram](company-directors.png)`,
+            formulas: [
+              { id: 'formula-colaw-mod4-company-management-directors-1', label: 'Board quorum', formula: 'Quorum: 1/3 of board strength or 2 directors, whichever is higher (minimum 2)', exampleQ: 'Board of 9 directors.', exampleA: 'Quorum = 3.' },
+              { id: 'formula-colaw-mod4-company-management-directors-2', label: 'Woman director', formula: 'Required for listed companies and public companies with paid-up capital above Rs 100 crore or turnover above Rs 300 crore', exampleQ: 'Public company, paid-up Rs 120 crore.', exampleA: 'Woman director mandatory.' },
+            ],
+            tricks: [
+              { id: 'trick-colaw-mod4-company-management-directors-1', title: 'Duty breach', trick: 'Section 166 breach: director holds gains in trust for the company (disgorgement).', whenToUse: 'Fiduciary-duty scenarios.' },
+              { id: 'trick-colaw-mod4-company-management-directors-2', title: 'Rotation', trick: 'Public company: 2/3 of directors retire by rotation every AGM; one-third eligible for reappointment.', whenToUse: 'Appointment-process questions.' },
+            ],
+            howToSolve: [
+              { id: 'solve-colaw-mod4-company-management-directors-1', step: 'Step 1: identify the director category (executive, independent, additional, a...', detail: 'identify the director category (executive, independent, additional, alternate) and the appointment route.', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-colaw-mod4-company-management-directors-2', step: 'Step 2: test composition rules (quorum, woman director, independent ratio)', detail: 'test composition rules (quorum, woman director, independent ratio).', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-colaw-mod4-company-management-directors-3', step: 'Step 3: analyse the act against Section 166 duties and Section 164 disqualifi...', detail: 'analyse the act against Section 166 duties and Section 164 disqualifications.', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-colaw-mod4-company-management-directors-4', step: 'Step 4: state consequences: removal, personal liability, disgorgement, or vac...', detail: 'state consequences: removal, personal liability, disgorgement, or vacation of office (Section 167).', questionType: 'Problem Solving / 5 to 10 Marks' },
+            ],
     },
     { id: 'colaw-mod5-winding-up-insolvency', subjectId: 'bba-karnataka-company-law', title: 'Winding Up & Insolvency', moduleNumber: 5, moduleName: 'Module 5: Winding Up & Insolvency', order: 5, difficulty: 'core', tier: 'free', status: 'published', examFrequency: 'moderate', generatedBy: 'curator', contentVersion: 1, publishedAt: '2026-09-16T12:00:00.000Z', featuredQuestionIds: ['q-claw-07', 'q-claw-08'], subtopics: [
         'Winding Up: Meaning & Modes',
@@ -3816,16 +5093,37 @@ Directors manage the company; shareholders own it.`,
         'Corporate Insolvency Resolution Process'
       ], explanationMd: `# Winding Up & Insolvency
 
-IBC 2016 consolidated insolvency laws in India.`,
-      formulas: [
-        { id: 'formula-colaw-mod5-winding-up-insolvency-1', label: 'Key Formula', formula: 'Formula placeholder', exampleQ: 'Example question', exampleA: 'Example answer' },
-      ],
-      tricks: [
-        { id: 'trick-claw-m5-1', title: 'IBC objective', trick: 'IBC 2016 aims to resolve insolvency in a time-bound manner.', whenToUse: 'Recall IBC purpose.' },
-      ],
-      howToSolve: [
-        { id: 'solve-claw-m5-1', step: 'Step 1: Identify winding up mode.', detail: 'Explain liquidator role.', questionType: 'Insolvency Theory Question' },
-      ]
+### Core Concept
+**Winding up** dissolves the company: by the tribunal (Section 271-273: inability to pay debts, oppression, public interest) or voluntary (members/creditors). The **Insolvency and Bankruptcy Code 2015** now governs resolution: CIRP (corporate insolvency resolution process, 180+90 days), liquidation waterfall (Section 53: secured creditors, workmen dues, employees, government dues, unsecured, preference, equity). Fast-track and pre-packaged schemes support MSMEs.
+
+---
+
+### Key Framework
+1. **Winding up grounds**: tribunal: unpaid debt (statutory demand/decree), special resolution plus tribunal opinion, public interest, inability to pay; voluntary: members (solvent), creditors (insolvent).
+2. **IBC process**: default of Rs 1 crore or more triggers CIRP; NCLT appoints IRP; committee of creditors decides resolution vs liquidation (66% voting share).
+3. **Liquidation waterfall (Section 53)**: insolvency resolution cost, workmen 24 months dues, secured creditors, employees, government, unsecured, preference shares, members.
+4. **Voluntary winding**: statement of affairs, liquidator appointment, final meeting, dissolution (Section 301).
+
+---
+
+### Exam Focus
+**Winding up vs liquidation vs dissolution**: winding up is the process; liquidation realises assets and pays creditors; dissolution ends the legal existence.
+
+![Winding Up Diagram](winding-up.png)`,
+            formulas: [
+              { id: 'formula-colaw-mod5-winding-up-insolvency-1', label: 'Trigger threshold', formula: 'CIRP triggers on default of Rs 1 crore or more (Rs 10 lakh for MSME class via pre-pack)', exampleQ: 'Default of Rs 2 crore to a bank.', exampleA: 'Bank can file CIRP application at NCLT.' },
+              { id: 'formula-colaw-mod5-winding-up-insolvency-2', label: 'Section 53 priority', formula: 'Waterfall: cost, workmen (24 months), secured, employees (12 months), government (1 year), unsecured, preference, equity', exampleQ: 'Rs 50 lakh available; workmen dues Rs 10 lakh, secured Rs 60 lakh.', exampleA: 'Cost and workmen paid first; secured gets balance; equity nothing.' },
+            ],
+            tricks: [
+              { id: 'trick-colaw-mod5-winding-up-insolvency-1', title: '180+90', trick: 'CIRP: 180 days plus one 90-day extension; beyond that liquidation.', whenToUse: 'Timeline questions.' },
+              { id: 'trick-colaw-mod5-winding-up-insolvency-2', title: 'Voluntary trigger', trick: 'Members voluntary when solvent; creditors voluntary when insolvent.', whenToUse: 'Route-selection MCQs.' },
+            ],
+            howToSolve: [
+              { id: 'solve-colaw-mod5-winding-up-insolvency-1', step: 'Step 1: identify the route: tribunal winding up, voluntary, or IBC CIRP', detail: 'identify the route: tribunal winding up, voluntary, or IBC CIRP.', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-colaw-mod5-winding-up-insolvency-2', step: 'Step 2: test the trigger (inability to pay, default amount, special resolution)', detail: 'test the trigger (inability to pay, default amount, special resolution).', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-colaw-mod5-winding-up-insolvency-3', step: 'Step 3: run the process timeline (IRP appointment, committee of creditors, re...', detail: 'run the process timeline (IRP appointment, committee of creditors, resolution plan).', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-colaw-mod5-winding-up-insolvency-4', step: 'Step 4: if liquidating, apply the Section 53 waterfall to distribute the assets', detail: 'if liquidating, apply the Section 53 waterfall to distribute the assets.', questionType: 'Problem Solving / 5 to 10 Marks' },
+            ],
     },
 ],
 
@@ -3906,18 +5204,39 @@ $$\\text{Total Taxable Income} = \\text{Gross Total Income (GTI)} - \\text{Deduc
         'Perquisites: Types & Valuation',
         'Deduction under Section 16',
         'Computation of Salary Income'
-      ], explanationMd: `# Income from Salary
+      ], explanationMd: `# Heads of Income: Salary
 
-Salary includes basic wages, allowances, perquisites and profits in lieu of salary.`,
-      formulas: [
-        { id: 'formula-tax2-m1-1', label: 'Gross Salary', formula: 'Gross Salary = Basic + Allowances + Perquisites − Section 16 Deductions', exampleQ: 'Basic ₹40,000/month; HRA ₹10,000/month. Annual gross salary?', exampleA: 'Annual basic = 4,80,000; Annual HRA = 1,20,000; Gross = ₹6,00,000 (before deductions).' },
-      ],
-      tricks: [
-        { id: 'trick-tax2-m1-1', title: 'Section 16 deductions', trick: 'Section 16: Standard deduction ₹50,000, entertainment allowance, professional tax.', whenToUse: 'Apply salary deductions.' },
-      ],
-      howToSolve: [
-        { id: 'solve-tax2-m1-1', step: 'Step 1: Sum all salary components.', detail: 'Subtract Section 16 deductions.', questionType: 'Salary Income Problem' },
-      ]
+### Core Concept
+**Salary income** covers wages, allowances, perquisites, profits in lieu of salary (Section 17). Computation: gross salary minus exemptions (HRA, gratuity, leave encashment, pension) minus standard deduction gives income under the head. The Finance Act updates rates yearly; key exam items: HRA exemption (Section 10(13A) old regime), perquisite valuation (rent-free accommodation, car), and standard deduction (Rs 75,000 new regime).
+
+---
+
+### Key Framework
+1. **Components**: basic, DA, commission, bonus; allowances: fully taxable (DA), partly exempt (HRA, LTA), fully exempt (special duty).
+2. **HRA exemption**: least of (HRA received; rent minus 10% of salary; 50%/40% of salary for metro/non-metro).
+3. **Perquisites**: rent-free house (valuation by rules), car, sweeper/gardener, education; some exempt (medical up to Rs 15,000).
+4. **Standard deduction**: Rs 75,000 (new regime) / Rs 50,000 (old regime); pensioners get the same standard deduction.
+
+---
+
+### Exam Focus
+**Salary definition**: includes wages, annuity, pension, gratuity, fees, commission, perquisites and profits in lieu (Section 17(1),(2)).
+
+![Salary Income Diagram](salary-income.png)`,
+            formulas: [
+              { id: 'formula-tax2-mod1-heads-of-income-salary-1', label: 'HRA exemption', formula: 'Exempt HRA = Least of (HRA received; Rent paid minus 10% of salary; 50% metro / 40% non-metro salary)', exampleQ: 'HRA Rs 2.4 lakh; rent Rs 2.4 lakh; salary Rs 6 lakh (metro).', exampleA: 'Least of (2.4L; 2.4-0.6=1.8L; 3L) = Rs 1.8 lakh exempt.' },
+              { id: 'formula-tax2-mod1-heads-of-income-salary-2', label: 'Standard deduction', formula: 'Salary head deduction = Rs 75,000 (new regime) or Rs 50,000 (old regime)', exampleQ: 'Gross salary Rs 8 lakh (new regime).', exampleA: 'Net salary income = Rs 7.25 lakh before other exemptions.' },
+            ],
+            tricks: [
+              { id: 'trick-tax2-mod1-heads-of-income-salary-1', title: 'Salary base', trick: 'For HRA, salary = basic plus DA (forming part) plus commission on fixed percentage of turnover.', whenToUse: 'Exemption computation basis.' },
+              { id: 'trick-tax2-mod1-heads-of-income-salary-2', title: 'Gratuity exempt', trick: 'Gratuity exemption: least of (15/26 x last salary x years; actual; Rs 20 lakh cap for private).', whenToUse: 'Retirement planning questions.' },
+            ],
+            howToSolve: [
+              { id: 'solve-tax2-mod1-heads-of-income-salary-1', step: 'Step 1: compute gross salary (basic + DA + allowances + perquisites + bonus)', detail: 'compute gross salary (basic + DA + allowances + perquisites + bonus).', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-tax2-mod1-heads-of-income-salary-2', step: 'Step 2: apply exemptions: HRA (least-of-three), LTA, gratuity, leave encashment', detail: 'apply exemptions: HRA (least-of-three), LTA, gratuity, leave encashment.', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-tax2-mod1-heads-of-income-salary-3', step: 'Step 3: subtract standard deduction', detail: 'subtract standard deduction.', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-tax2-mod1-heads-of-income-salary-4', step: 'Step 4: add the balance to total income; for perquisites, apply the valuation...', detail: 'add the balance to total income; for perquisites, apply the valuation rules (rent-free accommodation at prescribed rates).', questionType: 'Problem Solving / 5 to 10 Marks' },
+            ],
     },
     { id: 'tax2-mod2-income-from-house-property', subjectId: 'bba-karnataka-income-tax-2', title: 'Income from House Property', moduleNumber: 2, moduleName: 'Module 2: House Property Income', order: 2, difficulty: 'core', tier: 'free', status: 'published', examFrequency: 'moderate', generatedBy: 'curator', contentVersion: 1, publishedAt: '2026-09-16T12:00:00.000Z', featuredQuestionIds: ['q-tax2-03', 'q-tax2-04'], subtopics: [
         'House Property: Meaning',
@@ -3927,16 +5246,37 @@ Salary includes basic wages, allowances, perquisites and profits in lieu of sala
         'Interest on Housing Loan'
       ], explanationMd: `# Income from House Property
 
-Annual value is the inherent capacity of property to earn income.`,
-      formulas: [
-        { id: 'formula-tax2-m2-1', label: 'Net Annual Value', formula: 'NAV = GAV − Municipal Taxes', exampleQ: 'GAV ₹2,40,000; Municipal tax ₹20,000. NAV?', exampleA: 'NAV = 2,40,000 − 20,000 = ₹2,20,000.' },
-      ],
-      tricks: [
-        { id: 'trick-tax2-m2-1', title: 'Standard deduction 24(a)', trick: 'Standard deduction = 30% of NAV (repairs, maintenance).', whenToUse: 'Apply 30% standard deduction.' },
-      ],
-      howToSolve: [
-        { id: 'solve-tax2-m2-1', step: 'Step 1: Compute GAV and NAV.', detail: 'Apply standard deduction and interest.', questionType: 'House Property Problem' },
-      ]
+### Core Concept
+**House property income** is computed on annual value: the higher of fair rent, municipal value and standard rent (expected rent), then adjusted for unrealised rent and municipal taxes paid by owner. Deductions: 30% standard deduction (Section 24(a)) plus interest on borrowed capital (Section 24(b): Rs 2 lakh self-occupied limit). Two self-occupied houses can be treated as self-occupied (since AY 2020-21). Loss from house property set-off against other heads is capped at Rs 2 lakh.
+
+---
+
+### Key Framework
+1. **Annual value**: gross annual value = expected rent (higher of fair/municipal, capped by standard rent) or actual rent if higher; deduct unrealised rent (conditions).
+2. **NAV**: GAV minus municipal taxes (owner-paid) = Net Annual Value.
+3. **Deductions**: 30% of NAV (no proof needed); interest on loan: fully deductible for let-out; Rs 2 lakh cap for self-occupied (construction completed within 5 years).
+4. **Loss set-off**: house property loss against other heads limited to Rs 2 lakh per year; balance carried forward 8 years.
+
+---
+
+### Exam Focus
+**Let-out vs self-occupied**: let-out: actual rent basis with 30% plus full interest deduction; self-occupied: NAV deemed nil, only interest deduction (capped Rs 2 lakh).
+
+![House Property Diagram](house-property.png)`,
+            formulas: [
+              { id: 'formula-tax2-mod2-income-from-house-property-1', label: 'Income computation', formula: 'Income = NAV minus 30% of NAV minus Interest (subject to limits)', exampleQ: 'GAV Rs 2.4 lakh; municipal tax Rs 20k; interest Rs 1.5 lakh.', exampleA: 'NAV = 2.2L; income = 2.2 - 0.66 - 1.5 = Rs 4,000.' },
+              { id: 'formula-tax2-mod2-income-from-house-property-2', label: 'Expected rent', formula: 'Expected rent = Higher of fair rent and municipal value, restricted to standard rent; compare with actual rent', exampleQ: 'Fair 1.8L, municipal 1.6L, standard 1.7L, actual 2L.', exampleA: 'Expected = 1.7L; GAV = 2L (actual higher).' },
+            ],
+            tricks: [
+              { id: 'trick-tax2-mod2-income-from-house-property-1', title: '30% flat', trick: 'Standard deduction is always 30% of NAV regardless of actual expenses.', whenToUse: 'Fixed deduction trick.' },
+              { id: 'trick-tax2-mod2-income-from-house-property-2', title: '2L interest cap', trick: 'Self-occupied interest capped at Rs 2 lakh; let-out interest fully deductible against that property income.', whenToUse: 'Set-off questions.' },
+            ],
+            howToSolve: [
+              { id: 'solve-tax2-mod2-income-from-house-property-1', step: 'Step 1: determine occupancy status (self-occupied, let-out, deemed let-out)', detail: 'determine occupancy status (self-occupied, let-out, deemed let-out).', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-tax2-mod2-income-from-house-property-2', step: 'Step 2: compute GAV: expected rent versus actual rent rules; deduct municipal...', detail: 'compute GAV: expected rent versus actual rent rules; deduct municipal taxes.', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-tax2-mod2-income-from-house-property-3', step: 'Step 3: apply 30% standard deduction and interest deduction with the applicab...', detail: 'apply 30% standard deduction and interest deduction with the applicable cap.', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-tax2-mod2-income-from-house-property-4', step: 'Step 4: set off any loss (within Rs 2 lakh) and carry forward the balance', detail: 'set off any loss (within Rs 2 lakh) and carry forward the balance.', questionType: 'Problem Solving / 5 to 10 Marks' },
+            ],
     },
     { id: 'tax2-mod3-profit-gains-business-profession', subjectId: 'bba-karnataka-income-tax-2', title: 'Profit & Gains from Business or Profession', moduleNumber: 3, moduleName: 'Module 3: Business Income', order: 3, difficulty: 'core', tier: 'free', status: 'published', examFrequency: 'high', generatedBy: 'curator', contentVersion: 1, publishedAt: '2026-09-16T12:00:00.000Z', featuredQuestionIds: ['q-tax2-05', 'q-tax2-06'], subtopics: [
         'Business Income: Meaning',
@@ -3944,18 +5284,39 @@ Annual value is the inherent capacity of property to earn income.`,
         'Depreciation under Section 32',
         'Presumptive Taxation: Section 44AD',
         'Computation of Business Income'
-      ], explanationMd: `# Profit & Gains from Business or Profession
+      ], explanationMd: `# Profits & Gains of Business or Profession
 
-Business income = Revenue − Allowable expenses − Depreciation.`,
-      formulas: [
-        { id: 'formula-tax2-mod3-profit-gains-business-profession-1', label: 'Key Formula', formula: 'Formula placeholder', exampleQ: 'Example question', exampleA: 'Example answer' },
-      ],
-      tricks: [
-        { id: 'trick-tax2-m3-1', title: 'Section 44AD', trick: 'Section 44AD presumptive: 8% of turnover (6% digital) for small businesses.', whenToUse: 'Apply presumptive taxation.' },
-      ],
-      howToSolve: [
-        { id: 'solve-tax2-m3-1', step: 'Step 1: Identify business receipts.', detail: 'Subtract allowable expenses and depreciation.', questionType: 'Business Income Problem' },
-      ]
+### Core Concept
+This head taxes business profit: revenue receipts minus allowable expenses (Sections 30-44). Key allowances: depreciation (Section 32, block of assets), additional depreciation (20% for new plant in specified areas), bad debts (Section 36), preliminary expenses amortisation (Section 35D), and specific disallowances (Section 14A, 40(a)(i): TDS compliance, 43B: payments made before filing). Presumptive taxation (44AD/44ADA/44AE) simplifies small businesses.
+
+---
+
+### Key Framework
+1. **Allowable deductions**: rent (30), rates/taxes, repairs, insurance, depreciation (WDV method, blocks), bad debts written off (36(1)(vii)), employee PF/ESI, interest on business loans.
+2. **Depreciation**: block of assets concept; rates (15% buildings, 30% machinery, 40% computers); additional depreciation 20% for new plant used 180+ days.
+3. **Disallowed**: personal expenses, capital expenditure, illegal payments, payments above Rs 10,000 in cash (35AD specifics), provision for doubtful debts (only actual write-off allowed).
+4. **Presumptive**: 44AD: 8% (6% digital) of turnover for small businesses (turnover up to Rs 3 crore); 44ADA: 50% receipts for professionals (up to Rs 75 lakh); no further deductions claimed.
+
+---
+
+### Exam Focus
+**Depreciation is mandatory** under Section 32: even if not claimed in accounts, the WDV carry-forward requires computation.
+
+![Business Profession Diagram](business-profession.png)`,
+            formulas: [
+              { id: 'formula-tax2-mod3-profit-gains-business-profession-1', label: 'WDV depreciation', formula: 'Depreciation = WDV of block x Rate x (Days used / 365); WDV = Opening WDV + additions minus sales', exampleQ: 'Block WDV Rs 10 lakh (machinery 30%), used full year.', exampleA: 'Depreciation = Rs 3 lakh; closing WDV = Rs 7 lakh.' },
+              { id: 'formula-tax2-mod3-profit-gains-business-profession-2', label: 'Presumptive income', formula: '44AD income = 8% of turnover (6% for digital receipts); 44ADA = 50% of gross receipts', exampleQ: 'Turnover Rs 60 lakh, 100% digital.', exampleA: 'Presumptive income = 60L x 6% = Rs 3.6 lakh.' },
+            ],
+            tricks: [
+              { id: 'trick-tax2-mod3-profit-gains-business-profession-1', title: 'Block rule', trick: 'Depreciation runs on blocks of assets; sale proceeds reduce the block WDV (capped at block value).', whenToUse: 'Computation questions.' },
+              { id: 'trick-tax2-mod3-profit-gains-business-profession-2', title: '43B rule', trick: 'Deduction for taxes/PF/gratuity only when actually paid before the filing due date.', whenToUse: 'Timing disallowance traps.' },
+            ],
+            howToSolve: [
+              { id: 'solve-tax2-mod3-profit-gains-business-profession-1', step: 'Step 1: compute gross profit from business accounts (Section 28 income)', detail: 'compute gross profit from business accounts (Section 28 income).', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-tax2-mod3-profit-gains-business-profession-2', step: 'Step 2: add disallowed expenses back (personal, capital, provision, cash viol...', detail: 'add disallowed expenses back (personal, capital, provision, cash violations).', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-tax2-mod3-profit-gains-business-profession-3', step: 'Step 3: claim deductions: rent, interest, depreciation on block WDV (with 180...', detail: 'claim deductions: rent, interest, depreciation on block WDV (with 180-day rule for additions), bad debts.', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-tax2-mod3-profit-gains-business-profession-4', step: 'Step 4: compare with presumptive computation (44AD/44ADA) where eligible and...', detail: 'compare with presumptive computation (44AD/44ADA) where eligible and choose the lower-tax option.', questionType: 'Problem Solving / 5 to 10 Marks' },
+            ],
     },
     { id: 'tax2-mod5-capital-gains-income-other-sources', subjectId: 'bba-karnataka-income-tax-2', title: 'Capital Gains & Income from Other Sources', moduleNumber: 5, moduleName: 'Module 5: Capital Gains & Other Sources', order: 5, difficulty: 'core', tier: 'free', status: 'published', examFrequency: 'moderate', generatedBy: 'curator', contentVersion: 1, publishedAt: '2026-09-16T12:00:00.000Z', featuredQuestionIds: ['q-tax2-07', 'q-tax2-08'], subtopics: [
         'Capital Gains: Short-term & Long-term',
@@ -3963,18 +5324,39 @@ Business income = Revenue − Allowable expenses − Depreciation.`,
         'Exemptions: Sections 54, 54EC',
         'Income from Other Sources',
         'Deductions under Section 57'
-      ], explanationMd: `# Capital Gains & Other Sources
+      ], explanationMd: `# Capital Gains & Income from Other Sources
 
-LTCG on listed equity above ₹1 lakh is taxed at 10%.`,
-      formulas: [
-        { id: 'formula-tax2-m5-1', label: 'LTCG Tax', formula: 'LTCG on listed equity > ₹1 lakh = 10% without indexation', exampleQ: 'LTCG ₹1,50,000 on listed equity. Tax?', exampleA: 'Tax = 10% of (1,50,000 − 1,00,000) = ₹5,000.' },
-      ],
-      tricks: [
-        { id: 'trick-tax2-m5-1', title: 'LTCG equity exemption', trick: 'LTCG up to ₹1 lakh per year on listed equity is exempt.', whenToUse: 'Apply ₹1 lakh LTCG exemption.' },
-      ],
-      howToSolve: [
-        { id: 'solve-tax2-m5-1', step: 'Step 1: Classify STCG vs LTCG.', detail: 'Apply holding period rules.', questionType: 'Capital Gains Problem' },
-      ]
+### Core Concept
+**Capital gains** tax profits on transfer of a capital asset: short-term (held <= 12/24 months) versus long-term, with indexation benefits for long-term (except listed equity where LTCG above Rs 1.25 lakh is taxed at 12.5% without indexation post-July 2024). Exemptions: Sections 54, 54B, 54EC, 54F (reinvestment in residential house/bonds). **Income from other sources (IOS)** is the residual head: dividends, interest, gifts (Section 56(2)(x) above Rs 50,000), winnings from lottery (Section 115BB at 30%).
+
+---
+
+### Key Framework
+1. **Capital asset**: property of any kind; excludes stock-in-trade, personal effects (except jewellery); transfer includes sale, exchange, extinguishment.
+2. **STCG/LTCG**: listed equity: 12 months (STCG 20% post-budget; LTCG 12.5% above Rs 1.25 lakh); other assets: 24 months; indexation with CII for long-term (unlisted/property).
+3. **Exemptions**: 54 (residential house reinvestment; 2 houses max for gains up to Rs 10 crore), 54EC (NHAI/REC bonds up to Rs 50 lakh within 6 months), 54F (net consideration reinvested in a house).
+4. **IOS**: dividends at slab rates; interest (savings 80TTA/TTB exempt); gifts: money above Rs 50,000 taxable (exceptions: relatives, marriage, inheritance); lottery at 30% flat.
+
+---
+
+### Exam Focus
+**Indexation vs straight 12.5%**: post-July-2024, listed equity LTCG is 12.5% without indexation; property/unlisted gains retain indexation.
+
+![Capital Gains Other Sources Diagram](capital-gains.png)`,
+            formulas: [
+              { id: 'formula-tax2-mod5-capital-gains-income-other-sources-1', label: 'Indexed cost', formula: 'Indexed cost = Cost x CII of year of transfer / CII of year of acquisition', exampleQ: 'Cost Rs 20 lakh (2015-16, CII 254); transfer 2024-25 (CII 363).', exampleA: 'Indexed cost = 20L x 363/254 = Rs 28.6 lakh.' },
+              { id: 'formula-tax2-mod5-capital-gains-income-other-sources-2', label: 'Section 54F', formula: 'Exemption = Long-term gain x (Net consideration reinvested in new house / Net consideration)', exampleQ: 'Gain Rs 30 lakh; net consideration Rs 60 lakh; reinvested Rs 45 lakh.', exampleA: 'Exempt = 30 x 45/60 = Rs 22.5 lakh.' },
+            ],
+            tricks: [
+              { id: 'trick-tax2-mod5-capital-gains-income-other-sources-1', title: 'Holding test', trick: 'Listed equity: 12 months divides ST/LT; house/unlisted: 24 months.', whenToUse: 'Classification speed.' },
+              { id: 'trick-tax2-mod5-capital-gains-income-other-sources-2', title: 'Gift rule', trick: 'Money above Rs 50,000 from non-relatives is IOS income (Section 56(2)(x)); marriage/inheritance gifts exempt.', whenToUse: 'Gift MCQs.' },
+            ],
+            howToSolve: [
+              { id: 'solve-tax2-mod5-capital-gains-income-other-sources-1', step: 'Step 1: classify the asset and holding period; compute full and indexed cost...', detail: 'classify the asset and holding period; compute full and indexed cost of acquisition (plus improvement).', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-tax2-mod5-capital-gains-income-other-sources-2', step: 'Step 2: compute STCG or LTCG; apply the right tax rate (slab for STCG non-equ...', detail: 'compute STCG or LTCG; apply the right tax rate (slab for STCG non-equity; 20% STCG equity; 12.5% LTCG equity; 12.5% indexed for others).', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-tax2-mod5-capital-gains-income-other-sources-3', step: 'Step 3: apply exemptions (54/54B/54EC/54F) with time and amount limits', detail: 'apply exemptions (54/54B/54EC/54F) with time and amount limits.', questionType: 'Problem Solving / 5 to 10 Marks' },
+              { id: 'solve-tax2-mod5-capital-gains-income-other-sources-4', step: 'Step 4: compute IOS items separately (dividends at slab, lottery at 30%, gift...', detail: 'compute IOS items separately (dividends at slab, lottery at 30%, gifts above the threshold).', questionType: 'Problem Solving / 5 to 10 Marks' },
+            ],
     },
 ],
 }

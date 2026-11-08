@@ -927,7 +927,7 @@ function SubjectView({ subjectId }: { subjectId: string }) {
         {topics.length === 0 ? (
           <Card><Box sx={{ p: 3, color: 'text.secondary' }}>No published topics yet for this subject.</Box></Card>
         ) : (
-          <Stack spacing={3}>
+          <Box sx={{ display: 'grid', gap: 3, gridTemplateColumns: { xs: '1fr', md: 'repeat(2, minmax(0, 1fr))' } }}>
             {moduleGroups.map((group) => (
               <Stack spacing={1.5} key={group.key}>
                 {moduleGroups.length > 1 ? (
@@ -976,7 +976,7 @@ function SubjectView({ subjectId }: { subjectId: string }) {
                 </Grid>
               </Stack>
             ))}
-          </Stack>
+          </Box>
         )}
       </Stack>
     </Container>
