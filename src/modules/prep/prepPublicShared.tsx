@@ -21,41 +21,61 @@ import { formatDifficultyBadge } from '@/shared/utils/prepHelpers';
 import prepBcgMatrix from '../../assets/prep-images/bcg-matrix.png';
 import prepBigFivePersonality from '../../assets/prep-images/big-five-personality.png';
 import prepBreakEvenAnalysis from '../../assets/prep-images/break-even-analysis.png';
+import prepCalculusOptimization from '../../assets/prep-images/calculus-optimization.png';
+import prepCapitalMarket from '../../assets/prep-images/capital-market.png';
 import prepCostCurves from '../../assets/prep-images/cost-curves.png';
 import prepCultureChange from '../../assets/prep-images/culture-change.png';
+import prepDataPresentation from '../../assets/prep-images/data-presentation.png';
 import prepDirectingControl from '../../assets/prep-images/directing-control.png';
 import prepDistributionChannels from '../../assets/prep-images/distribution-channels.png';
 import prepFinancialStatements from '../../assets/prep-images/financial-statements.png';
+import prepFinancialSystem from '../../assets/prep-images/financial-system.png';
+import prepIndexNumbers from '../../assets/prep-images/index-numbers.png';
+import prepInterestAnnuities from '../../assets/prep-images/interest-annuities.png';
 import prepLeadershipMotivation from '../../assets/prep-images/leadership-motivation.png';
 import prepMarketStructures from '../../assets/prep-images/market-structures.png';
 import prepMarketingMix4ps from '../../assets/prep-images/marketing-mix-4ps.png';
+import prepMaterialLabourOverheads from '../../assets/prep-images/material-labour-overheads.png';
 import prepOrgStructure from '../../assets/prep-images/org-structure.png';
 import prepPerceptionLearning from '../../assets/prep-images/perception-learning.png';
 import prepProfitLossPartnership from '../../assets/prep-images/profit-loss-partnership.png';
 import prepPromotionMix from '../../assets/prep-images/promotion-mix.png';
+import prepSebiInvestor from '../../assets/prep-images/sebi-investor.png';
 import prepSupplyDemandCurve from '../../assets/prep-images/supply-demand-curve.png';
 import prepSwotAnalysis from '../../assets/prep-images/swot-analysis.png';
 import prepTeamsConflict from '../../assets/prep-images/teams-conflict.png';
+import prepTimeSeries from '../../assets/prep-images/time-series.png';
+import prepVarianceAnalysis from '../../assets/prep-images/variance-analysis.png';
 
 const PREP_IMAGE_URLS: Record<string, string> = {
   'bcg-matrix.png': prepBcgMatrix,
   'big-five-personality.png': prepBigFivePersonality,
   'break-even-analysis.png': prepBreakEvenAnalysis,
+  'calculus-optimization.png': prepCalculusOptimization,
+  'capital-market.png': prepCapitalMarket,
   'cost-curves.png': prepCostCurves,
   'culture-change.png': prepCultureChange,
+  'data-presentation.png': prepDataPresentation,
   'directing-control.png': prepDirectingControl,
   'distribution-channels.png': prepDistributionChannels,
   'financial-statements.png': prepFinancialStatements,
+  'financial-system.png': prepFinancialSystem,
+  'index-numbers.png': prepIndexNumbers,
+  'interest-annuities.png': prepInterestAnnuities,
   'leadership-motivation.png': prepLeadershipMotivation,
   'market-structures.png': prepMarketStructures,
   'marketing-mix-4ps.png': prepMarketingMix4ps,
+  'material-labour-overheads.png': prepMaterialLabourOverheads,
   'org-structure.png': prepOrgStructure,
   'perception-learning.png': prepPerceptionLearning,
   'profit-loss-partnership.png': prepProfitLossPartnership,
   'promotion-mix.png': prepPromotionMix,
+  'sebi-investor.png': prepSebiInvestor,
   'supply-demand-curve.png': prepSupplyDemandCurve,
   'swot-analysis.png': prepSwotAnalysis,
   'teams-conflict.png': prepTeamsConflict,
+  'time-series.png': prepTimeSeries,
+  'variance-analysis.png': prepVarianceAnalysis,
 };
 
 /** Resolve a markdown image src to a renderable URL, or null if unknown. */
