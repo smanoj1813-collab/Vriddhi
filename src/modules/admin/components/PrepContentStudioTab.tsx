@@ -13,7 +13,7 @@ import {
   BookOpen, Sparkles, Plus, Check, AlertTriangle, Loader2, RefreshCw,
   Eye, Save, Send, Database, Filter, Search, Award, FileText,
   ChevronRight, ExternalLink, HelpCircle, Layers, CheckCircle2, Circle, Trash2,
-  ImagePlus
+  ImagePlus, X
 } from 'lucide-react';
 import {
   fetchPrepSubjects,
@@ -513,6 +513,7 @@ export default function PrepContentStudioTab() {
   const [filterTrack, setFilterTrack] = useState<'all' | PrepTrack>('all');
   const [filterSemester, setFilterSemester] = useState<string>('all');
   const [filterStream, setFilterStream] = useState<string>('all');
+  const [topicSearch, setTopicSearch] = useState('');
   const [activeSection, setActiveSection] = useState<'explanation' | 'formulas' | 'tricks' | 'howToSolve' | 'practice'>('explanation');
 
   const [toast, setToast] = useState<{ type: 'ok' | 'err'; text: string } | null>(null);
@@ -786,7 +787,22 @@ export default function PrepContentStudioTab() {
       if (filterSemester !== 'all' && s.semester !== Number(filterSemester)) return false;
     }
     if (filterStream !== 'all' && s.stream !== filterStream) return false;
+    // Topic search: match subject name or any topic title for the selected
+    // subject. Topics are lazy-loaded per subject, so we can only pre-filter
+    // by subject name here; topics within the selected subject are filtered
+    // separately in the Topics panel below.
+    if (topicSearch.trim()) {
+      const q = topicSearch.trim().toLowerCase();
+      if (!s.name.toLowerCase().includes(q)) return false;
+    }
     return true;
+  });
+
+  /** Topics for the selected subject, filtered by topic search term. */
+  const filteredTopics = topics.filter((t) => {
+    const q = topicSearch.trim().toLowerCase();
+    if (!q) return true;
+    return t.title.toLowerCase().includes(q);
   });
 
   const selectedSubject = subjects.find((s) => s.id === selectedSubjectId);
@@ -925,6 +941,25 @@ export default function PrepContentStudioTab() {
             <div className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 px-2 pb-1">
               Subjects ({filteredSubjects.length})
             </div>
+            {/* Topic search across subject names and topic titles */}
+            <div className="flex gap-1 px-2 mb-1">
+              <Search className="w-3 h-3 text-slate-400 dark:text-slate-500 shrink-0" />
+              <input
+                value={topicSearch}
+                onChange={(e) => setTopicSearch(e.target.value)}
+                placeholder="Search topics…"
+                className="flex-1 text-[10px] bg-transparent border-none focus:ring-0 dark:text-slate-300 placeholder:text-slate-400/60"
+              />
+              {topicSearch.trim() && (
+                <button
+                  onClick={() => setTopicSearch('')}
+                  className="p-0.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                  title="Clear search"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              )}
+            </div>
             {loadingSubjects ? (
               <div className="p-4 text-center text-xs text-slate-500 dark:text-slate-400">Loading subjects…</div>
             ) : filteredSubjects.length === 0 ? (
@@ -960,7 +995,7 @@ export default function PrepContentStudioTab() {
           <div className="bg-white dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700/50 p-3 space-y-2">
             <div className="flex items-center justify-between px-2 pb-1">
               <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                Topics ({topics.length})
+                Topics ({filteredTopics.length})
               </span>
               <button
                 onClick={() => setShowNewTopic(true)}
@@ -974,10 +1009,10 @@ export default function PrepContentStudioTab() {
             <div className="max-h-80 overflow-y-auto space-y-1">
               {loadingTopics ? (
                 <div className="p-4 text-center text-xs text-slate-500 dark:text-slate-400">Loading topics…</div>
-              ) : topics.length === 0 ? (
-                <div className="p-4 text-center text-xs text-slate-500 dark:text-slate-400">No topics in this subject yet.</div>
+              ) : filteredTopics.length === 0 ? (
+                <div className="p-4 text-center text-xs text-slate-500 dark:text-slate-400">No topics match your search.</div>
               ) : (
-                topics.map((t) => {
+                filteredTopics.map((t) => {
                   const badge = formatDifficultyBadge(t.difficulty);
                   return (
                     <button
