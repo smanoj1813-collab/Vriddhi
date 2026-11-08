@@ -283,6 +283,8 @@ function HubView() {
   const [error, setError] = useState<string | null>(null);
   const [attempt, setAttempt] = useState(0);
   const [searchQuery, setSearchQuery] = useState('');
+  // Topics fetched per subject when searching, so topic titles are searchable too.
+  const [subjectTopics, setSubjectTopics] = useState<Record<string, PrepTopic[]>>({});
 
   useEffect(() => {
     let cancelled = false;
@@ -312,17 +314,37 @@ function HubView() {
   const academicSubjects = useMemo(() => subjects.filter((s) => effectivePrepTrack(s) === 'academic'), [subjects]);
   const aptitudeSubjects = useMemo(() => subjects.filter((s) => effectivePrepTrack(s) === 'aptitude'), [subjects]);
 
-  /** Subjects matching the search query (empty = all academic subjects). */
+  // When searching, fetch topics for any subject that doesn't have them cached yet,
+  // so topic titles are included in search results.
+  useEffect(() => {
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) return;
+    const missing = academicSubjects.filter((s) => !subjectTopics[s.id]);
+    missing.forEach((s) => {
+      fetchPrepTopics(s.id)
+        .then((tops) => {
+          setSubjectTopics((prev) => ({ ...prev, [s.id]: tops }));
+        })
+        .catch(() => {
+          // Topic fetch failure must not block subject search.
+          setSubjectTopics((prev) => ({ ...prev, [s.id]: [] }));
+        });
+    });
+  }, [searchQuery, academicSubjects, subjectTopics]);
+
+  /** Subjects matching the search query (empty = all academic subjects).
+   *  Matches subject name, stream, year group, or any topic title within the subject. */
   const searchMatchedSubjects = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
     if (!q) return academicSubjects;
-    return academicSubjects.filter(
-      (s) =>
-        s.name.toLowerCase().includes(q) ||
-        (s.stream || '').toLowerCase().includes(q) ||
-        (s.yearGroup || '').toLowerCase().includes(q)
-    );
-  }, [academicSubjects, searchQuery]);
+    return academicSubjects.filter((s) => {
+      if (s.name.toLowerCase().includes(q)) return true;
+      if ((s.stream || '').toLowerCase().includes(q)) return true;
+      if ((s.yearGroup || '').toLowerCase().includes(q)) return true;
+      const tops = subjectTopics[s.id] || [];
+      return tops.some((t) => t.title.toLowerCase().includes(q));
+    });
+  }, [academicSubjects, searchQuery, subjectTopics]);
 
   const groups = useMemo(() => groupAcademicSubjects(searchMatchedSubjects), [searchMatchedSubjects]);
   const topicTotal = academicSubjects.reduce((n, s) => n + (s.topicCount || 0), 0);
