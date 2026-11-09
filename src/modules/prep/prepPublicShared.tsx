@@ -23,8 +23,11 @@ import prepBigFivePersonality from '../../assets/prep-images/big-five-personalit
 import prepBreakEvenAnalysis from '../../assets/prep-images/break-even-analysis.png';
 import prepBudgetaryControl from '../../assets/prep-images/budgetary-control.png';
 import prepBusinessPlan from '../../assets/prep-images/business-plan.png';
+import prepBusinessProfession from '../../assets/prep-images/business-profession.png';
 import prepCalculusOptimization from '../../assets/prep-images/calculus-optimization.png';
+import prepCapitalGains from '../../assets/prep-images/capital-gains.png';
 import prepCapitalMarket from '../../assets/prep-images/capital-market.png';
+import prepCompanyDirectors from '../../assets/prep-images/company-directors.png';
 import prepCompanyIncorporation from '../../assets/prep-images/company-incorporation.png';
 import prepCompensationBenefits from '../../assets/prep-images/compensation-benefits.png';
 import prepConsumerProtection from '../../assets/prep-images/consumer-protection.png';
@@ -43,6 +46,7 @@ import prepFinancialSystem from '../../assets/prep-images/financial-system.png';
 import prepFundFlowCashFlow from '../../assets/prep-images/fund-flow-cash-flow.png';
 import prepGstRegistration from '../../assets/prep-images/gst-registration.png';
 import prepGstReturns from '../../assets/prep-images/gst-returns.png';
+import prepHouseProperty from '../../assets/prep-images/house-property.png';
 import prepHrmFunctions from '../../assets/prep-images/hrm-functions.png';
 import prepIndexNumbers from '../../assets/prep-images/index-numbers.png';
 import prepInterestAnnuities from '../../assets/prep-images/interest-annuities.png';
@@ -60,6 +64,7 @@ import prepPromotionMix from '../../assets/prep-images/promotion-mix.png';
 import prepQualityTqm from '../../assets/prep-images/quality-tqm.png';
 import prepRatioAnalysis from '../../assets/prep-images/ratio-analysis.png';
 import prepResidentialStatus from '../../assets/prep-images/residential-status.png';
+import prepSalaryIncome from '../../assets/prep-images/salary-income.png';
 import prepSaleOfGoods from '../../assets/prep-images/sale-of-goods.png';
 import prepSebiInvestor from '../../assets/prep-images/sebi-investor.png';
 import prepSharesDebentures from '../../assets/prep-images/shares-debentures.png';
@@ -76,6 +81,7 @@ import prepTimeSeries from '../../assets/prep-images/time-series.png';
 import prepTotalIncome from '../../assets/prep-images/total-income.png';
 import prepTrainingDevelopment from '../../assets/prep-images/training-development.png';
 import prepVarianceAnalysis from '../../assets/prep-images/variance-analysis.png';
+import prepWindingUp from '../../assets/prep-images/winding-up.png';
 
 const PREP_IMAGE_URLS: Record<string, string> = {
   'bcg-matrix.png': prepBcgMatrix,
@@ -83,8 +89,11 @@ const PREP_IMAGE_URLS: Record<string, string> = {
   'break-even-analysis.png': prepBreakEvenAnalysis,
   'budgetary-control.png': prepBudgetaryControl,
   'business-plan.png': prepBusinessPlan,
+  'business-profession.png': prepBusinessProfession,
   'calculus-optimization.png': prepCalculusOptimization,
+  'capital-gains.png': prepCapitalGains,
   'capital-market.png': prepCapitalMarket,
+  'company-directors.png': prepCompanyDirectors,
   'company-incorporation.png': prepCompanyIncorporation,
   'compensation-benefits.png': prepCompensationBenefits,
   'consumer-protection.png': prepConsumerProtection,
@@ -103,6 +112,7 @@ const PREP_IMAGE_URLS: Record<string, string> = {
   'fund-flow-cash-flow.png': prepFundFlowCashFlow,
   'gst-registration.png': prepGstRegistration,
   'gst-returns.png': prepGstReturns,
+  'house-property.png': prepHouseProperty,
   'hrm-functions.png': prepHrmFunctions,
   'index-numbers.png': prepIndexNumbers,
   'interest-annuities.png': prepInterestAnnuities,
@@ -120,6 +130,7 @@ const PREP_IMAGE_URLS: Record<string, string> = {
   'quality-tqm.png': prepQualityTqm,
   'ratio-analysis.png': prepRatioAnalysis,
   'residential-status.png': prepResidentialStatus,
+  'salary-income.png': prepSalaryIncome,
   'sale-of-goods.png': prepSaleOfGoods,
   'sebi-investor.png': prepSebiInvestor,
   'shares-debentures.png': prepSharesDebentures,
@@ -136,6 +147,7 @@ const PREP_IMAGE_URLS: Record<string, string> = {
   'total-income.png': prepTotalIncome,
   'training-development.png': prepTrainingDevelopment,
   'variance-analysis.png': prepVarianceAnalysis,
+  'winding-up.png': prepWindingUp,
 };
 
 /** Resolve a markdown image src to a renderable URL, or null if unknown. */
