@@ -22,27 +22,33 @@ import prepBcgMatrix from '../../assets/prep-images/bcg-matrix.png';
 import prepBigFivePersonality from '../../assets/prep-images/big-five-personality.png';
 import prepBreakEvenAnalysis from '../../assets/prep-images/break-even-analysis.png';
 import prepBudgetaryControl from '../../assets/prep-images/budgetary-control.png';
+import prepBusinessPlan from '../../assets/prep-images/business-plan.png';
 import prepCalculusOptimization from '../../assets/prep-images/calculus-optimization.png';
 import prepCapitalMarket from '../../assets/prep-images/capital-market.png';
+import prepCompanyIncorporation from '../../assets/prep-images/company-incorporation.png';
 import prepCompensationBenefits from '../../assets/prep-images/compensation-benefits.png';
 import prepConsumerProtection from '../../assets/prep-images/consumer-protection.png';
 import prepContractAct from '../../assets/prep-images/contract-act.png';
 import prepCostCurves from '../../assets/prep-images/cost-curves.png';
 import prepCultureChange from '../../assets/prep-images/culture-change.png';
+import prepCustomsBasics from '../../assets/prep-images/customs-basics.png';
 import prepDataPresentation from '../../assets/prep-images/data-presentation.png';
 import prepDirectingControl from '../../assets/prep-images/directing-control.png';
 import prepDistributionChannels from '../../assets/prep-images/distribution-channels.png';
 import prepDividendWorkingCapital from '../../assets/prep-images/dividend-working-capital.png';
 import prepEmployeeRelations from '../../assets/prep-images/employee-relations.png';
+import prepEntrepreneurshipIntro from '../../assets/prep-images/entrepreneurship-intro.png';
 import prepFinancialStatements from '../../assets/prep-images/financial-statements.png';
 import prepFinancialSystem from '../../assets/prep-images/financial-system.png';
 import prepFundFlowCashFlow from '../../assets/prep-images/fund-flow-cash-flow.png';
+import prepGstRegistration from '../../assets/prep-images/gst-registration.png';
+import prepGstReturns from '../../assets/prep-images/gst-returns.png';
 import prepHrmFunctions from '../../assets/prep-images/hrm-functions.png';
 import prepIndexNumbers from '../../assets/prep-images/index-numbers.png';
 import prepInterestAnnuities from '../../assets/prep-images/interest-annuities.png';
 import prepLeadershipMotivation from '../../assets/prep-images/leadership-motivation.png';
-import prepMarketStructures from '../../assets/prep-images/market-structures.png';
 import prepMarketingMix4ps from '../../assets/prep-images/marketing-mix-4ps.png';
+import prepMarketStructures from '../../assets/prep-images/market-structures.png';
 import prepMaterialLabourOverheads from '../../assets/prep-images/material-labour-overheads.png';
 import prepMoneyMarket from '../../assets/prep-images/money-market.png';
 import prepNegotiableInstruments from '../../assets/prep-images/negotiable-instruments.png';
@@ -56,7 +62,11 @@ import prepRatioAnalysis from '../../assets/prep-images/ratio-analysis.png';
 import prepResidentialStatus from '../../assets/prep-images/residential-status.png';
 import prepSaleOfGoods from '../../assets/prep-images/sale-of-goods.png';
 import prepSebiInvestor from '../../assets/prep-images/sebi-investor.png';
+import prepSharesDebentures from '../../assets/prep-images/shares-debentures.png';
+import prepStartupEcosystem from '../../assets/prep-images/startup-ecosystem.png';
+import prepStartupFinance from '../../assets/prep-images/startup-finance.png';
 import prepStrategicProcess from '../../assets/prep-images/strategic-process.png';
+import prepStrategyImplementation from '../../assets/prep-images/strategy-implementation.png';
 import prepSupplyChain from '../../assets/prep-images/supply-chain.png';
 import prepSupplyDemandCurve from '../../assets/prep-images/supply-demand-curve.png';
 import prepSwotAnalysis from '../../assets/prep-images/swot-analysis.png';
@@ -72,21 +82,27 @@ const PREP_IMAGE_URLS: Record<string, string> = {
   'big-five-personality.png': prepBigFivePersonality,
   'break-even-analysis.png': prepBreakEvenAnalysis,
   'budgetary-control.png': prepBudgetaryControl,
+  'business-plan.png': prepBusinessPlan,
   'calculus-optimization.png': prepCalculusOptimization,
   'capital-market.png': prepCapitalMarket,
+  'company-incorporation.png': prepCompanyIncorporation,
   'compensation-benefits.png': prepCompensationBenefits,
   'consumer-protection.png': prepConsumerProtection,
   'contract-act.png': prepContractAct,
   'cost-curves.png': prepCostCurves,
   'culture-change.png': prepCultureChange,
+  'customs-basics.png': prepCustomsBasics,
   'data-presentation.png': prepDataPresentation,
   'directing-control.png': prepDirectingControl,
   'distribution-channels.png': prepDistributionChannels,
   'dividend-working-capital.png': prepDividendWorkingCapital,
   'employee-relations.png': prepEmployeeRelations,
+  'entrepreneurship-intro.png': prepEntrepreneurshipIntro,
   'financial-statements.png': prepFinancialStatements,
   'financial-system.png': prepFinancialSystem,
   'fund-flow-cash-flow.png': prepFundFlowCashFlow,
+  'gst-registration.png': prepGstRegistration,
+  'gst-returns.png': prepGstReturns,
   'hrm-functions.png': prepHrmFunctions,
   'index-numbers.png': prepIndexNumbers,
   'interest-annuities.png': prepInterestAnnuities,
@@ -106,7 +122,11 @@ const PREP_IMAGE_URLS: Record<string, string> = {
   'residential-status.png': prepResidentialStatus,
   'sale-of-goods.png': prepSaleOfGoods,
   'sebi-investor.png': prepSebiInvestor,
+  'shares-debentures.png': prepSharesDebentures,
+  'startup-ecosystem.png': prepStartupEcosystem,
+  'startup-finance.png': prepStartupFinance,
   'strategic-process.png': prepStrategicProcess,
+  'strategy-implementation.png': prepStrategyImplementation,
   'supply-chain.png': prepSupplyChain,
   'supply-demand-curve.png': prepSupplyDemandCurve,
   'swot-analysis.png': prepSwotAnalysis,
