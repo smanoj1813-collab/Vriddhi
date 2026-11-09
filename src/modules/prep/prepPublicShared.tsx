@@ -21,6 +21,7 @@ import { formatDifficultyBadge } from '@/shared/utils/prepHelpers';
 import prepBcgMatrix from '../../assets/prep-images/bcg-matrix.png';
 import prepBigFivePersonality from '../../assets/prep-images/big-five-personality.png';
 import prepBreakEvenAnalysis from '../../assets/prep-images/break-even-analysis.png';
+import prepBudgetaryControl from '../../assets/prep-images/budgetary-control.png';
 import prepCalculusOptimization from '../../assets/prep-images/calculus-optimization.png';
 import prepCapitalMarket from '../../assets/prep-images/capital-market.png';
 import prepCompensationBenefits from '../../assets/prep-images/compensation-benefits.png';
@@ -35,6 +36,7 @@ import prepDividendWorkingCapital from '../../assets/prep-images/dividend-workin
 import prepEmployeeRelations from '../../assets/prep-images/employee-relations.png';
 import prepFinancialStatements from '../../assets/prep-images/financial-statements.png';
 import prepFinancialSystem from '../../assets/prep-images/financial-system.png';
+import prepFundFlowCashFlow from '../../assets/prep-images/fund-flow-cash-flow.png';
 import prepHrmFunctions from '../../assets/prep-images/hrm-functions.png';
 import prepIndexNumbers from '../../assets/prep-images/index-numbers.png';
 import prepInterestAnnuities from '../../assets/prep-images/interest-annuities.png';
@@ -46,14 +48,22 @@ import prepMoneyMarket from '../../assets/prep-images/money-market.png';
 import prepNegotiableInstruments from '../../assets/prep-images/negotiable-instruments.png';
 import prepOrgStructure from '../../assets/prep-images/org-structure.png';
 import prepPerceptionLearning from '../../assets/prep-images/perception-learning.png';
+import prepPomIntro from '../../assets/prep-images/pom-intro.png';
 import prepProfitLossPartnership from '../../assets/prep-images/profit-loss-partnership.png';
 import prepPromotionMix from '../../assets/prep-images/promotion-mix.png';
+import prepQualityTqm from '../../assets/prep-images/quality-tqm.png';
+import prepRatioAnalysis from '../../assets/prep-images/ratio-analysis.png';
+import prepResidentialStatus from '../../assets/prep-images/residential-status.png';
 import prepSaleOfGoods from '../../assets/prep-images/sale-of-goods.png';
 import prepSebiInvestor from '../../assets/prep-images/sebi-investor.png';
+import prepStrategicProcess from '../../assets/prep-images/strategic-process.png';
+import prepSupplyChain from '../../assets/prep-images/supply-chain.png';
 import prepSupplyDemandCurve from '../../assets/prep-images/supply-demand-curve.png';
 import prepSwotAnalysis from '../../assets/prep-images/swot-analysis.png';
+import prepTaxPlanning from '../../assets/prep-images/tax-planning.png';
 import prepTeamsConflict from '../../assets/prep-images/teams-conflict.png';
 import prepTimeSeries from '../../assets/prep-images/time-series.png';
+import prepTotalIncome from '../../assets/prep-images/total-income.png';
 import prepTrainingDevelopment from '../../assets/prep-images/training-development.png';
 import prepVarianceAnalysis from '../../assets/prep-images/variance-analysis.png';
 
@@ -61,6 +71,7 @@ const PREP_IMAGE_URLS: Record<string, string> = {
   'bcg-matrix.png': prepBcgMatrix,
   'big-five-personality.png': prepBigFivePersonality,
   'break-even-analysis.png': prepBreakEvenAnalysis,
+  'budgetary-control.png': prepBudgetaryControl,
   'calculus-optimization.png': prepCalculusOptimization,
   'capital-market.png': prepCapitalMarket,
   'compensation-benefits.png': prepCompensationBenefits,
@@ -75,6 +86,7 @@ const PREP_IMAGE_URLS: Record<string, string> = {
   'employee-relations.png': prepEmployeeRelations,
   'financial-statements.png': prepFinancialStatements,
   'financial-system.png': prepFinancialSystem,
+  'fund-flow-cash-flow.png': prepFundFlowCashFlow,
   'hrm-functions.png': prepHrmFunctions,
   'index-numbers.png': prepIndexNumbers,
   'interest-annuities.png': prepInterestAnnuities,
@@ -86,14 +98,22 @@ const PREP_IMAGE_URLS: Record<string, string> = {
   'negotiable-instruments.png': prepNegotiableInstruments,
   'org-structure.png': prepOrgStructure,
   'perception-learning.png': prepPerceptionLearning,
+  'pom-intro.png': prepPomIntro,
   'profit-loss-partnership.png': prepProfitLossPartnership,
   'promotion-mix.png': prepPromotionMix,
+  'quality-tqm.png': prepQualityTqm,
+  'ratio-analysis.png': prepRatioAnalysis,
+  'residential-status.png': prepResidentialStatus,
   'sale-of-goods.png': prepSaleOfGoods,
   'sebi-investor.png': prepSebiInvestor,
+  'strategic-process.png': prepStrategicProcess,
+  'supply-chain.png': prepSupplyChain,
   'supply-demand-curve.png': prepSupplyDemandCurve,
   'swot-analysis.png': prepSwotAnalysis,
+  'tax-planning.png': prepTaxPlanning,
   'teams-conflict.png': prepTeamsConflict,
   'time-series.png': prepTimeSeries,
+  'total-income.png': prepTotalIncome,
   'training-development.png': prepTrainingDevelopment,
   'variance-analysis.png': prepVarianceAnalysis,
 };
