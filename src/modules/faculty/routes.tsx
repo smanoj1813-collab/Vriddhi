@@ -40,6 +40,7 @@ const FacultyMySalary = lazy(() => import('./pages/FacultyMySalary'));
 const FacultyAppointmentsPage = lazy(() => import('./pages/FacultyAppointmentsPage'));
 const FacultyAutoGrading = lazy(() => import('./pages/FacultyAutoGrading'));
 const View360 = lazy(() => import('../admin/pages/View360'));
+const AcademicInsights = lazy(() => import('../admin/pages/AcademicInsights'));
 const PWAInstallPage = lazy(() => import('./pages/PWAInstallPage'));
 const FacultyJourneyPage = lazy(() => import('./pages/FacultyJourneyPage'));
 
@@ -148,6 +149,7 @@ export const facultyRoutes: RouteObject[] = [
       { path: 'assessments', element: <LazyPage label="faculty/assessments"><FacultyAssessments /></LazyPage> },
       { path: 'calendar', element: <LazyPage label="faculty/calendar"><FacultyCalendar /></LazyPage> },
       { path: 'curriculum', element: <LazyPage label="faculty/curriculum"><FacultyCurriculum /></LazyPage> },
+      { path: 'insights', element: <LazyPage label="faculty/insights"><AcademicInsights /></LazyPage> },
       { path: 'schedule', element: <LazyPage label="faculty/schedule"><FacultySchedule /></LazyPage> },
       { path: 'ai-questions', element: <LazyPage label="faculty/ai-questions"><FacultyAIQuestions /></LazyPage> },
       { path: 'auto-grading', element: <LazyPage label="faculty/auto-grading"><FacultyAutoGrading /></LazyPage> },

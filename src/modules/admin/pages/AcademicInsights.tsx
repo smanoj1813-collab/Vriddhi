@@ -61,6 +61,7 @@ import {
   type SubjectInsight,
 } from '../api/academicInsightsApi'
 import { defaultTermWindow } from '../api/classSessionApi'
+import { useAuth } from '../../auth/context/AuthContext'
 
 // ─── Presentation helpers ──────────────────────────────────────────────────
 
@@ -154,6 +155,15 @@ type View =
     }
 
 export default function AcademicInsights() {
+  const { user } = useAuth()
+  const role = String((user as { role?: string } | null)?.role || '')
+  const isSelfService = role === 'faculty' || role === 'mentor'
+  const isDepartmentScoped = role === 'hod' || role === 'admin'
+  const scopeLine = isSelfService
+    ? 'Your programme — the subjects you teach, from syllabus coverage and attendance down to your individual students’ scores.'
+    : isDepartmentScoped
+      ? 'Your department’s teaching — dig from the semester overview down to one subject and its individual students, all computed.'
+      : 'Dig from the semester overview down to one subject and its individual students — assigned curriculum, classes delivered, syllabus coverage, attendance and scores, all computed.'
   const [window, setWindow] = useState(() => defaultTermWindow())
   const [view, setView] = useState<View>({ level: 'overview' })
   const [data, setData] = useState<AcademicInsightsResult | null>(null)
@@ -228,8 +238,7 @@ export default function AcademicInsights() {
             Academic Insights
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            Dig from the semester overview down to one subject and its individual students — assigned
-            curriculum, classes delivered, syllabus coverage, attendance and scores, all computed.
+            {scopeLine}
           </Typography>
         </Box>
         <Stack direction="row" spacing={2} sx={{ flexWrap: 'wrap' }}>
@@ -328,8 +337,9 @@ export default function AcademicInsights() {
             <Card variant="outlined" sx={{ flex: 1 }}>
               <CardContent sx={{ py: 6, textAlign: 'center' }}>
                 <Typography variant="body2" color="text.secondary">
-                  No curriculum has been mapped to faculty yet. Assign curriculum under Academics →
-                  Curriculum Mapping, then insights appear here.
+                  {isSelfService
+                    ? 'No subjects are mapped to you yet. Once the office assigns curriculum to you, your programme insights appear here.'
+                    : 'No curriculum has been mapped to faculty yet. Assign curriculum under Academics → Curriculum Mapping, then insights appear here.'}
                 </Typography>
               </CardContent>
             </Card>

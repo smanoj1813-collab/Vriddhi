@@ -31,7 +31,13 @@ function MiniStat({ label, value, hint }: { label: string; value: string; hint?:
   );
 }
 
-export default function AcademicInsightsCard({ collegeId }: { collegeId: string | undefined }) {
+export default function AcademicInsightsCard({
+  collegeId,
+  insightsPath = '/admin/academic-insights',
+}: {
+  collegeId: string | undefined;
+  insightsPath?: string;
+}) {
   const navigate = useNavigate();
   const [data, setData] = useState<AcademicInsightsResult | null>(
     cache && Date.now() - cache.at < CACHE_TTL_MS ? cache.data : null
@@ -80,7 +86,7 @@ export default function AcademicInsightsCard({ collegeId }: { collegeId: string 
           </div>
         </div>
         <button
-          onClick={() => navigate('/admin/academic-insights')}
+          onClick={() => navigate(insightsPath)}
           className="flex items-center gap-1.5 text-sm font-medium text-indigo-600 dark:text-indigo-400 hover:underline"
         >
           Open drill-down <ArrowRight size={15} />
@@ -95,7 +101,7 @@ export default function AcademicInsightsCard({ collegeId }: { collegeId: string 
         <p className="text-sm text-slate-500 dark:text-slate-400 py-4">
           Insights are unavailable right now.{' '}
           <button
-            onClick={() => navigate('/admin/academic-insights')}
+            onClick={() => navigate(insightsPath)}
             className="text-indigo-600 dark:text-indigo-400 hover:underline"
           >
             Open the insights page

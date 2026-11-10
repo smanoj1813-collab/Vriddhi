@@ -110,6 +110,7 @@ const NAV_LABEL_KEYS: Record<string, TranslationKey> = {
   Curriculum: "nav.curriculum",
   "Curriculum Insights": "nav.curriculumInsights",
   "Curriculum Progress": "nav.curriculumProgress",
+  "Program Insights": "nav.programInsights",
   Comparison: "nav.comparison",
   Billing: "nav.billing",
   "System Health": "nav.systemHealth",
@@ -293,6 +294,7 @@ const facultyNav: SidebarEntry[] = [
     label: "Curriculum",
     icon: <School fontSize="small" />,
     children: [
+      { label: "Program Insights", path: "/faculty/insights", icon: <TrendingUp fontSize="small" /> },
       { label: "My Curriculum", path: "/faculty/curriculum", icon: <School fontSize="small" /> },
       { label: "Topics", path: "/faculty/topics", icon: <School fontSize="small" /> },
       { label: "Assignments", path: "/faculty/assignments", icon: <Assignment fontSize="small" /> },

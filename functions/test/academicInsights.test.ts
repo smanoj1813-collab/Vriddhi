@@ -14,8 +14,10 @@ import {
   buildStudentRows,
   groupIntoSemesters,
   matchesSubject,
+  resolveInsightScope,
   rollupSubjects,
   sessionBelongsToSubject,
+  subjectInScope,
   submissionStats,
   type StudentSubmissionRow,
   type SubjectInsight,
@@ -227,6 +229,52 @@ describe('groupIntoSemesters / rollupSubjects', () => {
     assert.equal(rollup.assessments.graded, 40)
     assert.equal(rollup.assessments.byType.quiz, 1)
     assert.equal(rollup.assessments.byType.exam, 1)
+  })
+})
+
+describe('resolveInsightScope / subjectInScope', () => {
+  it('principal and platform staff see the whole college', () => {
+    for (const role of ['principal', 'superadmin', 'operations']) {
+      assert.equal(resolveInsightScope(role, 'BBA').mode, 'college')
+    }
+  })
+
+  it('hod and admin are department-scoped (admin ≡ department HOD)', () => {
+    const scope = resolveInsightScope('hod', 'BBA')
+    assert.equal(scope.mode, 'department')
+    assert.equal(scope.department, 'bba')
+    assert.equal(resolveInsightScope('admin', 'BBA').mode, 'department')
+  })
+
+  it('faculty and mentors are self-scoped', () => {
+    assert.equal(resolveInsightScope('faculty', 'BBA').mode, 'self')
+    assert.equal(resolveInsightScope('mentor', null).mode, 'self')
+  })
+
+  it('department scope: case-insensitive match, tolerant of untagged rows', () => {
+    const scope = resolveInsightScope('hod', 'BBA')
+    assert.equal(subjectInScope({ branch: 'BBA' }, scope), true)
+    assert.equal(subjectInScope({ branch: 'bba' }, scope), true)
+    assert.equal(subjectInScope({ branch: '' }, scope), true) // legacy untagged row
+    assert.equal(subjectInScope({ branch: 'All' }, scope), true) // college-wide row
+    assert.equal(subjectInScope({ branch: 'MBA' }, scope), false)
+  })
+
+  it('department scope with no viewer tag cannot scope — sees everything', () => {
+    const scope = resolveInsightScope('hod', '')
+    assert.equal(subjectInScope({ branch: 'MBA' }, scope), true)
+  })
+
+  it('self scope delegates to the identity check', () => {
+    const scope = resolveInsightScope('faculty', null)
+    const owns = (facultyId: unknown) => String(facultyId) === 'FAC001'
+    assert.equal(subjectInScope({ facultyId: 'FAC001' }, scope, owns), true)
+    assert.equal(subjectInScope({ facultyId: 'FAC002' }, scope, owns), false)
+  })
+
+  it('college scope sees everything', () => {
+    const scope = resolveInsightScope('principal', 'BBA')
+    assert.equal(subjectInScope({ branch: 'MBA', facultyId: 'FAC002' }, scope), true)
   })
 })
 

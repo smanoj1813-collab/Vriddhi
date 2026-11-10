@@ -25,12 +25,15 @@ import { logger } from 'firebase-functions'
 import {
   type ModuleProgress,
   type SchedulingStaff,
+  callerOwnsFacultyId,
   classesNeededForHours,
   earlierDateKey,
   expectedSessions,
   hoursFromMinutes,
   isSlotActive,
   isTopicCovered,
+  loadFacultyAliases,
+  mergeIdentityIds,
   mergeTopicCoverage,
   moduleRollup,
   normalizeSessionDate,
@@ -49,9 +52,67 @@ import {
 /**
  * Who may read academic insights. Unlike getCurriculumProgress (self-service
  * faculty + scheduling staff) this is an ADMINISTRATIVE view: the principal,
- * the admin and the HOD are exactly the people who were missing it.
+ * the admin and the HOD are exactly the people who were missing it. Faculty
+ * and mentors get their own programme view (self scope) — the subjects they
+ * teach, nothing else.
  */
-export const ACADEMIC_INSIGHTS_ROLES = ['superadmin', 'operations', 'admin', 'principal', 'hod']
+export const ACADEMIC_INSIGHTS_ROLES = ['superadmin', 'operations', 'admin', 'principal', 'hod', 'faculty', 'mentor']
+
+// ─── Role scoping — principal = college, HOD = department, faculty = self ──
+//
+// Mirrors the client's src/shared/utils/departmentScope.ts semantics: the
+// department check is TOLERANT — a viewer with no department tag cannot
+// scope (sees everything), untagged/'All' rows stay visible, otherwise a
+// case-insensitive exact match. No row ever silently disappears.
+
+export type InsightScopeMode = 'college' | 'department' | 'self'
+
+export interface InsightScope {
+  mode: InsightScopeMode
+  /** Lower-cased department tag for 'department' mode (empty = cannot scope). */
+  department: string
+  /** Faculty ids the caller owns for 'self' mode (filled in by the callable). */
+  facultyIds: string[]
+}
+
+/**
+ * Which slice of the college each role may see.
+ *
+ *   principal / superadmin / operations  → the entire college
+ *   hod / admin (admin ≡ department HOD) → their department only
+ *   faculty / mentor                     → their own programme (self)
+ */
+export function resolveInsightScope(role: string, department: unknown): InsightScope {
+  const normalizedRole = String(role || '').trim().toLowerCase()
+  const dept = String(department ?? '').trim().toLowerCase()
+  if (normalizedRole === 'hod' || normalizedRole === 'admin') {
+    return { mode: 'department', department: dept, facultyIds: [] }
+  }
+  if (normalizedRole === 'faculty' || normalizedRole === 'mentor') {
+    return { mode: 'self', department: '', facultyIds: [] }
+  }
+  return { mode: 'college', department: '', facultyIds: [] }
+}
+
+/**
+ * Does a subject row fall inside the caller's scope? `ownsFaculty` resolves
+ * self-mode identity (the callable passes callerOwnsFacultyId; tests pass a
+ * stub).
+ */
+export function subjectInScope(
+  subject: { branch?: unknown; facultyId?: unknown },
+  scope: InsightScope,
+  ownsFaculty: (facultyId: unknown) => boolean = () => true
+): boolean {
+  if (scope.mode === 'college') return true
+  if (scope.mode === 'department') {
+    if (!scope.department) return true
+    const branch = String(subject.branch ?? '').trim().toLowerCase()
+    if (!branch || branch === 'all') return true
+    return branch === scope.department
+  }
+  return ownsFaculty(subject.facultyId)
+}
 
 // ─── Read caps (bounded fan-out, mirroring MAX_PROGRESS_*) ─────────────────
 
@@ -597,6 +658,17 @@ export const getAcademicInsights = onCall(
 
     const db = admin.firestore()
 
+    // ─── Role scope: principal = college, HOD = department, faculty = self ─
+    const callerUserSnap = await db.collection('users').doc(uid).get()
+    const callerDepartment = callerUserSnap.exists
+      ? (callerUserSnap.data() as Record<string, unknown> | undefined)?.department
+      : ''
+    const scope = resolveInsightScope(staff.role, callerDepartment)
+    const selfIds =
+      scope.mode === 'self' ? mergeIdentityIds(staff.uid, await loadFacultyAliases(staff.uid)) : []
+    const ownsFaculty = (facultyId: unknown): boolean =>
+      scope.mode === 'self' ? callerOwnsFacultyId({ uid: staff.uid, ids: selfIds }, facultyId) : true
+
     // ─── Plan: the assigned curriculum ────────────────────────────────────
     const mappingsSnap = await db
       .collection('curriculumFacultyMappings')
@@ -608,6 +680,9 @@ export const getAcademicInsights = onCall(
       .map((doc): Record<string, unknown> & { id: string } => ({ id: doc.id, ...(doc.data() as Record<string, unknown>) }))
       .filter((mapping) => {
         if (String(mapping.status || '') === 'removed') return false
+        if (!subjectInScope({ branch: mapping.branch, facultyId: mapping.facultyId }, scope, ownsFaculty)) {
+          return false
+        }
         if (input.facultyId && String(mapping.facultyId || '') !== input.facultyId) return false
         if (input.curriculumId && String(mapping.curriculumId || '') !== input.curriculumId) return false
         if (input.batch && fold(mapping.batch) !== fold(input.batch)) return false
@@ -1018,6 +1093,7 @@ export const getAcademicInsights = onCall(
 
     logger.info('[academicInsights] getAcademicInsights', {
       collegeId: input.collegeId,
+      scope: scope.mode,
       subjects: subjectInsights.length,
       semesters: semesters.length,
       drill: Boolean(input.curriculumId),

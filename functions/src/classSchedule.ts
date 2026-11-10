@@ -829,7 +829,7 @@ async function resolveLegacyStaffProfile(uid: string, email: string): Promise<Le
  * added lazily by the resolvers below only when a raw comparison fails, so the
  * common (already-matching) case costs nothing.
  */
-async function loadFacultyAliases(uid: string): Promise<string[]> {
+export async function loadFacultyAliases(uid: string): Promise<string[]> {
   const ids = mergeIdentityIds(uid)
   const db = admin.firestore()
   await Promise.all(
