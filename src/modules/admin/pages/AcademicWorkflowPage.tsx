@@ -26,6 +26,59 @@ export default function AcademicWorkflowPage() {
   const [notice, setNotice] = useState('');
   const [error, setError] = useState('');
   const [reviewNotes, setReviewNotes] = useState<Record<string, string>>({});
+  const [scheduleDrill, setScheduleDrill] = useState<
+    { level: 'programmes' } | { level: 'semesters'; branch: string } | { level: 'subjects'; branch: string; semester: number }
+  >({ level: 'programmes' });
+  const [expandedSubject, setExpandedSubject] = useState('');
+
+  // Programmes side-by-side → semester → subject → the individual slots.
+  const scheduleTree = useMemo(() => {
+    const byBranch = new Map<string, Row[]>();
+    schedules.forEach((s) => {
+      const branch = String(s.branch || 'Programme');
+      const rows = byBranch.get(branch) || [];
+      rows.push(s);
+      byBranch.set(branch, rows);
+    });
+    return [...byBranch.entries()]
+      .map(([branch, rows]) => {
+        const bySemester = new Map<number, Row[]>();
+        rows.forEach((s) => {
+          const sem = Number(s.semester) || 0;
+          const semRows = bySemester.get(sem) || [];
+          semRows.push(s);
+          bySemester.set(sem, semRows);
+        });
+        const semesters = [...bySemester.entries()]
+          .sort((a, b) => a[0] - b[0])
+          .map(([semester, semRows]) => {
+            const bySubject = new Map<string, Row[]>();
+            semRows.forEach((s) => {
+              const key = String(s.subject || s.subjectCode || 'Subject');
+              const slots = bySubject.get(key) || [];
+              slots.push(s);
+              bySubject.set(key, slots);
+            });
+            const subjects = [...bySubject.entries()]
+              .map(([subject, slots]) => ({
+                subject,
+                slots: slots.slice().sort((a, b) => `${a.dayOfWeek}${a.startTime}`.localeCompare(`${b.dayOfWeek}${b.startTime}`)),
+                faculty: [...new Set(slots.map((s) => String(s.facultyName || s.facultyId || '')).filter(Boolean))],
+                batches: [...new Set(slots.map((s) => String(s.batch || '')).filter(Boolean))],
+              }))
+              .sort((a, b) => a.subject.localeCompare(b.subject));
+            return { semester, subjects, classesPerWeek: semRows.length };
+          });
+        return {
+          branch,
+          semesters,
+          classesPerWeek: rows.length,
+          subjectCount: new Set(rows.map((s) => String(s.subject || ''))).size,
+          facultyCount: new Set(rows.map((s) => String(s.facultyId || '')).filter(Boolean)).size,
+        };
+      })
+      .sort((a, b) => a.branch.localeCompare(b.branch));
+  }, [schedules]);
   const [autoScheduleOpen, setAutoScheduleOpen] = useState(false);
 
   const load = useCallback(async () => {
@@ -175,7 +228,57 @@ export default function AcademicWorkflowPage() {
       <div className="mt-4 space-y-3">{relevantProposals.map((p) => <article key={p.id} className="rounded-xl border border-slate-200 p-4 dark:border-slate-700"><div className="flex flex-wrap justify-between gap-2"><div><h3 className="font-semibold">{p.slot?.subject || 'Class schedule'}</h3><p className="text-sm text-slate-500">{p.slot?.branch} · Semester {p.slot?.semester} · Batch {p.slot?.batch} · {p.slot?.dayOfWeek} {p.slot?.startTime}–{p.slot?.endTime} · {p.slot?.room}</p></div><span className="h-fit rounded-full bg-amber-100 px-2.5 py-1 text-xs font-semibold text-amber-900">{p.status}</span></div>{p.reviewNote && <p className="mt-2 text-sm text-rose-700">HOD note: {p.reviewNote}</p>}{isOps && p.status === 'returned' && <button onClick={() => { setEditingScheduleId(String(p.targetWeeklyScheduleId || '')); setReviewerUid(String(p.reviewerUid || '')); setSlot({ ...emptySlot, ...(p.slot || {}) }); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="mt-3 rounded-lg border border-teal-700 px-3 py-2 text-sm font-semibold text-teal-800">Revise returned draft</button>}{isHod && p.status === 'pending_hod' && <div className="mt-3 space-y-2"><textarea className={inputClass} placeholder="Review note (required when returning)" value={reviewNotes[p.id] || ''} onChange={(e) => setReviewNotes({ ...reviewNotes, [p.id]: e.target.value })} /><div className="flex gap-2"><button disabled={busy} onClick={() => review(p.id, 'approved')} className="rounded-lg bg-emerald-700 px-3 py-2 text-sm font-semibold text-white">Approve & publish</button><button disabled={busy || !reviewNotes[p.id]?.trim()} onClick={() => review(p.id, 'returned')} className="rounded-lg border border-rose-400 px-3 py-2 text-sm font-semibold text-rose-800">Return for changes</button></div></div>}</article>)}{!relevantProposals.length && <p className="text-sm text-slate-500">No schedule drafts to show.</p>}</div>
     </section>}
 
-    {isPrincipal && <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-900"><div className="mb-4 flex flex-wrap items-start justify-between gap-3"><div><h2 className="text-lg font-semibold">Published schedule visibility</h2><p className="text-sm text-slate-500">Read-only. Schedule changes are prepared by Operations and approved by the relevant programme HOD.</p></div><div className="flex gap-2"><button type="button" onClick={() => void exportPublished('pdf')} className="rounded-lg border px-3 py-2 text-sm">Download PDF</button><button type="button" onClick={() => void exportPublished('jpg')} className="rounded-lg border px-3 py-2 text-sm">Download JPG</button></div></div><div className="space-y-2">{schedules.map((s) => <div key={s.id} className="rounded-lg border border-slate-200 p-3 dark:border-slate-700"><strong>{s.subject}</strong><p className="text-sm text-slate-500">{s.branch} · Semester {s.semester} · Batch {s.batch} · {s.dayOfWeek} {s.startTime}–{s.endTime} · {s.room}</p></div>)}{!schedules.length && <p className="text-sm text-slate-500">No published schedules yet.</p>}</div></section>}
+    {isPrincipal && <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-900"><div className="mb-4 flex flex-wrap items-start justify-between gap-3"><div><h2 className="text-lg font-semibold">Published schedule visibility</h2><p className="text-sm text-slate-500">Read-only. Schedule changes are prepared by Operations and approved by the relevant programme HOD.</p></div><div className="flex gap-2"><button type="button" onClick={() => void exportPublished('pdf')} className="rounded-lg border px-3 py-2 text-sm">Download PDF</button><button type="button" onClick={() => void exportPublished('jpg')} className="rounded-lg border px-3 py-2 text-sm">Download JPG</button></div></div><div>
+            <nav className="mb-3 flex flex-wrap items-center gap-1 text-sm text-slate-500">
+              <button type="button" onClick={() => { setScheduleDrill({ level: 'programmes' }); setExpandedSubject(''); }} className={scheduleDrill.level === 'programmes' ? 'font-semibold text-teal-700' : 'underline hover:text-teal-700'}>All programmes</button>
+              {scheduleDrill.level !== 'programmes' && (<><span>›</span><button type="button" onClick={() => { setScheduleDrill({ level: 'semesters', branch: scheduleDrill.branch }); setExpandedSubject(''); }} className="hover:text-teal-700">{scheduleDrill.branch}</button></>)}
+              {scheduleDrill.level === 'subjects' && (<><span>›</span><span className="font-semibold text-teal-700">Semester {scheduleDrill.semester}</span></>)}
+            </nav>
+            {scheduleDrill.level === 'programmes' && (
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                {scheduleTree.map((programme) => (
+                  <button key={programme.branch} type="button" onClick={() => { setScheduleDrill({ level: 'semesters', branch: programme.branch }); setExpandedSubject(''); }} className="rounded-xl border border-slate-200 p-4 text-left transition hover:border-teal-500 hover:bg-teal-50 dark:border-slate-700 dark:hover:bg-slate-800">
+                    <strong className="text-base">{programme.branch}</strong>
+                    <p className="mt-1 text-sm text-slate-500">{programme.subjectCount} subjects · {programme.classesPerWeek} classes/week · {programme.facultyCount} faculty</p>
+                    <div className="mt-2 flex flex-wrap gap-1">{programme.semesters.map((sem) => (<span key={sem.semester} className="rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-600 dark:bg-slate-800 dark:text-slate-300">Sem {sem.semester || '—'} · {sem.classesPerWeek}/wk</span>))}</div>
+                  </button>
+                ))}
+                {!scheduleTree.length && <p className="text-sm text-slate-500">No published schedules yet.</p>}
+              </div>
+            )}
+            {scheduleDrill.level === 'semesters' && (
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                {(scheduleTree.find((p) => p.branch === scheduleDrill.branch)?.semesters || []).map((sem) => (
+                  <button key={sem.semester} type="button" onClick={() => { setScheduleDrill({ level: 'subjects', branch: scheduleDrill.branch, semester: sem.semester }); setExpandedSubject(''); }} className="rounded-xl border border-slate-200 p-4 text-left transition hover:border-teal-500 hover:bg-teal-50 dark:border-slate-700 dark:hover:bg-slate-800">
+                    <strong>Semester {sem.semester || 'Unassigned'}</strong>
+                    <p className="mt-1 text-sm text-slate-500">{sem.subjects.length} subjects · {sem.classesPerWeek} classes/week</p>
+                  </button>
+                ))}
+              </div>
+            )}
+            {scheduleDrill.level === 'subjects' && (
+              <div className="space-y-2">
+                {(scheduleTree.find((p) => p.branch === scheduleDrill.branch)?.semesters || []).find((sem) => sem.semester === scheduleDrill.semester)?.subjects.map((subject) => (
+                  <div key={subject.subject} className="rounded-lg border border-slate-200 dark:border-slate-700">
+                    <button type="button" onClick={() => setExpandedSubject(expandedSubject === subject.subject ? '' : subject.subject)} className="flex w-full flex-wrap items-center justify-between gap-2 p-3 text-left">
+                      <div>
+                        <strong>{subject.subject}</strong>
+                        <p className="text-sm text-slate-500">{subject.faculty.join(', ') || 'No faculty mapped'}{subject.batches.length ? ` · Batch ${subject.batches.join(', ')}` : ''} · {subject.slots.length} classes/week</p>
+                      </div>
+                      <span className="text-sm text-teal-700">{expandedSubject === subject.subject ? 'Hide slots' : 'Show slots'}</span>
+                    </button>
+                    {expandedSubject === subject.subject && (
+                      <div className="space-y-1 border-t border-slate-200 p-3 dark:border-slate-700">
+                        {subject.slots.map((slot) => (
+                          <p key={slot.id} className="text-sm text-slate-600 dark:text-slate-300">{slot.dayOfWeek} · {slot.startTime}–{slot.endTime} · {slot.room || 'Room TBA'}{slot.facultyName ? ` · ${slot.facultyName}` : ''}</p>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div></section>}
     <button onClick={() => load().catch((e) => setError(e.message))} className="text-sm font-medium text-teal-800 underline">Refresh workflow</button>
   </main>;
 }
