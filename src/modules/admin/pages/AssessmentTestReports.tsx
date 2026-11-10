@@ -27,7 +27,7 @@ export default function AssessmentTestReportsPage() {
       </Box>
       {tab === 0 && (
         <Box sx={{ p: { xs: 2, md: 3 } }}>
-          <AssessmentTestReports />
+          <AssessmentTestReports defaultDrill listTitle="All tests" />
         </Box>
       )}
       {tab === 1 && (
