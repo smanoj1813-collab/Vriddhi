@@ -576,6 +576,54 @@ export function buildStudentRows(
     })
 }
 
+/** True when a student row matches the cohort; blank fields (either side) match all. */
+export function studentMatchesCohort(
+  student: Record<string, unknown>,
+  semester: number,
+  branch: string,
+  batch: string
+): boolean {
+  if (semester > 0) {
+    const sem = Number(student.semester ?? student.currentSemester ?? 0)
+    if (sem && sem !== semester) return false
+  }
+  if (branch) {
+    const studentBranch = fold(student.branch || student.department)
+    if (studentBranch && studentBranch !== fold(branch)) return false
+  }
+  if (batch) {
+    const studentBatch = fold(student.batch || student.academicYear)
+    if (studentBatch && studentBatch !== fold(batch)) return false
+  }
+  return true
+}
+
+/**
+ * Roster with a tolerance ladder: the full cohort (semester + branch + batch)
+ * first, then progressively wider filters. One mislabelled batch or semester
+ * field must never empty a roster the college actually has.
+ */
+export function selectRoster(
+  students: Array<Record<string, unknown>>,
+  semester: number,
+  branch: string,
+  batch: string
+): Array<Record<string, unknown>> {
+  const rungs: Array<{ semester: number; branch: string; batch: string }> = [
+    { semester, branch, batch },
+    { semester, branch, batch: '' },
+    { semester, branch: '', batch: '' },
+    { semester: -1, branch: '', batch: '' },
+  ]
+  for (const rung of rungs) {
+    const matched = students.filter((student) =>
+      studentMatchesCohort(student, rung.semester, rung.branch, rung.batch)
+    )
+    if (matched.length > 0) return matched
+  }
+  return students
+}
+
 // ─── Callable ──────────────────────────────────────────────────────────────
 
 interface InsightSubjectRow {
@@ -610,6 +658,18 @@ function subjectRowFromMapping(mapping: Record<string, unknown>): InsightSubject
     modulesCount: Number(mapping.modulesCount) || 0,
     mapping,
   }
+}
+
+/** Exact course identity: a curriculum doc holds many courses, so the drill
+ * must pin the ONE course the user clicked — never subjectInsights[0]. */
+export function matchesCourseIdentity(
+  mapping: Record<string, unknown>,
+  courseId: string,
+  courseCode: string
+): boolean {
+  if (courseId && String(mapping.courseId || '') !== courseId) return false
+  if (courseCode && fold(mapping.courseCode) !== fold(courseCode)) return false
+  return true
 }
 
 /** Does an assessment belong to this subject? Same three-writer problem. */
@@ -685,6 +745,7 @@ export const getAcademicInsights = onCall(
         }
         if (input.facultyId && String(mapping.facultyId || '') !== input.facultyId) return false
         if (input.curriculumId && String(mapping.curriculumId || '') !== input.curriculumId) return false
+        if (!matchesCourseIdentity(mapping, input.courseId || '', input.courseCode || '')) return false
         if (input.batch && fold(mapping.batch) !== fold(input.batch)) return false
         if (input.branch && fold(mapping.branch) !== fold(input.branch)) return false
         if (input.semester && String(mapping.semester ?? '') !== input.semester) return false
@@ -936,7 +997,7 @@ export const getAcademicInsights = onCall(
     }
 
     // ─── Drill mode: one subject, down to the individual student ─────────
-    if (input.curriculumId && subjectInsights.length) {
+    if ((input.curriculumId || input.courseId || input.courseCode) && subjectInsights.length) {
       const subjectInsight = subjectInsights[0]
       const subjectRow = subjectRows[0]
       const subjectSessions = sessions.filter((session) => sessionBelongsToSubject(session, subjectRow))
@@ -1038,29 +1099,28 @@ export const getAcademicInsights = onCall(
 
       // Roster: the subject's cohort. The mapping's cohort fields filter;
       // when the mapping carries no batch every student of the semester is in.
+      // A tolerance ladder widens rather than returns nothing: a single
+      // mislabelled batch/semester field must not empty the class list.
       const studentsSnap = await db
         .collection('students')
         .where('collegeId', '==', input.collegeId)
         .limit(MAX_INSIGHTS_STUDENTS)
         .get()
-      const roster = studentsSnap.docs
+      const studentRows = studentsSnap.docs
         .map((doc): Record<string, unknown> & { id: string } => ({ id: doc.id, ...(doc.data() as Record<string, unknown>) }))
-        .filter((student) => {
-          const semester = Number(student.semester ?? student.currentSemester ?? 0)
-          if (subjectRow.semester && semester && semester !== subjectRow.semester) return false
-          if (subjectRow.batch && fold(student.batch) && fold(student.batch) !== fold(subjectRow.batch)) return false
-          if (subjectRow.branch && fold(student.branch) && fold(student.branch) !== fold(subjectRow.branch)) {
-            return false
-          }
-          return true
-        })
+      const roster = selectRoster(
+        studentRows,
+        subjectRow.semester,
+        subjectRow.branch,
+        subjectRow.batch
+      )
         .map((student) => ({
           id: String(student.id),
           name: String(student.name || student.displayName || ''),
           regNo: String(student.usn || student.regNo || student.rollNo || ''),
           semester: Number(student.semester ?? student.currentSemester ?? 0),
-          branch: String(student.branch || ''),
-          batch: String(student.batch || ''),
+          branch: String(student.branch || student.department || ''),
+          batch: String(student.batch || student.academicYear || ''),
         }))
 
       // Include anyone who has marks/attendance but sits outside the roster

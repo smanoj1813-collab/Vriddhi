@@ -991,6 +991,29 @@ export async function resolveSessionWriter(
 }
 
 /**
+ * Administrative readers of `getCurriculumProgress` — the principals, admins
+ * and HODs whose dashboards link here. They are readers, not session writers:
+ * they see the college (or their department) but cannot change class sessions.
+ */
+export const PROGRESS_READER_ROLES = ['admin', 'principal', 'hod']
+
+export async function resolveProgressReader(
+  uid: string,
+  token: Record<string, unknown>
+): Promise<SchedulingStaff> {
+  const staff = await resolveStaff(
+    uid,
+    token,
+    [...SESSION_WRITE_ROLES, ...PROGRESS_READER_ROLES],
+    'Academic progress access is required'
+  )
+  if (!staff.collegeId) {
+    throw new HttpsError('permission-denied', 'No college is associated with this account')
+  }
+  return staff
+}
+
+/**
  * The `facultyId` values a class session's teacher may have ledger rows under.
  *
  * A session carries the timetable's faculty id (the faculty PROFILE document
@@ -3382,6 +3405,9 @@ export interface ProgressInput {
   branch: string
   semester: string
   curriculumId: string
+  /** Exact course identity — a curriculum doc holds many courses. */
+  courseId?: string
+  courseCode?: string
   from: string
   to: string
 }
@@ -3410,6 +3436,8 @@ export function validateProgressInput(
     branch: optionalFilter(raw.branch, 'branch', 100),
     semester: optionalFilter(raw.semester, 'semester', 10),
     curriculumId: optionalFilter(raw.curriculumId, 'curriculumId', 200),
+    courseId: optionalFilter(raw.courseId, 'courseId', 200),
+    courseCode: optionalFilter(raw.courseCode, 'courseCode', 100),
     from,
     to,
   }
@@ -3432,14 +3460,27 @@ export const getCurriculumProgress = onCall(
   async (request) => {
     const uid = request.auth?.uid
     if (!uid) throw new HttpsError('unauthenticated', 'Authentication is required')
-    const staff = await resolveSessionWriter(uid, request.auth?.token || {})
+    // Readers extend beyond teaching staff: the principal, the admin and the
+    // HOD dashboards all link to this page, and "Teaching staff access is
+    // required" was refusing them at the door.
+    const staff = await resolveProgressReader(uid, request.auth?.token || {})
     const input = validateProgressInput(request.data, staff.role, staff.collegeId)
 
-    // Faculty may only read their own progress; scheduling roles may read the
-    // whole college. A self-service caller is matched by ANY of the ids they
-    // are filed under, because the mappings and the sessions below are keyed on
-    // the faculty profile id while the caller arrives as an auth uid.
-    const privileged = SCHEDULING_ROLES.includes(staff.role)
+    // A HOD reads their own department unless they asked for a specific one.
+    if (staff.role === 'hod' && !input.branch) {
+      const hodUserSnap = await admin.firestore().collection('users').doc(uid).get()
+      const dept = hodUserSnap.exists
+        ? String((hodUserSnap.data() as Record<string, unknown> | undefined)?.department || '').trim()
+        : ''
+      if (dept) input.branch = dept
+    }
+
+    // Faculty may only read their own progress; scheduling and administrative
+    // reader roles may read the whole college. A self-service caller is
+    // matched by ANY of the ids they are filed under, because the mappings and
+    // the sessions below are keyed on the faculty profile id while the caller
+    // arrives as an auth uid.
+    const privileged = SCHEDULING_ROLES.includes(staff.role) || PROGRESS_READER_ROLES.includes(staff.role)
     const selfIds = privileged ? [] : mergeIdentityIds(staff.uid, await loadFacultyAliases(staff.uid))
     const matchesFaculty = (facultyId: unknown): boolean => {
       if (privileged) {

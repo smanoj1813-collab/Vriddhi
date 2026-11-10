@@ -148,6 +148,9 @@ type View =
   | {
       level: 'subject'
       curriculumId: string
+      /** Exact course identity — a curriculum doc holds many courses. */
+      courseId: string
+      courseCode: string
       courseName: string
       semester: number
       facultyId: string
@@ -204,6 +207,8 @@ export default function AcademicInsights() {
       try {
         const result = await getAcademicInsights({
           curriculumId: view.curriculumId,
+          courseId: view.courseId,
+          courseCode: view.courseCode,
           facultyId: view.facultyId,
           batch: view.batch,
           from: window.from,
@@ -420,6 +425,8 @@ export default function AcademicInsights() {
                       setView({
                         level: 'subject',
                         curriculumId: subject.curriculumId,
+                        courseId: subject.courseId,
+                        courseCode: subject.courseCode,
                         courseName: subject.courseName || subject.courseCode || 'Subject',
                         semester: subject.semester,
                         facultyId: subject.facultyId,
@@ -532,6 +539,10 @@ export default function AcademicInsights() {
                       <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1 }}>
                         Module-wise syllabus completion
                       </Typography>
+                      <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1.5 }}>
+                        Planned classes are derived from the syllabus hours; the classes actually
+                        delivered are listed under “Attendance &amp; classes”.
+                      </Typography>
                       {drill.subject.modules.length === 0 && (
                         <Typography variant="body2" color="text.secondary">
                           No modules recorded for this subject yet.
@@ -543,7 +554,7 @@ export default function AcademicInsights() {
                             key={module.moduleNo || module.moduleName}
                             value={module.pct}
                             label={`${module.moduleName} (${module.covered}/${module.total}${
-                              module.classesNeeded > 0 ? ` · ${module.hours}h ≈ ${module.classesNeeded} classes` : ''
+                              module.classesNeeded > 0 ? ` · ${module.hours}h ≈ ${module.classesNeeded} planned classes` : ''
                             })`}
                           />
                         ))}
