@@ -1,4 +1,5 @@
 import { useState, useMemo, useRef, useEffect } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { useAuth } from '../../auth/context/AuthContext'
 import { db } from '@/Firebase/config'
 import {
@@ -349,6 +350,17 @@ export default function View360() {
   const [searchRegNo, setSearchRegNo] = useState('')
   const [activeTab, setActiveTab] = useState('institute')
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null)
+
+  // Deep link — /admin/view360?student=<id> opens that student's profile.
+  // The drill-down pages (Grade Records and friends) link their student rows
+  // here so every route ends at the same 360° student view.
+  const [searchParams] = useSearchParams()
+  const deepLinkedStudentId = searchParams.get('student')
+  useEffect(() => {
+    if (!deepLinkedStudentId || selectedStudent) return
+    const match = allStudents.find((s) => s.id === deepLinkedStudentId)
+    if (match) setSelectedStudent(match)
+  }, [deepLinkedStudentId, allStudents, selectedStudent])
 
   const [filterCourse, setFilterCourse] = useState('all')
   const [filterBatch, setFilterBatch] = useState('all')

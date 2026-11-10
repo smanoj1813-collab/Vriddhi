@@ -22,15 +22,20 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
+import { Link as RouterLink } from 'react-router-dom';
 import { collection, getDocs, limit, query, where } from 'firebase/firestore';
 import { httpsCallable } from 'firebase/functions';
 import { db, functions } from '@/Firebase/config';
 import { useAuth } from '../../auth/context/AuthContext';
+import DrillDown, { type DrillGroup, type DrillLevelSpec } from '@/shared/components/DrillDown';
 
 interface StudentOption {
   id: string;
   name: string;
   regNo: string;
+  /** Cohort fields — the drill keys (department = programme). */
+  department: string;
+  batch: string;
 }
 
 interface GradeRecord {
@@ -117,6 +122,8 @@ export default function GradeRecords() {
           id: student.id,
           name: String(data.name || 'Unnamed student'),
           regNo: String(data.regNo || data.registrationNumber || ''),
+          department: String(data.department || data.branch || ''),
+          batch: String(data.batch || data.academicYear || ''),
         };
       }).sort((left, right) => left.name.localeCompare(right.name)));
       setRecords(recordResponse.data.records);
@@ -132,9 +139,87 @@ export default function GradeRecords() {
 
   useEffect(() => { void load(); }, [load]);
 
-  const visibleRecords = useMemo(() => records.filter((record) =>
+  const studentById = useMemo(() => new Map(students.map((s) => [s.id, s])), [students]);
+
+  // The drill's programme level joins the student's department (records carry
+  // no branch of their own).
+  type EnrichedRecord = GradeRecord & { programme: string; batch: string };
+  const enriched: EnrichedRecord[] = useMemo(
+    () => records.map((record) => ({
+      ...record,
+      programme: studentById.get(record.studentId)?.department || 'Unassigned',
+      batch: studentById.get(record.studentId)?.batch || '',
+    })),
+    [records, studentById]
+  );
+
+  const drillLevels: Array<DrillLevelSpec<EnrichedRecord>> = [
+    {
+      title: 'Programme',
+      group: (rows) => {
+        const byProgramme = new Map<string, EnrichedRecord[]>();
+        rows.forEach((record) => {
+          const list = byProgramme.get(record.programme) || [];
+          list.push(record);
+          byProgramme.set(record.programme, list);
+        });
+        return [...byProgramme.entries()]
+          .sort((a, b) => a[0].localeCompare(b[0]))
+          .map(([programme, list]) => ({
+            label: programme,
+            subLabel: `${new Set(list.map((r) => r.studentId)).size} students`,
+            chips: [...new Set(list.map((r) => (r.semester ? `Sem ${r.semester}` : 'Unassigned')))]
+              .sort()
+              .slice(0, 4),
+            items: list,
+          }));
+      },
+    },
+    {
+      title: 'Semester',
+      group: (rows) => {
+        const bySemester = new Map<number, EnrichedRecord[]>();
+        rows.forEach((record) => {
+          const list = bySemester.get(record.semester) || [];
+          list.push(record);
+          bySemester.set(record.semester, list);
+        });
+        return [...bySemester.entries()]
+          .sort((a, b) => a[0] - b[0])
+          .map(([semester, list]) => ({
+            label: semester ? `Semester ${semester}` : 'Unassigned semester',
+            subLabel: `${new Set(list.map((r) => r.subject || r.code)).size} subjects`,
+            items: list,
+          }));
+      },
+    },
+    {
+      title: 'Subject',
+      group: (rows) => {
+        const bySubject = new Map<string, EnrichedRecord[]>();
+        rows.forEach((record) => {
+          const key = `${record.subject || 'Subject'}||${record.code || ''}`;
+          const list = bySubject.get(key) || [];
+          list.push(record);
+          bySubject.set(key, list);
+        });
+        return [...bySubject.entries()]
+          .sort((a, b) => a[0].localeCompare(b[0]))
+          .map(([key, list]) => {
+            const [subject, code] = key.split('||');
+            return {
+              label: code ? `${subject} (${code})` : subject,
+              subLabel: `${new Set(list.map((r) => r.studentId)).size} students`,
+              items: list,
+            };
+          });
+      },
+    },
+  ];
+
+  const visibleRecords = useMemo(() => enriched.filter((record) =>
     status === 'all' || record.status === status
-  ), [records, status]);
+  ), [enriched, status]);
 
   const updateField = (field: keyof GradeForm, value: string) => {
     setForm((current) => {
@@ -283,49 +368,51 @@ export default function GradeRecords() {
 
       {loading ? (
         <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}><CircularProgress /></Box>
-      ) : visibleRecords.length === 0 ? (
-        <Alert severity="info">No grade records match this filter.</Alert>
       ) : (
-        <TableContainer component={Card} variant="outlined">
-          <Table size="small">
-            <TableHead>
-              <TableRow>
-                <TableCell padding="checkbox" />
-                <TableCell>Student</TableCell>
-                <TableCell>Semester</TableCell>
-                <TableCell>Course</TableCell>
-                <TableCell>Marks</TableCell>
-                <TableCell>Credits</TableCell>
-                <TableCell>Grade</TableCell>
-                <TableCell>Status</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {visibleRecords.map((record) => (
-                <TableRow key={record.id} hover>
-                  <TableCell padding="checkbox">
-                    <Checkbox
-                      disabled={record.status !== 'draft'}
-                      checked={selectedDrafts.has(record.id)}
-                      onChange={(event) => setSelectedDrafts((current) => {
-                        const next = new Set(current);
-                        if (event.target.checked) next.add(record.id); else next.delete(record.id);
-                        return next;
-                      })}
-                    />
-                  </TableCell>
-                  <TableCell>{record.studentName}<Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>{record.studentRegNo}</Typography></TableCell>
-                  <TableCell>{record.semester}</TableCell>
-                  <TableCell>{record.code}<Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>{record.subject}</Typography></TableCell>
-                  <TableCell>{record.total ?? '—'}{record.internal !== undefined || record.external !== undefined ? <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>{record.internal ?? '—'} + {record.external ?? '—'}</Typography> : null}</TableCell>
-                  <TableCell>{record.credits ?? '—'}</TableCell>
-                  <TableCell>{record.grade}{record.gradePoint !== undefined ? ` (${record.gradePoint})` : ''}</TableCell>
-                  <TableCell><Chip size="small" label={record.status} color={record.status === 'published' ? 'success' : 'warning'} /></TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
+        <DrillDown
+          items={visibleRecords}
+          levels={drillLevels}
+          itemKey={(record) => record.id}
+          itemUnit="records"
+          searchPlaceholder="Search student / subject / code"
+          searchText={(record) => `${record.studentName} ${record.studentRegNo} ${record.subject} ${record.code}`}
+          renderItem={(record) => (
+            <Card variant="outlined">
+              <CardContent sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 2, p: 2, '&:last-child': { pb: 2 } }}>
+                <Checkbox
+                  disabled={record.status !== 'draft'}
+                  checked={selectedDrafts.has(record.id)}
+                  onChange={(event) => setSelectedDrafts((current) => {
+                    const next = new Set(current);
+                    if (event.target.checked) next.add(record.id); else next.delete(record.id);
+                    return next;
+                  })}
+                />
+                <Box sx={{ flex: '1 1 180px', minWidth: 0 }}>
+                  <Typography sx={{ fontWeight: 600 }}>{record.studentName}</Typography>
+                  <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
+                    {record.studentRegNo}{record.programme && record.programme !== 'Unassigned' ? ` · ${record.programme}` : ''}{record.batch ? ` · Batch ${record.batch}` : ''}
+                  </Typography>
+                </Box>
+                <Box sx={{ flex: '1 1 160px', minWidth: 0 }}>
+                  <Typography variant="body2">{record.code || '—'}</Typography>
+                  <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>{record.subject}</Typography>
+                </Box>
+                <Box sx={{ flex: '0 1 140px' }}>
+                  <Typography variant="body2">{record.total ?? '—'} total{record.credits !== undefined ? ` · ${record.credits} cr` : ''}</Typography>
+                  <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>{record.internal ?? '—'} + {record.external ?? '—'}</Typography>
+                </Box>
+                <Typography sx={{ fontWeight: 700, minWidth: 70 }}>
+                  {record.grade}{record.gradePoint !== undefined ? ` (${record.gradePoint})` : ''}
+                </Typography>
+                <Chip size="small" label={record.status} color={record.status === 'published' ? 'success' : 'warning'} />
+                <Button component={RouterLink} size="small" to={`/admin/view360?student=${record.studentId}`}>
+                  360° View
+                </Button>
+              </CardContent>
+            </Card>
+          )}
+        />
       )}
     </Box>
   );
