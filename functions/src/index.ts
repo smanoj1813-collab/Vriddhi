@@ -110,6 +110,8 @@ import {
 } from './classSchedule'
 // ─── Auto curriculum ↔ faculty mapping (preview + apply) ───
 import { autoMapCurriculum, applyAutoMapping } from './autoCurriculumMapping'
+// ─── Academic insights: semester → subject → student drill-down ───
+import { getAcademicInsights } from './academicInsights'
 // ─── Bulk schedule import: validate → clash-check → (optional) write ───
 import { bulkImportWeeklySchedules } from './scheduleImport'
 // ─── University scheme packs: custom packs + college assignment (G1) ───
@@ -351,6 +353,7 @@ export {
   getCurriculumProgress,
   autoMapCurriculum,
   applyAutoMapping,
+  getAcademicInsights,
   bulkImportWeeklySchedules,
   saveSchemePack,
   assignCollegeSchemePack,

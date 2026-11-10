@@ -635,7 +635,7 @@ export function subjectKey(subject?: unknown, subjectCode?: unknown): string {
 
 // ─── Staff resolution ───────────────────────────────────────────────────────
 
-interface SchedulingStaff {
+export interface SchedulingStaff {
   uid: string
   role: string
   collegeId: string
@@ -920,7 +920,7 @@ async function callerOwnsFaculty(
  * only thing that differs between the scheduling-only pair and the
  * session-writer pair, so the two cannot drift apart again.
  */
-async function resolveStaff(
+export async function resolveStaff(
   uid: string,
   token: Record<string, unknown>,
   allowedRoles: string[],
