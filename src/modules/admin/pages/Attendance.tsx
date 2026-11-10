@@ -37,6 +37,7 @@ import EditIcon from '@mui/icons-material/Edit';
 import RefreshIcon from '@mui/icons-material/Refresh';
 
 import {
+  listAttendanceRecords,
   listClassSessions,
   getAllStudentsAttendanceSummary,
   getAttendanceStats,
@@ -44,9 +45,11 @@ import {
   listAttendanceRecordsInRange,
   summarizeAttendanceRecords,
 } from '../api/attendanceApi';
+import { collection, getDocs, limit, query, where } from 'firebase/firestore';
+import { db } from '@/Firebase/config';
 import { useAuth } from '../../auth/context/AuthContext';
 import { shouldScopeToDepartment, docInDepartment } from '@/shared/utils/departmentScope';
-import type { AttendanceSummary, ClassSession } from '../types/attendance';
+import type { AttendanceRecord, AttendanceSummary, ClassSession } from '../types/attendance';
 import {
   buildStudentAttendanceReport,
   downloadAttendanceReport,
@@ -89,6 +92,15 @@ export default function Attendance() {
   const [date, setDate] = useState(() => new Date().toISOString().split('T')[0]);
   const [branch, setBranch] = useState('all');
   const [batch, setBatch] = useState('all');
+  const [semester, setSemester] = useState('all');
+  // Subject name/code → semester, joined from the curriculum mappings.
+  const [subjectSemesters, setSubjectSemesters] = useState<Map<string, number>>(new Map());
+  // Semester Drill: semesters → subjects → sessions → individual students.
+  const [drill, setDrill] = useState<
+    { level: 'semesters' } | { level: 'subjects'; semester: number } | { level: 'sessions'; semester: number; subject: string }
+  >({ level: 'semesters' });
+  const [expandedSessionId, setExpandedSessionId] = useState('');
+  const [sessionStudents, setSessionStudents] = useState<Record<string, AttendanceRecord[]>>({});
   const [sessions, setSessions] = useState<ClassSession[]>([]);
   const [summary, setSummary] = useState<AttendanceSummary[]>([]);
   const [stats, setStats] = useState({
@@ -237,6 +249,121 @@ export default function Attendance() {
     });
     return { branches: Array.from(bSet), batches: Array.from(baSet) };
   }, [sessions]);
+
+  // Subject → semester from the college's curriculum mappings.
+  useEffect(() => {
+    if (!collegeId) return;
+    let cancelled = false;
+    getDocs(query(collection(db, 'curriculumFacultyMappings'), where('collegeId', '==', collegeId), limit(500)))
+      .then((snap) => {
+        if (cancelled) return;
+        const map = new Map<string, number>();
+        snap.docs.forEach((docSnap) => {
+          const data = docSnap.data();
+          const sem = Number(data.semester) || 0;
+          [data.courseName, data.courseCode].forEach((value) => {
+            const key = String(value || '').trim().toLowerCase();
+            if (key && !map.has(key)) map.set(key, sem);
+          });
+        });
+        setSubjectSemesters(map);
+      })
+      .catch(() => setSubjectSemesters(new Map()));
+    return () => {
+      cancelled = true;
+    };
+  }, [collegeId]);
+
+  const sessionSemester = useCallback(
+    (session: ClassSession): number | null => {
+      const raw = session as unknown as Record<string, unknown>;
+      const keys = [session.subject, raw.subjectCode]
+        .filter(Boolean)
+        .map((value) => String(value).trim().toLowerCase());
+      for (const key of keys) {
+        if (subjectSemesters.has(key)) return subjectSemesters.get(key) ?? null;
+      }
+      for (const key of keys) {
+        for (const [name, sem] of subjectSemesters) {
+          if (name && key && (name.includes(key) || key.includes(name))) return sem;
+        }
+      }
+      return null;
+    },
+    [subjectSemesters]
+  );
+
+  const semesterOptions = useMemo(() => {
+    const set = new Set<number>(subjectSemesters.values());
+    sessions.forEach((s) => {
+      const sem = sessionSemester(s);
+      if (sem !== null) set.add(sem);
+    });
+    return [...set].sort((a, b) => a - b);
+  }, [sessions, subjectSemesters, sessionSemester]);
+
+  const semesterSessions = useMemo(
+    () => (semester === 'all' ? sessions : sessions.filter((s) => sessionSemester(s) === Number(semester))),
+    [sessions, semester, sessionSemester]
+  );
+
+  const counterOf = (session: ClassSession, key: 'presentCount' | 'attendanceCount'): number => {
+    const raw = session as unknown as Record<string, unknown>;
+    return Number(raw[key]) || 0;
+  };
+
+  const drillTree = useMemo(() => {
+    const semMap = new Map<number, Map<string, ClassSession[]>>();
+    semesterSessions.forEach((s) => {
+      const sem = sessionSemester(s) ?? 0;
+      const bySubject = semMap.get(sem) || new Map<string, ClassSession[]>();
+      const key = s.subject || 'Subject';
+      const list = bySubject.get(key) || [];
+      list.push(s);
+      bySubject.set(key, list);
+      semMap.set(sem, bySubject);
+    });
+    return [...semMap.entries()]
+      .sort((a, b) => a[0] - b[0])
+      .map(([sem, bySubject]) => {
+        const subjects = [...bySubject.entries()]
+          .map(([subject, list]) => {
+            const present = list.reduce((sum, s) => sum + counterOf(s, 'presentCount'), 0);
+            const marked = list.reduce((sum, s) => sum + counterOf(s, 'attendanceCount'), 0);
+            return {
+              subject,
+              sessions: list.slice().sort((a, b) => `${a.date}${a.startTime}`.localeCompare(`${b.date}${b.startTime}`)),
+              present,
+              marked,
+            };
+          })
+          .sort((a, b) => a.subject.localeCompare(b.subject));
+        return {
+          semester: sem,
+          subjects,
+          present: subjects.reduce((sum, x) => sum + x.present, 0),
+          marked: subjects.reduce((sum, x) => sum + x.marked, 0),
+        };
+      });
+  }, [semesterSessions, sessionSemester]);
+
+  const toggleSessionStudents = useCallback(
+    async (session: ClassSession) => {
+      if (expandedSessionId === session.id) {
+        setExpandedSessionId('');
+        return;
+      }
+      setExpandedSessionId(session.id);
+      if (sessionStudents[session.id]) return;
+      try {
+        const records = await listAttendanceRecords({ sessionId: session.id });
+        setSessionStudents((prev) => ({ ...prev, [session.id]: records }));
+      } catch {
+        setSessionStudents((prev) => ({ ...prev, [session.id]: [] }));
+      }
+    },
+    [expandedSessionId, sessionStudents]
+  );
 
   const statCards = [
     { label: 'Avg Attendance', value: `${stats.avgPercentage.toFixed(1)}%`, color: '#34d399' },
@@ -399,6 +526,7 @@ export default function Attendance() {
             <Tab label="Class Sessions" sx={{ color: 'text.secondary', textTransform: 'none' }} />
             <Tab label="Student Summary" sx={{ color: 'text.secondary', textTransform: 'none' }} />
             <Tab label="Daily Report" sx={{ color: 'text.secondary', textTransform: 'none' }} />
+            <Tab label="Semester Drill" sx={{ color: 'text.secondary', textTransform: 'none' }} />
           </Tabs>
 
           <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1.5, alignItems: 'center' }}>
@@ -445,6 +573,22 @@ export default function Attendance() {
                 ))}
               </Select>
             </FormControl>
+            <FormControl size="small" sx={{ minWidth: 130 }}>
+              <InputLabel sx={{ color: 'text.secondary' }}>Semester</InputLabel>
+              <Select
+                value={semester}
+                label="Semester"
+                onChange={(e: SelectChangeEvent) => setSemester(e.target.value)}
+                sx={{ color: 'text.primary', bgcolor: 'background.paper', '& .MuiOutlinedInput-notchedOutline': { borderColor: 'divider' } }}
+              >
+                <MenuItem value="all">All Semesters</MenuItem>
+                {semesterOptions.map((sem) => (
+                  <MenuItem key={sem} value={String(sem)}>
+                    {sem === 0 ? 'Unassigned' : `Semester ${sem}`}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
           </Box>
         </Box>
 
@@ -457,7 +601,7 @@ export default function Attendance() {
             <>
               {tab === 0 && (
                 <>
-                  {sessions.length === 0 ? (
+                  {semesterSessions.length === 0 ? (
                     <Box sx={{ textAlign: 'center', py: 6 }}>
                       <Typography sx={{ color: 'text.secondary' }}>
                         No sessions found{date ? ` for ${date}` : ''}.
@@ -479,7 +623,7 @@ export default function Attendance() {
                           </TableRow>
                         </TableHead>
                         <TableBody>
-                          {sessions.map((s) => (
+                          {semesterSessions.map((s) => (
                             <TableRow
                               key={s.id}
                               sx={{ '& td': { color: 'text.primary', borderBottom: '1px solid', borderColor: 'divider' }, '&:hover': { bgcolor: 'action.hover' } }}
@@ -587,6 +731,133 @@ export default function Attendance() {
               {tab === 2 && (
                 <Box sx={{ textAlign: 'center', py: 6 }}>
                   <Typography sx={{ color: 'text.secondary' }}>Daily report view coming soon.</Typography>
+                </Box>
+              )}
+
+              {tab === 3 && (
+                <Box sx={{ p: 1 }}>
+                  <Stack direction="row" spacing={1} sx={{ mb: 2, flexWrap: 'wrap', alignItems: 'center' }}>
+                    <Button
+                      size="small"
+                      onClick={() => setDrill({ level: 'semesters' })}
+                      sx={{ color: drill.level === 'semesters' ? '#0d9488' : 'text.secondary', fontWeight: drill.level === 'semesters' ? 700 : 400 }}
+                    >
+                      All semesters
+                    </Button>
+                    {drill.level !== 'semesters' && (
+                      <>
+                        <Typography sx={{ color: 'text.secondary' }}>›</Typography>
+                        <Button
+                          size="small"
+                          onClick={() => setDrill({ level: 'subjects', semester: drill.semester })}
+                          sx={{ color: drill.level === 'subjects' ? '#0d9488' : 'text.secondary', fontWeight: drill.level === 'subjects' ? 700 : 400 }}
+                        >
+                          {drill.semester === 0 ? 'Unassigned' : `Semester ${drill.semester}`}
+                        </Button>
+                      </>
+                    )}
+                    {drill.level === 'sessions' && (
+                      <>
+                        <Typography sx={{ color: 'text.secondary' }}>›</Typography>
+                        <Typography sx={{ fontWeight: 700, color: '#0d9488' }}>{drill.subject}</Typography>
+                      </>
+                    )}
+                  </Stack>
+
+                  {drill.level === 'semesters' && (
+                    <Box sx={{ display: 'grid', gap: 2, gridTemplateColumns: 'repeat(auto-fill, minmax(230px, 1fr))' }}>
+                      {drillTree.map((row) => (
+                        <Paper
+                          key={row.semester}
+                          onClick={() => setDrill({ level: 'subjects', semester: row.semester })}
+                          sx={{ p: 2, cursor: 'pointer', border: '1px solid', borderColor: 'divider', '&:hover': { borderColor: '#0d9488' } }}
+                        >
+                          <Typography sx={{ fontWeight: 700, color: 'text.primary' }}>
+                            {row.semester === 0 ? 'Unassigned semester' : `Semester ${row.semester}`}
+                          </Typography>
+                          <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                            {row.subjects.length} subjects · {row.subjects.reduce((n, s) => n + s.sessions.length, 0)} classes
+                          </Typography>
+                          <Typography variant="body2" sx={{ fontWeight: 600, color: row.marked ? '#0d9488' : 'text.secondary' }}>
+                            {row.marked ? `${Math.round((row.present / row.marked) * 1000) / 10}% attendance` : 'No attendance marked'}
+                          </Typography>
+                        </Paper>
+                      ))}
+                      {drillTree.length === 0 && (
+                        <Typography sx={{ color: 'text.secondary', py: 4, textAlign: 'center', gridColumn: '1 / -1' }}>
+                          No sessions in the current filters.
+                        </Typography>
+                      )}
+                    </Box>
+                  )}
+
+                  {drill.level === 'subjects' && (
+                    <TableContainer>
+                      <Table size="small">
+                        <TableHead>
+                          <TableRow sx={{ '& th': { color: 'text.secondary', borderBottom: '1px solid', borderColor: 'divider', fontWeight: 600 } }}>
+                            <TableCell>Subject</TableCell>
+                            <TableCell align="center">Classes</TableCell>
+                            <TableCell align="center">Present / marked</TableCell>
+                            <TableCell align="right">Attendance</TableCell>
+                          </TableRow>
+                        </TableHead>
+                        <TableBody>
+                          {(drillTree.find((row) => row.semester === drill.semester)?.subjects || []).map((subject) => (
+                            <TableRow
+                              key={subject.subject}
+                              hover
+                              sx={{ cursor: 'pointer', '& td': { color: 'text.primary', borderBottom: '1px solid', borderColor: 'divider' } }}
+                              onClick={() => setDrill({ level: 'sessions', semester: drill.semester, subject: subject.subject })}
+                            >
+                              <TableCell sx={{ fontWeight: 600 }}>{subject.subject}</TableCell>
+                              <TableCell align="center">{subject.sessions.length}</TableCell>
+                              <TableCell align="center">{subject.present} / {subject.marked || '—'}</TableCell>
+                              <TableCell align="right">
+                                {subject.marked ? `${Math.round((subject.present / subject.marked) * 1000) / 10}%` : '—'}
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </TableContainer>
+                  )}
+
+                  {drill.level === 'sessions' && (
+                    <Box sx={{ display: 'grid', gap: 1 }}>
+                      {((drillTree.find((row) => row.semester === drill.semester)?.subjects || []).find((s) => s.subject === drill.subject)?.sessions || []).map((session) => (
+                        <Paper key={session.id} sx={{ border: '1px solid', borderColor: 'divider' }}>
+                          <Box
+                            onClick={() => void toggleSessionStudents(session)}
+                            sx={{ p: 1.5, cursor: 'pointer', display: 'flex', justifyContent: 'space-between', gap: 2, flexWrap: 'wrap' }}
+                          >
+                            <Typography sx={{ fontWeight: 600, color: 'text.primary' }}>
+                              {session.date} · {session.startTime}–{session.endTime} · {session.facultyName || 'Faculty TBA'}
+                            </Typography>
+                            <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                              {session.status} · {counterOf(session, 'presentCount')}/{counterOf(session, 'attendanceCount') || '—'} present ·{' '}
+                              {expandedSessionId === session.id ? 'Hide students' : 'Show students'}
+                            </Typography>
+                          </Box>
+                          {expandedSessionId === session.id && (
+                            <Box sx={{ borderTop: '1px solid', borderColor: 'divider', p: 1.5, display: 'grid', gap: 0.5 }}>
+                              {(sessionStudents[session.id] || []).length === 0 ? (
+                                <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                                  No attendance records for this class.
+                                </Typography>
+                              ) : (
+                                (sessionStudents[session.id] || []).map((record) => (
+                                  <Typography key={record.id} variant="body2" sx={{ color: 'text.primary' }}>
+                                    {record.studentName} ({record.regNo}) — {record.status}
+                                  </Typography>
+                                ))
+                              )}
+                            </Box>
+                          )}
+                        </Paper>
+                      ))}
+                    </Box>
+                  )}
                 </Box>
               )}
             </>

@@ -31,6 +31,10 @@ interface User {
   status: 'active' | 'inactive' | 'pending'
   lastActive: string
   avatar?: string
+  /** Student cohort — the drill-down keys (absent on staff rows). */
+  semester?: number
+  batch?: string
+  regNo?: string
 }
 
 interface Department {
@@ -272,6 +276,9 @@ function useCollegeDashboardData(
             department: s.department || s.division || 'General',
             status: (s.status || 'active') as User['status'],
             lastActive: 'Recently',
+            semester: Number(s.semester ?? s.currentSemester ?? 0) || undefined,
+            batch: s.batch || s.academicYear || '',
+            regNo: s.usn || s.regNo || s.rollNo || '',
           })),
         ]
 
@@ -310,14 +317,69 @@ function UserManagement({ users, collegeId }: { users: User[]; collegeId?: strin
   const [roleFilter, setRoleFilter] = useState('all')
   const [statusFilter, setStatusFilter] = useState('all')
   const [deptFilter, setDeptFilter] = useState('all')
+  const [semesterFilter, setSemesterFilter] = useState('all')
+  const [batchFilter, setBatchFilter] = useState('all')
+  // Drill-down: branch → semester → batch → individual students.
+  const [drillMode, setDrillMode] = useState(false)
+  const [openBranch, setOpenBranch] = useState<string | null>(null)
+  const [openSemester, setOpenSemester] = useState<string | null>(null)
+  const [openBatch, setOpenBatch] = useState<string | null>(null)
 
   const filtered = useMemo(() => users.filter(u => {
     const matchSearch = u.name.toLowerCase().includes(search.toLowerCase()) || u.email.toLowerCase().includes(search.toLowerCase())
     const matchRole = roleFilter === 'all' || u.role === roleFilter
     const matchStatus = statusFilter === 'all' || u.status === statusFilter
     const matchDept = deptFilter === 'all' || u.department === deptFilter
-    return matchSearch && matchRole && matchStatus && matchDept
-  }), [users, search, roleFilter, statusFilter, deptFilter])
+    // Cohort filters act on the student fields; staff rows drop out while one is set.
+    const matchSemester = semesterFilter === 'all' || String(u.semester ?? '') === semesterFilter
+    const matchBatch = batchFilter === 'all' || (u.batch || '') === batchFilter
+    return matchSearch && matchRole && matchStatus && matchDept && matchSemester && matchBatch
+  }), [users, search, roleFilter, statusFilter, deptFilter, semesterFilter, batchFilter])
+
+  const branchOptions = useMemo(() => [...new Set(users.map(u => u.department).filter(Boolean))].sort(), [users])
+  const semesterOptions = useMemo(
+    () => [...new Set(users.map(u => u.semester).filter((s): s is number => typeof s === 'number' && s > 0))].sort((a, b) => a - b),
+    [users]
+  )
+  const batchOptions = useMemo(() => [...new Set(users.map(u => u.batch).filter((b): b is string => Boolean(b)))].sort(), [users])
+
+  const drillGroups = useMemo(() => {
+    const byBranch = new Map<string, User[]>()
+    filtered.forEach(u => {
+      const key = u.department || 'Unassigned'
+      const rows = byBranch.get(key) || []
+      rows.push(u)
+      byBranch.set(key, rows)
+    })
+    return [...byBranch.entries()]
+      .sort((a, b) => a[0].localeCompare(b[0]))
+      .map(([branch, rows]) => {
+        const bySemester = new Map<string, User[]>()
+        rows.forEach(u => {
+          const key = typeof u.semester === 'number' && u.semester > 0 ? String(u.semester) : 'staff'
+          const semRows = bySemester.get(key) || []
+          semRows.push(u)
+          bySemester.set(key, semRows)
+        })
+        const semesters = [...bySemester.entries()]
+          .sort((a, b) => (a[0] === 'staff' ? 1 : b[0] === 'staff' ? -1 : Number(a[0]) - Number(b[0])))
+          .map(([semester, semRows]) => {
+            const byBatch = new Map<string, User[]>()
+            semRows.forEach(u => {
+              const key = u.batch || 'Unassigned'
+              const batchRows = byBatch.get(key) || []
+              batchRows.push(u)
+              byBatch.set(key, batchRows)
+            })
+            return {
+              semester,
+              users: semRows,
+              batches: [...byBatch.entries()].sort((a, b) => a[0].localeCompare(b[0])),
+            }
+          })
+        return { branch, users: rows, semesters }
+      })
+  }, [filtered])
 
   const roleIcons: Record<string, React.ElementType> = {
     admin: Shield,
@@ -325,6 +387,45 @@ function UserManagement({ users, collegeId }: { users: User[]; collegeId?: strin
     faculty: GraduationCap,
     mentor: UserCheck,
     student: BookOpen,
+  }
+
+  const UserRow = ({ user }: { user: User }) => {
+    const RoleIcon = roleIcons[user.role] || UserIcon
+    return (
+      <tr className="hover:bg-slate-200/30 dark:hover:bg-slate-800/30 transition-colors">
+        <td className="table-cell">
+          <div className="flex items-center gap-3">
+            <div className="h-10 w-10 rounded-full bg-teal-100 dark:bg-teal-900/30 flex items-center justify-center text-teal-400 font-bold text-sm">
+              {getInitials(user.name)}
+            </div>
+            <div>
+              <p className="font-medium text-slate-900 dark:text-white">{user.name}</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400">{user.email}{user.regNo ? ` · ${user.regNo}` : ''}</p>
+            </div>
+          </div>
+        </td>
+        <td className="table-cell">
+          <div className="flex items-center gap-2">
+            <RoleIcon size={14} className="text-slate-500" />
+            <span className="capitalize text-slate-600 dark:text-slate-300">{user.role === 'admin' ? 'Principal' : user.role}</span>
+          </div>
+        </td>
+        <td className="table-cell text-slate-600 dark:text-slate-300">{user.department}</td>
+        <td className="table-cell">
+          <Badge variant={user.status === 'active' ? 'success' : user.status === 'pending' ? 'warning' : 'danger'}>
+            {user.status}
+          </Badge>
+        </td>
+        <td className="table-cell text-slate-500 dark:text-slate-400 text-xs">{user.lastActive}</td>
+        <td className="table-cell text-right">
+          <div className="flex items-center justify-end gap-2">
+            <button className="p-2 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500 hover:text-slate-900 dark:text-white transition-colors"><Eye size={14} /></button>
+            <button className="p-2 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500 hover:text-slate-900 dark:text-white transition-colors"><Edit3 size={14} /></button>
+            <button className="p-2 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500 hover:text-rose-400 transition-colors"><Trash2 size={14} /></button>
+          </div>
+        </td>
+      </tr>
+    )
   }
 
   return (
@@ -359,66 +460,127 @@ function UserManagement({ users, collegeId }: { users: User[]; collegeId?: strin
           <option value="inactive">Inactive</option>
           <option value="pending">Pending</option>
         </select>
-        <button className="btn-secondary"><Filter size={16} />More Filters</button>
+        <select value={deptFilter} onChange={e => setDeptFilter(e.target.value)} className="input-field">
+          <option value="all">All Branches</option>
+          {branchOptions.map(b => <option key={b} value={b}>{b}</option>)}
+        </select>
+        <select value={semesterFilter} onChange={e => setSemesterFilter(e.target.value)} className="input-field">
+          <option value="all">All Semesters</option>
+          {semesterOptions.map(s => <option key={s} value={String(s)}>Semester {s}</option>)}
+        </select>
+        <select value={batchFilter} onChange={e => setBatchFilter(e.target.value)} className="input-field">
+          <option value="all">All Batches</option>
+          {batchOptions.map(b => <option key={b} value={b}>{b}</option>)}
+        </select>
+        <button
+          onClick={() => { setDrillMode(!drillMode); setOpenBranch(null); setOpenSemester(null); setOpenBatch(null) }}
+          className={drillMode ? 'btn-primary' : 'btn-secondary'}
+        >
+          <Filter size={16} />{drillMode ? 'Flat list' : 'Drill-down'}
+        </button>
       </div>
 
-      <div className="table-container">
-        <table className="w-full">
-          <thead>
-            <tr className="border-b border-slate-200/50 dark:border-slate-700/50">
-              <th className="table-header">User</th>
-              <th className="table-header">Role</th>
-              <th className="table-header">Department</th>
-              <th className="table-header">Status</th>
-              <th className="table-header">Last Active</th>
-              <th className="table-header text-right">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filtered.map(user => {
-              const RoleIcon = roleIcons[user.role] || UserIcon
-              return (
-                <tr key={user.id} className="hover:bg-slate-200/30 dark:hover:bg-slate-800/30 transition-colors">
-                  <td className="table-cell">
-                    <div className="flex items-center gap-3">
-                      <div className="h-10 w-10 rounded-full bg-teal-100 dark:bg-teal-900/30 flex items-center justify-center text-teal-400 font-bold text-sm">
-                        {getInitials(user.name)}
+      {drillMode ? (
+        <div className="space-y-3">
+          <p className="text-xs text-slate-500 dark:text-slate-400">
+            Branch › semester › batch › individual students. Click a level to dig deeper.
+          </p>
+          {drillGroups.map(group => (
+            <div key={group.branch} className="glass-card overflow-hidden">
+              <button
+                onClick={() => { setOpenBranch(openBranch === group.branch ? null : group.branch); setOpenSemester(null); setOpenBatch(null) }}
+                className="w-full flex items-center justify-between p-4 text-left hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors"
+              >
+                <div>
+                  <p className="font-semibold text-slate-900 dark:text-white">{group.branch}</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">{group.users.length} users · {group.semesters.length} semester groups</p>
+                </div>
+                <span className="text-xs font-semibold text-teal-600 dark:text-teal-400">{openBranch === group.branch ? 'Hide' : 'Drill in'}</span>
+              </button>
+              {openBranch === group.branch && (
+                <div className="border-t border-slate-200/60 dark:border-slate-700/60 p-4 space-y-2">
+                  {group.semesters.map(sem => {
+                    const semKey = `${group.branch}/${sem.semester}`
+                    return (
+                      <div key={semKey} className="rounded-xl border border-slate-200/70 dark:border-slate-700/70">
+                        <button
+                          onClick={() => { setOpenSemester(openSemester === semKey ? null : semKey); setOpenBatch(null) }}
+                          className="w-full flex items-center justify-between p-3 text-left hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors"
+                        >
+                          <p className="text-sm font-semibold text-slate-800 dark:text-slate-200">
+                            {sem.semester === 'staff' ? 'Staff (no semester)' : `Semester ${sem.semester}`}
+                          </p>
+                          <p className="text-xs text-slate-500 dark:text-slate-400">{sem.users.length} users</p>
+                        </button>
+                        {openSemester === semKey && (
+                          <div className="border-t border-slate-200/60 dark:border-slate-700/60 p-3 space-y-2">
+                            {sem.batches.map(([batch, rows]) => {
+                              const batchKey = `${semKey}/${batch}`
+                              return (
+                                <div key={batchKey} className="rounded-lg bg-slate-50 dark:bg-slate-800/40">
+                                  <button
+                                    onClick={() => setOpenBatch(openBatch === batchKey ? null : batchKey)}
+                                    className="w-full flex items-center justify-between p-2.5 text-left"
+                                  >
+                                    <p className="text-sm font-medium text-slate-700 dark:text-slate-300">Batch {batch}</p>
+                                    <p className="text-xs text-slate-500 dark:text-slate-400">{rows.length} users</p>
+                                  </button>
+                                  {openBatch === batchKey && (
+                                    <ul className="border-t border-slate-200/60 dark:border-slate-700/60 divide-y divide-slate-200/60 dark:divide-slate-700/60">
+                                      {rows.map(u => (
+                                        <li key={u.id} className="flex items-center justify-between p-2.5">
+                                          <div className="flex items-center gap-3">
+                                            <div className="h-8 w-8 rounded-full bg-teal-100 dark:bg-teal-900/30 flex items-center justify-center text-teal-500 font-bold text-xs">
+                                              {getInitials(u.name)}
+                                            </div>
+                                            <div>
+                                              <p className="text-sm font-medium text-slate-900 dark:text-white">{u.name}</p>
+                                              <p className="text-xs text-slate-500 dark:text-slate-400">{u.email}{u.regNo ? ` · ${u.regNo}` : ''}</p>
+                                            </div>
+                                          </div>
+                                          <Badge variant={u.status === 'active' ? 'success' : u.status === 'pending' ? 'warning' : 'danger'}>{u.status}</Badge>
+                                        </li>
+                                      ))}
+                                    </ul>
+                                  )}
+                                </div>
+                              )
+                            })}
+                          </div>
+                        )}
                       </div>
-                      <div>
-                        <p className="font-medium text-slate-900 dark:text-white">{user.name}</p>
-                        <p className="text-xs text-slate-500 dark:text-slate-400">{user.email}</p>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="table-cell">
-                    <div className="flex items-center gap-2">
-                      <RoleIcon size={14} className="text-slate-500" />
-                      <span className="capitalize text-slate-600 dark:text-slate-300">{user.role === 'admin' ? 'Principal' : user.role}</span>
-                    </div>
-                  </td>
-                  <td className="table-cell text-slate-600 dark:text-slate-300">{user.department}</td>
-                  <td className="table-cell">
-                    <Badge variant={user.status === 'active' ? 'success' : user.status === 'pending' ? 'warning' : 'danger'}>
-                      {user.status}
-                    </Badge>
-                  </td>
-                  <td className="table-cell text-slate-500 dark:text-slate-400 text-xs">{user.lastActive}</td>
-                  <td className="table-cell text-right">
-                    <div className="flex items-center justify-end gap-2">
-                      <button className="p-2 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500 hover:text-slate-900 dark:text-white transition-colors"><Eye size={14} /></button>
-                      <button className="p-2 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500 hover:text-slate-900 dark:text-white transition-colors"><Edit3 size={14} /></button>
-                      <button className="p-2 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500 hover:text-rose-400 transition-colors"><Trash2 size={14} /></button>
-                    </div>
-                  </td>
-                </tr>
-              )
-            })}
-          </tbody>
-        </table>
-        {filtered.length === 0 && (
-          <div className="text-center py-8 text-slate-500 dark:text-slate-400">No users found</div>
-        )}
-      </div>
+                    )
+                  })}
+                </div>
+              )}
+            </div>
+          ))}
+          {drillGroups.length === 0 && (
+            <div className="text-center py-8 text-slate-500 dark:text-slate-400">No users match the current filters</div>
+          )}
+        </div>
+      ) : (
+        <div className="table-container">
+          <table className="w-full">
+            <thead>
+              <tr className="border-b border-slate-200/50 dark:border-slate-700/50">
+                <th className="table-header">User</th>
+                <th className="table-header">Role</th>
+                <th className="table-header">Department</th>
+                <th className="table-header">Status</th>
+                <th className="table-header">Last Active</th>
+                <th className="table-header text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.map(user => <UserRow key={user.id} user={user} />)}
+            </tbody>
+          </table>
+          {filtered.length === 0 && (
+            <div className="text-center py-8 text-slate-500 dark:text-slate-400">No users found</div>
+          )}
+        </div>
+      )}
     </div>
   )
 }

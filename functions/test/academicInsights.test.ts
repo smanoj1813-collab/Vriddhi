@@ -18,6 +18,9 @@ import {
   rollupSubjects,
   sessionBelongsToSubject,
   subjectInScope,
+  matchesCourseIdentity,
+  selectRoster,
+  studentMatchesCohort,
   submissionStats,
   type StudentSubmissionRow,
   type SubjectInsight,
@@ -333,5 +336,80 @@ describe('buildStudentRows', () => {
     assert.equal(s3.avgPct, null)
     assert.equal(s3.totals.pct, null)
     assert.equal(s3.attendance.marked, 0)
+  })
+})
+
+describe('matchesCourseIdentity — the drill stays on the clicked course', () => {
+  const mapping = { courseId: 'C1', courseCode: 'BBA301', courseName: 'Financial Accounting' }
+
+  it('passes every mapping when no identity is requested', () => {
+    assert.equal(matchesCourseIdentity(mapping, '', ''), true)
+  })
+
+  it('pins the exact courseId', () => {
+    assert.equal(matchesCourseIdentity(mapping, 'C1', ''), true)
+    assert.equal(matchesCourseIdentity(mapping, 'C2', ''), false)
+    // A sibling course in the SAME curriculum doc must not leak in.
+    assert.equal(
+      matchesCourseIdentity({ courseId: 'C2', courseCode: 'BBA302', courseName: 'HRM' }, 'C1', ''),
+      false
+    )
+  })
+
+  it('pins the course code case-insensitively', () => {
+    assert.equal(matchesCourseIdentity(mapping, '', 'bba301'), true)
+    assert.equal(matchesCourseIdentity(mapping, '', 'BBA302'), false)
+  })
+
+  it('combines both identity fields', () => {
+    assert.equal(matchesCourseIdentity(mapping, 'C1', 'BBA301'), true)
+    assert.equal(matchesCourseIdentity(mapping, 'C1', 'BBA302'), false)
+  })
+})
+
+describe('studentMatchesCohort / selectRoster — a tolerant roster', () => {
+  const students = [
+    { id: 's1', name: 'Ananya', semester: 3, department: 'BBA', batch: '2026-2027' },
+    { id: 's2', name: 'Bhavana', semester: 3, branch: 'BBA', academicYear: '2026-27' },
+    { id: 's3', name: 'Chitra', semester: 4, department: 'BBA', batch: '2026-2027' },
+    { id: 's4', name: 'Deepa', semester: 3, department: 'BCA', batch: '2026-2027' },
+  ]
+
+  it('matches the full cohort and tolerates blank student fields', () => {
+    assert.equal(studentMatchesCohort(students[0], 3, 'BBA', '2026-2027'), true)
+    // Missing semester on the student side passes (like the old filter did).
+    assert.equal(studentMatchesCohort({ id: 'x' }, 3, 'BBA', '2026-2027'), true)
+  })
+
+  it('reads branch from department and batch from academicYear', () => {
+    assert.equal(studentMatchesCohort(students[1], 3, 'bba', ''), true)
+    assert.equal(studentMatchesCohort(students[1], 3, '', '2026-27'), true)
+    // …and still rejects a genuinely different batch label.
+    assert.equal(studentMatchesCohort(students[1], 3, '', '2026-2027'), false)
+  })
+
+  it('rejects a real mismatch', () => {
+    assert.equal(studentMatchesCohort(students[2], 3, 'BBA', ''), false)
+    assert.equal(studentMatchesCohort(students[3], 3, 'BBA', ''), false)
+  })
+
+  it('full cohort rung keeps everyone on the same cohort', () => {
+    const roster = selectRoster(students, 3, 'BBA', '2026-2027')
+    assert.deepEqual(roster.map((s) => s.id), ['s1'])
+  })
+
+  it('a mislabelled batch drops the batch filter instead of emptying the roster', () => {
+    const roster = selectRoster(students, 3, 'BBA', 'Batch A')
+    assert.deepEqual(roster.map((s) => s.id), ['s1', 's2'])
+  })
+
+  it('a mislabelled branch falls back to the semester', () => {
+    const roster = selectRoster(students, 3, 'B.Com', 'no-such-batch')
+    assert.deepEqual(roster.map((s) => s.id), ['s1', 's2', 's4'])
+  })
+
+  it('nothing matches nothing — the last rung shows every student', () => {
+    const roster = selectRoster(students, 9, '', '')
+    assert.equal(roster.length, students.length)
   })
 })

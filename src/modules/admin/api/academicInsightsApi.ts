@@ -192,6 +192,9 @@ export interface AcademicInsightsInput {
   facultyId?: string
   /** When set the result carries `subject` — the single-subject drill-down. */
   curriculumId?: string
+  /** Exact course identity within the curriculum doc (the clicked subject). */
+  courseId?: string
+  courseCode?: string
   from?: string
   to?: string
 }
@@ -212,6 +215,8 @@ export async function getAcademicInsights(
       ...(input.batch ? { batch: input.batch } : {}),
       ...(input.facultyId ? { facultyId: input.facultyId } : {}),
       ...(input.curriculumId ? { curriculumId: input.curriculumId } : {}),
+      ...(input.courseId ? { courseId: input.courseId } : {}),
+      ...(input.courseCode ? { courseCode: input.courseCode } : {}),
       ...(input.from ? { from: input.from } : {}),
       ...(input.to ? { to: input.to } : {}),
     })
