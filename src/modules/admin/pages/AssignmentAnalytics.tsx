@@ -5,6 +5,7 @@
 // different truths.
 
 import React, { useCallback, useEffect, useState } from 'react'
+import DrillDown, { type DrillLevelSpec } from '@/shared/components/DrillDown'
 import {
   BarChart3, BookOpen, Download, Loader2, RefreshCw, AlertTriangle,
   ClipboardCheck, CheckCircle2, Clock,
@@ -166,6 +167,49 @@ export default function AssignmentAnalytics() {
 
   const { overall, groups, overdueAlerts, rows } = data
 
+  // Per-assignment drill: course → module → the assignment rows.
+  type AnalyticsRow = (typeof rows)[number];
+  const drillLevels: Array<DrillLevelSpec<AnalyticsRow>> = [
+    {
+      title: 'Course',
+      group: (items) => {
+        const byCourse = new Map<string, AnalyticsRow[]>();
+        items.forEach((row) => {
+          const key = row.courseName || 'Unassigned course';
+          const list = byCourse.get(key) || [];
+          list.push(row);
+          byCourse.set(key, list);
+        });
+        return [...byCourse.entries()]
+          .sort((a, b) => a[0].localeCompare(b[0]))
+          .map(([course, list]) => ({
+            label: course,
+            subLabel: `${list.length} assignments · ${list.reduce((n, r) => n + r.submitted, 0)}/${list.reduce((n, r) => n + r.expected, 0)} submitted`,
+            items: list,
+          }));
+      },
+    },
+    {
+      title: 'Module',
+      group: (items) => {
+        const byModule = new Map<string, AnalyticsRow[]>();
+        items.forEach((row) => {
+          const key = row.moduleTitle || 'No module';
+          const list = byModule.get(key) || [];
+          list.push(row);
+          byModule.set(key, list);
+        });
+        return [...byModule.entries()]
+          .sort((a, b) => a[0].localeCompare(b[0]))
+          .map(([module, list]) => ({
+            label: module,
+            subLabel: `${list.length} assignments`,
+            items: list,
+          }));
+      },
+    },
+  ];
+
   return (
     <div className="page-container">
       {/* Header */}
@@ -307,51 +351,29 @@ export default function AssignmentAnalytics() {
             when generating class sessions from the timetable.
           </p>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-vriddhi-border">
-                  <th className="table-header">Assignment</th>
-                  <th className="table-header">Status</th>
-                  <th className="table-header">Deadline</th>
-                  <th className="table-header text-center">Submitted</th>
-                  <th className="table-header text-center">Late</th>
-                  <th className="table-header text-center">Graded</th>
-                  <th className="table-header text-center">Missing</th>
-                  <th className="table-header">Completion</th>
-                </tr>
-              </thead>
-              <tbody>
-                {rows.map((row) => (
-                  <tr key={row.assignmentId} className="hover:bg-vriddhi-dark/30 transition-colors">
-                    <td className="table-cell">
+          <div className="p-4">
+            <DrillDown
+              items={rows}
+              levels={drillLevels}
+              itemKey={(row) => row.assignmentId}
+              itemUnit="assignments"
+              searchPlaceholder="Search assignment / batch"
+              searchText={(row) => `${row.title} ${row.courseName} ${row.moduleTitle} ${row.batch} ${row.division}`}
+              renderItem={(row) => (
+                <div className="rounded-xl border border-vriddhi-border p-3">
+                  <div className="flex flex-wrap items-start justify-between gap-2">
+                    <div>
                       <p className="font-medium text-slate-900 dark:text-white">{row.title}</p>
                       <p className="text-[10px] text-vriddhi-muted">
                         {row.moduleTitle ? `${row.courseName} → ${row.moduleTitle}` : row.courseName}
                         {[row.batch, row.division].filter(Boolean).length > 0 &&
                           ` · ${[row.batch, row.division].filter(Boolean).join(' · ')}`}
                       </p>
-                    </td>
-                    <td className="table-cell">
+                    </div>
+                    <div className="flex items-center gap-3">
                       <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-vriddhi-dark text-vriddhi-text">
                         {STATUS_LABELS[row.status] || row.status}
                       </span>
-                    </td>
-                    <td className="table-cell">
-                      {formatDeadline(row.deadline)}
-                      {row.overdue && (
-                        <span className="ml-1.5 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-rose-50 text-rose-600 dark:bg-rose-950/40 dark:text-rose-300 ring-1 ring-rose-500/20">
-                          {row.overdueDays}d over
-                        </span>
-                      )}
-                    </td>
-                    <td className="table-cell text-center">{row.submitted}/{row.expected}</td>
-                    <td className="table-cell text-center">{row.late}</td>
-                    <td className="table-cell text-center">{row.graded}</td>
-                    <td className="table-cell text-center">
-                      <span className={row.missing > 0 ? 'text-rose-500 font-semibold' : ''}>{row.missing}</span>
-                    </td>
-                    <td className="table-cell">
                       <div className="flex items-center gap-2">
                         <div className="w-24 h-2 bg-vriddhi-dark rounded-full overflow-hidden">
                           <div
@@ -361,11 +383,16 @@ export default function AssignmentAnalytics() {
                         </div>
                         <span className="text-xs font-semibold text-slate-900 dark:text-white w-10">{row.completionPct}%</span>
                       </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                    </div>
+                  </div>
+                  <p className="text-xs text-vriddhi-muted mt-1">
+                    Submitted {row.submitted}/{row.expected} · late {row.late} · graded {row.graded} ·{' '}
+                    <span className={row.missing > 0 ? 'text-rose-500 font-semibold' : ''}>missing {row.missing}</span> · deadline {formatDeadline(row.deadline)}
+                    {row.overdue && ` · ${row.overdueDays}d over`}
+                  </p>
+                </div>
+              )}
+            />
           </div>
         )}
       </div>

@@ -46,6 +46,7 @@ import {
   summarizeAttendanceRecords,
 } from '../api/attendanceApi';
 import { collection, getDocs, limit, query, where } from 'firebase/firestore';
+import { Link as RouterLink } from 'react-router-dom';
 import { db } from '@/Firebase/config';
 import { useAuth } from '../../auth/context/AuthContext';
 import { shouldScopeToDepartment, docInDepartment } from '@/shared/utils/departmentScope';
@@ -847,9 +848,16 @@ export default function Attendance() {
                                 </Typography>
                               ) : (
                                 (sessionStudents[session.id] || []).map((record) => (
-                                  <Typography key={record.id} variant="body2" sx={{ color: 'text.primary' }}>
-                                    {record.studentName} ({record.regNo}) — {record.status}
-                                  </Typography>
+                                  <Box key={record.id} sx={{ display: 'flex', justifyContent: 'space-between', gap: 1, alignItems: 'center' }}>
+                                    <Typography variant="body2" sx={{ color: 'text.primary' }}>
+                                      {record.studentName} ({record.regNo}) — {record.status}
+                                    </Typography>
+                                    {record.studentId && (
+                                      <Button component={RouterLink} size="small" to={`/admin/view360?student=${record.studentId}`}>
+                                        360° View
+                                      </Button>
+                                    )}
+                                  </Box>
                                 ))
                               )}
                             </Box>

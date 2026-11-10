@@ -35,6 +35,7 @@ import {
   Tune,
   Warning,
 } from '@mui/icons-material';
+import { Link as RouterLink } from 'react-router-dom';
 import { collection, getDocs, limit, query, where } from 'firebase/firestore';
 import { httpsCallable } from 'firebase/functions';
 import { db, functions } from '@/Firebase/config';
@@ -354,6 +355,7 @@ function TestReport({ testId, onBack }: { testId: string; onBack: () => void }) 
   });
 
   const canEditCategories = ['superadmin', 'admin', 'principal', 'hod'].includes(user?.role || '');
+  const canOpen360 = canEditCategories;
 
   const attemptLabel = (status: string, needsManualGrading: boolean): string => {
     if (status === 'graded') return 'Graded';
@@ -628,6 +630,11 @@ function TestReport({ testId, onBack }: { testId: string; onBack: () => void }) 
                           <Typography variant="caption" color="text.secondary">
                             {s.regNo}{s.branch ? ` · ${s.branch}` : ''}{s.semester ? ` · Sem ${s.semester}` : ''}{s.batch ? ` · Batch ${s.batch}` : ''}{s.section ? ` · Sec ${s.section}` : ''}
                           </Typography>
+                          {canOpen360 && s.studentId && (
+                            <Button component={RouterLink} size="small" sx={{ p: 0, minWidth: 0, display: 'block' }} to={`/admin/view360?student=${s.studentId}`}>
+                              360° View
+                            </Button>
+                          )}
                         </TableCell>
                         <TableCell>
                           {s.status === 'graded' && <Chip size="small" color="success" label="Graded" />}

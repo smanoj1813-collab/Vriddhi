@@ -100,7 +100,16 @@ export default function CertificatesPage() {
   const issued = all.filter(r => r.status === 'issued')
   const issuedThisMonth = issued.filter(r => r.issuedAt.slice(0, 7) === new Date().toISOString().slice(0, 7)).length
   const s = q.trim().toLowerCase()
-  const visible = (tab === 'issued' ? issued : open).filter(r => !s || `${r.studentName} ${r.regNo} ${r.certificateNo} ${r.kindLabel}`.toLowerCase().includes(s))
+  // Certificate-kind filter (bonafide, study certificate, …) beside the search.
+  const [kindFilter, setKindFilter] = useState('all')
+  const kindOptions = useMemo(
+    () => [...new Set((tab === 'issued' ? issued : open).map(r => r.kindLabel).filter(Boolean))].sort(),
+    [tab, issued, open]
+  )
+  const visible = (tab === 'issued' ? issued : open).filter(r =>
+    (kindFilter === 'all' || r.kindLabel === kindFilter) &&
+    (!s || `${r.studentName} ${r.regNo} ${r.certificateNo} ${r.kindLabel}`.toLowerCase().includes(s))
+  )
 
   const issueMut = useMutation({
     mutationFn: (f: IssueForm) => issueCertificate(f.reqId, f, settings, branding),
@@ -167,9 +176,15 @@ export default function CertificatesPage() {
           { id: 'settings', label: 'Settings' },
         ]} />
         {(tab === 'requests' || tab === 'issued') && (
-          <div className="relative ml-auto w-full sm:w-72">
-            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-vriddhi-muted" />
-            <input className="input-field pl-9" placeholder="Search student, reg no, certificate no…" value={q} onChange={e => setQ(e.target.value)} />
+          <div className="flex items-center gap-2 ml-auto w-full sm:w-auto">
+            <select className="input-field !w-auto" value={kindFilter} onChange={e => setKindFilter(e.target.value)}>
+              <option value="all">All certificates</option>
+              {kindOptions.map(k => <option key={k} value={k}>{k}</option>)}
+            </select>
+            <div className="relative w-full sm:w-72">
+              <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-vriddhi-muted" />
+              <input className="input-field pl-9" placeholder="Search student, reg no, certificate no…" value={q} onChange={e => setQ(e.target.value)} />
+            </div>
           </div>
         )}
       </div>
