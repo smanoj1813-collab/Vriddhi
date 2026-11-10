@@ -40,6 +40,7 @@ import {
   type CurriculumProgressResult,
   type FacultyProgress,
 } from '../api/classSessionApi'
+import DrillDown, { type DrillLevelSpec } from '@/shared/components/DrillDown'
 
 // ─── Presentation helpers ──────────────────────────────────────────────────
 
@@ -147,8 +148,97 @@ export default function CurriculumProgress() {
     return [...batches].sort()
   }, [data])
 
-  const totals = data?.totals
   const rows: FacultyProgress[] = data?.faculty || []
+
+  // Flatten faculty × course into the drill's items: one row per assigned
+  // course, carrying its teaching faculty's progress numbers (labelled as
+  // faculty-level on the row so the two are never confused).
+  type CourseRow = {
+    key: string
+    facultyName: string
+    course: FacultyProgress['courses'][number]
+    progress: FacultyProgress
+  }
+  const courseRows: CourseRow[] = useMemo(
+    () =>
+      rows.flatMap((row) =>
+        row.courses.map((course, index) => ({
+          key: `${row.facultyId}-${course.curriculumId}-${index}`,
+          facultyName: row.facultyName || row.facultyId,
+          course,
+          progress: row,
+        }))
+      ),
+    [rows]
+  )
+
+  const drillLevels: Array<DrillLevelSpec<CourseRow>> = [
+    {
+      title: 'Programme',
+      group: (items) => {
+        const byBranch = new Map<string, CourseRow[]>();
+        items.forEach((item) => {
+          const key = item.course.branch || 'Unassigned';
+          const list = byBranch.get(key) || [];
+          list.push(item);
+          byBranch.set(key, list);
+        });
+        return [...byBranch.entries()]
+          .sort((a, b) => a[0].localeCompare(b[0]))
+          .map(([branch, list]) => ({
+            label: branch,
+            subLabel: `${new Set(list.map((i) => i.facultyName)).size} faculty`,
+            chips: [...new Set(list.map((i) => (i.course.semester ? `Sem ${i.course.semester}` : 'Unassigned')))]
+              .sort()
+              .slice(0, 4),
+            items: list,
+          }));
+      },
+    },
+    {
+      title: 'Semester',
+      group: (items) => {
+        const bySemester = new Map<number, CourseRow[]>();
+        items.forEach((item) => {
+          const key = item.course.semester || 0;
+          const list = bySemester.get(key) || [];
+          list.push(item);
+          bySemester.set(key, list);
+        });
+        return [...bySemester.entries()]
+          .sort((a, b) => a[0] - b[0])
+          .map(([semester, list]) => ({
+            label: semester ? `Semester ${semester}` : 'Unassigned semester',
+            subLabel: `${new Set(list.map((i) => i.course.courseName || i.course.courseCode)).size} subjects`,
+            items: list,
+          }));
+      },
+    },
+    {
+      title: 'Subject',
+      group: (items) => {
+        const bySubject = new Map<string, CourseRow[]>();
+        items.forEach((item) => {
+          const key = `${item.course.courseName || 'Subject'}||${item.course.courseCode || ''}`;
+          const list = bySubject.get(key) || [];
+          list.push(item);
+          bySubject.set(key, list);
+        });
+        return [...bySubject.entries()]
+          .sort((a, b) => a[0].localeCompare(b[0]))
+          .map(([key, list]) => {
+            const [subject, code] = key.split('||');
+            return {
+              label: code ? `${subject} (${code})` : subject,
+              subLabel: [...new Set(list.map((i) => i.facultyName))].join(', '),
+              items: list,
+            };
+          });
+      },
+    },
+  ]
+
+  const totals = data?.totals
 
   return (
     <Box sx={{ p: { xs: 2, md: 3 } }}>
@@ -295,91 +385,62 @@ export default function CurriculumProgress() {
         </>
       )}
 
-      {/* Per-faculty table */}
+      {/* Drill: programme → semester → subject → the assigned course rows */}
       <Card variant="outlined">
-        <CardContent sx={{ p: 0 }}>
-          <Box sx={{ p: 2 }}>
-            <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-              By faculty
-            </Typography>
-            <Typography variant="caption" color="text.secondary">
-              {rows.length} faculty member(s) with a curriculum mapping
-              {data?.facultyCount === 0 && ' — assign curriculum to faculty to see coverage here'}
-            </Typography>
-          </Box>
-          <Divider />
-          <Table size="small">
-            <TableHead>
-              <TableRow sx={{ bgcolor: 'action.hover' }}>
-                <TableCell sx={{ fontWeight: 600 }}>Faculty</TableCell>
-                <TableCell sx={{ fontWeight: 600 }}>Courses</TableCell>
-                <TableCell sx={{ fontWeight: 600 }}>Topics covered</TableCell>
-                <TableCell sx={{ fontWeight: 600 }}>Hours</TableCell>
-                <TableCell sx={{ fontWeight: 600 }}>Pace</TableCell>
-                <TableCell sx={{ fontWeight: 600 }}>Attendance</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {rows.length === 0 && (
-                <TableRow>
-                  <TableCell colSpan={6} align="center" sx={{ py: 6 }}>
-                    <Typography variant="body2" color="text.secondary">
-                      {loading ? 'Loading…' : 'No curriculum progress data for this range yet.'}
+        <CardContent sx={{ p: 2 }}>
+          <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+            By programme &amp; semester
+          </Typography>
+          <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 2 }}>
+            {courseRows.length} course assignment(s) across {rows.length} faculty member(s)
+            {data?.facultyCount === 0 && ' — assign curriculum to faculty to see coverage here'}.
+            Progress bars are the teaching faculty's overall numbers across their courses.
+          </Typography>
+          {loading && <LinearProgress sx={{ mb: 2 }} />}
+          <DrillDown
+            items={courseRows}
+            levels={drillLevels}
+            itemKey={(item) => item.key}
+            itemUnit="courses"
+            searchPlaceholder="Search course / faculty"
+            searchText={(item) => `${item.course.courseName} ${item.course.courseCode} ${item.facultyName}`}
+            emptyState={
+              <Typography variant="body2" color="text.secondary" sx={{ py: 6, textAlign: 'center' }}>
+                {loading ? 'Loading…' : 'No curriculum progress data for this range yet.'}
+              </Typography>
+            }
+            renderItem={(item) => (
+              <Card variant="outlined">
+                <CardContent sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, alignItems: 'center', p: 2, '&:last-child': { pb: 2 } }}>
+                  <Box sx={{ flex: '1 1 220px', minWidth: 0 }}>
+                    <Typography sx={{ fontWeight: 600 }}>
+                      {item.course.courseName || item.course.courseCode || 'Course'}
                     </Typography>
-                  </TableCell>
-                </TableRow>
-              )}
-              {rows.map((row) => (
-                <TableRow key={row.facultyId} hover>
-                  <TableCell>
-                    <Typography sx={{ fontWeight: 500, fontSize: 14 }}>
-                      {row.facultyName || row.facultyId}
+                    <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
+                      {item.course.courseCode}
+                      {item.course.batch ? ` · Batch ${item.course.batch}` : ''}
+                      {item.course.credits ? ` · ${item.course.credits} cr` : ''}
+                      {item.course.totalHours ? ` · ${item.course.totalHours}h` : ''}
                     </Typography>
-                  </TableCell>
-                  <TableCell>
-                    <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
-                      {row.courses.length === 0 && (
-                        <Typography variant="caption" color="text.secondary">—</Typography>
-                      )}
-                      {row.courses.map((course, index) => (
-                        <Chip
-                          key={`${course.curriculumId}-${index}`}
-                          label={`${course.courseName || course.courseCode || 'Course'}${course.batch ? ` · ${course.batch}` : ''}`}
-                          size="small"
-                          variant="outlined"
-                          sx={{ height: 22 }}
-                        />
-                      ))}
+                    <Typography variant="caption" color="text.secondary">
+                      Taught by {item.facultyName}
+                    </Typography>
+                  </Box>
+                  <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', flex: '1 1 340px' }}>
+                    <Bar value={item.progress.topics.pct} label={`Topics ${item.progress.topics.covered}/${item.progress.topics.total}`} />
+                    <Bar value={item.progress.hoursPct} label={`Hours ${item.progress.hoursDelivered}h/${item.progress.hoursPlanned}h`} />
+                    <Bar value={item.progress.pace.pct} label={`Pace ${item.progress.pace.completed}/${item.progress.pace.expected}`} />
+                    <Box sx={{ minWidth: 110 }}>
+                      <Typography variant="caption" color="text.secondary">Attendance</Typography>
+                      <Typography sx={{ fontSize: 14 }}>
+                        {item.progress.attendance.marked ? `${item.progress.attendance.pct}%` : '—'}
+                      </Typography>
                     </Box>
-                  </TableCell>
-                  <TableCell>
-                    <Tooltip title={`${row.topics.pending} topic(s) still pending`}>
-                      <Box>
-                        <Bar value={row.topics.pct} label={`${row.topics.covered}/${row.topics.total}`} />
-                      </Box>
-                    </Tooltip>
-                  </TableCell>
-                  <TableCell>
-                    <Bar
-                      value={row.hoursPct}
-                      label={`${row.hoursDelivered}h of ${row.hoursPlanned}h`}
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <Bar
-                      value={row.pace.pct}
-                      label={`${row.pace.completed}/${row.pace.expected} classes`}
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <Typography sx={{ fontSize: 14 }}>
-                      {row.attendance.marked ? `${row.attendance.pct}%` : '—'}
-                    </Typography>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+                  </Box>
+                </CardContent>
+              </Card>
+            )}
+          />
         </CardContent>
       </Card>
 

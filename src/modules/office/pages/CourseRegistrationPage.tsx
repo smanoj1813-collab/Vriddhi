@@ -1,3 +1,4 @@
+import DrillDown, { type DrillLevelSpec } from '@/shared/components/DrillDown'
 // /admin/course-registration — define elective baskets per semester,
 // open the window, watch subject strengths, confirm and export the
 // final lists (for UUCMS subject entry, timetable and IA lists).
@@ -88,6 +89,32 @@ export default function CourseRegistrationPage() {
   const patchGroup = (wi: number, gi: number, patch: Partial<RegGroup>) => patchWindow(wi, { groups: editWindows[wi].groups.map((g, i) => (i === gi ? { ...g, ...patch } : g)) })
   const patchOption = (wi: number, gi: number, oi: number, patch: Partial<RegOption>) => patchGroup(wi, gi, { options: editWindows[wi].groups[gi].options.map((o, i) => (i === oi ? { ...o, ...patch } : o)) })
 
+  // Registrations drill: programmes side by side → the students of each.
+  // (One window = one semester, so the window selector above carries the
+  // semester context and the drill groups by programme.)
+  type RegRow = (typeof regs)[number]
+  const regDrillLevels: Array<DrillLevelSpec<RegRow>> = [
+    {
+      title: 'Programme',
+      group: (items) => {
+        const byProgramme = new Map<string, RegRow[]>()
+        items.forEach((row) => {
+          const key = row.programme || 'Unassigned'
+          const list = byProgramme.get(key) || []
+          list.push(row)
+          byProgramme.set(key, list)
+        })
+        return [...byProgramme.entries()]
+          .sort((a, b) => a[0].localeCompare(b[0]))
+          .map(([programme, list]) => ({
+            label: programme,
+            subLabel: `${list.filter((row) => row.status === 'confirmed').length} confirmed · ${list.filter((row) => row.status === 'submitted').length} pending`,
+            items: list,
+          }))
+      },
+    },
+  ]
+
   if (!cid) return <div className="p-6"><Empty icon={<BookOpenCheck className="w-8 h-8" />} title="No college selected" /></div>
 
   return (
@@ -135,27 +162,41 @@ export default function CourseRegistrationPage() {
                 </div>
               </div>
               {regsQ.isLoading ? <Loading /> : !regs.length ? <Empty icon={<Users className="w-8 h-8" />} title="No submissions yet" /> : (
-                <div className="glass-card p-4 overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead><tr className="text-left text-vriddhi-muted border-b border-slate-200 dark:border-slate-700">
-                      <th className="py-2 pr-2">Student</th>
-                      {activeWindow.groups.map(g => <th key={g.id} className="py-2 pr-2">{g.label}</th>)}
-                      <th className="py-2 pr-2">Status</th><th className="py-2">Action</th>
-                    </tr></thead>
-                    <tbody>
-                      {regs.map(r => (
-                        <tr key={r.id} className="border-b border-slate-100 dark:border-slate-800 align-top">
-                          <td className="py-2 pr-2"><span className="font-medium">{r.name}</span><span className="block text-xs text-vriddhi-muted">{r.regNo} · {r.programme}</span></td>
-                          {activeWindow.groups.map(g => <td key={g.id} className="py-2 pr-2 text-xs">{(r.selections[g.id] || []).map(id => optionLabel(activeWindow, g.id, id)).join('; ') || '—'}</td>)}
-                          <td className="py-2 pr-2"><Badge tone={r.status === 'confirmed' ? 'green' : r.status === 'rejected' ? 'red' : 'amber'}>{r.status}</Badge></td>
-                          <td className="py-2 whitespace-nowrap">
-                            {r.status === 'submitted' && <><button className={btn.primary} onClick={() => setStatus.mutate({ id: r.id, status: 'confirmed' })}>Confirm</button>{' '}<button className={btn.ghost} onClick={() => setStatus.mutate({ id: r.id, status: 'rejected' })}>Return</button></>}
-                            {r.status !== 'submitted' && <button className={btn.ghost} onClick={() => setStatus.mutate({ id: r.id, status: 'submitted' })}>Reopen</button>}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                <div className="glass-card p-4">
+                  <p className="font-semibold mb-1">Registrations — programme › students</p>
+                  <p className="text-xs text-vriddhi-muted mb-3">
+                    Click a programme to see its students, their elective selections and the confirm/return actions.
+                  </p>
+                  <DrillDown
+                    items={regs}
+                    levels={regDrillLevels}
+                    itemKey={(row) => row.id}
+                    itemUnit="students"
+                    searchPlaceholder="Search student / reg no"
+                    searchText={(row) => `${row.name} ${row.regNo} ${row.programme}`}
+                    renderItem={(row) => (
+                      <div className="rounded-xl border border-slate-200 dark:border-slate-700 p-3">
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                          <div>
+                            <span className="font-medium">{row.name}</span>
+                            <span className="block text-xs text-vriddhi-muted">{row.regNo} · {row.programme}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Badge tone={row.status === 'confirmed' ? 'green' : row.status === 'rejected' ? 'red' : 'amber'}>{row.status}</Badge>
+                            {row.status === 'submitted' && <><button className={btn.primary} onClick={() => setStatus.mutate({ id: row.id, status: 'confirmed' })}>Confirm</button>{' '}<button className={btn.ghost} onClick={() => setStatus.mutate({ id: row.id, status: 'rejected' })}>Return</button></>}
+                            {row.status !== 'submitted' && <button className={btn.ghost} onClick={() => setStatus.mutate({ id: row.id, status: 'submitted' })}>Reopen</button>}
+                          </div>
+                        </div>
+                        <div className="mt-2 grid sm:grid-cols-2 gap-1">
+                          {activeWindow!.groups.map(g => (
+                            <p key={g.id} className="text-xs text-vriddhi-muted">
+                              {g.label}: {(row.selections[g.id] || []).map(id => optionLabel(activeWindow!, g.id, id)).join('; ') || '—'}
+                            </p>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  />
                 </div>
               )}
             </>

@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from 'react'
-import { useSearchParams, useLocation } from 'react-router-dom'
+import { Link as RouterNavLink, useSearchParams, useLocation } from 'react-router-dom'
 import { useAuth } from '../../auth/context/AuthContext'
 import { shouldScopeToDepartment, docInDepartment } from '@/shared/utils/departmentScope'
 import FacultyAttendancePanel from '../components/FacultyAttendancePanel'
@@ -538,7 +538,14 @@ function UserManagement({ users, collegeId }: { users: User[]; collegeId?: strin
                                               <p className="text-xs text-slate-500 dark:text-slate-400">{u.email}{u.regNo ? ` · ${u.regNo}` : ''}</p>
                                             </div>
                                           </div>
-                                          <Badge variant={u.status === 'active' ? 'success' : u.status === 'pending' ? 'warning' : 'danger'}>{u.status}</Badge>
+                                          <div className="flex items-center gap-2">
+                                            {u.role === 'student' && (
+                                              <RouterNavLink to={`/admin/view360?student=${u.id}`} className="text-xs font-semibold text-teal-600 dark:text-teal-400 hover:underline">
+                                                360° View
+                                              </RouterNavLink>
+                                            )}
+                                            <Badge variant={u.status === 'active' ? 'success' : u.status === 'pending' ? 'warning' : 'danger'}>{u.status}</Badge>
+                                          </div>
                                         </li>
                                       ))}
                                     </ul>

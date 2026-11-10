@@ -52,6 +52,16 @@ export default function NoDuesPage() {
   const s = q.trim().toLowerCase()
   const list = filter === 'settings' ? [] : lists[filter].filter(r => !s || `${r.studentName} ${r.regNo} ${r.certificateNo}`.toLowerCase().includes(s))
 
+  // Cohort filters — the natural cohort of a no-dues request.
+  const [deptFilter, setDeptFilter] = useState('all')
+  const [courseFilter, setCourseFilter] = useState('all')
+  const departmentOptions = useMemo(() => [...new Set(all.map(r => r.department).filter(Boolean))].sort(), [all])
+  const courseOptions = useMemo(() => [...new Set(all.map(r => r.course).filter(Boolean))].sort(), [all])
+  const cohortList = list.filter(r =>
+    (deptFilter === 'all' || r.department === deptFilter) &&
+    (courseFilter === 'all' || r.course === courseFilter)
+  )
+
   if (settingsQ.isLoading || reqQ.isLoading) return <div className="p-6"><Loading /></div>
   return (
     <div className="p-4 md:p-6 max-w-7xl mx-auto">
@@ -69,14 +79,24 @@ export default function NoDuesPage() {
           { id: 'all', label: 'All' },
           ...(CAN_CONFIG.includes(role) ? [{ id: 'settings' as Filter, label: 'Checklist settings' }] : []),
         ]} />
-        {filter !== 'settings' && <div className="relative ml-auto"><Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-vriddhi-muted" /><input className="input-field pl-9" placeholder="Name, reg no, certificate" value={q} onChange={e => setQ(e.target.value)} /></div>}
+        {filter !== 'settings' && <div className="flex flex-wrap items-center gap-2 ml-auto">
+          <select className="input-field !w-auto" value={deptFilter} onChange={e => setDeptFilter(e.target.value)}>
+            <option value="all">All departments</option>
+            {departmentOptions.map(d => <option key={d} value={d}>{d}</option>)}
+          </select>
+          <select className="input-field !w-auto" value={courseFilter} onChange={e => setCourseFilter(e.target.value)}>
+            <option value="all">All courses</option>
+            {courseOptions.map(c => <option key={c} value={c}>{c}</option>)}
+          </select>
+          <div className="relative"><Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-vriddhi-muted" /><input className="input-field pl-9" placeholder="Name, reg no, certificate" value={q} onChange={e => setQ(e.target.value)} /></div>
+        </div>}
       </div>
-      {filter === 'settings' ? <SettingsForm initial={settings} onSaved={refresh} /> : !list.length ? <Empty icon={<ShieldCheck className="w-8 h-8" />} title="Nothing here" hint="Students apply from their portal, or start a request for them." /> : (
+      {filter === 'settings' ? <SettingsForm initial={settings} onSaved={refresh} /> : !cohortList.length ? <Empty icon={<ShieldCheck className="w-8 h-8" />} title="Nothing here" hint="Students apply from their portal, or start a request for them." /> : (
         <div className="glass-card overflow-x-auto">
           <table className="w-full text-sm">
             <thead><tr className="text-left text-xs text-vriddhi-muted border-b border-vriddhi-border"><th className="p-3">Student</th><th className="p-3">Purpose</th><th className="p-3">Progress</th><th className="p-3">Applied</th><th className="p-3">Status</th></tr></thead>
             <tbody>
-              {list.map(r => {
+              {cohortList.map(r => {
                 const p = progress(settings.sections, r.sections)
                 return (
                   <tr key={r.id} className="border-b border-vriddhi-border/50 hover:bg-vriddhi-border/20 cursor-pointer" onClick={() => setOpen(r)}>
