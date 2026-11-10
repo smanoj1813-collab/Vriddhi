@@ -635,7 +635,7 @@ export function subjectKey(subject?: unknown, subjectCode?: unknown): string {
 
 // ─── Staff resolution ───────────────────────────────────────────────────────
 
-interface SchedulingStaff {
+export interface SchedulingStaff {
   uid: string
   role: string
   collegeId: string
@@ -829,7 +829,7 @@ async function resolveLegacyStaffProfile(uid: string, email: string): Promise<Le
  * added lazily by the resolvers below only when a raw comparison fails, so the
  * common (already-matching) case costs nothing.
  */
-async function loadFacultyAliases(uid: string): Promise<string[]> {
+export async function loadFacultyAliases(uid: string): Promise<string[]> {
   const ids = mergeIdentityIds(uid)
   const db = admin.firestore()
   await Promise.all(
@@ -920,7 +920,7 @@ async function callerOwnsFaculty(
  * only thing that differs between the scheduling-only pair and the
  * session-writer pair, so the two cannot drift apart again.
  */
-async function resolveStaff(
+export async function resolveStaff(
   uid: string,
   token: Record<string, unknown>,
   allowedRoles: string[],

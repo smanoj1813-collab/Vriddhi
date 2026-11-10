@@ -7,6 +7,7 @@ import {
 } from 'firebase/firestore';
 import { fetchFacultyWeeklySchedule } from '../../admin/api/scheduleApi';
 import FacultyAcademicPlanner from '../components/FacultyAcademicPlanner';
+import AcademicInsightsCard from '@/modules/admin/components/AcademicInsightsCard';
 import MergedDivisionChip from '@/shared/components/MergedDivisionChip';
 import {
   Box,
@@ -286,6 +287,11 @@ export default function FacultyDashboard() {
       {/* Deterministic academic planning (getFacultyAcademicContext callable).
           Renders nothing when the backend feature gate is off. */}
       <FacultyAcademicPlanner />
+
+      {/* Program Insights — self-scoped: only the subjects this faculty teaches */}
+      <Box sx={{ mb: 3 }}>
+        <AcademicInsightsCard collegeId={user?.collegeId} insightsPath="/faculty/insights" />
+      </Box>
 
       <Grid container spacing={3}>
         {/* Today's Schedule */}

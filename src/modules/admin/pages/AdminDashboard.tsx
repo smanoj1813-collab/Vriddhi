@@ -4,6 +4,7 @@ import { useAuth } from '../../auth/context/AuthContext'
 import { shouldScopeToDepartment, docInDepartment } from '@/shared/utils/departmentScope'
 import FacultyAttendancePanel from '../components/FacultyAttendancePanel'
 import FacultyAttendanceTodayCard from '../components/FacultyAttendanceTodayCard'
+import AcademicInsightsCard from '../components/AcademicInsightsCard'
 import { db } from '@/Firebase/config'
 import {
   collection, query, where, getDocs
@@ -753,6 +754,8 @@ export default function AdminDashboard() {
               <StatCard icon={BookOpen} label="Students" value={dashboardData.totalStudents.toLocaleString()} color="amber" />
               <StatCard icon={Activity} label="Departments" value={dashboardData.departments.length.toString()} color="rose" />
             </div>
+
+            <AcademicInsightsCard collegeId={collegeId} />
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <FacultyAttendanceTodayCard collegeId={collegeId} />

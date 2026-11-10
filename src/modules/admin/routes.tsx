@@ -42,6 +42,7 @@ const Attendance = lazy(() => import('./pages/Attendance'));
 const FacultyAttendanceAdmin = lazy(() => import('./pages/FacultyAttendanceAdmin'));
 const CollegeOnboarding = lazy(() => import('./pages/CollegeOnboarding'));
 const CurriculumProgress = lazy(() => import('./pages/CurriculumProgress'));
+const AcademicInsights = lazy(() => import('./pages/AcademicInsights'));
 const HODDashboard = lazy(() => import('./pages/HODDashboard'));
 const GradeRecords = lazy(() => import('./pages/GradeRecords'));
 const Journey = lazy(() => import('./pages/Journey'));
@@ -189,6 +190,7 @@ export const adminRoutes: RouteObject[] = [
       { path: 'schedule-workflow', element: <LazyPage><AcademicWorkflowPage /></LazyPage> },
       { path: 'workflow-inbox', element: <LazyPage><WorkflowInboxPage /></LazyPage> },
       { path: 'curriculum-progress', element: <LazyPage><CurriculumProgress /></LazyPage> },
+      { path: 'academic-insights', element: <LazyPage><AcademicInsights /></LazyPage> },
       { path: 'analytics', element: <LazyPage><Analytics /></LazyPage> },
       { path: 'assignment-analytics', element: <LazyPage><AssignmentAnalytics /></LazyPage> },
       { path: 'journey', element: <LazyPage><Journey /></LazyPage> },

@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react'
 import { useAuth } from '../../auth/context/AuthContext'
+import AcademicInsightsCard from '../components/AcademicInsightsCard'
 import {
   Shield, Users, Building2, CheckCircle, FileText,
   Search, BarChart3, Eye, Download,
@@ -188,6 +189,9 @@ function DepartmentOverview({ data }: { data: ReturnType<typeof useDashboardData
           </div>
         </div>
       </div>
+
+      {/* Academic Insights — department-scoped (server enforces the HOD's branch) */}
+      <AcademicInsightsCard collegeId={user?.collegeId} />
 
       {/* Charts Row */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
