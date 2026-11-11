@@ -1,23 +1,26 @@
-// src/scripts/seedStudents.ts
+// scripts/seed-students.ts
 // ============================================================
 // ONE-TIME SEED SCRIPT — Import all 500 students into Firestore
 // ============================================================
 //
 // HOW TO RUN:
-//   1. Place this file in src/scripts/seedStudents.ts
-//   2. Import and call from a protected admin route/component:
-//      import { seedStudents } from '../scripts/seedStudents';
-//      await seedStudents('YOUR_COLLEGE_ID');
+//   This is a one-off operational script, not app code — nothing imports it and
+//   it is outside src/ so the app's typecheck and bundle never see it (it used
+//   to be the largest file in src/ while being dead weight there).
 //
-//   OR run via a temporary button in your SuperAdmin dashboard:
-//      <button onClick={() => seedStudents(collegeId)}>Seed Students</button>
+//   To run it, copy it back into the app for a single session:
+//     cp scripts/seed-students.ts src/scripts-tmp.ts   # adjust imports by one level
+//   or drive it from a throwaway route in the SuperAdmin area.
+//
+//   Either way: importStudentIndexBulk() is a client-SDK call, so it needs a
+//   signed-in superadmin session, not the Admin SDK.
 //
 // ⚠️  This will WIPE existing students and re-import. Use only once.
 //
 // ============================================================
 
-import { importStudentIndexBulk, deleteAllStudentIndex } from '../api/studentIndexApi';
-import type { StudentImportRow } from '../types/students';
+import { importStudentIndexBulk, deleteAllStudentIndex } from '../src/api/studentIndexApi';
+import type { StudentImportRow } from '../src/types/students';
 
 // Embedded seed data (500 students from your CSV)
 const SEED_DATA: StudentImportRow[] = [

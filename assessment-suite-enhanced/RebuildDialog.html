@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Poppins', sans-serif; background: linear-gradient(135deg, #32c888 0%, #1b5e20 100%); min-height: 100vh; display: flex; justify-content: center; align-items: center; padding: 20px; }
+    .container { background: rgba(255, 255, 255, 0.97); border-radius: 24px; padding: 35px; width: 100%; max-width: 480px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); animation: slideIn 0.5s ease-out; }
+    @keyframes slideIn { from { opacity: 0; transform: translateY(-30px); } to { opacity: 1; transform: translateY(0); } }
+    .header { text-align: center; margin-bottom: 25px; }
+    .header h1 { font-size: 24px; font-weight: 800; background: linear-gradient(135deg, #32c888, #1b5e20); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 6px; }
+    .header p { color: #64748b; font-size: 13px; }
+    .input-group { margin-bottom: 16px; }
+    .input-group label { display: block; font-weight: 600; color: #1e293b; margin-bottom: 6px; font-size: 13px; }
+    .input-group input, .input-group select { width: 100%; padding: 12px 16px; border: 2px solid #e2e8f0; border-radius: 10px; font-family: 'Poppins', sans-serif; font-size: 13px; transition: all 0.3s; background: #f8fafc; }
+    .input-group input:focus, .input-group select:focus { outline: none; border-color: #32c888; background: white; box-shadow: 0 0 0 4px rgba(50, 200, 136, 0.15); }
+    .btn { width: 100%; padding: 14px; border: none; border-radius: 10px; font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 15px; cursor: pointer; transition: all 0.3s; margin-top: 8px; }
+    .btn-primary { background: linear-gradient(135deg, #32c888, #1b5e20); color: white; box-shadow: 0 10px 20px -5px rgba(50, 200, 136, 0.4); }
+    .btn-primary:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 15px 30px -5px rgba(50, 200, 136, 0.5); }
+    .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+    .btn-secondary { background: #f1f5f9; color: #64748b; margin-top: 10px; }
+    .btn-secondary:hover { background: #e2e8f0; }
+    .status { text-align: center; margin-top: 12px; font-size: 13px; color: #64748b; min-height: 20px; }
+    .spinner { display: none; width: 20px; height: 20px; border: 3px solid #e2e8f0; border-top-color: #32c888; border-radius: 50%; animation: spin 0.8s linear infinite; margin: 10px auto 0; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .info-box { background: linear-gradient(135deg, #dcfce7, #bbf7d0); border-left: 4px solid #32c888; padding: 10px 14px; border-radius: 8px; margin-bottom: 16px; font-size: 12px; color: #166534; }
+    .help { font-size: 11px; color: #94a3b8; margin-top: 4px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>🔄 Rebuild Leaderboard</h1>
+      <p>Select category and rebuild existing leaderboard data</p>
+    </div>
+    <div class="info-box">💡 This rebuilds the leaderboard using registered assessments from the Assessment Registry + auto-discovered sheets. Existing data is preserved.</div>
+    <div class="input-group">
+      <label for="collegeInput">🏛️ College Name</label>
+      <input type="text" id="collegeInput" placeholder="e.g., ABC College of Engineering">
+      <div class="help" id="collegeHelp">Auto-detected from this spreadsheet — leave as-is unless this sheet serves a different college.</div>
+    </div>
+    <div class="input-group">
+      <label for="categorySelect">📊 Category <span style="color:#dc2626;">*</span></label>
+      <select id="categorySelect" aria-required="true">
+        <option value="">-- Select Category --</option>
+        <option value="All">♻️ All Categories</option>
+        <option value="Class Test">📊 Class Test</option>
+        <option value="Company">🏢 Company Specific</option>
+        <option value="Practice">📚 Practice Module</option>
+      </select>
+      <div class="help">Class Test = CTD, Company = DCA, Practice = PMD.</div>
+    </div>
+    <button class="btn btn-primary" id="rebuildBtn" onclick="rebuild()">🚀 Rebuild Leaderboard</button>
+    <button class="btn btn-secondary" onclick="google.script.host.close()">✕ Cancel</button>
+    <div class="spinner" id="spinner" role="status" aria-label="Loading"></div>
+    <div class="status" id="status" role="status" aria-live="polite"></div>
+  </div>
+  <script>
+    let isRebuilding = false;
+    function rebuild() {
+      if (isRebuilding) return;
+      const collegeName = document.getElementById('collegeInput').value.trim();
+      const category = document.getElementById('categorySelect').value;
+      if (!category) { showStatus('Please select a category!', 'error'); document.getElementById('categorySelect').focus(); return; }
+      isRebuilding = true;
+      const btn = document.getElementById('rebuildBtn');
+      btn.disabled = true;
+      btn.textContent = '⏳ Rebuilding...';
+      document.getElementById('spinner').style.display = 'block';
+      showStatus('Rebuilding leaderboard... Please wait (do not close)', 'info');
+      google.script.run
+        .withSuccessHandler(function(result) {
+          isRebuilding = false;
+          btn.disabled = false;
+          btn.textContent = '🚀 Rebuild Leaderboard';
+          document.getElementById('spinner').style.display = 'none';
+          showStatus('✅ ' + result, 'success');
+          setTimeout(function() { google.script.host.close(); }, 3000);
+        })
+        .withFailureHandler(function(error) {
+          isRebuilding = false;
+          btn.disabled = false;
+          btn.textContent = '🚀 Rebuild Leaderboard';
+          document.getElementById('spinner').style.display = 'none';
+          showStatus('❌ Error: ' + error.message, 'error');
+        })
+        .rebuildLeaderboardFromDialog(category, collegeName);
+    }
+    function showStatus(msg, type) {
+      const el = document.getElementById('status');
+      el.textContent = msg;
+      el.style.color = type === 'error' ? '#ef4444' : type === 'success' ? '#10b981' : '#64748b';
+    }
+  
+    /* GENERALIZED: pre-fill the college so nobody retypes it. */
+    window.onload = function () { prefillCollege(); };
+
+    function prefillCollege() {
+      google.script.run
+        .withSuccessHandler(function (info) {
+          const input = document.getElementById('collegeInput');
+          const help = document.getElementById('collegeHelp');
+          if (info && info.name && info.name !== 'Unknown College') {
+            if (!input.value.trim()) input.value = info.name;
+            help.textContent = 'Detected: ' + info.name + ' (' + (info.source || 'this spreadsheet') + ') — edit only if needed.';
+          } else {
+            help.textContent = 'College not detected — leave blank to use the last one, or set it in 🏫 College Setup.';
+          }
+        })
+        .withFailureHandler(function () { /* non-blocking */ })
+        .getCollegeInfo();
+    }
+</script>
+</body>
+</html>

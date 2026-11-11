@@ -53,7 +53,11 @@ fees, timetables, and more — powered by Firebase and modern React.
 - **Multi-college / multi-university** support managed at the superadmin level, including
   subscription billing and a system health monitor.
 - **South Indian language support** — Kannada, Tamil, Telugu, and Malayalam (plus English and
-  Hindi) for the UI and for AI question generation in native Unicode scripts.
+  Hindi) with complete, key-for-key dictionaries (233 keys × 6 languages, every one translated).
+  Scope, stated plainly: the translated UI is the student area and the shared chrome (header,
+  navigation, common actions) — 15 components and 147 `t()` calls — while the admin, office and
+  superadmin screens are still English. AI question generation is fully multilingual in native
+  Unicode scripts regardless of the interface language.
 
 ## Roles
 
@@ -124,7 +128,7 @@ Vriddhi/
 │                               # Python generator that validates them
 ├── scripts/                    # Seed / migration / fixture scripts + the unit & render test harnesses
 ├── firebase.json               # Firebase Hosting, Firestore, RTDB, Functions config
-├── current-firestore.rules     # Firestore security rules
+├── firestore.rules             # Firestore security rules
 ├── database.rules.json         # Realtime Database security rules
 ├── vite.config.ts              # Vite config, @/ alias, manual chunking
 ├── tailwind.config.js          # Tailwind configuration
@@ -237,7 +241,7 @@ plain `node --test` via `tsx`.
    firebase deploy --only firestore:rules,database:rules
    ```
 
-   Rules files: `current-firestore.rules` (Firestore) and `database.rules.json` (Realtime DB).
+   Rules files: `firestore.rules` (Firestore) and `database.rules.json` (Realtime DB).
 
 4. Run emulators locally:
 
@@ -273,7 +277,11 @@ names). Prompts instruct the model to write question text, options, and explanat
 chosen script while keeping JSON keys in English.
 
 Interface language is stored in `localStorage` (`vriddhi_language`) and can be changed from the
-header switcher or Settings → Appearance.
+header switcher or Settings → Appearance. Dictionaries live in
+`src/shared/i18n/translations.ts`; `en`, `hi`, `kn`, `ta`, `te` and `ml` each carry the same 233
+keys, so there are no untranslated fallbacks inside that set — the gap is *reach*, not content:
+the admin/office/superadmin screens do not call `t()` yet. Adding a language means adding one
+object to that file; adding coverage means swapping literals for `t()` screen by screen.
 
 ## AI / LLM providers
 

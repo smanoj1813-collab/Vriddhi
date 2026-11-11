@@ -31,10 +31,13 @@ function isAmbient(rel) {
   return rel.endsWith('.d.ts');
 }
 
-// Standalone developer tooling, run by hand rather than from the app.
-function isStandaloneTooling(rel) {
-  return rel === 'src/scripts' || rel.startsWith('src/scripts/');
-}
+// NOTE: there used to be a `src/scripts/` exclusion here, on the theory that
+// those files were standalone tooling. They were not — they were two one-off
+// seed scripts importing app modules, and the exclusion made the single largest
+// file in the repository (scripts/seed-students.ts, 5,077 lines) invisible to
+// this guard while it sat inside the app's typecheck space. They now live in
+// scripts/ with the other by-hand tooling, and the exclusion is gone: anything
+// dropped into src/ from now on is either reachable from main.tsx or reported.
 
 // Unit tests are executed by `npm run test:unit` (node --test), never imported
 // by the app, so they are reachable by construction rather than orphans.
@@ -121,7 +124,6 @@ function main() {
     .filter((f) => !seen.has(f))
     .map(toRel)
     .filter((rel) => !isAmbient(rel))
-    .filter((rel) => !isStandaloneTooling(rel))
     .filter((rel) => !isUnitTest(rel))
     .sort();
 

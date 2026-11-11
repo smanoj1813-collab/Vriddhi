@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <meta charset="UTF-8">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --brand:#32c888; --brand-dark:#1b5e20; --bg:#f8fafc; --text:#1e293b; --muted:#64748b;
+      --border:#e2e8f0; --ok:#10b981; --warn:#f59e0b; --error:#ef4444;
+    }
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{
+      font-family:'Poppins',sans-serif;
+      background:linear-gradient(135deg,#32c888 0%,#1b5e20 100%);
+      min-height:100vh;display:flex;justify-content:center;align-items:center;padding:18px;
+    }
+    .container{
+      background:rgba(255,255,255,.98);border-radius:22px;padding:28px 30px;width:100%;max-width:540px;
+      box-shadow:0 25px 50px -12px rgba(0,0,0,.28);animation:slideIn .45s ease-out;
+    }
+    @keyframes slideIn{from{opacity:0;transform:translateY(-24px)}to{opacity:1;transform:translateY(0)}}
+
+    .header{text-align:center;margin-bottom:18px}
+    .header h1{font-size:22px;font-weight:800;color:var(--brand-dark);margin-bottom:5px}
+    .header p{color:var(--muted);font-size:12px}
+
+    /* Auto-detected college chip — replaces the old typed College field */
+    .college-bar{
+      display:flex;align-items:center;gap:9px;background:linear-gradient(135deg,#ecfdf5,#d1fae5);
+      border:1px solid #a7f3d0;border-radius:10px;padding:10px 13px;margin-bottom:16px;font-size:12px;
+    }
+    .college-bar .icon{font-size:15px;line-height:1}
+    .college-bar .value{font-weight:700;color:#065f46;flex:1;word-break:break-word}
+    .college-bar .tag{font-size:9px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;
+      background:#fff;color:#047857;border:1px solid #a7f3d0;padding:2px 7px;border-radius:20px;white-space:nowrap}
+    .college-bar.warn{background:#fef3c7;border-color:#fcd34d;color:#92400e}
+    .college-bar.warn .value{color:#92400e}
+    .college-bar.warn .tag{color:#92400e;border-color:#fcd34d}
+
+    .input-group{margin-bottom:13px}
+    .input-group label{display:block;font-weight:600;color:var(--text);margin-bottom:5px;font-size:12.5px}
+    .req{color:var(--error)}
+    .input-group input,.input-group select{
+      width:100%;padding:11px 14px;border:2px solid var(--border);border-radius:10px;
+      font-family:'Poppins';font-size:13px;transition:.2s;background:var(--bg);color:var(--text);
+    }
+    .input-group input:focus,.input-group select:focus{
+      outline:none;border-color:var(--brand);background:#fff;box-shadow:0 0 0 4px rgba(50,200,136,.14);
+    }
+    .input-group input.invalid{border-color:var(--error);background:#fef2f2}
+    .input-group select:disabled{background:#e2e8f0;color:#94a3b8;cursor:not-allowed}
+    .help{font-size:10.5px;color:#94a3b8;margin-top:4px}
+
+    .info-box{
+      display:none;background:#f0fdf4;border:1px solid #86efac;border-radius:10px;padding:12px 15px;
+      margin-bottom:13px;font-size:11.5px;
+    }
+    .info-box .row{display:flex;justify-content:space-between;gap:12px;margin:4px 0;color:#166534}
+    .info-box .row .label{font-weight:600;white-space:nowrap}
+    .info-box .row .val{text-align:right;word-break:break-word;color:#14532d}
+
+    .warning-box{
+      display:none;background:#fef3c7;border-left:4px solid var(--warn);border-radius:8px;
+      padding:11px 14px;margin-bottom:13px;font-size:12px;color:#92400e;line-height:1.5;
+    }
+    .warning-box.mismatch{background:#fee2e2;border-left-color:var(--error);color:#991b1b}
+
+    .btn{width:100%;padding:13px;border:none;border-radius:10px;font-family:'Poppins';
+      font-weight:700;font-size:14px;cursor:pointer;transition:.25s;margin-top:8px}
+    .btn-primary{background:linear-gradient(135deg,var(--brand),var(--brand-dark));color:#fff;
+      box-shadow:0 10px 20px -6px rgba(50,200,136,.55)}
+    .btn-primary:hover:not(:disabled){transform:translateY(-2px)}
+    .btn-primary:disabled{opacity:.6;cursor:not-allowed;transform:none}
+    .btn-secondary{background:#f1f5f9;color:var(--muted);margin-top:9px;padding:11px;font-size:13px}
+    .btn-secondary:hover{background:#e2e8f0}
+
+    .status{text-align:center;margin-top:11px;font-size:12.5px;color:var(--muted);min-height:20px;line-height:1.45}
+    .spinner{display:none;width:18px;height:18px;border:3px solid var(--border);border-top-color:var(--brand);
+      border-radius:50%;animation:spin .8s linear infinite;margin:10px auto 0}
+    @keyframes spin{to{transform:rotate(360deg)}}
+
+    .checkbox-group{display:none;align-items:center;gap:9px;margin-bottom:13px;
+      background:#fff7ed;border:1px solid #fed7aa;border-radius:9px;padding:10px 13px}
+    .checkbox-group input[type=checkbox]{width:17px;height:17px;accent-color:var(--brand)}
+    .checkbox-group label{font-size:12px;color:#7c2d12;cursor:pointer}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>📧 Send Assessment Report</h1>
+      <p>Select Assessment, Batch and Date — college is detected automatically</p>
+    </div>
+
+    <!-- GENERALIZED: no College input. Read from the spreadsheet once, shown here for confidence. -->
+    <div class="college-bar" id="collegeBar">
+      <span class="icon">🏫</span>
+      <span class="value" id="collegeName">Detecting college…</span>
+      <span class="tag" id="collegeTag">auto</span>
+    </div>
+
+    <div class="warning-box" id="duplicateWarning">
+      ⚠️ This report was already sent on <strong id="duplicateDate"></strong>.
+    </div>
+    <div class="warning-box mismatch" id="mismatchWarning"></div>
+
+    <div class="input-group">
+      <label for="assessmentName">Assessment Name <span class="req">*</span></label>
+      <input type="text" id="assessmentName" placeholder="e.g., Weekly Test 1" autocomplete="off" onblur="onKeyBlur()">
+      <div class="help">Must match the name used in the Email Registry.</div>
+    </div>
+
+    <div class="input-group">
+      <label for="batch">Batch <span class="req">*</span></label>
+      <input type="text" id="batch" placeholder="e.g., 2027" autocomplete="off" onblur="onKeyBlur()">
+      <div class="help">Passing-out year, as stored in the registry.</div>
+    </div>
+
+    <div class="input-group">
+      <label for="dateSelect">Date <span class="req">*</span></label>
+      <select id="dateSelect" disabled onchange="loadRegistryData()">
+        <option value="">Enter Assessment &amp; Batch first</option>
+      </select>
+      <div class="help">Only dates that exist for this Assessment + Batch are listed.</div>
+    </div>
+
+    <div class="info-box" id="registryInfo">
+      <div class="row"><span class="label">College:</span> <span class="val" id="infoCollege">—</span></div>
+      <div class="row"><span class="label">Date:</span> <span class="val" id="infoDate">—</span></div>
+      <div class="row"><span class="label">To:</span> <span class="val" id="infoTo">—</span></div>
+      <div class="row"><span class="label">CC:</span> <span class="val" id="infoCc">—</span></div>
+      <div class="row"><span class="label">Report:</span> <span class="val" id="infoReport">—</span></div>
+      <div class="row"><span class="label">Answer Key:</span> <span class="val" id="infoKey">—</span></div>
+    </div>
+
+    <div class="checkbox-group" id="resendGroup">
+      <input type="checkbox" id="forceResend">
+      <label for="forceResend">Force resend (ignore duplicate warning)</label>
+    </div>
+
+    <button class="btn btn-primary" id="sendBtn" onclick="sendEmail()">📧 Send Email</button>
+    <button class="btn btn-secondary" onclick="google.script.host.close()">✕ Cancel</button>
+
+    <div class="spinner" id="spinner"></div>
+    <div class="status" id="status" role="status" aria-live="polite"></div>
+  </div>
+
+  <script>
+    let currentRegistry = null;
+    let availableDates = [];
+    let detectedCollege = '';
+    let busy = false;
+
+    window.onload = function () {
+      loadCollege();
+    };
+
+    /* ---------- helpers ---------- */
+
+    function showStatus(msg, type) {
+      const el = document.getElementById('status');
+      el.textContent = msg || '';
+      el.style.color = type === 'error' ? '#ef4444' : type === 'success' ? '#10b981' : '#64748b';
+    }
+    function spin(on) {
+      document.getElementById('spinner').style.display = on ? 'block' : 'none';
+      const btn = document.getElementById('sendBtn');
+      btn.disabled = on;
+      busy = on;
+    }
+    function markInvalid(id, invalid) {
+      const el = document.getElementById(id);
+      if (el) el.classList.toggle('invalid', !!invalid);
+    }
+
+    /* ---------- college (auto-detected, never typed) ---------- */
+
+    function loadCollege() {
+      google.script.run
+        .withSuccessHandler(function (info) {
+          detectedCollege = (info && info.name) || '';
+          const bar = document.getElementById('collegeBar');
+          const nameEl = document.getElementById('collegeName');
+          const tagEl = document.getElementById('collegeTag');
+
+          if (!detectedCollege || detectedCollege === 'Unknown College') {
+            nameEl.textContent = 'College not detected — set it in 📊 Assessment Suite → 🏫 College Setup';
+            bar.classList.add('warn');
+            tagEl.textContent = 'action needed';
+          } else {
+            nameEl.textContent = detectedCollege;
+            tagEl.textContent = info.likelyCopy ? 'verify' : 'auto';
+            if (info.likelyCopy) bar.classList.add('warn');
+          }
+        })
+        .withFailureHandler(function (err) {
+          document.getElementById('collegeName').textContent = 'College detection unavailable';
+          console.warn('loadCollege failed: ' + err.message);
+        })
+        .getCollegeInfo();
+    }
+
+    /* ---------- dates ---------- */
+
+    function onKeyBlur() {
+      const a = document.getElementById('assessmentName');
+      const b = document.getElementById('batch');
+      markInvalid('assessmentName', !a.value.trim());
+      markInvalid('batch', !b.value.trim());
+      loadDates();
+    }
+
+    function loadDates() {
+      const assessmentName = document.getElementById('assessmentName').value.trim();
+      const batch = document.getElementById('batch').value.trim();
+      const dateSelect = document.getElementById('dateSelect');
+
+      currentRegistry = null;
+      document.getElementById('registryInfo').style.display = 'none';
+      document.getElementById('duplicateWarning').style.display = 'none';
+      document.getElementById('mismatchWarning').style.display = 'none';
+      document.getElementById('resendGroup').style.display = 'none';
+
+      if (!assessmentName || !batch) {
+        dateSelect.innerHTML = '<option value="">Enter Assessment &amp; Batch first</option>';
+        dateSelect.disabled = true;
+        return;
+      }
+
+      spin(true);
+      showStatus('Loading dates…', 'info');
+
+      google.script.run
+        .withSuccessHandler(function (dates) {
+          spin(false);
+          availableDates = dates || [];
+          dateSelect.innerHTML = '';
+
+          if (availableDates.length === 0) {
+            dateSelect.innerHTML = '<option value="">No dates found — check the Email Registry</option>';
+            dateSelect.disabled = true;
+            showStatus('No dates found for this Assessment + Batch. Generate the report first.', 'error');
+            return;
+          }
+
+          dateSelect.disabled = false;
+          const def = document.createElement('option');
+          def.value = '';
+          def.textContent = 'Select a date…';
+          dateSelect.appendChild(def);
+
+          availableDates.forEach(function (d) {
+            const opt = document.createElement('option');
+            opt.value = d;
+            opt.textContent = d; // already "dd-MMM-yyyy" from the server
+            dateSelect.appendChild(opt);
+          });
+
+          // One date only? Select it — saves a click.
+          if (availableDates.length === 1) {
+            dateSelect.value = availableDates[0];
+            loadRegistryData();
+            return;
+          }
+          showStatus('Select a date to preview the details.', 'info');
+        })
+        .withFailureHandler(function (err) {
+          spin(false);
+          showStatus('❌ Could not load dates: ' + err.message, 'error');
+        })
+        .getUniqueDatesForAssessment(assessmentName, batch, detectedCollege);
+    }
+
+    /* ---------- registry preview ---------- */
+
+    function loadRegistryData() {
+      const assessmentName = document.getElementById('assessmentName').value.trim();
+      const batch = document.getElementById('batch').value.trim();
+      const date = document.getElementById('dateSelect').value;
+
+      document.getElementById('mismatchWarning').style.display = 'none';
+
+      if (!assessmentName || !batch || !date) {
+        document.getElementById('registryInfo').style.display = 'none';
+        currentRegistry = null;
+        return;
+      }
+
+      spin(true);
+      document.getElementById('registryInfo').style.display = 'none';
+      showStatus('Loading registry details…', 'info');
+
+      google.script.run
+        .withSuccessHandler(function (record) {
+          spin(false);
+          currentRegistry = record;
+
+          if (!record) {
+            document.getElementById('registryInfo').style.display = 'none';
+            document.getElementById('duplicateWarning').style.display = 'none';
+            document.getElementById('resendGroup').style.display = 'none';
+            showStatus('No registry record for this Assessment + Batch + Date.', 'error');
+            return;
+          }
+
+          // FIXED: this used to display the assessment name under "College".
+          document.getElementById('infoCollege').textContent =
+            record.college || detectedCollege || '—';
+
+          let displayDate = record.date || '—';
+          if (record.date && (String(record.date).includes('GMT') || String(record.date).includes('Tue') || String(record.date).includes('Mon'))) {
+            try {
+              const d = new Date(record.date);
+              if (!isNaN(d.getTime())) {
+                const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+                displayDate = d.getDate() + '-' + months[d.getMonth()] + '-' + d.getFullYear();
+              }
+            } catch (e) {}
+          }
+          document.getElementById('infoDate').textContent = displayDate;
+          document.getElementById('infoTo').textContent = record.email || '—';
+          document.getElementById('infoCc').textContent = record.cc || '—';
+          document.getElementById('infoReport').textContent = record.reportLink ? '✅ Available' : '❌ Missing';
+          document.getElementById('infoKey').textContent = record.answerKey ? '✅ Available' : '❌ Missing';
+          document.getElementById('registryInfo').style.display = 'block';
+
+          if (record.collegeMatch === false) {
+            const box = document.getElementById('mismatchWarning');
+            box.style.display = 'block';
+            box.innerHTML = '⚠️ This row is recorded under <strong>' + (record.college || 'another college') +
+              '</strong>, which differs from this spreadsheet\'s college. It will still be sent — ' +
+              'check 🏫 College Setup if that looks wrong.';
+          }
+
+          if (record.status === 'Sent' && record.dateSent) {
+            document.getElementById('duplicateWarning').style.display = 'block';
+            document.getElementById('duplicateDate').textContent = record.dateSent;
+            document.getElementById('resendGroup').style.display = 'flex';
+            document.getElementById('forceResend').checked = false;
+            showStatus('Already sent — tick Force resend to send again.', 'error');
+          } else {
+            document.getElementById('duplicateWarning').style.display = 'none';
+            document.getElementById('resendGroup').style.display = 'none';
+            showStatus('Record found. Ready to send.', 'success');
+          }
+        })
+        .withFailureHandler(function (err) {
+          spin(false);
+          showStatus('❌ Could not load registry details: ' + err.message, 'error');
+        })
+        .getEmailRegistryRecordForDialog(assessmentName, batch, date);
+    }
+
+    /* ---------- send ---------- */
+
+    function sendEmail() {
+      if (busy) return;
+
+      const assessmentName = document.getElementById('assessmentName').value.trim();
+      const batch = document.getElementById('batch').value.trim();
+      const date = document.getElementById('dateSelect').value;
+      const forceResend = document.getElementById('forceResend').checked;
+
+      markInvalid('assessmentName', !assessmentName);
+      markInvalid('batch', !batch);
+
+      if (!assessmentName || !batch) {
+        showStatus('Assessment Name and Batch are required.', 'error');
+        return;
+      }
+      if (!date) {
+        showStatus('Please select a Date.', 'error');
+        document.getElementById('dateSelect').focus();
+        return;
+      }
+      if (!currentRegistry) {
+        showStatus('Registry details are still loading — try again in a moment.', 'error');
+        return;
+      }
+      if (!currentRegistry.email) {
+        showStatus('No "To" email in the registry for this row. Add it in the Email Registry sheet first.', 'error');
+        return;
+      }
+      if (currentRegistry.status === 'Sent' && currentRegistry.dateSent && !forceResend) {
+        showStatus('Already sent. Tick Force resend if you really want to send it again.', 'error');
+        document.getElementById('resendGroup').style.display = 'flex';
+        return;
+      }
+
+      spin(true);
+      showStatus('Sending email…', 'info');
+
+      google.script.run
+        .withSuccessHandler(function (result) {
+          spin(false);
+          if (!result) { showStatus('No response from the server — check the Email Registry.', 'error'); return; }
+
+          if (result.status === 'duplicate') {
+            showStatus('⚠️ ' + result.message, 'error');
+            document.getElementById('resendGroup').style.display = 'flex';
+            return;
+          }
+          showStatus('✅ ' + result.message + ' Closing…', 'success');
+          setTimeout(function () { google.script.host.close(); }, 2500);
+        })
+        .withFailureHandler(function (error) {
+          spin(false);
+          showStatus('❌ ' + error.message, 'error');
+        })
+        .sendAssessmentEmail({
+          assessmentName: assessmentName,
+          batch: batch,
+          date: date,
+          forceResend: forceResend,
+          college: detectedCollege
+        });
+    }
+
+    // Enter submits once the essentials are filled.
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' && !busy) {
+        const active = document.activeElement;
+        if (active && active.tagName === 'SELECT') return;
+        sendEmail();
+      }
+    });
+  </script>
+</body>
+</html>

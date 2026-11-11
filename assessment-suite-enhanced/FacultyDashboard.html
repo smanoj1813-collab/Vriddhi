@@ -1,0 +1,1325 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --brand: #32c888; --brand-dark: #1b5e20; --brand-light: #dcfce7;
+      --danger: #ef4444; --warning: #f59e0b; --info: #3b82f6; --purple: #8b5cf6;
+      --bg: #f1f5f9; --card: #ffffff; --text: #1e293b; --text-muted: #64748b; --border: #e2e8f0;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Poppins', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; font-size: 13px; }
+
+    .header {
+      background: linear-gradient(135deg, var(--brand) 0%, var(--brand-dark) 100%);
+      color: white; padding: 20px 30px; position: sticky; top: 0; z-index: 100;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+    }
+    .header-inner { max-width: 1400px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; }
+    .header h1 { font-size: 22px; font-weight: 700; letter-spacing: -0.3px; }
+    .header .college-name { font-size: 13px; font-weight: 600; opacity: 0.95; margin-top: 2px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .header p { opacity: 0.85; font-size: 12px; margin-top: 2px; }
+    .header-actions { display: flex; gap: 10px; align-items: center; }
+    .btn { padding: 8px 18px; border: none; border-radius: 8px; font-family: 'Poppins', sans-serif; font-weight: 600; font-size: 12px; cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; gap: 6px; }
+    .btn-white { background: white; color: var(--brand-dark); }
+    .btn-white:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
+    .btn-outline { background: rgba(255,255,255,0.15); color: white; border: 1px solid rgba(255,255,255,0.3); }
+    .btn-outline:hover { background: rgba(255,255,255,0.25); }
+    .btn-primary { background: var(--brand); color: white; }
+    .btn-primary:hover { background: var(--brand-dark); }
+    .btn-sm { padding: 6px 14px; font-size: 11px; }
+
+    .container { max-width: 1400px; margin: 0 auto; padding: 24px; display: grid; grid-template-columns: 260px 1fr; gap: 24px; align-items: start; }
+
+    .sidebar { background: var(--card); border-radius: 16px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); height: fit-content; position: sticky; top: 90px; align-self: start; }
+    .sidebar h3 { font-size: 14px; font-weight: 700; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+    .filter-group { margin-bottom: 14px; }
+    .filter-group label { display: block; font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+    .filter-group select, .filter-group input { width: 100%; padding: 8px 12px; border: 1.5px solid var(--border); border-radius: 8px; font-family: 'Poppins', sans-serif; font-size: 12px; background: var(--bg); transition: all 0.2s; }
+    .filter-group select:focus, .filter-group input:focus { outline: none; border-color: var(--brand); background: white; box-shadow: 0 0 0 3px rgba(50,200,136,0.1); }
+    .filter-actions { display: flex; gap: 8px; margin-top: 20px; }
+    .filter-actions .btn { flex: 1; justify-content: center; }
+    .help { font-size: 11px; color: #94a3b8; margin-top: 4px; font-weight: 400; text-transform: none; letter-spacing: 0; }
+
+    .main { display: flex; flex-direction: column; gap: 20px; min-width: 0; }
+
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 16px; }
+    .stat-card { background: var(--card); border-radius: 14px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); border-left: 4px solid var(--brand); transition: transform 0.2s; display: flex; flex-direction: column; justify-content: space-between; }
+    .stat-card:hover { transform: translateY(-2px); }
+    .stat-card.danger { border-left-color: var(--danger); }
+    .stat-card.warning { border-left-color: var(--warning); }
+    .stat-card.info { border-left-color: var(--info); }
+    .stat-card.purple { border-left-color: var(--purple); }
+    .stat-card h4 { font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+    .stat-card .value { font-size: 28px; font-weight: 700; color: var(--text); line-height: 1; }
+    .stat-card .sub { font-size: 11px; color: var(--text-muted); margin-top: 6px; }
+
+    .active-filters { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; min-height: 32px; }
+    .active-filters-label { font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+    .filter-chip { background: var(--brand-light); color: var(--brand-dark); padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--brand); }
+    .filter-chip button { background: none; border: none; color: var(--brand-dark); cursor: pointer; font-size: 14px; line-height: 1; padding: 0; width: 16px; height: 16px; display: flex; align-items: center; justify-content: center; border-radius: 50%; }
+    .filter-chip button:hover { background: var(--brand); color: white; }
+
+    .charts-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; align-items: stretch; }
+    .chart-card { background: var(--card); border-radius: 14px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); display: flex; flex-direction: column; }
+    .chart-card h3 { font-size: 14px; font-weight: 700; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+
+    .dual-bar-chart { display: flex; flex-direction: column; gap: 14px; flex: 1; justify-content: center; }
+    .dual-bar-item { display: flex; flex-direction: column; gap: 6px; padding: 10px 12px; background: #f8fafc; border-radius: 10px; }
+    .dual-bar-header { display: flex; justify-content: space-between; align-items: flex-start; }
+    .dual-bar-title { font-size: 12px; font-weight: 700; color: var(--text); }
+    .dual-bar-meta { font-size: 10px; color: var(--text-muted); font-weight: 500; margin-top: 2px; }
+    .dual-bar-row { display: flex; align-items: center; gap: 8px; }
+    .dual-bar-label { width: 70px; font-size: 10px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.3px; flex-shrink: 0; }
+    .dual-bar-track { flex: 1; height: 22px; background: #e2e8f0; border-radius: 5px; overflow: hidden; position: relative; }
+    .dual-bar-fill { height: 100%; border-radius: 5px; transition: width 0.6s ease; display: flex; align-items: center; justify-content: flex-end; padding-right: 6px; min-width: 30px; }
+    .dual-bar-fill.attendance { background: linear-gradient(90deg, #60a5fa, #2563eb); }
+    .dual-bar-fill.score { background: linear-gradient(90deg, var(--brand), var(--brand-dark)); }
+    .dual-bar-fill.poor { background: linear-gradient(90deg, #fca5a5, #ef4444); }
+    .dual-bar-fill.avg { background: linear-gradient(90deg, #fcd34d, #f59e0b); }
+    .dual-bar-fill.good { background: linear-gradient(90deg, #86efac, #22c55e); }
+    .dual-bar-fill.best { background: linear-gradient(90deg, #67e8f9, #06b6d4); }
+    .dual-bar-value { font-size: 10px; font-weight: 700; color: white; white-space: nowrap; text-shadow: 0 1px 2px rgba(0,0,0,0.3); }
+    .dual-bar-detail { width: 110px; font-size: 10px; color: var(--text-muted); font-weight: 500; text-align: right; flex-shrink: 0; }
+    .dual-bar-detail strong { color: var(--text); font-size: 11px; }
+
+    .donut-container { display: flex; align-items: center; justify-content: center; gap: 24px; flex-wrap: wrap; flex: 1; }
+    .donut { width: 140px; height: 140px; border-radius: 50%; position: relative; transition: background 0.6s ease; flex-shrink: 0; }
+    .donut::after { content: ''; position: absolute; inset: 30px; background: white; border-radius: 50%; }
+    .donut-hole { position: absolute; inset: 30px; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 2; }
+    .donut-hole .value { font-size: 22px; font-weight: 700; color: var(--text); line-height: 1; }
+    .donut-hole .label { font-size: 9px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+    .donut-legend { display: flex; flex-direction: column; gap: 8px; }
+    .legend-item { display: flex; align-items: center; gap: 8px; font-size: 12px; }
+    .legend-dot { width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0; }
+
+    .criteria-card { background: var(--card); border-radius: 14px; padding: 16px 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+    .criteria-title { font-size: 12px; font-weight: 700; color: var(--text); margin-bottom: 10px; }
+    .criteria-grid { display: flex; flex-wrap: wrap; gap: 10px; }
+    .criteria-item { display: flex; align-items: center; gap: 8px; font-size: 11px; padding: 6px 12px; border-radius: 6px; font-weight: 600; }
+    .criteria-best { background: #dcfce7; color: #166534; }
+    .criteria-good { background: #dbeafe; color: #1e40af; }
+    .criteria-avg { background: #fef9c3; color: #854d0e; }
+    .criteria-poor { background: #fee2e2; color: #991b1b; }
+
+    .table-card { background: var(--card); border-radius: 14px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+    .table-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 12px; }
+    .table-header h3 { font-size: 14px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+    .search-box { padding: 8px 14px; border: 1.5px solid var(--border); border-radius: 8px; font-family: 'Poppins', sans-serif; font-size: 12px; width: 260px; background: var(--bg); }
+    .search-box:focus { outline: none; border-color: var(--brand); background: white; }
+    .table-wrap { overflow-x: auto; border-radius: 10px; border: 1px solid var(--border); }
+    table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    th { background: #f8fafc; padding: 10px 12px; text-align: left; font-weight: 600; color: var(--text-muted); text-transform: uppercase; font-size: 10px; letter-spacing: 0.5px; border-bottom: 2px solid var(--border); white-space: nowrap; cursor: pointer; user-select: none; }
+    th:hover { color: var(--brand); }
+    th.sortable::after { content: ' ↕'; opacity: 0.3; }
+    th.sort-asc::after { content: ' ↑'; opacity: 1; color: var(--brand); }
+    th.sort-desc::after { content: ' ↓'; opacity: 1; color: var(--brand); }
+    td { padding: 10px 12px; border-bottom: 1px solid #f1f5f9; color: var(--text); white-space: nowrap; }
+    tr:hover { background: #f8fafc; }
+    .badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+    .badge-best { background: #dcfce7; color: #166534; }
+    .badge-good { background: #dbeafe; color: #1e40af; }
+    .badge-avg { background: #fef9c3; color: #854d0e; }
+    .badge-poor { background: #fee2e2; color: #991b1b; }
+    .badge-inactive { background: #f1f5f9; color: var(--text-muted); }
+
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: stretch; }
+
+    .loading-overlay { position: fixed; inset: 0; background: rgba(255,255,255,0.95); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 1000; gap: 16px; }
+    .spinner { width: 40px; height: 40px; border: 4px solid var(--border); border-top-color: var(--brand); border-radius: 50%; animation: spin 0.8s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .empty-state { text-align: center; padding: 40px; color: var(--text-muted); }
+
+    .attendance-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; }
+    .attendance-card { background: var(--bg); border-radius: 10px; padding: 14px; border-left: 3px solid var(--brand); display: flex; flex-direction: column; }
+    .attendance-card h5 { font-size: 12px; font-weight: 600; color: var(--text); margin-bottom: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .attendance-card .meta { font-size: 11px; color: var(--text-muted); }
+    .attendance-card .count { font-size: 20px; font-weight: 700; color: var(--brand-dark); margin: 4px 0; }
+    .attendance-bar { height: 6px; background: #e2e8f0; border-radius: 3px; overflow: hidden; margin-top: auto; padding-top: 8px; }
+    .attendance-bar-fill { height: 100%; background: linear-gradient(90deg, var(--brand), var(--brand-dark)); border-radius: 3px; transition: width 0.6s ease; }
+
+    .toast { position: fixed; bottom: 24px; right: 24px; background: var(--text); color: white; padding: 12px 20px; border-radius: 10px; font-size: 12px; font-weight: 500; box-shadow: 0 10px 30px rgba(0,0,0,0.2); transform: translateY(100px); opacity: 0; transition: all 0.3s ease; z-index: 300; display: flex; align-items: center; gap: 8px; }
+    .toast.show { transform: translateY(0); opacity: 1; }
+    .toast.success { background: var(--brand-dark); }
+    .toast.error { background: var(--danger); }
+
+    .pagination { display: flex; justify-content: center; align-items: center; gap: 8px; margin-top: 12px; }
+    .pagination button { padding: 6px 12px; border: 1.5px solid var(--border); background: white; border-radius: 6px; font-family: 'Poppins'; font-size: 12px; cursor: pointer; color: var(--text); }
+    .pagination button:hover { border-color: var(--brand); color: var(--brand); }
+    .pagination button:disabled { opacity: 0.4; cursor: not-allowed; }
+    .pagination .page-info { font-size: 12px; color: var(--text-muted); font-weight: 500; }
+
+    .print-only { display: none; }
+
+    .checkbox-group {
+      max-height: 200px;
+      overflow-y: auto;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      padding: 6px;
+      background: var(--bg);
+    }
+    .checkbox-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 6px 8px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background 0.15s;
+      font-size: 12px;
+      user-select: none;
+    }
+    .checkbox-item:hover {
+      background: rgba(50,200,136,0.08);
+    }
+    .checkbox-item input[type="checkbox"] {
+      appearance: none;
+      -webkit-appearance: none;
+      width: 16px;
+      height: 16px;
+      border: 2px solid #cbd5e1;
+      border-radius: 4px;
+      background: white;
+      cursor: pointer;
+      flex-shrink: 0;
+      position: relative;
+      transition: all 0.15s;
+      margin: 0;
+    }
+    .checkbox-item input[type="checkbox"]:checked {
+      background: var(--brand);
+      border-color: var(--brand);
+    }
+    .checkbox-item input[type="checkbox"]:checked::after {
+      content: '✓';
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      color: white;
+      font-size: 10px;
+      font-weight: 700;
+    }
+    .checkbox-item label {
+      cursor: pointer;
+      font-weight: 500;
+      color: var(--text);
+      margin: 0;
+      text-transform: none;
+      letter-spacing: 0;
+      font-size: 12px;
+      line-height: 1.4;
+    }
+    .checkbox-actions {
+      display: flex;
+      gap: 6px;
+      margin-top: 6px;
+      padding-top: 6px;
+      border-top: 1px solid var(--border);
+    }
+    .checkbox-actions button {
+      flex: 1;
+      padding: 5px 8px;
+      border: 1px solid var(--border);
+      background: white;
+      border-radius: 6px;
+      font-family: 'Poppins', sans-serif;
+      font-size: 10px;
+      font-weight: 600;
+      cursor: pointer;
+      color: var(--text-muted);
+      transition: all 0.15s;
+    }
+    .checkbox-actions button:hover {
+      border-color: var(--brand);
+      color: var(--brand);
+      background: var(--brand-light);
+    }
+
+    /* ── UNIFORM FULL-WIDTH LAYOUT ────────────────────────────────────────
+       Every panel is the same width grid cell, the same radius, the same
+       border and the same internal padding, and the page uses the whole
+       viewport instead of being boxed to 1400px.                            */
+    .header-inner, .container { max-width: none; margin: 0; }
+    .container { padding: 20px 28px; grid-template-columns: 288px minmax(0, 1fr); gap: 20px; }
+    .sidebar { top: 96px; max-height: calc(100vh - 116px); overflow-y: auto; }
+
+    .stat-card, .chart-card, .table-card, .criteria-card {
+      background: var(--card); border: 1px solid var(--border); border-radius: 14px;
+      box-shadow: 0 1px 2px rgba(15,23,42,0.05);
+    }
+    .chart-card, .table-card, .criteria-card { padding: 18px 20px; }
+
+    .stats-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+    .stat-card { min-height: 118px; padding: 18px; }
+    .stat-card .value { font-size: 26px; }
+
+    .charts-grid { grid-template-columns: 1.7fr 1fr; }
+    .dual-bar-chart { max-height: 430px; overflow-y: auto; padding-right: 6px; }
+    .donut-container { align-content: center; padding: 8px 0; }
+
+    .two-col { grid-template-columns: 1fr 1fr; }
+    .two-col > .table-card { display: flex; flex-direction: column; min-width: 0; }
+    .two-col .table-wrap { max-height: 430px; overflow: auto; flex: 1; }
+    #allStudentsCard .table-wrap { max-height: 72vh; overflow: auto; }
+
+    th { position: sticky; top: 0; z-index: 2; }
+    .attendance-grid { grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); }
+
+    @media (max-width: 1400px) { .container { grid-template-columns: 260px minmax(0, 1fr); } }
+    @media (max-width: 900px) {
+      .container { padding: 14px; grid-template-columns: 1fr; }
+      .stats-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .two-col { grid-template-columns: 1fr; }
+    }
+
+    @media print {
+      body { background: white; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      .sidebar, .header-actions, .filter-actions, .toast, .pagination, .search-box, #tableSearch, .active-filters button { display: none !important; }
+      .container { grid-template-columns: 1fr; padding: 12px; }
+      .header { position: static; padding: 12px 20px; }
+      .main { gap: 12px; }
+      .chart-card, .table-card, .stat-card, .criteria-card { box-shadow: none; border: 1px solid #ddd; break-inside: avoid; }
+      .stats-grid { grid-template-columns: repeat(4, 1fr); }
+      .dual-bar-chart, .two-col .table-wrap, #allStudentsCard .table-wrap { max-height: none; overflow: visible; }
+      .two-col { grid-template-columns: 1fr; }
+      .charts-grid { grid-template-columns: 1fr; }
+      #studentTable { display: none; }
+      .print-only { display: table !important; width: 100%; border-collapse: collapse; font-size: 10px; }
+      .print-only th, .print-only td { border: 1px solid #ccc; padding: 6px; text-align: left; }
+      .print-only th { background: #f0f0f0; font-weight: 600; }
+    }
+
+    @media (max-width: 1024px) { .container { grid-template-columns: 1fr; } .sidebar { position: static; } .charts-grid { grid-template-columns: 1fr; } .two-col { grid-template-columns: 1fr; } }
+    @media (max-width: 640px) { .stats-grid { grid-template-columns: repeat(2, 1fr); } .header-inner { flex-direction: column; align-items: flex-start; } }
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+  </style>
+  <base target="_blank">
+</head>
+<body>
+
+  <div class="loading-overlay" id="loading">
+    <div class="spinner"></div>
+    <p style="color: var(--text-muted); font-weight: 500;">Loading analytics... (reading the leaderboard)</p>
+  </div>
+
+  <header class="header">
+    <div class="header-inner">
+      <div>
+        <div class="college-name" id="collegeNameDisplay">🏛️ Loading...</div>
+        <h1>📊 PrepInsta Assessment Dashboard</h1>
+        <p id="subtitle">Real-time assessment insights</p>
+      </div>
+      <div class="header-actions">
+        <button class="btn btn-outline btn-sm" onclick="refreshData()">🔄 Refresh</button>
+        <button class="btn btn-outline btn-sm" onclick="downloadPDF()">📄 PDF</button>
+        <button class="btn btn-white btn-sm" onclick="downloadReport()">⬇️ Sheet Report</button>
+      </div>
+    </div>
+  </header>
+
+  <div class="container">
+    <aside class="sidebar">
+      <h3>🔍 Filters</h3>
+      <p style="font-size:11px;color:#94a3b8;margin-bottom:12px;">Filter by Week, Branch, Assessment, or Status. Click Apply Filters to update all charts.</p>
+
+      <div class="filter-group">
+        <label for="filterWeek">Week</label>
+        <select id="filterWeek"><option value="">All Weeks</option></select>
+        <div class="help">Based on date in sheet name (e.g. “CTD 1 12-Jun-2026”).</div>
+      </div>
+      <div class="filter-group">
+        <label>Branch</label>
+        <div class="checkbox-group" id="filterBranch"></div>
+        <div class="checkbox-actions">
+          <button onclick="toggleAll('filterBranch', true)">Select All</button>
+          <button onclick="toggleAll('filterBranch', false)">Clear</button>
+        </div>
+      </div>
+      <div class="filter-group">
+        <label for="filterBranchGroup">Branch Group</label>
+        <select id="filterBranchGroup">
+          <option value="">All Groups</option>
+          <option value="CS">CS Branch</option>
+          <option value="Non-CS">Non-CS Branch</option>
+        </select>
+      </div>
+      <div class="filter-group" id="collegeFilterGroup">
+        <label for="filterCollege">College</label>
+        <select id="filterCollege"><option value="">All Colleges</option></select>
+      </div>
+      <div class="filter-group">
+        <label>Assessment</label>
+        <div class="checkbox-group" id="filterAssessment"></div>
+        <div class="checkbox-actions">
+          <button onclick="toggleAll('filterAssessment', true)">Select All</button>
+          <button onclick="toggleAll('filterAssessment', false)">Clear</button>
+        </div>
+      </div>
+      <div class="filter-group">
+        <label for="filterStatus">Status</label>
+        <select id="filterStatus">
+          <option value="">All Statuses</option>
+          <option value="BEST">🏆 BEST (81%+)</option>
+          <option value="GOOD">🟢 GOOD (61-80%)</option>
+          <option value="AVERAGE">🟡 AVERAGE (31-60%)</option>
+          <option value="POOR">🔴 POOR (0-30%)</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label for="filterSearch">Search Student</label>
+        <input type="text" id="filterSearch" placeholder="Name, Reg No, Email..." autocomplete="off">
+      </div>
+      <div class="filter-actions">
+        <button class="btn btn-primary btn-sm" onclick="applyFilters()">Apply Filters</button>
+        <button class="btn btn-outline btn-sm" onclick="resetFilters()" style="color: var(--text-muted); border-color: var(--border);">Reset</button>
+      </div>
+    </aside>
+
+    <main class="main">
+      <div class="stats-grid" id="statsGrid"></div>
+
+      <div class="active-filters" id="activeFilters" style="display:none;">
+        <span class="active-filters-label">Active Criteria:</span>
+      </div>
+
+      <div class="criteria-card">
+        <div class="criteria-title">📊 Classification Criteria</div>
+        <div class="criteria-grid">
+          <div class="criteria-item criteria-best">🏆 BEST: 81% & above</div>
+          <div class="criteria-item criteria-good">🟢 GOOD: 61% – 80%</div>
+          <div class="criteria-item criteria-avg">🟡 AVERAGE: 31% – 60%</div>
+          <div class="criteria-item criteria-poor">🔴 POOR: 0% – 30%</div>
+        </div>
+      </div>
+
+      <div class="charts-grid">
+        <div class="chart-card">
+          <h3>🏢 Branch Performance <span style="font-size:11px;color:var(--text-muted);font-weight:400">(Attendance vs Scores)</span></h3>
+          <div class="dual-bar-chart" id="branchChart"><div class="empty-state">Loading...</div></div>
+        </div>
+        <div class="chart-card">
+          <h3>📊 Status Distribution</h3>
+          <div class="donut-container" id="statusChart"><div class="empty-state">Loading...</div></div>
+        </div>
+      </div>
+
+      <div class="table-card">
+        <div class="table-header">
+          <h3>📝 Test-wise Attendance</h3>
+          <span id="attendanceSummary" style="font-size: 12px; color: var(--text-muted);"></span>
+        </div>
+        <div class="attendance-grid" id="attendanceGrid">
+          <div class="empty-state">Loading attendance data...</div>
+        </div>
+      </div>
+
+      <div class="two-col">
+        <div class="table-card">
+          <div class="table-header"><h3>🏆 Top Performers</h3></div>
+          <div class="table-wrap">
+            <table id="topTable"><thead><tr><th>Rank</th><th>Name</th><th>Branch</th><th>Overall %</th><th>Appeared</th><th>Status</th></tr></thead><tbody></tbody></table>
+          </div>
+        </div>
+        <div class="table-card">
+          <div class="table-header"><h3>⚠️ At-Risk Students</h3></div>
+          <div class="table-wrap">
+            <table id="riskTable"><thead><tr><th>Name</th><th>Branch</th><th>Overall %</th><th>Appeared</th><th>Action</th></tr></thead><tbody></tbody></table>
+          </div>
+        </div>
+      </div>
+
+      <div class="table-card" id="allStudentsCard">
+        <div class="table-header">
+          <h3>📋 All Students <span id="studentCount" style="color: var(--text-muted); font-size: 12px; font-weight: 400;">(0)</span></h3>
+          <input type="text" class="search-box" id="tableSearch" placeholder="🔍 Quick search..." oninput="filterTable()" aria-label="Quick search students">
+        </div>
+        <div class="table-wrap">
+          <table id="studentTable">
+            <thead>
+              <tr>
+                <th class="sortable" onclick="sortTable('r')">Reg No</th>
+                <th class="sortable" onclick="sortTable('n')">Name</th>
+                <th class="sortable" onclick="sortTable('b')">Branch</th>
+                <th class="sortable" onclick="sortTable('bg')">Group</th>
+                <th class="sortable" onclick="sortTable('ba')">Batch</th>
+                <th class="sortable" onclick="sortTable('c')">College</th>
+                <th class="sortable" onclick="sortTable('pa')">Participation</th>
+                <th class="sortable" onclick="sortTable('s')">Score</th>
+                <th class="sortable" onclick="sortTable('p')">Overall %</th>
+                <th class="sortable" onclick="sortTable('ap')">Avg (appeared)</th>
+                <th class="sortable" onclick="sortTable('st')">Status</th>
+                <th>Insight</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+          <table class="print-only" id="printTable">
+            <thead><tr><th>Reg No</th><th>Name</th><th>Branch</th><th>Group</th><th>Batch</th><th>College</th><th>Participation</th><th>Score</th><th>Overall %</th><th>Avg (Appeared)</th><th>Status</th><th>Insight</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <div class="pagination" id="tablePagination" style="display:none;">
+          <button onclick="changePage(-1)" id="prevBtn">← Prev</button>
+          <span class="page-info" id="pageInfo">Page 1 of 1</span>
+          <button onclick="changePage(1)" id="nextBtn">Next →</button>
+        </div>
+      </div>
+
+      <div class="debug-panel" id="debugPanel" style="display:none; background: var(--card); border-radius: 14px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); margin-top: 20px;">
+        <h4 style="font-size: 14px; font-weight: 700; margin-bottom: 12px;">🔧 Debug Info</h4>
+        <div id="debugSummary" style="font-size: 12px; line-height: 1.8;"></div>
+        <button class="btn btn-outline btn-sm" onclick="toggleDebugDetails()" style="margin-top: 10px;">Show Details</button>
+        <div class="debug-content" id="debugDetails" style="display: none; margin-top: 12px; font-size: 11px;"></div>
+      </div>
+    </main>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    let allData = null;
+    let filteredStudents = [];
+    let currentSort = { column: 'p', dir: 'desc' };
+    let tableRows = [];
+    let currentPage = 1;
+    const ROWS_PER_PAGE = 50;
+
+    window.onload = function() { loadData(); };
+
+    function showToast(msg, type) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.className = 'toast show ' + (type || 'success');
+      setTimeout(() => t.classList.remove('show'), 3000);
+    }
+
+    function loadData() {
+      document.getElementById('loading').style.display = 'flex';
+      google.script.run
+        .withSuccessHandler(function(data) {
+          allData = data;
+          if (!data || data.error) {
+            document.getElementById('loading').innerHTML = 
+              '<div style="text-align:center;"><h3 style="color:#ef4444">❌ ' + (data?.message || 'Failed to load data') + 
+              '</h3><p>Check Debug Info below for details. Ensure Master Data has valid emails.</p>' +
+              '<button class="btn btn-primary" onclick="loadData()" style="margin-top:12px;">Retry</button></div>';
+            renderDebug(data?.debug || { errors: ['No debug info available'] });
+            document.getElementById('debugPanel').style.display = 'block';
+            return;
+          }
+          document.getElementById('collegeNameDisplay').textContent = '🏛️ ' + (data.collegeName || 'Institution');
+          filteredStudents = (data.students || []).map(toStudent);
+          populateFilters(data.filters);
+          applyFilters(true);          // recompute + render with the shared score math
+          renderDebug(data.debug);
+          document.getElementById('loading').style.display = 'none';
+          updateSubtitle(data.fromCache, data.ts);
+          if (data.debug && data.debug.errors && data.debug.errors.length > 0) {
+            document.getElementById('debugPanel').style.display = 'block';
+          }
+        })
+        .withFailureHandler(function(err) {
+          document.getElementById('loading').innerHTML = 
+            '<div style="text-align:center;"><h3 style="color:#ef4444">❌ Error</h3><p>' + 
+            (err.message || err) + '</p><button class="btn btn-primary" onclick="loadData()" style="margin-top:12px;">Retry</button></div>';
+        })
+        .getFacultyDashboardData();
+    }
+
+    function updateSubtitle(fromCache, timestamp) {
+      const d = timestamp ? new Date(timestamp) : new Date();
+      const timeStr = d.toLocaleString('en-IN', { hour: '2-digit', minute: '2-digit', day: 'numeric', month: 'short' });
+      document.getElementById('subtitle').textContent = 'Last updated: ' + timeStr + (fromCache ? ' (cached)' : '');
+    }
+
+    function populateFilters(filters) {
+      const setOpts = (id, items, label) => {
+        const sel = document.getElementById(id);
+        if (!sel) return;
+        const val = sel.value;
+        sel.innerHTML = '<option value="">' + (label || 'All') + '</option>';
+        (items || []).forEach(item => { 
+          const opt = document.createElement('option'); 
+          opt.value = item; 
+          opt.textContent = item; 
+          sel.appendChild(opt); 
+        });
+        sel.value = val;
+      };
+
+      if (filters.weeks) setOpts('filterWeek', filters.weeks, 'All Weeks');
+      if (filters.branchGroups) setOpts('filterBranchGroup', filters.branchGroups, 'All Groups');
+
+      const collegeGroup = document.getElementById('collegeFilterGroup');
+      if (filters.colleges && filters.colleges.length > 0) {
+        collegeGroup.style.display = 'block';
+        setOpts('filterCollege', filters.colleges, 'All Colleges');
+      } else {
+        collegeGroup.style.display = 'none';
+      }
+
+      renderCheckboxGroup('filterBranch', filters.branches || []);
+      renderCheckboxGroup('filterAssessment', filters.assessments || []);
+    }
+
+    function renderCheckboxGroup(id, items) {
+      const container = document.getElementById(id);
+      if (!container) return;
+      container.innerHTML = '';
+      const cleanItems = items.filter(item => item && item.trim() && item !== 'All Branches' && item !== 'All Assessments');
+      cleanItems.forEach(item => {
+        const safeId = id + '_' + item.replace(/[^a-zA-Z0-9]/g, '_');
+        const div = document.createElement('div');
+        div.className = 'checkbox-item';
+        div.innerHTML = `
+          <input type="checkbox" id="${safeId}" value="${item.replace(/"/g, '&quot;')}" onchange="onCheckboxChange('${id}')">
+          <label for="${safeId}">${item}</label>
+        `;
+        container.appendChild(div);
+      });
+    }
+
+    function toggleAll(id, checked) {
+      const container = document.getElementById(id);
+      if (!container) return;
+      container.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = checked);
+      onCheckboxChange(id);
+    }
+
+    function onCheckboxChange(id) {
+      const container = document.getElementById(id);
+      if (!container) return;
+      const anyChecked = container.querySelectorAll('input[type="checkbox"]:checked').length > 0;
+      container.style.borderColor = anyChecked ? 'var(--brand)' : 'var(--border)';
+      container.querySelectorAll('.checkbox-item').forEach(item => {
+        const cb = item.querySelector('input[type="checkbox"]');
+        if (cb && cb.checked) {
+          item.style.background = 'rgba(50,200,136,0.12)';
+        } else {
+          item.style.background = 'transparent';
+        }
+      });
+    }
+
+    function getFilterValues() {
+      const getChecked = (id) => {
+        const container = document.getElementById(id);
+        if (!container) return [];
+        return Array.from(container.querySelectorAll('input[type="checkbox"]:checked')).map(cb => cb.value);
+      };
+
+      return {
+        week: document.getElementById('filterWeek').value,
+        branch: getChecked('filterBranch'),
+        branchGroup: document.getElementById('filterBranchGroup').value,
+        college: document.getElementById('filterCollege').value,
+        assessment: getChecked('filterAssessment'),
+        status: document.getElementById('filterStatus').value,
+        search: document.getElementById('filterSearch').value.toLowerCase()
+      };
+    }
+
+    /* ── SCORE MATH — one rule for every number on this page ───────────────
+       Overall %       = score ÷ (max of ALL tests in scope)
+                          → a test the student did not sit counts as ZERO.
+       Avg (appeared)  = score ÷ (max of the tests actually sat)
+                          → the old "average of what they attended" number,
+                            kept as its own column so nothing is lost.
+       Ranking always uses Overall %, so a student who sat 1 of 10 tests and
+       scored 100% cannot outrank a student who sat 9 of 10 at 90%.
+       ────────────────────────────────────────────────────────────────────── */
+    function computeTotals(student, scopeNames, maxMap) {
+      const out = { totalScore: 0, totalMax: 0, conductedMax: 0, testsAttended: 0,
+                    testsConducted: 0, overallPercentage: 0, appearedPercentage: 0 };
+      const names = scopeNames || [];
+      names.forEach(name => {
+        const colMax = Number(maxMap && maxMap[name]) || 0;
+        out.conductedMax += colMax;
+        const rec = student.assessments ? student.assessments[name] : null;
+        if (rec && typeof rec.s === 'number' && !isNaN(rec.s)) {
+          out.testsAttended++;
+          out.totalScore += rec.s;
+          out.totalMax += (Number(rec.m) || colMax);
+        }
+      });
+      out.testsConducted = names.length;
+      out.overallPercentage = out.conductedMax > 0 ? (out.totalScore / out.conductedMax) * 100 : 0;
+      out.appearedPercentage = out.totalMax > 0 ? (out.totalScore / out.totalMax) * 100 : 0;
+      return out;
+    }
+
+    function statusFromPercentage(pct) {
+      if (pct >= 81) return { rawStatus: 'BEST', status: '🏆 BEST', insight: '⭐ Excellent Performer' };
+      if (pct >= 61) return { rawStatus: 'GOOD', status: '🟢 GOOD', insight: '👍 Moderate Performer' };
+      if (pct >= 31) return { rawStatus: 'AVERAGE', status: '🟡 AVERAGE', insight: '📈 Needs Improvement' };
+      return { rawStatus: 'POOR', status: '🔴 POOR', insight: '⚠️ Need Immediate Attention' };
+    }
+
+    function rankCompare(a, b) {
+      return (b.overallPercentage - a.overallPercentage)
+        || (b.testsAttended - a.testsAttended)
+        || (b.appearedPercentage - a.appearedPercentage)
+        || String(a.name || '').localeCompare(String(b.name || ''));
+    }
+
+    /* Max score of every test, independent of who sat it. */
+    function buildMaxMap() {
+      const map = {};
+      ((allData && allData.assessmentAttendance) || []).forEach(a => {
+        const m = Number(a.maxScore) || 0;
+        if (m > 0) map[a.name] = m;
+      });
+      ((allData && allData.students) || []).forEach(st => {
+        Object.keys((st && st.as) || {}).forEach(k => {
+          if (!map[k]) {
+            const m = Number((st.as[k] || {}).m) || 0;
+            if (m > 0) map[k] = m;
+          }
+        });
+      });
+      return map;
+    }
+
+    /* Which tests are "in scope": Week filter ∩ Assessment filter. */
+    function resolveScope(f) {
+      const maxMap = buildMaxMap();
+      let names = Object.keys(maxMap);
+      if (f && f.week && allData && allData.assessmentMeta) {
+        names = names.filter(n => allData.assessmentMeta[n] && allData.assessmentMeta[n].week === f.week);
+      }
+      if (f && f.assessment && f.assessment.length > 0) {
+        names = names.filter(n => f.assessment.indexOf(n) !== -1);
+      }
+      return { names: names, maxMap: maxMap };
+    }
+
+    function toStudent(s) {
+      return {
+        email: s.e, name: s.n, regNo: s.r, branch: s.b, batch: s.ba, college: s.c,
+        branchGroup: s.bg || 'Other',
+        overallPercentage: s.p, rawStatus: s.st, insight: s.in,
+        totalScore: s.sc, totalMax: s.mx, conductedMax: s.mx,
+        appearedPercentage: 0,
+        testsAttended: s.ta, testsConducted: s.tc,
+        assessments: s.as || {}
+      };
+    }
+
+    function recalcStudent(student, scopeNames, maxMap) {
+      const t = computeTotals(student, scopeNames, maxMap);
+      const inactive = t.testsAttended === 0;
+      const st = inactive
+        ? { rawStatus: 'INACTIVE', status: 'INACTIVE', insight: 'No assessment data' }
+        : statusFromPercentage(t.overallPercentage);
+      return Object.assign({}, student, {
+        totalScore: t.totalScore,
+        totalMax: t.totalMax,             // max of the tests actually sat
+        conductedMax: t.conductedMax,     // max of every test in scope
+        testsAttended: t.testsAttended,
+        testsConducted: t.testsConducted,
+        overallPercentage: inactive ? 0 : t.overallPercentage,
+        appearedPercentage: inactive ? 0 : t.appearedPercentage,
+        rawStatus: st.rawStatus,
+        status: st.status,
+        insight: st.insight
+      });
+    }
+
+    function recomputeAllStudents(f) {
+      const scope = resolveScope(f);
+      return ((allData && allData.students) || [])
+        .map(toStudent)
+        .map(s => recalcStudent(s, scope.names, scope.maxMap));
+    }
+
+    function studentMatchesFilters(s, f) {
+      if (f.branch.length > 0 && !f.branch.includes(s.branch)) return false;
+      if (f.assessment && f.assessment.length > 0 &&
+          !f.assessment.some(a => s.assessments && s.assessments[a])) return false;
+      if (f.branchGroup && s.branchGroup !== f.branchGroup) return false;
+      if (f.college && s.college !== f.college) return false;
+      if (f.status && s.rawStatus !== f.status) return false;
+      if (f.search && !(
+            String(s.name || '').toLowerCase().includes(f.search) ||
+            String(s.email || '').toLowerCase().includes(f.search) ||
+            String(s.regNo || '').toLowerCase().includes(f.search))) return false;
+      return true;
+    }
+
+    function applyFilters(silent) {
+      if (!allData) return;
+      const f = getFilterValues();
+
+      filteredStudents = recomputeAllStudents(f).filter(s => studentMatchesFilters(s, f));
+
+      currentPage = 1;
+      sortData();
+      renderAll();
+      renderActiveFilters(f);
+      if (silent !== true) showToast('Filters applied — ' + filteredStudents.length + ' students');
+    }
+
+    function renderActiveFilters(f) {
+      const container = document.getElementById('activeFilters');
+      container.innerHTML = '<span class="active-filters-label">Active Criteria:</span>';
+      
+      const labels = {
+        week: ['Week', f.week],
+        branch: ['Branch', f.branch],
+        branchGroup: ['Branch Group', f.branchGroup],
+        college: ['College', f.college],
+        assessment: ['Assessment', f.assessment],
+        status: ['Status', f.status],
+        search: ['Search', f.search]
+      };
+      
+      let hasAny = false;
+      Object.entries(labels).forEach(([key, [label, value]]) => {
+        if (value) {
+          hasAny = true;
+          const chip = document.createElement('span');
+          chip.className = 'filter-chip';
+          chip.innerHTML = label + ': ' + value + ' <button onclick="clearFilter(\'' + key + '\')" title="Remove">×</button>';
+          container.appendChild(chip);
+        }
+      });
+      
+      container.style.display = hasAny ? 'flex' : 'none';
+    }
+
+    function clearFilter(key) {
+      const map = { week: 'filterWeek', branch: 'filterBranch', branchGroup: 'filterBranchGroup', college: 'filterCollege', assessment: 'filterAssessment', status: 'filterStatus', search: 'filterSearch' };
+      const el = document.getElementById(map[key]);
+      if (!el) return;
+
+      if (key === 'branch' || key === 'assessment') {
+        el.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
+        el.style.borderColor = 'var(--border)';
+      } else {
+        el.value = '';
+      }
+      applyFilters();
+    }
+
+    function resetFilters() {
+      ['filterWeek','filterBranchGroup','filterCollege','filterStatus','filterSearch'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
+      });
+      ['filterBranch','filterAssessment'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+          el.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
+          el.style.borderColor = 'var(--border)';
+        }
+      });
+      document.getElementById('activeFilters').style.display = 'none';
+      document.getElementById('activeFilters').innerHTML = '<span class="active-filters-label">Active Criteria:</span>';
+      applyFilters();
+      showToast('Filters reset');
+    }
+
+    function refreshData() { 
+      showToast('Clearing cache and reloading...');
+      google.script.run.withSuccessHandler(function(){
+        loadData();
+      }).clearFacultyCache(); 
+    }
+
+    function downloadPDF() {
+      const printBody = document.querySelector('#printTable tbody');
+      const rows = filteredStudents.map(s => `
+        <tr>
+          <td>${s.regNo || '—'}</td>
+          <td>${s.name}</td>
+          <td>${s.branch || '—'}</td>
+          <td>${s.branchGroup || '—'}</td>
+          <td>${s.batch || '—'}</td>
+          <td>${s.college || '—'}</td>
+          <td>${s.testsAttended || 0} / ${s.testsConducted || 0}</td>
+          <td>${s.testsAttended > 0 ? (s.totalScore || 0) + ' / ' + (s.conductedMax || 0) : '—'}</td>
+          <td>${s.testsAttended > 0 ? s.overallPercentage.toFixed(1) + '%' : '—'}</td>
+          <td>${s.testsAttended > 0 ? s.appearedPercentage.toFixed(1) + '%' : '—'}</td>
+          <td>${s.rawStatus}</td>
+          <td>${s.insight || '—'}</td>
+        </tr>
+      `).join('');
+      printBody.innerHTML = rows;
+      setTimeout(() => window.print(), 100);
+    }
+
+    function renderAll() {
+      renderStats();
+      renderBranchChart();
+      renderStatusChart();
+      renderAttendance();
+      renderTopTable();
+      renderRiskTable();
+      renderStudentTable();
+    }
+
+    function renderStats() {
+      const active = filteredStudents.filter(s => s.testsAttended > 0);
+      const totalActive = active.length;
+      const f = getFilterValues();
+      const scope = resolveScope(f);
+
+      const totalPossible = filteredStudents.length * scope.names.length;
+      const totalAppeared = filteredStudents.reduce((n, s) => n + (s.testsAttended || 0), 0);
+      const avgPart = totalPossible > 0 ? ((totalAppeared / totalPossible) * 100).toFixed(1) : '0.0';
+
+      const mean = key => totalActive > 0
+        ? (active.reduce((sum, s) => sum + (s[key] || 0), 0) / totalActive)
+        : 0;
+      const avg = mean('overallPercentage');
+      const avgAppeared = mean('appearedPercentage');
+      const pass = active.filter(s => s.overallPercentage >= 50).length;
+      const passRate = totalActive > 0 ? ((pass / totalActive) * 100).toFixed(1) : '0.0';
+      const ready = active.filter(s => s.overallPercentage >= 80).length;
+      const atRisk = active.filter(s => s.overallPercentage < 50).length;
+
+      const stats = [
+        { label: 'Total Students', value: filteredStudents.length, sub: 'Roster', color: '' },
+        { label: 'Active Students', value: totalActive, sub: 'Sat ≥1 test in scope', color: '' },
+        { label: 'Avg Participation', value: avgPart + '%', sub: totalAppeared + ' of ' + totalPossible + ' attempts', color: 'info' },
+        { label: 'Average Score', value: avg.toFixed(2) + '%', sub: 'of ' + totalActive + ' active (absent = 0)', color: '' },
+        { label: 'Avg (Appeared)', value: avgAppeared.toFixed(2) + '%', sub: 'tests actually sat only', color: 'purple' },
+        { label: 'Pass Rate', value: passRate + '%', sub: 'of ' + totalActive + ' active (≥50%)', color: '' },
+        { label: 'Placement Ready', value: totalActive > 0 ? ((ready / totalActive) * 100).toFixed(1) + '%' : '0.0%', sub: 'of ' + totalActive + ' active (≥80%)', color: 'purple' },
+        { label: 'At Risk', value: atRisk, sub: 'of ' + totalActive + ' active (<50%)', color: 'danger' }
+      ];
+      document.getElementById('statsGrid').innerHTML = stats.map(x => `
+        <div class="stat-card ${x.color}"><h4>${x.label}</h4><div class="value">${x.value}</div>${x.sub ? `<div class="sub">${x.sub}</div>` : ''}</div>
+      `).join('');
+    }
+
+    function renderBranchChart() {
+  const container = document.getElementById('branchChart');
+  const f = getFilterValues();
+  
+  const stats = {};
+  filteredStudents.forEach(s => {
+    const b = s.branch || 'Unknown';
+    if (!stats[b]) {
+      stats[b] = { totalStudents: 0, activeStudents: 0, totalScoreSum: 0, appearedSum: 0, scoreCount: 0, passCount: 0 };
+    }
+    stats[b].totalStudents++;
+    if (s.testsAttended > 0) {
+      stats[b].activeStudents++;
+      stats[b].totalScoreSum += s.overallPercentage;
+      stats[b].appearedSum += s.appearedPercentage;
+      stats[b].scoreCount++;
+      if (s.overallPercentage >= 50) stats[b].passCount++;
+    }
+  });
+
+  let branches = Object.keys(stats).map(b => {
+    const s = stats[b];
+    const avg = s.scoreCount > 0 ? (s.totalScoreSum / s.scoreCount) : 0;
+    const avgAppeared = s.scoreCount > 0 ? (s.appearedSum / s.scoreCount) : 0;
+    const attendanceRate = s.totalStudents > 0 ? ((s.activeStudents / s.totalStudents) * 100) : 0;
+    const passRate = s.scoreCount > 0 ? ((s.passCount / s.scoreCount) * 100) : 0;
+    return {
+      branch: b,
+      branchGroup: getBranchGroup(b),
+      totalStudents: s.totalStudents,
+      activeStudents: s.activeStudents,
+      attendanceRate: attendanceRate,
+      avg: avg,
+      avgAppeared: avgAppeared,
+      passRate: passRate,
+      inactive: s.totalStudents - s.activeStudents
+    };
+  });
+
+  if (f.branchGroup) {
+    branches = branches.filter(b => b.branchGroup === f.branchGroup);
+  }
+  if (f.branch.length > 0) {
+    branches = branches.filter(b => f.branch.includes(b.branch));
+  }
+
+  branches.sort((a, b) => {
+    if (b.attendanceRate !== a.attendanceRate) return b.attendanceRate - a.attendanceRate;
+    return b.avg - a.avg;
+  });
+
+  if (branches.length === 0) { container.innerHTML = '<div class="empty-state">No data for selected filters</div>'; return; }
+
+  const maxAtt = Math.max(...branches.map(b => b.attendanceRate), 100);
+  const maxScore = Math.max(...branches.map(b => b.avg), 100);
+
+  container.innerHTML = branches.map(b => {
+    const attPct = (b.attendanceRate / maxAtt) * 100;
+    const scorePct = (b.avg / maxScore) * 100;
+    
+    let scoreCls = 'dual-bar-fill score';
+    if (b.avg >= 81) scoreCls = 'dual-bar-fill best';
+    else if (b.avg >= 61) scoreCls = 'dual-bar-fill good';
+    else if (b.avg >= 31) scoreCls = 'dual-bar-fill avg';
+    else scoreCls = 'dual-bar-fill poor';
+
+    return `
+      <div class="dual-bar-item">
+        <div class="dual-bar-header">
+          <div>
+            <div class="dual-bar-title">${b.branch}</div>
+            <div class="dual-bar-meta">${b.totalStudents} total • ${b.inactive} inactive</div>
+          </div>
+          <div style="text-align:right;">
+            <div style="font-size:11px; font-weight:700; color:var(--text);">Avg: ${b.avg.toFixed(2)}%</div>
+            <div style="font-size:10px; color:var(--text-muted);">Appeared: ${b.avgAppeared.toFixed(2)}%</div>
+            <div style="font-size:10px; color:var(--text-muted);">✅ Pass: ${b.passRate.toFixed(1)}%</div>
+          </div>
+        </div>
+        <div class="dual-bar-row">
+          <div class="dual-bar-label">🎓 Attendance</div>
+          <div class="dual-bar-track">
+            <div class="dual-bar-fill attendance" style="width: ${Math.max(attPct, 3)}%">
+              <span class="dual-bar-value">${b.attendanceRate.toFixed(1)}%</span>
+            </div>
+          </div>
+          <div class="dual-bar-detail">${b.activeStudents}/${b.totalStudents}</div>
+        </div>
+        <div class="dual-bar-row">
+          <div class="dual-bar-label">📊 Score</div>
+          <div class="dual-bar-track">
+            <div class="${scoreCls}" style="width: ${Math.max(scorePct, 3)}%">
+              <span class="dual-bar-value">${b.avg.toFixed(1)}%</span>
+            </div>
+          </div>
+          <div class="dual-bar-detail">${b.passRate.toFixed(1)}% pass</div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+    function getBranchGroup(branch) {
+      const normalized = String(branch || '').trim();
+      const lower = normalized.toLowerCase().replace(/\s+/g, '').replace(/\./g, '').replace(/-/g, '');
+      const csList = ['btechaids', 'becsd', 'becse','besct','becseiot','btechit'];
+      const nonCsList = ['beece','beeee','bemech','bemechmct','mba'];
+      if (csList.some(b => lower === b || lower.includes(b))) return 'CS';
+      if (nonCsList.some(b => lower === b || lower.includes(b))) return 'Non-CS';
+      return 'Other';
+    }
+
+    function renderStatusChart() {
+      const container = document.getElementById('statusChart');
+      const active = filteredStudents.filter(s => s.testsAttended > 0);
+      const total = active.length || 1;
+      const counts = { BEST: 0, GOOD: 0, AVERAGE: 0, POOR: 0, INACTIVE: 0 };
+      active.forEach(s => { counts[s.rawStatus] = (counts[s.rawStatus] || 0) + 1; });
+      counts.INACTIVE = filteredStudents.filter(s => s.testsAttended === 0).length;
+
+      const cum = {
+        best: (counts.BEST / total) * 100,
+        good: ((counts.BEST + counts.GOOD) / total) * 100,
+        avg: ((counts.BEST + counts.GOOD + counts.AVERAGE) / total) * 100,
+        poor: ((counts.BEST + counts.GOOD + counts.AVERAGE + counts.POOR) / total) * 100
+      };
+
+      const colors = { BEST: '#32c888', GOOD: '#3b82f6', AVERAGE: '#f59e0b', POOR: '#ef4444', INACTIVE: '#cbd5e1' };
+      const labels = { BEST: '🏆 BEST', GOOD: '🟢 GOOD', AVERAGE: '🟡 AVERAGE', POOR: '🔴 POOR', INACTIVE: '⚪ INACTIVE' };
+
+      const donutHtml = `
+        <div class="donut" style="background: conic-gradient(
+          ${colors.BEST} 0% ${cum.best}%, 
+          ${colors.GOOD} ${cum.best}% ${cum.good}%, 
+          ${colors.AVERAGE} ${cum.good}% ${cum.avg}%, 
+          ${colors.POOR} ${cum.avg}% ${cum.poor}%, 
+          ${colors.INACTIVE} ${cum.poor}% 100%
+        );">
+          <div class="donut-hole">
+            <div class="value">${active.length}</div>
+            <div class="label">Active</div>
+          </div>
+        </div>
+        <div class="donut-legend">
+          ${Object.entries(counts).filter(([k,v]) => v > 0).map(([k,v]) => `
+            <div class="legend-item"><span class="legend-dot" style="background:${colors[k]}"></span>${labels[k]}: ${v}</div>
+          `).join('')}
+        </div>
+      `;
+      container.innerHTML = donutHtml;
+    }
+
+    function renderAttendance() {
+  const container = document.getElementById('attendanceGrid');
+  const attendance = allData?.assessmentAttendance || [];
+  const f = getFilterValues();
+  const scope = resolveScope(f);
+  const filteredAttendance = attendance.filter(a => scope.names.indexOf(a.name) !== -1);
+  
+  if (filteredAttendance.length === 0) {
+    container.innerHTML = '<div class="empty-state">No assessment data found for selected period.</div>';
+    document.getElementById('attendanceSummary').textContent = '';
+    return;
+  }
+
+      const totalMaster = allData?.summary?.totalStudents || 0;
+      document.getElementById('attendanceSummary').textContent = 
+        `${filteredAttendance.length} test(s) • Master: ${totalMaster} students`;
+
+      container.innerHTML = filteredAttendance.map(a => {
+        const pct = parseFloat(a.percentage) || 0;
+        let color = 'var(--brand)';
+        if (pct < 50) color = 'var(--danger)';
+        else if (pct < 75) color = 'var(--warning)';
+        
+        return `
+          <div class="attendance-card">
+            <h5 title="${a.name}">${a.name}</h5>
+            <div class="meta">Max Score: ${a.maxScore}</div>
+            <div class="count">${a.appeared} <span style="font-size:13px;color:var(--text-muted);font-weight:500">/ ${a.masterTotal}</span></div>
+            <div class="meta">${pct}% attended</div>
+            <div class="attendance-bar">
+              <div class="attendance-bar-fill" style="width: ${Math.min(pct, 100)}%; background: ${color}"></div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderTopTable() {
+      const tbody = document.querySelector('#topTable tbody');
+      const active = filteredStudents
+        .filter(s => s.testsAttended > 0)
+        .slice()
+        .sort(rankCompare)
+        .slice(0, 10);
+      if (active.length === 0) { tbody.innerHTML = '<tr><td colspan="6" class="empty-state">No data</td></tr>'; return; }
+      tbody.innerHTML = active.map((s, i) => `
+        <tr>
+          <td>#${i + 1}</td>
+          <td><strong>${s.name}</strong>
+<small style="color:var(--text-muted)">${s.email}</small></td>
+          <td>${s.branch || '—'}</td>
+          <td><strong>${s.overallPercentage.toFixed(1)}%</strong></td>
+          <td>${s.testsAttended}<span style="color:var(--text-muted)"> / ${s.testsConducted}</span></td>
+          <td><span class="badge badge-${s.rawStatus.toLowerCase()}">${s.rawStatus}</span></td>
+        </tr>
+      `).join('');
+    }
+
+    function renderRiskTable() {
+      const tbody = document.querySelector('#riskTable tbody');
+      const atRisk = filteredStudents
+        .filter(s => s.testsAttended > 0 && s.overallPercentage < 50)
+        .slice()
+        .sort((a, b) => (a.overallPercentage - b.overallPercentage) || rankCompare(a, b))
+        .slice(0, 20);
+      if (atRisk.length === 0) { tbody.innerHTML = '<tr><td colspan="5" class="empty-state">No at-risk students 🎉</td></tr>'; return; }
+      tbody.innerHTML = atRisk.map(s => `
+        <tr>
+          <td><strong>${s.name}</strong>
+<small style="color:var(--text-muted)">${s.email}</small></td>
+          <td>${s.branch || '—'}</td>
+          <td><span style="color:var(--danger);font-weight:700">${s.overallPercentage.toFixed(1)}%</span></td>
+          <td>${s.testsAttended}<span style="color:var(--text-muted)"> / ${s.testsConducted}</span></td>
+          <td><span class="badge badge-poor">${s.insight || 'Needs Attention'}</span></td>
+        </tr>
+      `).join('');
+    }
+
+    function sortTable(col) {
+      if (currentSort.column === col) {
+        currentSort.dir = currentSort.dir === 'asc' ? 'desc' : 'asc';
+      } else {
+        currentSort.column = col;
+        currentSort.dir = 'desc';
+      }
+      sortData();
+      renderStudentTable();
+      updateSortHeaders();
+    }
+
+    function sortData() {
+      const map = { r: 'regNo', n: 'name', b: 'branch', bg: 'branchGroup', ba: 'batch', c: 'college',
+                    pa: 'testsAttended', s: 'totalScore', p: 'overallPercentage',
+                    ap: 'appearedPercentage', st: 'rawStatus' };
+      const key = map[currentSort.column] || 'overallPercentage';
+      const dir = currentSort.dir === 'asc' ? 1 : -1;
+      filteredStudents.sort((a, b) => {
+        const av = a[key];
+        const bv = b[key];
+        if (typeof av === 'number' || typeof bv === 'number') {
+          // 0 is a real value — never turn it into '' (that made 0% rows sort to the top)
+          const an = typeof av === 'number' && !isNaN(av) ? av : -Infinity;
+          const bn = typeof bv === 'number' && !isNaN(bv) ? bv : -Infinity;
+          return an === bn ? 0 : (an - bn) * dir;
+        }
+        const as = String(av === undefined || av === null ? '' : av).toLowerCase();
+        const bs = String(bv === undefined || bv === null ? '' : bv).toLowerCase();
+        if (as === bs) return 0;
+        return (as < bs ? -1 : 1) * dir;
+      });
+    }
+
+    function updateSortHeaders() {
+      document.querySelectorAll('#studentTable th').forEach(th => {
+        th.classList.remove('sort-asc', 'sort-desc');
+      });
+      const headers = ['r','n','b','bg','ba','c','pa','s','p','ap','st'];
+      const idx = headers.indexOf(currentSort.column);
+      if (idx !== -1) {
+        const th = document.querySelectorAll('#studentTable th')[idx];
+        if (th) th.classList.add(currentSort.dir === 'asc' ? 'sort-asc' : 'sort-desc');
+      }
+    }
+
+    function renderStudentTable() {
+      const tbody = document.querySelector('#studentTable tbody');
+      document.getElementById('studentCount').textContent = '(' + filteredStudents.length + ')';
+      tableRows = filteredStudents;
+      
+      const totalPages = Math.ceil(filteredStudents.length / ROWS_PER_PAGE) || 1;
+      const start = (currentPage - 1) * ROWS_PER_PAGE;
+      const pageData = filteredStudents.slice(start, start + ROWS_PER_PAGE);
+      
+      const pagination = document.getElementById('tablePagination');
+      if (tableRows.length > ROWS_PER_PAGE) {
+        pagination.style.display = 'flex';
+        document.getElementById('pageInfo').textContent = `Page ${currentPage} of ${totalPages} (${tableRows.length} filtered)`;
+        document.getElementById('prevBtn').disabled = currentPage === 1;
+        document.getElementById('nextBtn').disabled = currentPage === totalPages;
+      } else {
+        pagination.style.display = 'none';
+      }
+
+      if (pageData.length === 0) { 
+        tbody.innerHTML = '<tr><td colspan="12" class="empty-state">No matches found — try clearing filters</td></tr>'; 
+        return; 
+      }
+      
+      tbody.innerHTML = pageData.map(s => {
+        const active = (s.testsAttended || 0) > 0;
+        return `
+        <tr>
+          <td>${s.regNo || '—'}</td>
+          <td><strong>${s.name}</strong>
+<small style="color:var(--text-muted)">${s.email}</small></td>
+          <td>${s.branch || '—'}</td>
+          <td>${s.branchGroup || '—'}</td>
+          <td>${s.batch || '—'}</td>
+          <td>${s.college || '—'}</td>
+          <td><strong>${s.testsAttended || 0}</strong><span style="color:var(--text-muted)"> / ${s.testsConducted || 0}</span></td>
+          <td><strong>${active ? (s.totalScore || 0) + ' / ' + (s.conductedMax || 0) : '—'}</strong></td>
+          <td><strong>${active ? s.overallPercentage.toFixed(1) + '%' : '—'}</strong></td>
+          <td><span style="color:var(--text-muted)">${active ? s.appearedPercentage.toFixed(1) + '%' : '—'}</span></td>
+          <td><span class="badge badge-${s.rawStatus.toLowerCase()}">${s.rawStatus}</span></td>
+          <td><span style="font-size:11px;color:var(--text-muted)">${s.insight || '—'}</span></td>
+        </tr>
+      `; }).join('');
+    }
+
+    function changePage(dir) {
+      const totalPages = Math.ceil(tableRows.length / ROWS_PER_PAGE) || 1;
+      const newPage = currentPage + dir;
+      if (newPage >= 1 && newPage <= totalPages) {
+        currentPage = newPage;
+        renderStudentTable();
+      }
+    }
+
+    function filterTable() {
+      const q = document.getElementById('tableSearch').value.toLowerCase();
+      if (!q) {
+        applyFilters();
+        return;
+      }
+      const f = getFilterValues();
+      const base = recomputeAllStudents(f).filter(s => studentMatchesFilters(s, f));
+      filteredStudents = base.filter(s =>
+        String(s.name || '').toLowerCase().includes(q) ||
+        String(s.email || '').toLowerCase().includes(q) ||
+        String(s.regNo || '').toLowerCase().includes(q) ||
+        String(s.branch || '').toLowerCase().includes(q)
+      );
+      currentPage = 1;
+      sortData();
+      renderStudentTable();
+    }
+
+    function downloadReport() {
+      const raw = getFilterValues();
+      const filters = {
+        ...raw,
+        branch: raw.branch.length > 0 ? raw.branch : null,
+        assessment: raw.assessment.length > 0 ? raw.assessment : null
+      };
+      showToast('Generating report...');
+      google.script.run
+        .withSuccessHandler(function(res) {
+          showToast('Report generated: ' + res.sheetName);
+          window.open(res.url, '_blank');
+        })
+        .withFailureHandler(function(err) {
+          showToast('Failed: ' + (err.message || err), 'error');
+        })
+        .generateFacultyReport(filters);
+    }
+
+    function renderDebug(debug) {
+      if (!debug) { document.getElementById('debugPanel').style.display = 'none'; return; }
+      document.getElementById('debugPanel').style.display = 'none';
+      
+      const summary = document.getElementById('debugSummary');
+      const details = document.getElementById('debugDetails');
+
+      let html = '';
+      html += '<div style="margin-bottom:4px;"><strong>Version:</strong> ' + (debug.version || '—') + '</div>';
+      html += '<div style="margin-bottom:4px;"><strong>Execution Time:</strong> ' + (debug.executionTime || '—') + '</div>';
+      html += '<div style="margin-bottom:4px;"><strong>Partial Load:</strong> ' + (debug.partialLoad ? 'YES (timeout safeguard)' : 'No') + '</div>';
+      html += '<div style="margin-bottom:4px;"><strong>Master Sheet:</strong> ' + (debug.masterSheet || 'Not found') + '</div>';
+      html += '<div style="margin-bottom:4px;"><strong>Master Rows:</strong> ' + (debug.masterRows || 0) + '</div>';
+      html += '<div style="margin-bottom:4px;"><strong>Master Emails:</strong> ' + (debug.masterEmails || 0) + '</div>';
+      
+      if (debug.detectedColumns) {
+        const cols = debug.detectedColumns;
+        html += '<div style="margin-bottom:4px;"><strong>Columns:</strong> ' + 
+          'Name=' + cols.name + ' Email=' + cols.email + ' Reg=' + cols.regNo + ' Branch=' + cols.branch + ' Batch=' + cols.batch + ' College=' + cols.college + '</div>';
+      }
+      
+      if (debug.errors && debug.errors.length > 0) {
+        html += '<div style="margin-bottom:4px;color:#ef4444;"><strong>Errors:</strong><br>' + debug.errors.join('<br>') + '</div>';
+      }
+      summary.innerHTML = html;
+
+      if (debug.assessmentSheets && debug.assessmentSheets.length > 0) {
+        let dhtml = '<table style="width:100%;border-collapse:collapse;font-size:11px;"><thead><tr style="background:#f8fafc;"><th style="padding:6px;border:1px solid #e2e8f0;">Sheet</th><th style="padding:6px;border:1px solid #e2e8f0;">Status</th><th style="padding:6px;border:1px solid #e2e8f0;">Rows</th><th style="padding:6px;border:1px solid #e2e8f0;">Matched</th><th style="padding:6px;border:1px solid #e2e8f0;">Max Score</th><th style="padding:6px;border:1px solid #e2e8f0;">Week</th><th style="padding:6px;border:1px solid #e2e8f0;">Reason</th></tr></thead><tbody>';
+        debug.assessmentSheets.forEach(s => {
+                    const statusColor = s.status === 'processed' ? '#166534' : (s.status === 'error' ? '#991b1b' : '#64748b');
+          dhtml += '<tr><td style="padding:6px;border:1px solid #e2e8f0;">' + s.name + '</td><td style="padding:6px;border:1px solid #e2e8f0;color:' + statusColor + ';">' + s.status + '</td><td style="padding:6px;border:1px solid #e2e8f0;">' + (s.rows || '—') + '</td><td style="padding:6px;border:1px solid #e2e8f0;">' + (s.matched || '—') + '</td><td style="padding:6px;border:1px solid #e2e8f0;">' + (s.maxScore || '—') + '</td><td style="padding:6px;border:1px solid #e2e8f0;">' + (s.week || '—') + '</td><td style="padding:6px;border:1px solid #e2e8f0;">' + (s.reason || '—') + '</td></tr>';
+        });
+        dhtml += '</tbody></table>';
+        details.innerHTML = dhtml;
+      } else {
+        details.innerHTML = '<div>No assessment sheets found. Create subsheets with columns: Email, Score (and optional Branch for sections).</div>';
+      }
+    }
+
+    function toggleDebugDetails() {
+      const el = document.getElementById('debugDetails');
+      const btn = document.querySelector('#debugPanel button');
+      if (el.style.display === 'block') {
+        el.style.display = 'none';
+        btn.textContent = 'Show Details';
+      } else {
+        el.style.display = 'block';
+        btn.textContent = 'Hide Details';
+      }
+    }
+  </script>
+</body>
+</html>

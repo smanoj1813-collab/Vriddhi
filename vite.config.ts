@@ -83,7 +83,11 @@ export default defineConfig(({ mode }) => {
           'assets/index-*.js',
           'assets/index-*.css',
           'assets/react-core-*.js',
-          'assets/firebase-*.js',
+          // Was 'assets/firebase-*.js' until the boot/data split (P1-2) renamed
+          // the chunk. Only the auth half belongs in the offline shell; the data
+          // chunk is fetched after sign-in and covered by the /assets/ runtime
+          // route below, so precaching it would put 183 kB back into install.
+          'assets/firebase-auth-*.js',
           'assets/mui-core-*.js',
           'assets/mui-icons-*.js',
           'assets/utils-*.js',

@@ -1,5 +1,5 @@
   # Job 3: Firestore / Storage / RTDB security rules against the emulator.
-  # Compiles current-firestore.rules (a syntax error fails here, not at
+  # Compiles firestore.rules (a syntax error fails here, not at
   # deploy time) and runs functions/test/firestore.rules.test.ts.
   rules:
     name: Security rules (emulator)

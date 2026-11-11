@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <meta charset="UTF-8">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --brand:#32c888; --brand-dark:#1b5e20; --ink:#0f172a; --text:#1e293b; --muted:#64748b;
+      --line:#e2e8f0; --bg:#f1f5f9; --card:#fff;
+      --ok:#10b981; --warn:#f59e0b; --bad:#ef4444; --info:#3b82f6;
+      --ready:#16a34a; --near:#3b82f6; --work:#f59e0b; --risk:#ef4444;
+    }
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:'Poppins',sans-serif;background:var(--bg);color:var(--text);font-size:13px;min-height:100vh}
+
+    header{background:linear-gradient(135deg,var(--brand),var(--brand-dark));color:#fff;
+      padding:16px 22px;position:sticky;top:0;z-index:50;box-shadow:0 6px 22px rgba(0,0,0,.16)}
+    .head-in{max-width:1500px;margin:0 auto;display:flex;justify-content:space-between;
+      align-items:center;gap:14px;flex-wrap:wrap}
+    .head-in h1{font-size:19px;font-weight:800;letter-spacing:.2px}
+    .head-in .sub{font-size:11px;opacity:.85;margin-top:3px}
+    .head-tools{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+    select.head-sel{background:rgba(255,255,255,.16);color:#fff;border:1px solid rgba(255,255,255,.35);
+      padding:7px 11px;border-radius:8px;font-family:'Poppins';font-size:12px;cursor:pointer}
+    select.head-sel option{color:#0f172a}
+    .btn-h{background:#fff;color:var(--brand-dark);border:none;padding:8px 14px;border-radius:8px;
+      font-family:'Poppins';font-weight:700;font-size:12px;cursor:pointer}
+    .btn-h.ghost{background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.35)}
+
+    main{max-width:1500px;margin:0 auto;padding:18px;display:flex;flex-direction:column;gap:16px}
+
+    .banner{border-radius:10px;padding:11px 14px;font-size:12px;line-height:1.5;display:none}
+    .banner.show{display:block}
+    .banner.warn{background:#fef3c7;border-left:4px solid var(--warn);color:#92400e}
+    .banner.bad{background:#fee2e2;border-left:4px solid var(--bad);color:#991b1b}
+
+    .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(132px,1fr));gap:11px}
+    .kpi{background:var(--card);border-radius:12px;padding:13px 14px;border-left:4px solid var(--brand);
+      box-shadow:0 1px 3px rgba(0,0,0,.07)}
+    .kpi .k{font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--muted)}
+    .kpi .v{font-size:22px;font-weight:800;margin-top:5px;line-height:1.1}
+    .kpi .s{font-size:10px;color:var(--muted);margin-top:3px}
+    .kpi.good{border-left-color:var(--ok)} .kpi.warn{border-left-color:var(--warn)}
+    .kpi.bad{border-left-color:var(--bad)} .kpi.info{border-left-color:var(--info)}
+
+    .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+    @media(max-width:1080px){.grid2{grid-template-columns:1fr}}
+
+    .card{background:var(--card);border-radius:12px;box-shadow:0 1px 3px rgba(0,0,0,.07);overflow:hidden}
+    .card h2{font-size:12px;font-weight:700;padding:12px 15px;border-bottom:1px solid var(--line);
+      display:flex;justify-content:space-between;align-items:center;gap:8px}
+    .card h2 .hint{font-size:10px;font-weight:500;color:var(--muted);text-transform:none;letter-spacing:0}
+
+    table{width:100%;border-collapse:collapse;font-size:11.5px}
+    th{background:#f8fafc;padding:8px 10px;text-align:left;font-weight:700;font-size:9.5px;
+      text-transform:uppercase;letter-spacing:.5px;color:var(--muted);border-bottom:2px solid var(--line);
+      white-space:nowrap;position:sticky;top:0}
+    td{padding:7px 10px;border-bottom:1px solid #f1f5f9;white-space:nowrap}
+    tbody tr.clickable{cursor:pointer;transition:background .12s}
+    tbody tr.clickable:hover{background:#ecfdf5}
+    .num{text-align:right;font-variant-numeric:tabular-nums}
+    .wrap-cell{white-space:normal}
+    .scroll{max-height:340px;overflow:auto}
+
+    .badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700}
+    .b-ready{background:#dcfce7;color:#166534}
+    .b-near{background:#dbeafe;color:#1e40af}
+    .b-work{background:#fef9c3;color:#854d0e}
+    .b-risk{background:#fee2e2;color:#991b1b}
+    .b-muted{background:#f1f5f9;color:#64748b}
+
+    .bars{display:flex;flex-direction:column;gap:9px;padding:14px 15px}
+    .bar-row{display:grid;grid-template-columns:132px 1fr 54px;gap:9px;align-items:center;font-size:11px}
+    .bar-track{height:15px;background:#f1f5f9;border-radius:8px;overflow:hidden}
+    .bar-fill{height:100%;border-radius:8px;transition:width .4s}
+    .bar-row .lbl{color:var(--text);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .bar-row .val{text-align:right;font-weight:700;font-variant-numeric:tabular-nums}
+
+    .list{padding:6px 0}
+    .list-item{display:flex;justify-content:space-between;align-items:center;gap:10px;
+      padding:7px 15px;cursor:pointer;border-bottom:1px solid #f8fafc}
+    .list-item:hover{background:#ecfdf5}
+    .list-item .who{font-weight:600;font-size:11.5px}
+    .list-item .meta{font-size:10px;color:var(--muted)}
+
+    /* drill-down overlay */
+    #drill{position:fixed;inset:0;background:rgba(15,23,42,.55);display:none;z-index:200;
+      padding:24px;overflow:auto}
+    #drill.open{display:block}
+    .drill-panel{max-width:1080px;margin:0 auto;background:#fff;border-radius:14px;
+      box-shadow:0 24px 60px rgba(0,0,0,.3);overflow:hidden;animation:pop .22s ease-out}
+    @keyframes pop{from{transform:translateY(14px);opacity:0}to{transform:none;opacity:1}}
+    .drill-head{background:linear-gradient(135deg,var(--brand),var(--brand-dark));color:#fff;padding:15px 18px;
+      display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+    .drill-head h3{font-size:16px;font-weight:800}
+    .drill-head .sub{font-size:11px;opacity:.9;margin-top:2px}
+    .drill-body{padding:16px 18px;display:flex;flex-direction:column;gap:14px}
+    .chips{display:flex;gap:8px;flex-wrap:wrap}
+    .chip{background:#f8fafc;border:1px solid var(--line);border-radius:9px;padding:7px 11px;font-size:11px}
+    .chip b{display:block;font-size:14px;margin-top:2px}
+    .delta-pos{color:var(--ok);font-weight:700}
+    .delta-neg{color:var(--bad);font-weight:700}
+    .drill-note{font-size:11px;color:var(--muted);line-height:1.5}
+
+    .loading{position:fixed;inset:0;background:rgba(255,255,255,.94);display:none;
+      align-items:center;justify-content:center;flex-direction:column;gap:12px;z-index:300}
+    .loading.show{display:flex}
+    .spinner{width:34px;height:34px;border:4px solid var(--line);border-top-color:var(--brand);
+      border-radius:50%;animation:spin .8s linear infinite}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .empty{padding:26px;text-align:center;color:var(--muted);font-size:12px;line-height:1.6}
+    .toast{position:fixed;bottom:20px;right:20px;background:var(--ink);color:#fff;padding:11px 17px;
+      border-radius:9px;font-size:12px;opacity:0;transform:translateY(14px);transition:.25s;z-index:400}
+    .toast.show{opacity:1;transform:none}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="head-in">
+      <div>
+        <h1 id="title">📊 Leaderboard Analytics</h1>
+        <div class="sub" id="subtitle">Loading…</div>
+      </div>
+      <div class="head-tools">
+        <select class="head-sel" id="typeSel" onchange="load(this.value)" aria-label="Leaderboard type"></select>
+        <button class="btn-h ghost" onclick="load(currentType)">🔄 Refresh</button>
+        <button class="btn-h" onclick="google.script.host.close()">✕ Close</button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <div class="banner warn" id="dqBanner"></div>
+    <div class="banner bad" id="errBanner"></div>
+
+    <div class="kpis" id="kpis"></div>
+
+    <div class="grid2">
+      <div class="card">
+        <h2>🏢 Branch performance <span class="hint">click a branch to drill down</span></h2>
+        <div class="scroll"><table id="branchTable">
+          <thead><tr>
+            <th>Branch</th><th>Group</th><th class="num">Students</th><th class="num">Appeared</th>
+            <th class="num">Absent</th><th class="num">Avg % (appeared)</th><th class="num">Avg % (all)</th>
+            <th class="num">Min</th><th class="num">Max</th><th class="num">Pass %</th><th class="num">At risk</th>
+          </tr></thead><tbody></tbody>
+        </table></div>
+      </div>
+
+      <div class="card">
+        <h2>🧪 Assessment difficulty <span class="hint">click to see distribution + absentees</span></h2>
+        <div class="scroll"><table id="assessmentTable">
+          <thead><tr>
+            <th>Assessment</th><th class="num">Max</th><th class="num">Appeared</th><th class="num">Absent</th>
+            <th class="num">Mean</th><th class="num">Mean %</th><th>Difficulty</th><th class="num">Pass %</th>
+          </tr></thead><tbody></tbody>
+        </table></div>
+      </div>
+    </div>
+
+    <div class="grid2">
+      <div class="card">
+        <h2>📊 Score distribution <span class="hint">appeared students only</span></h2>
+        <div class="bars" id="bands"></div>
+      </div>
+      <div class="card">
+        <h2>🎯 Group comparison</h2>
+        <div class="scroll"><table id="groupTable">
+          <thead><tr><th>Group</th><th class="num">Branches</th><th class="num">Students</th>
+          <th class="num">Appeared</th><th class="num">Avg %</th></tr></thead><tbody></tbody>
+        </table></div>
+      </div>
+    </div>
+
+    <div class="grid2">
+      <div class="card">
+        <h2>🏆 Top performers <span class="hint">click a student</span></h2>
+        <div class="list" id="topList"></div>
+      </div>
+      <div class="card">
+        <h2>⚠️ Needs attention <span class="hint">click a student</span></h2>
+        <div class="list" id="riskList"></div>
+      </div>
+    </div>
+  </main>
+
+  <div id="drill" onclick="if(event.target===this)closeDrill()">
+    <div class="drill-panel">
+      <div class="drill-head">
+        <div>
+          <h3 id="drillTitle">—</h3>
+          <div class="sub" id="drillSub">—</div>
+        </div>
+        <button class="btn-h" onclick="closeDrill()">✕ Back</button>
+      </div>
+      <div class="drill-body" id="drillBody"></div>
+    </div>
+  </div>
+
+  <div class="loading" id="loading"><div class="spinner"></div><div style="font-size:12px;color:#64748b">Reading the leaderboard…</div></div>
+  <div class="toast" id="toast"></div>
+
+  <script>
+    let currentType = '';
+    let analytics = null;
+
+    /* ---------- helpers ---------- */
+    function esc(v) {
+      return String(v === null || v === undefined ? '' : v)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    }
+    function num(v, suffix) {
+      if (v === null || v === undefined || v === '') return '—';
+      return (typeof v === 'number' ? v : Number(v) || 0) + (suffix || '');
+    }
+    function toast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg; t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 2600);
+    }
+    function loading(on) { document.getElementById('loading').classList.toggle('show', !!on); }
+
+    function bandClass(pct) {
+      if (pct === null || pct === undefined) return 'b-muted';
+      if (pct >= 80) return 'b-ready';
+      if (pct >= 65) return 'b-near';
+      if (pct >= 50) return 'b-work';
+      return 'b-risk';
+    }
+    function bandLabel(pct) {
+      if (pct === null || pct === undefined) return 'Absent';
+      if (pct >= 80) return 'Ready';
+      if (pct >= 65) return 'Near ready';
+      if (pct >= 50) return 'Needs work';
+      return 'At risk';
+    }
+    function deltaCell(v) {
+      if (v === null || v === undefined) return '<td class="num">—</td>';
+      const cls = v >= 0 ? 'delta-pos' : 'delta-neg';
+      return '<td class="num ' + cls + '">' + (v >= 0 ? '+' : '') + v + '</td>';
+    }
+
+    /* ---------- load ---------- */
+    function load(type) {
+      currentType = type === undefined ? currentType : type;
+      loading(true);
+      google.script.run
+        .withSuccessHandler(function (data) {
+          loading(false);
+          if (!data || !data.ok) {
+            analytics = null;
+            document.getElementById('errBanner').className = 'banner bad show';
+            document.getElementById('errBanner').textContent = '⚠️ ' + ((data && data.message) || 'Could not read the leaderboard.');
+            document.getElementById('kpis').innerHTML = '';
+            document.getElementById('subtitle').textContent = 'No leaderboard data';
+            ['branchTable', 'assessmentTable', 'groupTable'].forEach(id => {
+              document.querySelector('#' + id + ' tbody').innerHTML =
+                '<tr><td colspan="11" class="empty">Nothing to show yet.</td></tr>';
+            });
+            document.getElementById('bands').innerHTML = '<div class="empty">—</div>';
+            document.getElementById('topList').innerHTML = '<div class="empty">—</div>';
+            document.getElementById('riskList').innerHTML = '<div class="empty">—</div>';
+            return;
+          }
+          analytics = data;
+          document.getElementById('errBanner').className = 'banner bad';
+          render(data);
+        })
+        .withFailureHandler(function (err) {
+          loading(false);
+          document.getElementById('errBanner').className = 'banner bad show';
+          document.getElementById('errBanner').textContent = '⚠️ ' + err.message;
+        })
+        .getLeaderboardAnalytics(currentType);
+    }
+
+    /* ---------- render ---------- */
+    function render(d) {
+      document.getElementById('subtitle').textContent =
+        (d.collegeName || 'College') + ' · ' + d.sheetName + ' · ' + d.generatedAt;
+
+      const sel = document.getElementById('typeSel');
+      const types = d.availableTypes || [];
+      if (sel.options.length !== types.length + 1) {
+        sel.innerHTML = '<option value="">Auto</option>' +
+          types.map(t => '<option value="' + esc(t) + '">' + esc(t) + '</option>').join('');
+      }
+      sel.value = d.leaderboardType || '';
+
+      // data-quality banner
+      const dq = d.dataQuality || {};
+      const dqEl = document.getElementById('dqBanner');
+      const problems = [];
+      if (dq.unmappedVariants && dq.unmappedVariants.length) {
+        problems.push(dq.unmappedVariants.length + ' branch label(s) not mapped to a canonical name');
+      }
+      if (dq.duplicateRegNos) problems.push(dq.duplicateRegNos + ' duplicate Reg No(s)');
+      if (problems.length) {
+        dqEl.className = 'banner warn show';
+        dqEl.innerHTML = '⚠️ <strong>Data quality:</strong> ' + esc(problems.join(' · ')) +
+          ' — fix in 📊 Assessment Suite → 🏫 College Setup.';
+      } else {
+        dqEl.className = 'banner warn';
+      }
+
+      const k = d.kpi;
+      const kpis = [
+        { k: 'Students', v: k.students, s: 'on the leaderboard', cls: 'info' },
+        { k: 'Appeared', v: k.appeared, s: k.completionPct + '% completion', cls: 'good' },
+        { k: 'Absent', v: k.absent, s: 'no scores', cls: k.absent ? 'warn' : '' },
+        { k: 'Avg % (appeared)', v: k.avgPctAppeared + '%', s: 'excludes absentees', cls: 'good' },
+        { k: 'Avg % (all)', v: k.avgPctAll + '%', s: 'the sheet’s basis', cls: 'info' },
+        { k: 'Pass rate', v: k.passRate + '%', s: '≥ ' + d.decisions.passLine + '%', cls: 'info' },
+        { k: 'Placement ready', v: k.readyPct + '%', s: '≥ ' + d.decisions.readyLine + '%', cls: 'good' },
+        { k: 'At risk', v: k.atRiskPct + '%', s: '< ' + d.decisions.atRiskLine + '%', cls: k.atRiskPct > 25 ? 'bad' : 'warn' }
+      ];
+      document.getElementById('kpis').innerHTML = kpis.map(x =>
+        '<div class="kpi ' + x.cls + '"><div class="k">' + esc(x.k) + '</div>' +
+        '<div class="v">' + esc(x.v) + '</div><div class="s">' + esc(x.s) + '</div></div>').join('');
+
+      // branches
+      const bt = document.querySelector('#branchTable tbody');
+      bt.innerHTML = (d.branches || []).map(b =>
+        '<tr class="clickable" onclick="drillBranch(\'' + esc(b.branch).replace(/'/g, "\\'") + '\')">' +
+        '<td><strong>' + esc(b.branch) + '</strong></td>' +
+        '<td><span class="badge b-muted">' + esc(b.group || '—') + '</span></td>' +
+        '<td class="num">' + b.students + '</td>' +
+        '<td class="num">' + b.appeared + '</td>' +
+        '<td class="num" style="' + (b.absent ? 'color:#ef4444;font-weight:700' : '') + '">' + b.absent + '</td>' +
+        '<td class="num"><strong>' + b.avgPctAppeared + '%</strong></td>' +
+        '<td class="num" style="color:#64748b">' + b.avgPctAll + '%</td>' +
+        '<td class="num">' + b.min + '</td>' +
+        '<td class="num">' + b.max + '</td>' +
+        '<td class="num"><span class="badge ' + bandClass(b.passRate) + '">' + b.passRate + '%</span></td>' +
+        '<td class="num">' + b.atRisk + '</td></tr>').join('') ||
+        '<tr><td colspan="11" class="empty">No branch data.</td></tr>';
+
+      // assessments
+      const at = document.querySelector('#assessmentTable tbody');
+      at.innerHTML = (d.assessments || []).map(a =>
+        '<tr class="clickable" onclick="drillAssessment(\'' + esc(a.header).replace(/'/g, "\\'") + '\')">' +
+        '<td class="wrap-cell"><strong>' + esc(a.header) + '</strong>' +
+        (a.maxInferred ? ' <span class="badge b-muted">max inferred</span>' : '') + '</td>' +
+        '<td class="num">' + a.max + '</td>' +
+        '<td class="num">' + a.appeared + '</td>' +
+        '<td class="num" style="' + (a.absent ? 'color:#ef4444;font-weight:700' : '') + '">' + a.absent + '</td>' +
+        '<td class="num">' + a.mean + '</td>' +
+        '<td class="num"><strong>' + a.meanPct + '%</strong></td>' +
+        '<td><span class="badge ' + (a.difficulty === 'Very hard' || a.difficulty === 'Hard' ? 'b-risk'
+          : a.difficulty === 'Easy' ? 'b-ready' : 'b-work') + '">' + esc(a.difficulty) + '</span></td>' +
+        '<td class="num">' + a.passRate + '%</td></tr>').join('') ||
+        '<tr><td colspan="8" class="empty">No assessment columns detected.</td></tr>';
+
+      // bands
+      const colors = ['#ef4444', '#f59e0b', '#eab308', '#3b82f6', '#16a34a'];
+      document.getElementById('bands').innerHTML = (d.bands || []).map((b, i) =>
+        '<div class="bar-row"><span class="lbl">' + esc(b.label) + '</span>' +
+        '<div class="bar-track"><div class="bar-fill" style="width:' + Math.max(b.pct, b.count ? 2 : 0) +
+        '%;background:' + colors[i] + '"></div></div>' +
+        '<span class="val">' + b.count + ' (' + b.pct + '%)</span></div>').join('');
+
+      // groups
+      document.querySelector('#groupTable tbody').innerHTML = (d.groups || []).map(g =>
+        '<tr><td><strong>' + esc(g.group) + '</strong></td>' +
+        '<td class="num">' + g.branches + '</td><td class="num">' + g.students + '</td>' +
+        '<td class="num">' + g.appeared + '</td>' +
+        '<td class="num"><strong>' + g.avgPctAppeared + '%</strong></td></tr>').join('') ||
+        '<tr><td colspan="5" class="empty">Set programme groups in 🏫 College Setup to see this.</td></tr>';
+
+      // lists
+      document.getElementById('topList').innerHTML = (d.top || []).map(s =>
+        '<div class="list-item" onclick="drillStudent(\'' + esc(s.regNo || s.name).replace(/'/g, "\\'") + '\')">' +
+        '<div><div class="who">' + esc(s.name) + '</div>' +
+        '<div class="meta">' + esc(s.regNo) + ' · ' + esc(s.branch) + '</div></div>' +
+        '<span class="badge ' + bandClass(s.percent) + '">' + s.percent + '%</span></div>').join('') ||
+        '<div class="empty">No appeared students.</div>';
+
+      document.getElementById('riskList').innerHTML = (d.atRisk || []).map(s =>
+        '<div class="list-item" onclick="drillStudent(\'' + esc(s.regNo || s.name).replace(/'/g, "\\'") + '\')">' +
+        '<div><div class="who">' + esc(s.name) + '</div>' +
+        '<div class="meta">' + esc(s.regNo) + ' · ' + esc(s.branch) + '</div></div>' +
+        '<span class="badge ' + bandClass(s.percent) + '">' + s.percent + '%</span></div>').join('') ||
+        '<div class="empty">Nobody below the at-risk line. 🎉</div>';
+    }
+
+    /* ---------- drill-down ---------- */
+    function openDrill(title, sub, bodyHtml) {
+      document.getElementById('drillTitle').textContent = title;
+      document.getElementById('drillSub').textContent = sub || '';
+      document.getElementById('drillBody').innerHTML = bodyHtml;
+      document.getElementById('drill').classList.add('open');
+    }
+    function closeDrill() { document.getElementById('drill').classList.remove('open'); }
+
+    function drillStudent(identifier) {
+      openDrill('Loading…', '', '<div class="empty">Fetching student detail…</div>');
+      google.script.run
+        .withSuccessHandler(function (d) {
+          if (!d || !d.ok) { openDrill('Not found', '', '<div class="empty">' + esc((d && d.message) || 'Student not found.') + '</div>'); return; }
+          const s = d.student;
+          const chips = [
+            ['Overall', s.percent + '%'],
+            ['Rank', (s.rank || '—') + ' of ' + s.of],
+            ['Total', s.total],
+            ['Batch', s.batch || '—'],
+            ['Assessments', s.appeared + ' / ' + s.assessmentsTotal]
+          ];
+          const rows = d.assessments.map(a =>
+            '<tr>' + '<td class="wrap-cell">' + esc(a.header) + '</td>' +
+            '<td class="num">' + a.max + '</td>' +
+            '<td class="num">' + (a.absent ? 'Absent' : a.score) + '</td>' +
+            '<td class="num"><span class="badge ' + bandClass(a.pct) + '">' + (a.pct === null ? '—' : a.pct + '%') + '</span></td>' +
+            '<td class="num">' + a.classMeanPct + '%</td>' +
+            deltaCell(a.deltaPct) +
+            '<td class="num">' + (a.position ? a.position + ' / ' + a.of : '—') + '</td></tr>').join('');
+
+          openDrill(s.name, s.regNo + ' · ' + s.branch + (s.batch ? ' · Batch ' + s.batch : ''),
+            '<div class="chips">' + chips.map(c =>
+              '<div class="chip">' + esc(c[0]) + '<b>' + esc(c[1]) + '</b></div>').join('') + '</div>' +
+            '<div class="drill-note">Comparison is against the class mean for the same assessment. ' +
+            'Δ = this student − class mean.</div>' +
+            '<div class="scroll"><table><thead><tr><th>Assessment</th><th class="num">Max</th>' +
+            '<th class="num">Score</th><th class="num">%</th><th class="num">Class mean %</th>' +
+            '<th class="num">Δ</th><th class="num">Position</th></tr></thead><tbody>' + rows + '</tbody></table></div>' +
+            (s.insight ? '<div class="drill-note">💡 ' + esc(s.insight) + '</div>' : ''));
+        })
+        .withFailureHandler(function (e) { openDrill('Error', '', '<div class="empty">' + esc(e.message) + '</div>'); })
+        .getStudentDrilldown(identifier, currentType);
+    }
+
+    function drillBranch(branch) {
+      openDrill('Loading…', '', '<div class="empty">Fetching branch detail…</div>');
+      google.script.run
+        .withSuccessHandler(function (d) {
+          if (!d || !d.ok) { openDrill('Not available', '', '<div class="empty">' + esc((d && d.message) || 'No data.') + '</div>'); return; }
+          const sm = d.summary;
+          const chips = [
+            ['Students', sm.students], ['Appeared', sm.appeared], ['Absent', sm.absent],
+            ['Avg % (appeared)', sm.avgPctAppeared + '%'], ['Pass rate', sm.passRate + '%'],
+            ['At risk', sm.atRisk], ['Group', sm.group || '—']
+          ];
+          const prof = d.assessments.map(a =>
+            '<tr><td class="wrap-cell">' + esc(a.header) + '</td><td class="num">' + a.max + '</td>' +
+            '<td class="num">' + a.appeared + '</td>' +
+            '<td class="num"><strong>' + a.meanPct + '%</strong></td>' +
+            '<td class="num">' + a.classMeanPct + '%</td>' + deltaCell(a.deltaPct) + '</tr>').join('');
+          const studs = d.students.map(s =>
+            '<tr class="clickable" onclick="drillStudent(\'' + esc(s.regNo || s.name).replace(/'/g, "\\'") + '\')">' +
+            '<td class="num">' + s.position + '</td>' +
+            '<td><strong>' + esc(s.name) + '</strong></td>' +
+            '<td class="num">' + esc(s.regNo) + '</td>' +
+            '<td class="num">' + s.total + '</td>' +
+            '<td class="num"><span class="badge ' + bandClass(s.percent) + '">' + s.percent + '%</span></td>' +
+            '<td class="num">' + s.appeared + '</td>' +
+            '<td>' + (s.atRisk ? '<span class="badge b-risk">at risk</span>' : '') + '</td></tr>').join('');
+
+          openDrill(d.branch, 'Branch drill-down · ' + d.leaderboardType + ' leaderboard',
+            '<div class="chips">' + chips.map(c =>
+              '<div class="chip">' + esc(c[0]) + '<b>' + esc(c[1]) + '</b></div>').join('') + '</div>' +
+            '<div class="card"><h2>Assessment profile <span class="hint">vs whole class</span></h2>' +
+            '<div class="scroll"><table><thead><tr><th>Assessment</th><th class="num">Max</th>' +
+            '<th class="num">Appeared</th><th class="num">Branch mean %</th><th class="num">Class mean %</th>' +
+            '<th class="num">Δ</th></tr></thead><tbody>' + prof + '</tbody></table></div></div>' +
+            '<div class="card"><h2>Students <span class="hint">click a student for their detail</span></h2>' +
+            '<div class="scroll"><table><thead><tr><th class="num">#</th><th>Name</th><th class="num">Reg No</th>' +
+            '<th class="num">Total</th><th class="num">%</th><th class="num">Assessments</th><th></th></tr></thead>' +
+            '<tbody>' + studs + '</tbody></table></div></div>');
+        })
+        .withFailureHandler(function (e) { openDrill('Error', '', '<div class="empty">' + esc(e.message) + '</div>'); })
+        .getBranchDrilldown(branch, currentType);
+    }
+
+    function drillAssessment(header) {
+      openDrill('Loading…', '', '<div class="empty">Fetching assessment detail…</div>');
+      google.script.run
+        .withSuccessHandler(function (d) {
+          if (!d || !d.ok) { openDrill('Not available', '', '<div class="empty">' + esc((d && d.message) || 'No data.') + '</div>'); return; }
+          const st = d.stats;
+          const chips = [
+            ['Appeared', st.appeared], ['Absent', st.absent], ['Mean %', st.meanPct + '%'],
+            ['Median', st.median], ['Highest', st.highest + ' / ' + d.max], ['Pass rate', st.passRate + '%']
+          ];
+          const colors = ['#ef4444', '#f59e0b', '#eab308', '#3b82f6', '#16a34a'];
+          const buckets = d.buckets.map((b, i) =>
+            '<div class="bar-row"><span class="lbl">' + esc(b.label) + '</span>' +
+            '<div class="bar-track"><div class="bar-fill" style="width:' + Math.max(b.pct, b.count ? 2 : 0) +
+            '%;background:' + colors[i] + '"></div></div>' +
+            '<span class="val">' + b.count + ' (' + b.pct + '%)</span></div>').join('');
+          const byBranch = d.byBranch.map(b =>
+            '<tr><td><strong>' + esc(b.branch) + '</strong></td><td class="num">' + b.appeared + '</td>' +
+            '<td class="num">' + b.mean + '</td><td class="num">' + b.meanPct + '%</td>' +
+            '<td class="num">' + b.highest + '</td></tr>').join('');
+          const absent = d.absentees.length ? d.absentees.map(a =>
+            '<div class="list-item"><div><div class="who">' + esc(a.name) + '</div>' +
+            '<div class="meta">' + esc(a.regNo) + ' · ' + esc(a.branch) + '</div></div>' +
+            '<span class="badge b-risk">not attempted</span></div>').join('')
+            : '<div class="empty">Everyone attempted this one. 🎉</div>';
+
+          openDrill(d.header, 'Assessment drill-down · max ' + d.max +
+            (d.maxInferred ? ' (inferred from data)' : ''),
+            '<div class="chips">' + chips.map(c =>
+              '<div class="chip">' + esc(c[0]) + '<b>' + esc(c[1]) + '</b></div>').join('') + '</div>' +
+            '<div class="card"><h2>Score distribution</h2><div class="bars">' + buckets + '</div></div>' +
+            '<div class="card"><h2>Branch comparison</h2><div class="scroll"><table><thead><tr>' +
+            '<th>Branch</th><th class="num">Appeared</th><th class="num">Mean</th>' +
+            '<th class="num">Mean %</th><th class="num">Highest</th></tr></thead><tbody>' +
+            byBranch + '</tbody></table></div></div>' +
+            '<div class="card"><h2>Absentees <span class="hint">' + d.absentees.length + '</span></h2>' +
+            '<div class="list">' + absent + '</div></div>');
+        })
+        .withFailureHandler(function (e) { openDrill('Error', '', '<div class="empty">' + esc(e.message) + '</div>'); })
+        .getAssessmentDrilldown(header, currentType);
+    }
+
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') closeDrill();
+    });
+
+    window.onload = function () { load(''); };
+  </script>
+</body>
+</html>

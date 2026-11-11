@@ -1,3 +1,8 @@
+// scripts/seed-faculty.ts
+//
+// One-off operational script: provision faculty accounts. Nothing imports
+// it; it lives outside src/ so it is not part of the app's typecheck or
+// bundle. Needs a signed-in superadmin session (client SDK calls).
 // src/scripts/seedFaculty.ts
 // ============================================================
 // Faculty Seed + Mentor Linking Script
@@ -5,8 +10,8 @@
 // ============================================================
 
 import { collection, doc, setDoc, updateDoc, getDocs, writeBatch } from 'firebase/firestore';
-import { db } from '../Firebase/data';
-import { createFirebaseAuthUser } from '../modules/superadmin/api/superAdminApi';
+import { db } from '../src/Firebase/data';
+import { createFirebaseAuthUser } from '../src/modules/superadmin/api/superAdminApi';
 
 /** Faculty onboarding data derived from student CSV + faculty CSV */
 const FACULTY_SEED = [
