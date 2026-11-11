@@ -101,14 +101,14 @@ jobs:
         working-directory: functions
         run: npm run test:rules:course-security
 
-      # The full rules suite (firestore + storage + database, ~97 cases).
-      # Non-blocking while it is red: it fails today and has never run in this
-      # pipeline, so the failures are pre-existing, not this PR's. The step below
-      # posts the failing cases onto the pull request so they can be triaged.
+      # The full rules suite (firestore + storage + database, 97 cases).
+      # BLOCKING. It was never run by CI before, and the first run found a rule
+      # that could not be evaluated at all (classSessions update, 1000-expression
+      # budget) — i.e. an outage that no other test could see. The step below is
+      # kept so that any future failure names itself on the pull request.
       - name: Full security-rules suite
         id: rules
         working-directory: functions
-        continue-on-error: true
         run: |
           set -o pipefail
           npm run test:rules 2>&1 | tee /tmp/rules.log
