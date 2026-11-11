@@ -615,50 +615,90 @@ service cloud.firestore {
       // dashboards (see src/modules/admin/api/dashboardApi.ts,
       // src/modules/admin/api/feeApi.ts, src/modules/faculty/pages/
       // FacultyDashboard.tsx). They pre-date the collegeId hygiene work, so
-      // individual documents cannot be trusted to carry a collegeId field -
-      // the collection path itself is the tenant boundary.
+      // individual documents cannot be trusted to carry a collegeId field.
+      //
+      // That is exactly why the path segment has to be checked: {collegeId} is
+      // whatever the CALLER typed into the path, not a fact about the caller.
+      // `isStaff()` on its own let a faculty account at college A read
+      // colleges/B/attendance, colleges/B/scores, colleges/B/attendanceRecords
+      // and friends by naming B. The claim comparison below is the same one the
+      // neighbouring announcements, feeStructures and feePayments blocks
+      // already make — `collegeId()` is the caller's claim, the bare
+      // `collegeId` is the path segment.
+      //
+      // Cost note: the path comparison needs no document read and no query
+      // filter, so list queries keep working unchanged (the path is fixed for
+      // the whole query). This is the cheap half of the tenancy story.
 
       match /schedules/{docId} {
-        allow get: if isSignedIn() && (isSuperadmin() || isStaff());
-        allow list: if isSignedIn() && (isSuperadmin() || isStaff());
+        allow get: if isSignedIn()
+          && (isSuperadmin() || (isStaff() && collegeId() == collegeId));
+        // The path is fixed for a list query, so this needs no extra
+        // where() clause on the client.
+        allow list: if isSignedIn()
+          && (isSuperadmin() || (isStaff() && collegeId() == collegeId));
         allow write: if isSuperadmin()
           || (role() in ['admin', 'hod'] && collegeId() == collegeId);
       }
 
       match /attendance/{docId} {
-        allow get: if isSignedIn() && (isSuperadmin() || isStaff());
-        allow list: if isSignedIn() && (isSuperadmin() || isStaff());
+        allow get: if isSignedIn()
+          && (isSuperadmin() || (isStaff() && collegeId() == collegeId));
+        // The path is fixed for a list query, so this needs no extra
+        // where() clause on the client.
+        allow list: if isSignedIn()
+          && (isSuperadmin() || (isStaff() && collegeId() == collegeId));
         allow write: if collegePathWrite(collegeId);
       }
 
       match /attendanceRecords/{docId} {
-        allow get: if isSignedIn() && (isSuperadmin() || isStaff());
-        allow list: if isSignedIn() && (isSuperadmin() || isStaff());
+        allow get: if isSignedIn()
+          && (isSuperadmin() || (isStaff() && collegeId() == collegeId));
+        // The path is fixed for a list query, so this needs no extra
+        // where() clause on the client.
+        allow list: if isSignedIn()
+          && (isSuperadmin() || (isStaff() && collegeId() == collegeId));
         allow write: if collegePathWrite(collegeId);
       }
 
       match /assessments/{docId} {
-        allow get: if isSignedIn() && (isSuperadmin() || isStaff());
-        allow list: if isSignedIn() && (isSuperadmin() || isStaff());
+        allow get: if isSignedIn()
+          && (isSuperadmin() || (isStaff() && collegeId() == collegeId));
+        // The path is fixed for a list query, so this needs no extra
+        // where() clause on the client.
+        allow list: if isSignedIn()
+          && (isSuperadmin() || (isStaff() && collegeId() == collegeId));
         allow write: if collegePathWrite(collegeId);
       }
 
       match /scores/{docId} {
-        allow get: if isSignedIn() && (isSuperadmin() || isStaff());
-        allow list: if isSignedIn() && (isSuperadmin() || isStaff());
+        allow get: if isSignedIn()
+          && (isSuperadmin() || (isStaff() && collegeId() == collegeId));
+        // The path is fixed for a list query, so this needs no extra
+        // where() clause on the client.
+        allow list: if isSignedIn()
+          && (isSuperadmin() || (isStaff() && collegeId() == collegeId));
         allow write: if collegePathWrite(collegeId);
       }
 
       match /activities/{docId} {
-        allow get: if isSignedIn() && (isSuperadmin() || isStaff());
-        allow list: if isSignedIn() && (isSuperadmin() || isStaff());
+        allow get: if isSignedIn()
+          && (isSuperadmin() || (isStaff() && collegeId() == collegeId));
+        // The path is fixed for a list query, so this needs no extra
+        // where() clause on the client.
+        allow list: if isSignedIn()
+          && (isSuperadmin() || (isStaff() && collegeId() == collegeId));
         allow write: if isSuperadmin()
           || (role() in ['admin', 'hod'] && collegeId() == collegeId);
       }
 
       match /milestones/{docId} {
-        allow get: if isSignedIn() && (isSuperadmin() || isStaff());
-        allow list: if isSignedIn() && (isSuperadmin() || isStaff());
+        allow get: if isSignedIn()
+          && (isSuperadmin() || (isStaff() && collegeId() == collegeId));
+        // The path is fixed for a list query, so this needs no extra
+        // where() clause on the client.
+        allow list: if isSignedIn()
+          && (isSuperadmin() || (isStaff() && collegeId() == collegeId));
         allow write: if collegePathWrite(collegeId);
       }
 
@@ -1506,7 +1546,13 @@ service cloud.firestore {
         && (request.auth.uid == uid
           || isSuperadmin()
           || (isStaff() && sameCollege(resource.data)));
-      allow list: if isSignedIn() && (isSuperadmin() || isStaff());
+      // The list was the one blind half of this block: a get was already
+      // college-scoped, a list was not. Nothing in src/ reads resumes as a
+      // collection (the render pipeline goes through
+      // functions/src/routes/resume.ts), so the same filter cannot break a
+      // screen — it only closes the enumeration.
+      allow list: if isSignedIn()
+        && (isSuperadmin() || (isStaff() && sameCollege(resource.data)));
       allow write: if false;
     }
 
@@ -1515,7 +1561,10 @@ service cloud.firestore {
         && (('uid' in resource.data && resource.data.uid == request.auth.uid)
           || isSuperadmin()
           || (isStaff() && sameCollege(resource.data)));
-      allow list: if isSignedIn() && (isSuperadmin() || isStaff());
+      // Same shape as /resumes: the owner and college-scoped gets were
+      // already right, the list was not. No client reads this collection.
+      allow list: if isSignedIn()
+        && (isSuperadmin() || (isStaff() && sameCollege(resource.data)));
       allow write: if false;
     }
 
@@ -1535,13 +1584,20 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // Written by functions/src/studentAssessments.ts with a collegeId on every
+    // row, and read by nothing in src/ today — so scoping the read costs no
+    // screen and stops proctoring evidence (another student's exam behaviour)
+    // from being readable platform-wide by any staff account.
     match /proctoringLogs/{logId} {
-      allow read: if isSignedIn() && (isSuperadmin() || isStaff());
+      allow read: if isSignedIn()
+        && (isSuperadmin() || (isStaff() && sameCollege(resource.data)));
       allow write: if false;
     }
 
+    // Assignments carry collegeId (assignmentApi stamps it on create).
     match /assignments/{assignmentId} {
-      allow read: if isSignedIn() && (isSuperadmin() || isStaff());
+      allow read: if isSignedIn()
+        && (isSuperadmin() || (isStaff() && sameCollege(resource.data)));
       allow create, update, delete: if false;
     }
 
@@ -1552,7 +1608,15 @@ service cloud.firestore {
         || ('studentUid' in resource.data && resource.data.studentUid == request.auth.uid)
         || ('studentId' in resource.data && ownsStudentId(resource.data.studentId))
       );
-      allow list: if isSignedIn() && (isSuperadmin() || isStaff());
+      // A list is evaluated per candidate row, so the two real queries keep
+      // working while both stay inside their own tenant: staff list by
+      // `where('collegeId','==',cid)` (assignmentApi.fetchAssignmentSubmissions),
+      // a student asks for their own row by `studentUid`.
+      allow list: if isSignedIn()
+        && (isSuperadmin()
+          || (isStaff() && sameCollege(resource.data))
+          || ('studentUid' in resource.data && resource.data.studentUid == request.auth.uid)
+          || ('studentId' in resource.data && ownsStudentId(resource.data.studentId)));
       allow create: if false;
       allow update, delete: if false;
     }
@@ -1822,7 +1886,11 @@ service cloud.firestore {
       allow get: if isSignedIn() && (isSuperadmin()
         || (isCollegeStaff() && sameCollege(resource.data))
         || ownsStudentId(studentId));
-      allow list: if isSignedIn() && (isSuperadmin() || isCollegeStaff());
+      // get was college-scoped; list returned every college's summaries to any
+      // staff member. Rows carry collegeId (functions/src/attendanceSummary.ts
+      // writes it on every recompute), so the same filter applies.
+      allow list: if isSignedIn()
+        && (isSuperadmin() || (isCollegeStaff() && sameCollege(resource.data)));
       allow write: if false;
     }
 
