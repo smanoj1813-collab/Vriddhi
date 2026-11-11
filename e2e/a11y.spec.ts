@@ -16,9 +16,14 @@ import { expect, test } from '@playwright/test'
  * screen is colour contrast, and "fix contrast" is a design decision about the
  * brand palette, not something to silently change in a security PR.
  */
-test.describe('login screen accessibility', () => {
+// Both front doors: staff and students are separate routes with separate forms
+// (and, it turned out, the same two bugs).
+const LOGIN_ROUTES = ['/login', '/student/login']
+
+for (const route of LOGIN_ROUTES) {
+test.describe(`${route} accessibility`, () => {
   test('has no critical violations', async ({ page }) => {
-    await page.goto('/login')
+    await page.goto(route)
     await expect(page.locator('input[type="email"]')).toBeVisible()
 
     const results = await new AxeBuilder({ page })
@@ -58,7 +63,7 @@ test.describe('login screen accessibility', () => {
   })
 
   test('the form is reachable and usable by keyboard alone', async ({ page }) => {
-    await page.goto('/login')
+    await page.goto(route)
     await expect(page.locator('input[type="email"]')).toBeVisible()
 
     // Tab order is the thing a keyboard-only user lives in, and no unit test can
@@ -83,3 +88,4 @@ test.describe('login screen accessibility', () => {
     expect(seen, `tab order was: ${seen.join(' → ')}`).toContain('button:submit')
   })
 })
+}
