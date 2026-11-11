@@ -145,3 +145,90 @@ jobs:
             echo "::error title=Security rules::$line"
           done
           echo "::error title=Rules failure detail (log tail)::$(tail -c 2000 /tmp/rules.log | tr '\n' ' ' | head -c 900)"
+
+  # Job 3: real browser smoke tests.
+  #
+  # Everything else in this pipeline is jsdom or pure logic. Nothing verified
+  # that the app boots in a browser: that `/` lands on the login screen, that a
+  # deep link to a guarded route bounces, that the language switch repaints, or
+  # that a 390 px phone does not scroll sideways. These four regressions have all
+  # happened in products like this one; none of them can be caught by the render
+  # harness, which mounts components in isolation.
+  #
+  # Scope stops at the sign-in wall on purpose: there is no Firebase project and
+  # no emulator in CI, and faking a session would test the fake.
+  browser:
+    name: Browser smoke (Chromium)
+    # Pinned rather than ubuntu-latest: the -latest label is mid-migration to
+    # Ubuntu 26 (the runner prints a notice about it on every job), and
+    # Playwright's `install --with-deps` apt recipe targets the current LTS. This
+    # job failed on -latest for exactly that reason; a browser job that depends on
+    # a moving OS image is a flake generator.
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check out the code
+        uses: actions/checkout@v5
+
+      - name: Set up Node.js 22
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install frontend dependencies
+        run: npm ci
+
+      - name: Install Chromium
+        id: chromium
+        run: |
+          set -o pipefail
+          # Browser only, first. The runner image already carries the shared
+          # libraries; `--with-deps` spends several minutes in apt and then fails
+          # here (its recipe targets the previous LTS), which made this job take
+          # 11 minutes to do 4 minutes of work. The launch probe below is what
+          # decides whether the system packages are actually needed.
+          npx playwright install chromium 2>&1 | tee /tmp/pw-install.log || true
+          if node -e "require('@playwright/test').chromium.launch().then(b=>b.close()).then(()=>process.exit(0),()=>process.exit(1))"; then
+            echo "Chromium launches — system libraries already present, no apt needed"
+          else
+            echo "::warning title=Chromium::launch failed without system packages, installing them"
+            npx playwright install --with-deps chromium 2>&1 | tee -a /tmp/pw-install.log
+          fi
+
+      # A bare "exit code 1" tells nobody anything, and this pipeline's logs are
+      # not reliably reachable — so the reason is pushed into an annotation.
+      - name: Explain a failed browser install
+        if: failure() && steps.chromium.outcome == 'failure'
+        run: |
+          echo "::error title=Chromium install failed::$(tail -c 900 /tmp/pw-install.log | tr '\n' ' ')"
+          exit 1
+
+      - name: Typecheck the browser tests
+        run: npm run typecheck:e2e
+
+      - name: Run the browser smoke tests
+        run: npm run test:e2e
+
+      # Turns "0/12 failed" into an actual state of the app: URL, title, visible
+      # text, console errors — as annotations, because the log is not readable.
+      - name: Diagnose the boot when the suite fails
+        if: failure()
+        run: node scripts/e2e-diagnose.mjs
+
+      # Logs are not always reachable from where this pipeline is read, so the
+      # failures also go to the checks API and the job summary.
+      - name: Report browser results
+        if: always()
+        continue-on-error: true
+        run: node scripts/e2e-annotate.mjs e2e-results.json
+
+      - name: Keep the traces for a failed run
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-traces
+          path: |
+            test-results/
+            e2e-results.json
+          if-no-files-found: ignore
+          retention-days: 7
