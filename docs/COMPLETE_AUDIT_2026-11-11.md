@@ -318,6 +318,8 @@ the claim).
 - **No live Firebase project was touched.** Nothing was written, deployed, or migrated.
 - **Accessibility** was not assessed beyond noting the absence of automated checks. Given a
   college audience, an axe-core pass on the student portal would be a reasonable next audit.
+  *(Since done for the two login screens — see 9.5.8. It found two critical defects; the
+  authenticated pages are still unscanned.)*
 
 ---
 
@@ -617,6 +619,40 @@ one sink name.** `innerHTML`, `outerHTML`, `insertAdjacentHTML`, `document.write
 `new Function` are the same risk class, and this codebase had three of them outside the count
 (no `eval` or `new Function` anywhere, which is worth saying out loud).
 
+#### 9.5.8 Accessibility — the login screen, measured
+
+§8 said an axe pass "would be a reasonable next audit". The browser harness from 9.5.5 makes it a
+20-line spec, so it is now a gate rather than a future audit.
+
+**Scope and gate.** Both login routes (`/login`, `/student/login`), on desktop and Pixel 7
+viewports, against axe's WCAG 2.0/2.1 A+AA rules. Only `critical` violations fail the build —
+those are the defects that make a control unusable with a screen reader or keyboard. Everything
+else is emitted as an annotation, because the plausible remainder is colour contrast and "fix the
+contrast" is a decision about the brand palette, not something to change silently inside a
+security PR. A second test walks the tab order and asserts email → password → submit are all
+reachable, since no unit test or render check can see focus order.
+
+**It found two critical defects, in both forms, on the first run.**
+
+| Rule | What was wrong | Fix |
+|---|---|---|
+| `label` | `<label>` with no `htmlFor`, `<input>` with no `id` — a styled caption, not a label. A screen reader announced "edit text" and nothing else, on the two fields that are the entire form. | `htmlFor`/`id` pairs on both fields, both pages |
+| `button-name` | The show/hide-password button is icon-only and had no accessible name at all. | `aria-label` that states the action, not the icon |
+
+The `aria-label` needs text, so it needs translating: `auth.showPassword` / `auth.hidePassword`
+were added to all six dictionaries. The dictionary type refuses a partial language, which is what
+keeps them in step — worth knowing before adding a seventh.
+
+**What is left, deliberately.** Four `color-contrast` findings (serious, not critical) on the same
+screens: the disabled "forgot" link at `opacity-60`, the helper text under the form, the footer
+paragraph and its link. These are reported on every run as annotations and are a palette decision,
+not a bug fix. They should be settled when the login screen is next touched for visual reasons —
+which, per 9.7, is also what the remaining 23 kB of bundle would require.
+
+**Not covered:** every authenticated page. A session is needed to reach them, and there is still
+no emulator or Firebase project in CI, so scanning them would mean scanning a fake — the same
+boundary the browser suite stops at.
+
 ### 9.6 Verification after the second pass
 
 ```
@@ -645,3 +681,10 @@ functions test:rules (CI)     → 102/102, 0 fail
 4. **Field performance.** A real browser now runs (see 9.5.6), but the numbers in §P1-2 are still
    build artefact sizes, not Lighthouse or RUM on a 4G connection in a tier-2 town. Worth measuring
    once the app is deployed with real traffic.
+5. **Accessibility beyond the login screens.** The two login routes are now gated (9.5.8) and two
+   critical defects were fixed there. The authenticated pages — attendance tables, marks entry, the
+   exam runner — are unscanned, and they are where an unlabelled control actually costs someone a
+   working day. That needs a test session (emulator or a seeded project), the same blocker as the
+   authenticated browser coverage.
+6. **Colour contrast on the login screens.** Four serious findings, annotated on every run,
+   deliberately not changed (9.5.8): who decides the palette is a product question.
