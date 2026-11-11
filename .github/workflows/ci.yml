@@ -145,3 +145,54 @@ jobs:
             echo "::error title=Security rules::$line"
           done
           echo "::error title=Rules failure detail (log tail)::$(tail -c 2000 /tmp/rules.log | tr '\n' ' ' | head -c 900)"
+
+  # Job 3: real browser smoke tests.
+  #
+  # Everything else in this pipeline is jsdom or pure logic. Nothing verified
+  # that the app boots in a browser: that `/` lands on the login screen, that a
+  # deep link to a guarded route bounces, that the language switch repaints, or
+  # that a 390 px phone does not scroll sideways. These four regressions have all
+  # happened in products like this one; none of them can be caught by the render
+  # harness, which mounts components in isolation.
+  #
+  # Scope stops at the sign-in wall on purpose: there is no Firebase project and
+  # no emulator in CI, and faking a session would test the fake.
+  browser:
+    name: Browser smoke (Chromium)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the code
+        uses: actions/checkout@v5
+
+      - name: Set up Node.js 22
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install frontend dependencies
+        run: npm ci
+
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Typecheck the browser tests
+        run: npm run typecheck:e2e
+
+      - name: Run the browser smoke tests
+        run: npm run test:e2e
+
+      # Logs are not always reachable from where this pipeline is read, so the
+      # failures also go to the checks API and the job summary.
+      - name: Report browser results
+        if: always()
+        continue-on-error: true
+        run: node scripts/e2e-annotate.mjs e2e-results.json
+
+      - name: Keep the traces for a failed run
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-traces
+          path: test-results/
+          retention-days: 7
