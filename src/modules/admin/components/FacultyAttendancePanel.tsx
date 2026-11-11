@@ -7,7 +7,7 @@
 //   • /admin/faculty-attendance (sidebar link, full page)
 //
 // Everything here is read-only. A principal reviews and downloads; the faculty
-// member owns their own record (current-firestore.rules enforces that).
+// member owns their own record (firestore.rules enforces that).
 
 import { useEffect, useMemo, useState } from 'react';
 import {
@@ -20,7 +20,7 @@ import {
 } from 'recharts';
 import { doc, getDoc } from 'firebase/firestore';
 
-import { db } from '@/Firebase/config';
+import { db } from '@/Firebase/data';
 import { useStaffAttendanceAnalytics } from '../hooks/useStaffAttendanceAnalytics';
 import {
   STAFF_STATUS_LABEL,

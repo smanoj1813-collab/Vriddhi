@@ -5,7 +5,7 @@ import { AdminPanelSettings, Build, Search, VerifiedUser } from '@mui/icons-mate
 import CredentialsTable from '../components/CredentialsTable'
 import { runIdentityRepair, type RepairInput, type RepairResult } from '../api/identityApi'
 import { useColleges } from '../hooks/useSuperAdmin'
-import { functions } from '@/Firebase/config'
+import { functions } from '@/Firebase/data'
 import { collegeLabel, collegeMatchesQuery, resolveCollegeInput, type CollegeOption } from '@/shared/utils/collegeReference'
 
 /**

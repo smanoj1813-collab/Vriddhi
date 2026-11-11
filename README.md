@@ -37,12 +37,14 @@ fees, timetables, and more — powered by Firebase and modern React.
 - **Assessments & tests** with a full test-taking flow (instructions → active test → results),
   MCQ rendering, and step-by-step solutions.
 - **Question bank** with manual, bulk-imported, and **AI-generated** aptitude questions,
-  plus a one-click **curated platform seed** (759 B.Com / BA / B.Sc questions organised
-  subject → topic → sub-topic) loaded from Superadmin → Question Bank.
+  plus a one-click **curated platform seed** (951 questions across B.Com / BA / B.Sc / BCA,
+  192 sub-topics, organised subject → topic → sub-topic) loaded from Superadmin →
+  Question Bank. `npm run test:render` asserts the shipped CSV's shape, so this number is
+  checked against the data rather than trusted.
 - **AI paper generator** producing question papers from the question bank via Gemini / OpenAI / DeepSeek.
 - **Curriculum management** — standardized curriculum upload, syllabus parsing, and mapping, including **auto-mapping** that suggests a scored faculty for every unmapped course (subject/branch/experience/load scoring, preview → approve — see `docs/auto-curriculum-mapping.md`).
 - **University scheme packs (G1)** — per-university exam rules (marks split, IA composition, attendance slabs, pass criteria, grade table) drive compliance dashboards, hall-ticket blocking and result import. BCU preset by default; KUD-NEP + generic NEP presets; custom packs per college (`/admin/scheme-packs`).
-- **Auto timetable generator (G4)** — mappings → grid: day×period auto-placement with faculty/room/cohort clash safety, lab spanning, faculty daily caps, unplaced-reason reporting and per-day hours coverage; preview → approve (Class Schedule → "Auto Generate").
+- **Auto timetable generator (G4)** — mappings → grid: day×period auto-placement with faculty/room/cohort clash safety, lab spanning, faculty daily caps, unplaced-reason reporting and per-day hours coverage; preview → approve (Academic workflow → Bulk timetable tools → Auto Generate).
 - **Guest faculty lifecycle (G5)** — contract windows + per-period rates; guest-aware auto-mapping (12-period cap, full-time preference tier, expired-contract exclusion); timetable-derived monthly billing with CSV export (`/admin/guest-faculty-billing`). See `docs/g1-g4-g5-karnataka-college-features.md`.
 - **Bulk timetable import** — CSV upload with server-side validation, de-duplication, clash detection (same engine as session generation) and curriculum-mapping cross-reference; preview a per-row report, then apply.
 - **Fees** management and a student fee portal.
@@ -51,7 +53,11 @@ fees, timetables, and more — powered by Firebase and modern React.
 - **Multi-college / multi-university** support managed at the superadmin level, including
   subscription billing and a system health monitor.
 - **South Indian language support** — Kannada, Tamil, Telugu, and Malayalam (plus English and
-  Hindi) for the UI and for AI question generation in native Unicode scripts.
+  Hindi) with complete, key-for-key dictionaries (233 keys × 6 languages, every one translated).
+  Scope, stated plainly: the translated UI is the student area and the shared chrome (header,
+  navigation, common actions) — 15 components and 147 `t()` calls — while the admin, office and
+  superadmin screens are still English. AI question generation is fully multilingual in native
+  Unicode scripts regardless of the interface language.
 
 ## Roles
 
@@ -122,7 +128,7 @@ Vriddhi/
 │                               # Python generator that validates them
 ├── scripts/                    # Seed / migration / fixture scripts + the unit & render test harnesses
 ├── firebase.json               # Firebase Hosting, Firestore, RTDB, Functions config
-├── current-firestore.rules     # Firestore security rules
+├── firestore.rules             # Firestore security rules
 ├── database.rules.json         # Realtime Database security rules
 ├── vite.config.ts              # Vite config, @/ alias, manual chunking
 ├── tailwind.config.js          # Tailwind configuration
@@ -235,7 +241,7 @@ plain `node --test` via `tsx`.
    firebase deploy --only firestore:rules,database:rules
    ```
 
-   Rules files: `current-firestore.rules` (Firestore) and `database.rules.json` (Realtime DB).
+   Rules files: `firestore.rules` (Firestore) and `database.rules.json` (Realtime DB).
 
 4. Run emulators locally:
 
@@ -271,7 +277,11 @@ names). Prompts instruct the model to write question text, options, and explanat
 chosen script while keeping JSON keys in English.
 
 Interface language is stored in `localStorage` (`vriddhi_language`) and can be changed from the
-header switcher or Settings → Appearance.
+header switcher or Settings → Appearance. Dictionaries live in
+`src/shared/i18n/translations.ts`; `en`, `hi`, `kn`, `ta`, `te` and `ml` each carry the same 233
+keys, so there are no untranslated fallbacks inside that set — the gap is *reach*, not content:
+the admin/office/superadmin screens do not call `t()` yet. Adding a language means adding one
+object to that file; adding coverage means swapping literals for `t()` screen by screen.
 
 ## AI / LLM providers
 

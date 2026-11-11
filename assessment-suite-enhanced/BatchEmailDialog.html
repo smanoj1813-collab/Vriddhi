@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(135deg, #32c888 0%, #1b5e20 100%);
+      min-height: 100vh;
+      padding: 20px;
+    }
+    .container {
+      background: rgba(255, 255, 255, 0.98);
+      border-radius: 16px;
+      padding: 28px;
+      width: 100%;
+      max-width: 900px;
+      margin: 0 auto;
+      box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
+    }
+    .header {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+    .header h1 {
+      font-size: 22px;
+      font-weight: 700;
+      color: #1e293b;
+      margin-bottom: 6px;
+    }
+    .header p {
+      color: #64748b;
+      font-size: 13px;
+    }
+    .toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .filter-input {
+      padding: 10px 14px;
+      border: 2px solid #e2e8f0;
+      border-radius: 8px;
+      font-family: 'Poppins', sans-serif;
+      font-size: 13px;
+      width: 260px;
+    }
+    .filter-input:focus { outline: none; border-color: #32c888; box-shadow: 0 0 0 3px rgba(50,200,136,0.15); }
+    .btn {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 8px;
+      font-family: 'Poppins', sans-serif;
+      font-weight: 600;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    .btn-select {
+      background: #dcfce7;
+      color: #166534;
+    }
+    .btn-select:hover {
+      background: #bbf7d0;
+    }
+    .btn-send {
+      background: linear-gradient(135deg, #32c888, #1b5e20);
+      color: white;
+    }
+    .btn-send:hover:not(:disabled) {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(50, 200, 136, 0.4);
+    }
+    .btn-send:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+    .btn-close {
+      background: #f1f5f9;
+      color: #64748b;
+    }
+    .table-wrap {
+      max-height: 420px;
+      overflow-y: auto;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+    thead th {
+      background: #f8fafc;
+      padding: 12px 10px;
+      text-align: left;
+      font-weight: 600;
+      color: #475569;
+      border-bottom: 2px solid #e2e8f0;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    tbody td {
+      padding: 10px;
+      border-bottom: 1px solid #f1f5f9;
+      color: #334155;
+      vertical-align: middle;
+    }
+    tbody tr:hover {
+      background: #f8fafc;
+    }
+    .checkbox {
+      width: 18px;
+      height: 18px;
+      accent-color: #32c888;
+      cursor: pointer;
+    }
+    .status-badge {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .status-sent {
+      background: #dcfce7;
+      color: #166534;
+    }
+    .status-generated {
+      background: #dbeafe;
+      color: #1e40af;
+    }
+    .status-failed {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+    .link-cell {
+      max-width: 140px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .link-cell a {
+      color: #2563eb;
+      text-decoration: none;
+      font-size: 12px;
+    }
+    .empty-state {
+      text-align: center;
+      padding: 40px;
+      color: #94a3b8;
+    }
+    .result-box {
+      display: none;
+      margin-top: 16px;
+      padding: 16px;
+      border-radius: 10px;
+      font-size: 13px;
+    }
+    .result-success {
+      background: #f0fdf4;
+      border: 1px solid #86efac;
+      color: #166534;
+    }
+    .result-error {
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+      color: #991b1b;
+    }
+    .spinner {
+      display: none;
+      width: 20px;
+      height: 20px;
+      border: 3px solid #e2e8f0;
+      border-top-color: #32c888;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 0 auto;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    .count-pill {
+      background: #f1f5f9;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #475569;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>📧 Send Multiple Assessment Reports</h1>
+      <p>Select assessments from the Email Registry and send them in one batch</p>
+      <p style="font-size:11px;color:#94a3b8;margin-top:4px;">Already-sent rows are disabled. Search filters by Assessment, Batch, Date, or Email.</p>
+    </div>
+   
+    <div class="toolbar">
+      <div style="display: flex; gap: 8px; align-items: center;">
+        <input type="text" class="filter-input" id="searchInput" placeholder="🔍 Search assessment, batch, date..." onkeyup="filterTable()" aria-label="Search registry">
+        <span class="count-pill" id="countPill">0 selected</span>
+      </div>
+      <div style="display: flex; gap: 8px;">
+        <button class="btn btn-select" onclick="selectAll()">Select All</button>
+        <button class="btn btn-select" onclick="selectNone()">Select None</button>
+      </div>
+    </div>
+   
+    <div class="table-wrap" id="tableContainer">
+      <div class="empty-state">
+        <div class="spinner" style="display: block;"></div>
+        <p style="margin-top: 12px;">Loading Email Registry...</p>
+      </div>
+    </div>
+   
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 20px;">
+      <button class="btn btn-close" onclick="google.script.host.close()">✕ Close</button>
+      <button class="btn btn-send" id="sendBtn" onclick="sendSelected()" disabled>
+        📧 Send Selected Reports
+      </button>
+    </div>
+   
+    <div class="result-box" id="resultBox"></div>
+  </div>
+
+  <script>
+    let allRecords = [];
+    let selectedRows = new Set();
+    let isSending = false;
+   
+    function loadRecords() {
+      google.script.run
+        .withSuccessHandler(function(records) {
+          allRecords = records;
+          renderTable(records);
+        })
+        .withFailureHandler(function(err) {
+          document.getElementById('tableContainer').innerHTML =
+            '<div class="empty-state">❌ Error loading registry: ' + err.message + '<br><button class="btn btn-select" style="margin-top:12px;" onclick="loadRecords()">Retry</button></div>';
+        })
+        .getAllEmailRegistryRecords();
+    }
+   
+    function renderTable(records) {
+      const container = document.getElementById('tableContainer');
+     
+      if (records.length === 0) {
+        container.innerHTML = '<div class="empty-state">No records found in Email Registry.<br>Generate some reports first.</div>';
+        return;
+      }
+     
+      let html = '<table><thead><tr>' +
+        '<th style="width: 40px;"><input type="checkbox" class="checkbox" onchange="toggleAll(this.checked)" aria-label="Select all"></th>' +
+        '<th>College</th>' +
+        '<th>Assessment Name</th>' +
+        '<th>Batch</th>' +
+        '<th>Date</th>' +
+        '<th>Status</th>' +
+        '<th>To Email</th>' +
+        '<th>Report</th>' +
+        '<th>Answer Key</th>' +
+        '</tr></thead><tbody>';
+     
+      records.forEach(function(r) {
+        const statusClass = r.status === 'Sent' ? 'status-sent' :
+                           r.status === 'Failed' ? 'status-failed' : 'status-generated';
+        const reportLink = r.reportLink ? '<a href="' + r.reportLink + '" target="_blank">📄 Link</a>' : '—';
+        const keyLink = r.answerKey ? '<a href="' + r.answerKey + '" target="_blank">🔑 Link</a>' : '—';
+        const isDisabled = r.status === 'Sent' ? 'disabled' : '';
+       
+        html += '<tr>' +
+          '<td><input type="checkbox" class="checkbox" data-row="' + r.rowIndex + '" ' + isDisabled + ' onchange="toggleRow(' + r.rowIndex + ', this.checked)" aria-label="Select ' + escapeHtml(r.assessmentName) + '"></td>' +
+          '<td>' + escapeHtml(r.college || '—') + '</td>' +
+          '<td><strong>' + escapeHtml(r.assessmentName) + '</strong></td>' +
+          '<td>' + escapeHtml(r.batch) + '</td>' +
+          '<td>' + escapeHtml(r.date) + '</td>' +
+          '<td><span class="status-badge ' + statusClass + '">' + escapeHtml(r.status || 'Generated') + '</span></td>' +
+          '<td>' + escapeHtml(r.email || '—') + '</td>' +
+          '<td class="link-cell">' + reportLink + '</td>' +
+          '<td class="link-cell">' + keyLink + '</td>' +
+          '</tr>';
+      });
+     
+      html += '</tbody></table>';
+      container.innerHTML = html;
+    }
+   
+    function toggleRow(rowIndex, checked) {
+      if (checked) selectedRows.add(rowIndex);
+      else selectedRows.delete(rowIndex);
+      updateCount();
+    }
+   
+    function toggleAll(checked) {
+      const boxes = document.querySelectorAll('tbody input.checkbox:not(:disabled)');
+      boxes.forEach(box => {
+        box.checked = checked;
+        const row = parseInt(box.dataset.row);
+        if (checked) selectedRows.add(row);
+        else selectedRows.delete(row);
+      });
+      updateCount();
+    }
+   
+    function selectAll() {
+      toggleAll(true);
+    }
+   
+    function selectNone() {
+      toggleAll(false);
+    }
+   
+    function updateCount() {
+      const count = selectedRows.size;
+      document.getElementById('countPill').textContent = count + ' selected';
+      document.getElementById('sendBtn').disabled = count === 0 || isSending;
+    }
+   
+    function filterTable() {
+      const query = document.getElementById('searchInput').value.toLowerCase();
+      const filtered = allRecords.filter(r =>
+        (r.assessmentName || '').toLowerCase().includes(query) ||
+        (r.batch || '').toLowerCase().includes(query) ||
+        (r.date || '').toLowerCase().includes(query) ||
+        (r.email || '').toLowerCase().includes(query)
+      );
+      renderTable(filtered);
+      setTimeout(() => {
+        document.querySelectorAll('tbody input.checkbox').forEach(box => {
+          const row = parseInt(box.dataset.row);
+          box.checked = selectedRows.has(row);
+        });
+      }, 50);
+    }
+   
+    function sendSelected() {
+      if (selectedRows.size === 0 || isSending) return;
+     
+      const indices = Array.from(selectedRows);
+      const btn = document.getElementById('sendBtn');
+      isSending = true;
+      btn.disabled = true;
+      btn.textContent = '⏳ Sending ' + indices.length + ' reports...';
+     
+      document.getElementById('resultBox').style.display = 'none';
+     
+      google.script.run
+        .withSuccessHandler(function(result) {
+          isSending = false;
+          btn.disabled = false;
+          btn.textContent = '📧 Send Selected Reports';
+         
+          let html = '<strong>✅ Batch Complete:</strong> ' + result.sent + ' sent, ' +
+                     result.failed + ' failed, ' + result.skipped + ' skipped (already sent).<br><br>';
+         
+          result.results.forEach(function(r) {
+            const icon = r.status === 'sent' ? '✅' : r.status === 'skipped' ? '⏭️' : '❌';
+            html += icon + ' <strong>' + escapeHtml(r.assessmentName) + '</strong> (' + escapeHtml(r.batch) + '): ' + escapeHtml(r.message) + '<br>';
+          });
+         
+          const box = document.getElementById('resultBox');
+          box.innerHTML = html;
+          box.className = 'result-box result-success';
+          box.style.display = 'block';
+         
+          selectedRows.clear();
+          updateCount();
+          loadRecords();
+        })
+        .withFailureHandler(function(err) {
+          isSending = false;
+          btn.disabled = false;
+          btn.textContent = '📧 Send Selected Reports';
+         
+          const box = document.getElementById('resultBox');
+          box.innerHTML = '<strong>❌ Batch Failed:</strong> ' + escapeHtml(err.message);
+          box.className = 'result-box result-error';
+          box.style.display = 'block';
+        })
+        .sendBatchEmails(indices);
+    }
+   
+    function escapeHtml(text) {
+      if (!text) return '';
+      return String(text)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+   
+    loadRecords();
+  </script>
+</body>
+</html>

@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import { User, Bell, Shield, Palette, Save, Loader2, Check, Lock, Mail, GraduationCap, Building2, Hash, BookOpen } from 'lucide-react';
 import { httpsCallable } from 'firebase/functions';
-import { auth, functions } from '@/Firebase/config';
+import { auth } from '@/Firebase/config'
+import { functions } from '@/Firebase/data';
 import ChangePasswordForm from '../../../shared/components/ChangePasswordForm';
 import { useStudentProfile } from '../hooks/useStudentProfile';
 import { useAuth } from '../../auth/context/AuthContext';

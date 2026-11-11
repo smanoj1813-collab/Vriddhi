@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root { --brand:#32c888; --brand-dark:#1b5e20; --bg:#f1f5f9; --card:#fff; --text:#1e293b; --muted:#64748b; --border:#e2e8f0; --danger:#ef4444; }
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:'Poppins',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+    .header{background:linear-gradient(135deg,var(--brand),var(--brand-dark));color:#fff;padding:20px 30px;position:sticky;top:0;z-index:100;box-shadow:0 4px 20px rgba(0,0,0,.15)}
+    .header-inner{max-width:1400px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px}
+    .header h1{font-size:22px;font-weight:700}
+    .header p{opacity:.85;font-size:12px;margin-top:2px}
+    .btn{padding:8px 18px;border:none;border-radius:8px;font-family:'Poppins';font-weight:600;font-size:12px;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+    .btn-white{background:#fff;color:var(--brand-dark)}
+    .btn-outline{background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3)}
+    .container{max-width:1400px;margin:0 auto;padding:24px;display:flex;flex-direction:column;gap:20px}
+    .toolbar{background:var(--card);border-radius:14px;padding:16px 20px;box-shadow:0 1px 3px rgba(0,0,0,.08);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px}
+    .toolbar select{padding:8px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:'Poppins';font-size:12px;background:var(--bg)}
+    .stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:16px}
+    .stat-card{background:var(--card);border-radius:14px;padding:20px;box-shadow:0 1px 3px rgba(0,0,0,.08);border-left:4px solid var(--brand)}
+    .stat-card.danger{border-left-color:var(--danger)}
+    .stat-card h4{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px}
+    .stat-card .value{font-size:28px;font-weight:700}
+    .stat-card .sub{font-size:11px;color:var(--muted);margin-top:6px}
+    .card{background:var(--card);border-radius:14px;padding:20px;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+    .card h3{font-size:14px;font-weight:700;margin-bottom:16px}
+    table{width:100%;border-collapse:collapse;font-size:12px}
+    th{background:#f8fafc;padding:10px 12px;text-align:left;font-weight:600;color:var(--muted);text-transform:uppercase;font-size:10px;letter-spacing:.5px;border-bottom:2px solid var(--border)}
+    td{padding:10px 12px;border-bottom:1px solid #f1f5f9}
+    .badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;background:#dcfce7;color:#166534}
+    .loading{position:fixed;inset:0;background:rgba(255,255,255,.95);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:1000;gap:16px}
+    .spinner{width:40px;height:40px;border:4px solid var(--border);border-top-color:var(--brand);border-radius:50%;animation:spin .8s linear infinite}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .empty{text-align:center;padding:40px;color:var(--muted)}
+    .toast{position:fixed;bottom:24px;right:24px;background:var(--text);color:#fff;padding:12px 20px;border-radius:10px;font-size:12px;transform:translateY(100px);opacity:0;transition:all .3s;z-index:300}
+    .toast.show{transform:translateY(0);opacity:1}
+    .help{font-size:11px;color:#94a3b8;margin-top:4px}
+  </style>
+</head>
+<body>
+  <div class="loading" id="loading"><div class="spinner"></div><p style="color:var(--muted)">Loading TPO Dashboard...</p></div>
+
+  <header class="header">
+    <div class="header-inner">
+      <div>
+        <h1>🎓 TPO Dashboard</h1>
+        <p id="subtitle">Placement readiness & assessment insights</p>
+      </div>
+      <div style="display:flex;gap:10px">
+        <button class="btn btn-outline" onclick="refreshData()">🔄 Refresh</button>
+        <button class="btn btn-white" onclick="clearCache()">🧹 Clear Cache</button>
+      </div>
+    </div>
+  </header>
+
+  <div class="container">
+    <div class="toolbar">
+      <div>
+        <label for="typeSelect" style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;">Leaderboard Type</label>
+        <select id="typeSelect" onchange="loadData(this.value)">
+          <option value="">Auto (first available)</option>
+        </select>
+        <div class="help">Practice / Company / Class Test leaderboards. Auto picks first found.</div>
+      </div>
+      <div style="font-size:12px;color:var(--muted)" id="loadInfo"></div>
+    </div>
+
+    <div class="stats-grid" id="statsGrid"></div>
+
+    <div class="card">
+      <h3>📊 Placement Readiness</h3>
+      <div id="readiness"></div>
+    </div>
+
+    <div class="card">
+      <h3>🏆 Top Performers</h3>
+      <div class="table-wrap"><table id="topTable"><thead><tr><th>Rank</th><th>Name</th><th>Branch</th><th>Score</th><th>Status</th></tr></thead><tbody></tbody></table></div>
+    </div>
+
+    <div class="card">
+      <h3>⚠️ At-Risk Students</h3>
+      <div class="table-wrap"><table id="riskTable"><thead><tr><th>Name</th><th>Branch</th><th>Score</th><th>Action</th></tr></thead><tbody></tbody></table></div>
+    </div>
+
+    <div class="card">
+      <h3>📋 Recent Assessments</h3>
+      <div class="table-wrap"><table id="recentTable"><thead><tr><th>Assessment</th><th>Type</th><th>Date</th><th>Max</th><th>Appeared</th></tr></thead><tbody></tbody></table></div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    let currentType = '';
+    window.onload = function(){ loadData(''); };
+
+    function showToast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.className='toast show'; setTimeout(()=>t.classList.remove('show'),3000); }
+
+    function loadData(type){
+      currentType = type || '';
+      document.getElementById('loading').style.display='flex';
+      google.script.run
+        .withSuccessHandler(function(data){
+          document.getElementById('loading').style.display='none';
+          if(!data || data.error){
+            document.getElementById('statsGrid').innerHTML='<div class="empty">❌ '+(data?.message||'Failed to load')+'</div>';
+            return;
+          }
+          // Populate type selector
+          const sel=document.getElementById('typeSelect');
+          const cur=sel.value;
+          sel.innerHTML='<option value="">Auto (first available)</option>';
+          (data.availableTypes||[]).forEach(t=>{ const o=document.createElement('option'); o.value=t; o.textContent=t; sel.appendChild(o); });
+          sel.value = data.selectedType && data.selectedType!=='None' ? data.selectedType : cur;
+
+          document.getElementById('subtitle').textContent = 'Type: '+(data.leaderboardType||'None')+' • Role: '+(data.userRole||'')+' • '+(data.fromCache?'Cached':'Live');
+          document.getElementById('loadInfo').textContent = 'Load time: '+(data.loadTime||'')+(data.fromCache?' (cached)':'');
+
+          const s=data.summary||{};
+          const stats=[
+            {label:'Total Students',value:s.totalStudents||0,sub:'From Master Data'},
+            {label:'Active Students',value:s.activeStudents||0,sub:'Appeared'},
+            {label:'Average Score',value:s.averageScore||'0%',sub:'of active'},
+            {label:'Pass Rate',value:s.passRate||'0%',sub:'≥50%'},
+            {label:'Placement Ready',value:s.placementReady||'0%',sub:'≥80%'},
+            {label:'At Risk',value:s.atRiskPct||'0%',sub:'<50%',cls:'danger'}
+          ];
+          document.getElementById('statsGrid').innerHTML=stats.map(x=>`<div class="stat-card ${x.cls||''}"><h4>${x.label}</h4><div class="value">${x.value}</div><div class="sub">${x.sub}</div></div>`).join('');
+
+          const r=data.placementReadiness||{};
+          document.getElementById('readiness').innerHTML = `
+            <p style="font-size:12px;color:var(--muted);margin-bottom:8px;">Ready ≥80% • Near Ready ≥65% • Needs Improvement ≥50% • At Risk &lt;50%</p>
+            <div style="display:flex;gap:12px;flex-wrap:wrap">
+              <span class="badge">✅ Ready: ${r.ready||0} (${r.readyPct||'0'}%)</span>
+              <span class="badge" style="background:#dbeafe;color:#1e40af">👍 Near Ready: ${r.nearReady||0} (${r.nearReadyPct||'0'}%)</span>
+              <span class="badge" style="background:#fef9c3;color:#854d0e">📈 Needs Improvement: ${r.needsImprovement||0} (${r.needsImprovementPct||'0'}%)</span>
+              <span class="badge" style="background:#fee2e2;color:#991b1b">⚠️ At Risk: ${r.atRisk||0} (${r.atRiskPct||'0'}%)</span>
+            </div>`;
+
+          const top=(data.topPerformers||[]).slice(0,10);
+          document.querySelector('#topTable tbody').innerHTML = top.length? top.map(p=>`<tr><td>#${p.rank}</td><td><strong>${p.name}</strong></td><td>${p.branch||'—'}</td><td><strong>${p.score}%</strong></td><td><span class="badge">${p.status||''}</span></td></tr>`).join('') : '<tr><td colspan="5" class="empty">No data</td></tr>';
+
+          const risk=(data.atRiskStudents||[]).slice(0,10);
+          document.querySelector('#riskTable tbody').innerHTML = risk.length? risk.map(p=>`<tr><td><strong>${p.name}</strong></td><td>${p.branch||'—'}</td><td style="color:var(--danger);font-weight:700">${p.score}%</td><td>${p.action||''}</td></tr>`).join('') : '<tr><td colspan="4" class="empty">No at-risk students 🎉</td></tr>';
+
+          const rec=(data.recentAssessments||[]).slice(0,10);
+          document.querySelector('#recentTable tbody').innerHTML = rec.length? rec.map(a=>`<tr><td><strong>${a.name}</strong></td><td>${a.type||'—'}</td><td>${a.date||'—'}</td><td>${a.maxScore||'—'}</td><td>${a.studentsAppeared||0}</td></tr>`).join('') : '<tr><td colspan="5" class="empty">No assessments found</td></tr>';
+        })
+        .withFailureHandler(function(err){
+          document.getElementById('loading').style.display='none';
+          document.getElementById('statsGrid').innerHTML='<div class="empty">❌ '+err.message+'</div>';
+        })
+        .getDashboardData(currentType);
+    }
+
+    function refreshData(){ showToast('Refreshing...'); loadData(currentType); }
+    function clearCache(){
+      google.script.run.withSuccessHandler(function(){ showToast('Cache cleared'); loadData(currentType); }).clearDashboardCache();
+    }
+  </script>
+</body>
+</html>

@@ -4,7 +4,7 @@
 // self-heal) live in src/shared/services/identityBackend.ts because the auth
 // context needs them too.
 
-import { functions } from '@/Firebase/config'
+import { functions } from '@/Firebase/data'
 import { httpsCallable } from 'firebase/functions'
 import { describeIdentityError, identityBackendMismatch } from '@/shared/services/identityBackend'
 import type { CredentialDelivery } from '@/shared/services/identityBackend'

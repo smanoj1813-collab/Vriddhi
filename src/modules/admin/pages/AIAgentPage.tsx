@@ -6,7 +6,7 @@ import {
   Users, FileText, AlertTriangle, ShieldCheck, MessageSquare, WifiOff
 } from 'lucide-react';
 import { useAuth } from '@/modules/auth/context/AuthContext';
-import { db } from '@/Firebase/config';
+import { db } from '@/Firebase/data';
 import { collection, getDocs } from 'firebase/firestore';
 import { sendAIChatMessage, type AIChatMessage, type AIChatReplySource } from '@/shared/services/aiChatService';
 import ChatMarkdown from '@/shared/components/chat/ChatMarkdown';

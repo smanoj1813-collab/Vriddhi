@@ -24,7 +24,7 @@ import {
   arrayUnion,
   type DocumentData,
 } from 'firebase/firestore'
-import { db } from '@/Firebase/config'
+import { db } from '@/Firebase/data'
 import { actor, clean, nextCounter, nowIso, num, officeCol, officeDoc, str, todayIso } from './officeDb'
 import { applyMovement, formatAssetTag, normalizeInventorySettings, type AssetCategory, type DepMethod, type InventorySettings } from '../utils/inventoryEngine'
 import { cappedLimit, warnIfTruncated } from '@/shared/utils/firestoreLimits';

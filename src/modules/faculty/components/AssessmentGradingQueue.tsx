@@ -15,7 +15,7 @@ import {
 } from '@mui/material';
 import { AutoAwesome, RestartAlt } from '@mui/icons-material';
 import { httpsCallable } from 'firebase/functions';
-import { functions } from '@/Firebase/config';
+import { functions } from '@/Firebase/data';
 import { useAuth } from '../../auth/context/AuthContext';
 import { FIVE_MARKS_PRESETS, TEN_MARKS_PRESETS, autoGradeAnswer, FIVE_MARKS_RUBRICS, TEN_MARKS_RUBRICS } from '@/shared/utils/autoGrading';
 

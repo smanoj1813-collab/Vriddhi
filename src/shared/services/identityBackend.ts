@@ -19,9 +19,13 @@
 //   * syncMyIdentity()          — re-issues a missing role claim so an account
 //     that "logs in but sees nothing" can repair itself.
 
-import { auth, functions } from '@/Firebase/config'
-import { httpsCallable } from 'firebase/functions'
+import { auth } from '@/Firebase/config'
 import { sendPasswordResetEmail } from 'firebase/auth'
+// `firebase/functions` and the Functions handle are imported inside
+// syncMyIdentity(), not here: the auth context imports this module statically at
+// boot, so a module-scope Functions import dragged the whole data SDK
+// (Firestore, Storage, RTDB — ~183 kB gzip) onto the login screen's preload
+// list. The callable is only invoked once somebody is signed in.
 
 /**
  * Must match IDENTITY_API_VERSION in functions/src/identityShared.ts.
@@ -155,6 +159,10 @@ export interface SyncMyIdentityResult {
  * insufficient permissions" state.
  */
 export async function syncMyIdentity(): Promise<SyncMyIdentityResult | null> {
+  const [{ httpsCallable }, { functions }] = await Promise.all([
+    import('firebase/functions'),
+    import('@/Firebase/data'),
+  ])
   const call = httpsCallable<Record<string, never>, SyncMyIdentityResult>(functions, 'syncMyIdentity')
   try {
     const result = await call({})

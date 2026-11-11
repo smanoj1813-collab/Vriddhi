@@ -8,7 +8,7 @@ import { doc, setDoc, serverTimestamp } from 'firebase/firestore'
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
 import { useQueryClient } from '@tanstack/react-query'
 import { ImagePlus, Loader2, Trash2, Building2 } from 'lucide-react'
-import { db, storage } from '@/Firebase/config'
+import { db, storage } from '@/Firebase/data'
 import { useCollegeBranding, collegeBrandingKey } from '@/shared/hooks/useCollegeBranding'
 
 type Kind = 'logoUrl' | 'coverImageUrl'

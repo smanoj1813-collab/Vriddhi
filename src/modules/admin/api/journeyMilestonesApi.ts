@@ -2,7 +2,7 @@
 // Connects College, Faculty, Student journeys into one unified timeline
 
 import { collection, getDocs, query, orderBy, limit, where, Timestamp, type DocumentData, type Query, type QueryDocumentSnapshot } from 'firebase/firestore'
-import { db } from '@/Firebase/config'
+import { db } from '@/Firebase/data'
 import type { Milestone } from './journeyApi'
 
 function getCollegeId(): string {

@@ -63,7 +63,7 @@ before(async () => {
     },
     firestore: {
       ...firestore,
-      rules: readFileSync(resolve(process.cwd(), '../current-firestore.rules'), 'utf8'),
+      rules: readFileSync(resolve(process.cwd(), '../firestore.rules'), 'utf8'),
     },
     storage: {
       ...storage,
@@ -1022,7 +1022,7 @@ describe('legacy no-claim faculty reads', () => {
     // a legacy faculty profile. Identity for AUTHORIZATION is claim-only, so
     // staff-scoped reads are denied until identity repair issues claims and the
     // user signs in again. (The profile doc still lets them sign IN — it just
-    // cannot authorize a staff query. See current-firestore.rules header.)
+    // cannot authorize a staff query. See firestore.rules header.)
     return testEnv.authenticatedContext('legacy-faculty-a', {
       email: 'legacy-faculty@example.edu',
     })
@@ -1691,7 +1691,7 @@ describe('connect with mentors (faculty availability & appointments)', () => {
 
 // ── Department scoping (admin ≡ department HOD) ─────────────────────────────
 // The `department` custom claim narrows admin/hod POINT reads via deptScoped()
-// in current-firestore.rules. Deliberate tolerances pinned here:
+// in firestore.rules. Deliberate tolerances pinned here:
 //   - no claim, or an untagged document (or department 'All') ⇒ still visible
 //   - case-insensitive match between claim and document tag
 //   - `list` statements stay college-wide — current client queries are scoped
@@ -2498,5 +2498,117 @@ describe('academic workflow schedule approvals', () => {
     await assertFails(getDoc(doc(opsDb, 'workflowTasks', 'task-other')))
     await assertSucceeds(updateDoc(doc(opsDb, 'workflowTasks', 'task-ops'), { read: true }))
     await assertFails(updateDoc(doc(opsDb, 'workflowTasks', 'task-ops'), { title: 'Forged task' }))
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Tenant scoping of the legacy read paths (audit P1-1).
+//
+// Two families were role-checked but never college-checked:
+//
+//   1. the per-college collections under /colleges/{collegeId}/…, where the
+//      {collegeId} segment is whatever the caller typed — `isStaff()` alone let
+//      a faculty token at college A read colleges/B/attendance by naming B;
+//   2. a handful of top-level collections whose documents carry a collegeId but
+//      whose list rules returned every college's rows to any staff account.
+//
+// Every case below is a read that used to succeed across the boundary.
+describe('legacy reads stay inside the caller\'s college', () => {
+  const staff = (college: string, uid = 'faculty-tenant') =>
+    testEnv.authenticatedContext(uid, { role: 'faculty', collegeId: college })
+  const platformRoot = () => testEnv.authenticatedContext('platform-root-2', { role: 'superadmin' })
+
+  // The seven path-scoped collections that had `isStaff()` and nothing else.
+  const LEGACY = [
+    'schedules',
+    'attendance',
+    'attendanceRecords',
+    'assessments',
+    'scores',
+    'activities',
+    'milestones',
+  ] as const
+
+  beforeEach(async () => {
+    await testEnv.withSecurityRulesDisabled(async (context) => {
+      const db = context.firestore()
+      const writes: Promise<unknown>[] = []
+      for (const name of LEGACY) {
+        writes.push(setDoc(doc(db, 'colleges', COLLEGE_A, name, 'row-a'), { collegeId: COLLEGE_A, label: 'a' }))
+        writes.push(setDoc(doc(db, 'colleges', COLLEGE_B, name, 'row-b'), { collegeId: COLLEGE_B, label: 'b' }))
+      }
+      writes.push(
+        setDoc(doc(db, 'resumes', 'resume-a'), { collegeId: COLLEGE_A, uid: STUDENT_UID }),
+        setDoc(doc(db, 'resumes', 'resume-b'), { collegeId: COLLEGE_B, uid: 'someone-else' }),
+        setDoc(doc(db, 'resumeDownloads', 'download-a'), { collegeId: COLLEGE_A, uid: STUDENT_UID }),
+        setDoc(doc(db, 'resumeDownloads', 'download-b'), { collegeId: COLLEGE_B, uid: 'someone-else' }),
+        setDoc(doc(db, 'proctoringLogs', 'proctor-a'), { collegeId: COLLEGE_A, studentUid: STUDENT_UID }),
+        setDoc(doc(db, 'proctoringLogs', 'proctor-b'), { collegeId: COLLEGE_B, studentUid: 'someone-else' }),
+        setDoc(doc(db, 'assignments', 'assignment-a'), { collegeId: COLLEGE_A, title: 'A' }),
+        setDoc(doc(db, 'assignments', 'assignment-b'), { collegeId: COLLEGE_B, title: 'B' }),
+        setDoc(doc(db, 'submissions', 'submission-a'), { collegeId: COLLEGE_A, studentUid: OTHER_UID }),
+        setDoc(doc(db, 'submissions', 'submission-b'), { collegeId: COLLEGE_B, studentUid: 'someone-else' }),
+        setDoc(doc(db, 'attendanceSummaries', STUDENT_ID), { collegeId: COLLEGE_A, total: 10 }),
+        setDoc(doc(db, 'attendanceSummaries', OTHER_STUDENT_ID), { collegeId: COLLEGE_B, total: 10 }),
+      )
+      await Promise.all(writes)
+    })
+  })
+
+  it('lets a faculty account read its own college\'s legacy collections', async () => {
+    const db = staff(COLLEGE_A).firestore()
+    for (const name of LEGACY) {
+      await assertSucceeds(getDoc(doc(db, 'colleges', COLLEGE_A, name, 'row-a')))
+      await assertSucceeds(getDocs(collection(db, 'colleges', COLLEGE_A, name)))
+    }
+  })
+
+  it('refuses those same reads one college over', async () => {
+    // Before the fix every one of these succeeded: the path segment was the only
+    // tenant check, and the caller supplies the path segment.
+    const db = staff(COLLEGE_A).firestore()
+    for (const name of LEGACY) {
+      await assertFails(getDoc(doc(db, 'colleges', COLLEGE_B, name, 'row-b')))
+      await assertFails(getDocs(collection(db, 'colleges', COLLEGE_B, name)))
+    }
+  })
+
+  it('still lets a superadmin cross the boundary', async () => {
+    const db = platformRoot().firestore()
+    for (const name of LEGACY) {
+      await assertSucceeds(getDoc(doc(db, 'colleges', COLLEGE_B, name, 'row-b')))
+    }
+    await assertSucceeds(getDoc(doc(db, 'resumes', 'resume-b')))
+    await assertSucceeds(getDocs(query(collection(db, 'resumes'), where('collegeId', '==', COLLEGE_B))))
+  })
+
+  it('scopes the top-level collections by their collegeId field', async () => {
+    const db = staff(COLLEGE_A).firestore()
+
+    // Own college: the queries the app actually issues still work.
+    await assertSucceeds(getDocs(query(collection(db, 'resumes'), where('collegeId', '==', COLLEGE_A))))
+    await assertSucceeds(getDocs(query(collection(db, 'resumeDownloads'), where('collegeId', '==', COLLEGE_A))))
+    await assertSucceeds(getDocs(query(collection(db, 'proctoringLogs'), where('collegeId', '==', COLLEGE_A))))
+    await assertSucceeds(getDocs(query(collection(db, 'assignments'), where('collegeId', '==', COLLEGE_A))))
+    await assertSucceeds(getDocs(query(collection(db, 'submissions'), where('collegeId', '==', COLLEGE_A))))
+    await assertSucceeds(getDocs(query(collection(db, 'attendanceSummaries'), where('collegeId', '==', COLLEGE_A))))
+
+    // One college over: every one of these was a plain `isStaff()` read before.
+    await assertFails(getDocs(query(collection(db, 'resumes'), where('collegeId', '==', COLLEGE_B))))
+    await assertFails(getDocs(query(collection(db, 'resumeDownloads'), where('collegeId', '==', COLLEGE_B))))
+    await assertFails(getDocs(query(collection(db, 'proctoringLogs'), where('collegeId', '==', COLLEGE_B))))
+    await assertFails(getDocs(query(collection(db, 'assignments'), where('collegeId', '==', COLLEGE_B))))
+    await assertFails(getDocs(query(collection(db, 'submissions'), where('collegeId', '==', COLLEGE_B))))
+    await assertFails(getDocs(query(collection(db, 'attendanceSummaries'), where('collegeId', '==', COLLEGE_B))))
+  })
+
+  it('keeps a student able to fetch their own submission and attendance summary', async () => {
+    const db = testEnv.authenticatedContext(STUDENT_UID, { role: 'student', collegeId: COLLEGE_A }).firestore()
+    // The student path in assignmentApi has no collegeId filter — it asks for its
+    // own row by studentUid, and that has to keep working.
+    await assertSucceeds(getDocs(query(collection(db, 'submissions'), where('studentUid', '==', STUDENT_UID))))
+    await assertSucceeds(getDoc(doc(db, 'attendanceSummaries', STUDENT_ID)))
+    // …but not somebody else's.
+    await assertFails(getDoc(doc(db, 'attendanceSummaries', OTHER_STUDENT_ID)))
   })
 })

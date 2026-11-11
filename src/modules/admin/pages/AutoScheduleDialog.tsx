@@ -30,7 +30,7 @@ import {
   PlayArrow as PreviewIcon,
   PublishRounded as ApplyIcon,
 } from '@mui/icons-material';
-import { db } from '@/Firebase/config';
+import { db } from '@/Firebase/data';
 import {
   autoGenerateWeeklySchedule,
   type AutoSchedulePlan,

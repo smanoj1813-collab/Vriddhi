@@ -12,7 +12,7 @@ import { getQuestions, linkQuestionToPaper, updateQuestion, getBatchBranchConfig
 import PaperUploadEditor from '@/shared/components/question-paper/PaperUploadEditor'
 import { createPaper, generatePaper } from '../../admin/api/paperApi'
 import { httpsCallable } from 'firebase/functions'
-import { functions } from '@/Firebase/config'
+import { functions } from '@/Firebase/data'
 import { getPapers } from '../../admin/services/paperAPI'
 import { downloadPaperPDF } from '../../../shared/utils/pdfDownloader'
 import type { Question as BankQuestion } from '../../admin/types/questionBank'

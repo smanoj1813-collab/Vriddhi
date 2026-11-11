@@ -23,8 +23,12 @@ import {
   reauthenticateWithCredential,
   updatePassword,
 } from 'firebase/auth';
-import { httpsCallable } from 'firebase/functions';
-import { auth, functions } from '@/Firebase/config';
+import { auth } from '@/Firebase/config'
+// `httpsCallable` and the Functions handle are imported lazily inside the
+// handler: this form is mounted by MustChangePasswordGate, which main.tsx
+// renders, so a static import put the whole data SDK (Firestore, Storage, RTDB)
+// back on the login screen's preload list. The callable only runs after a
+// password rotation, by which time the data chunk is needed anyway.
 
 /** Must match grantUserRole / CreateCollegeAdmin / the ops scripts. */
 export const MIN_PASSWORD_LENGTH = 10;
@@ -91,6 +95,10 @@ export default function ChangePasswordForm({ onDone, bare }: ChangePasswordFormP
       //    backend without the callable must not fail the rotation itself;
       //    the flag simply clears on the next admin-side rotation instead).
       try {
+        const [{ httpsCallable }, { functions }] = await Promise.all([
+          import('firebase/functions'),
+          import('@/Firebase/data'),
+        ]);
         const clear = httpsCallable(functions, 'clearMyMustChangePassword');
         await clear({});
       } catch {

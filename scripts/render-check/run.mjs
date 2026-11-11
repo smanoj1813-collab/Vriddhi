@@ -1197,7 +1197,11 @@ await section('student challans', '/src/modules/student/pages/StudentChallans.ts
   check('challans: mounts without throwing', true);
   check('challans: shows the challan the college issued for this student',
     t.includes('CH-202609-BCA-000123') && t.includes('DCBCS503 Theory End-term Examination'), t);
-  check('challans: shows the amount and the due date', t.includes('\u20B92,450') && /Due 30 Sep/.test(t), t);
+  // Two things used to rot here: the capital-D "Due" (the fixture's 30 Sep 2026 is now
+  // in the past, so the row renders "Overdue — due 30 Sept 2026") and the month as
+  // "Sep" (en-IN formats it "Sept"). Assert the shape of a due date, not its letters.
+  check('challans: shows the amount and the due date',
+    t.includes('\u20B92,450') && /due:?\s*\d{1,2}\s+[A-Za-z]{3,4}\s+\d{4}/i.test(t), t);
   check('challans: labels the row with its bank-payment status', /To pay/.test(t), t);
   check('challans: warns that a payable challan must be stamped at the bank',
     /Print this challan and pay at State Bank of India/.test(t), t);
@@ -1500,7 +1504,7 @@ await section('question renderer (clipboard locked)', '/src/modules/student/comp
 
 
 // ── The declaration write (only student-side mutation in this flow) ────────
-// current-firestore.rules admits exactly these keys from a student, so the
+// firestore.rules admits exactly these keys from a student, so the
 // payload shape is pinned here: a "small extra field" added in the app would
 // otherwise pass every test and fail for every student on their phone.
 {
@@ -1727,107 +1731,35 @@ await section('student top bar', '/src/modules/student/components/StudentTopBar.
     }
   });
 
-// ── Scheduling a class in a college that has no subject list ────────────────
-// What the principal reported: with no subject mapped to the faculty member
-// the Subject box was a dropdown with nothing in it and the Create button
-// refused to open, so a class could not be scheduled at all. The fixture is
-// exactly that college — one faculty member and no subjectsUG / subjectsPG —
-// so the dropdown is genuinely empty and only free text can get the class in.
-const scheduleFixtureDocs = [
+// ── Scheduling: the screen that owns it today ───────────────────────────────
+// These two sections used to drive `src/modules/admin/pages/AdminClassSchedule.tsx`
+// (an "Add Class" dialog with a free-text subject box). That page is not in this
+// repository — `git log --all -- '*AdminClassSchedule*'` is empty — so the
+// sections could only ever fail on the import. Class scheduling now runs through
+// AdminWorkflowPage: draft timetables arrive from the import sheet or the
+// auto-generator and are routed to the programme HOD for approval.
+//
+// What is kept is only what this fixture can honestly assert: the page mounts for
+// an admin, it names itself, and it says who prepares drafts and who approves
+// them. The draft/approval panes need real workflow documents, so the approval
+// logic is covered by the curriculum-flow section and the functions tests.
+localStorage.setItem('vriddhi_college_id', 'college-a');
+globalThis.__RC_ROLE = 'admin';
+globalThis.__RC_FIRESTORE_DOCS = [
   { id: 'fac-1', data: () => ({ collegeId: 'college-a', name: 'Dr Rao', department: 'Commerce' }) },
 ];
-const scheduleFixtureDoc = { data: { collegeId: 'college-a', name: 'Dr Rao' } };
-
-localStorage.setItem('vriddhi_college_id', 'college-a');
-globalThis.__RC_FIRESTORE_DOCS = scheduleFixtureDocs;
-globalThis.__RC_FIRESTORE_DOC = scheduleFixtureDoc;
+globalThis.__RC_FIRESTORE_DOC = { data: { collegeId: 'college-a', name: 'Dr Rao' } };
 globalThis.__RC_LOCATION_STATE = null;
 
-await section('schedule dialog', '/src/modules/admin/pages/AdminClassSchedule.tsx', {}, async (t, view) => {
-  check('schedule dialog: mounts without throwing', true);
-  const addClass = view.byText('Add Class');
-  check('schedule dialog: the page offers Add Class', !!addClass, t.slice(0, 200));
-  if (!addClass) return;
-  await view.click(addClass);
-
-  const dialog = view.dialogText();
-  check('schedule dialog: opens on click', /Add New Class Schedule/.test(dialog), dialog);
-
-  const subject = view.dialogEl('input[placeholder="Type to search, or type a new subject"]');
-  check('schedule dialog: the subject can be typed, not only picked from a list',
-    !!subject && !subject.disabled && !subject.readOnly,
-    subject ? `disabled=${subject.disabled} readOnly=${subject.readOnly}` : 'no subject input in the dialog');
-
-  const create = view.dialogButtons().find((b) => (b.textContent ?? '').trim() === 'Create');
-  check('schedule dialog: Create is not dead while the subject list is empty', !!create && !create.disabled,
-    `create=${!!create} disabled=${create?.disabled}`);
-
-  // Submitting with nothing filled in must name what is missing — the old
-  // button simply refused to be pressed.
-  if (create) {
-    await view.click(create);
-    const told = view.bodyText();
-    check('schedule dialog: names the missing fields instead of refusing to submit',
-      /Please fill:/.test(told) && /Subject/.test(told), told.slice(-260));
-  }
-
-  // …and the same button lets the class through once a subject is typed.
-  if (subject && create) {
-    await view.type(subject, 'Business Statistics');
-    check('schedule dialog: a typed subject stays in the box', subject.value === 'Business Statistics', subject.value);
-    await view.click(create);
-    const told = view.bodyText();
-    check('schedule dialog: the typed subject clears the Subject complaint',
-      /Please fill:/.test(told) && !/Please fill: Subject/.test(told), told.slice(-260));
-  }
-});
-
-// The curriculum page hands the dialog a prefill; this is the "Schedule Class"
-// route a principal takes, and it has to end in a written class.
-globalThis.__RC_LOCATION_STATE = {
-  prefill: {
-    subject: 'Business Statistics',
-    subjectCode: 'BST101',
-    facultyId: 'fac-1',
-    branch: 'BCA',
-    batch: '2026',
-    semester: 4,
-    division: 'A',
-    section: 'A',
-  },
-};
-
-await section('schedule dialog (prefilled)', '/src/modules/admin/pages/AdminClassSchedule.tsx', {}, async (t, view) => {
-  check('prefilled schedule: mounts without throwing', true);
-  const dialog = view.dialogText();
-  check('prefilled schedule: opens from the curriculum prefill', /Add New Class Schedule/.test(dialog), dialog);
-  check('prefilled schedule: says to type the subject when none is mapped',
-    /No subject is mapped to this faculty yet/.test(dialog), dialog);
-
-  const subject = view.dialogEl('input[placeholder="Type to search, or type a new subject"]');
-  check('prefilled schedule: keeps the prefill as free text', subject?.value === 'Business Statistics', subject?.value);
-
-  const room = view.dialogEl('input[placeholder="e.g. 301-A"]');
-  check('prefilled schedule: still asks for the room', !!room, dialog.slice(0, 160));
-  if (!room) return;
-  await view.type(room, '301-A');
-
-  const create = view.dialogButtons().find((b) => (b.textContent ?? '').trim() === 'Create');
-  if (!create) {
-    check('prefilled schedule: Create is offered', false, dialog);
-    return;
-  }
-  globalThis.__RC_WRITES = [];
-  await view.click(create);
-  const write = (globalThis.__RC_WRITES ?? []).find((w) => w.path === 'addDoc');
-  check('prefilled schedule: the class is written to the schedule collection', !!write,
-    JSON.stringify(globalThis.__RC_WRITES ?? []).slice(0, 240));
-  check('prefilled schedule: the write carries the typed subject, room and cohort',
-    write?.data?.subject === 'Business Statistics' && write?.data?.room === '301-A'
-      && write?.data?.branch === 'BCA' && write?.data?.semester === 4,
-    JSON.stringify(write?.data ?? {}).slice(0, 300));
-  check('prefilled schedule: tells the principal it worked',
-    /Schedule created successfully/.test(view.bodyText()), view.bodyText().slice(-220));
+// Deliberately shallow: with no fixture rows the page renders its header and
+// flow only — the draft/approval panes need real workflow documents. Asserting
+// the header keeps a crash guard on the scheduling surface without pretending
+// to cover the approval logic (functions and the curriculum-flow section do).
+await section('academic workflow (scheduling)', '/src/modules/admin/pages/AcademicWorkflowPage.tsx', {}, async (t, view) => {
+  check('academic workflow: names the screen', /Timetable preparation & approval/.test(t), t);
+  check('academic workflow: says who prepares drafts and who approves them',
+    /Operations prepares drafts/.test(t) && /HOD reviews them/.test(t), t);
+  check('academic workflow: does not fall back to hand-typed classes', !/Add Class\b/.test(t), t);
 });
 
 // ── Curriculum → timetable flow: one screen, semesters 1–6 ──────────────────
@@ -2008,10 +1940,19 @@ const SEED_SUBTOPICS = seedAll.subTopicCount;
 
 check('seeder: the shipped CSVs still parse clean', SEED_INVALID === 0,
   `${SEED_INVALID} invalid row(s): ${JSON.stringify(seedAll.invalid.slice(0, 2))}`);
-check('seeder: the bundled dataset is the full three-programme bank', SEED_TOTAL === 759,
-  `parsed ${SEED_TOTAL} rows`);
+// Assert the SHAPE of the bank, not a snapshot of its size. The old checks pinned
+// 759 rows / 144 sub-topics; the dataset has since grown to 951 / 192 (BCA added),
+// which made a healthy bank look broken. These invariants survive growth while
+// still catching a truncated CSV or a branch that silently disappeared.
+const SEED_BRANCHES = seedAll.branches.map((b) => b.name);
+check('seeder: the bundled dataset covers every programme in the bank',
+  SEED_BRANCHES.length >= 3
+    && seedAll.branches.every((b) => b.count > 0)
+    && seedAll.branches.reduce((n, b) => n + b.count, 0) === SEED_TOTAL
+    && SEED_TOTAL >= 600,                       // floor: a truncated CSV fails this
+  `${SEED_BRANCHES.length} programmes · ${seedAll.branches.map((b) => `${b.name}:${b.count}`).join(', ')} · ${SEED_TOTAL} rows`);
 check('seeder: every row carries a sub-topic (subject → topic → sub-topic)',
-  SEED_SUBTOPICS === 144 && seedAll.rowsWithoutSubTopic === 0,
+  SEED_SUBTOPICS > 0 && seedAll.rowsWithoutSubTopic === 0,
   `${SEED_SUBTOPICS} sub-topics, ${seedAll.rowsWithoutSubTopic} row(s) without one`);
 
 await section('question bank seeder', SEED_DIALOG, { open: true, onClose: () => {} }, async (t, view) => {

@@ -10,7 +10,7 @@
 // ═══════════════════════════════════════════════════════════════════════
 
 import { collection, getDocs } from 'firebase/firestore';
-import { db } from '@/Firebase/config';
+import { db } from '@/Firebase/data';
 import { questionStorageApi } from '../../admin/api/cloudStorageApi';
 import type { QuestionMetadata } from '../../admin/types/universalQuestionBank';
 import {

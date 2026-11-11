@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { collection, getDocs, limit, query, where } from 'firebase/firestore';
 import { httpsCallable } from 'firebase/functions';
-import { db, functions } from '@/Firebase/config';
+import { db, functions } from '@/Firebase/data';
 import { useAuth } from '@/modules/auth/context/AuthContext';
 
 type CurriculumRow = Record<string, any> & { id: string };

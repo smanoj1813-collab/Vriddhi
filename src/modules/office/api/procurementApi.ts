@@ -10,7 +10,7 @@
 //   goodsReceipts, vendorBills, config/procurement
 
 import { addDoc, arrayUnion, doc as fsDoc, getDoc, getDocs, limit, query, runTransaction, setDoc, updateDoc, where, type DocumentData } from 'firebase/firestore'
-import { db } from '@/Firebase/config'
+import { db } from '@/Firebase/data'
 import { actor, clean, financialYear, formatDocNo, nextCounter, nowIso, num, officeCol, officeDoc, str, todayIso } from './officeDb'
 import { recordMovement } from './inventoryApi'
 import {

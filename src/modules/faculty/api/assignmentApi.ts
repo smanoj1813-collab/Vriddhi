@@ -1,7 +1,7 @@
 // src/modules/faculty/api/assignmentApi.ts
 // Firestore CRUD for Faculty Assignments
 
-import { db, functions } from '@/Firebase/config'
+import { db, functions } from '@/Firebase/data'
 import { httpsCallable } from 'firebase/functions'
 import {
   collection,

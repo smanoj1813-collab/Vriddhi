@@ -3,7 +3,7 @@
 // (same collection faculty/admin write recurring classes to).
 import { useEffect, useMemo, useState } from 'react';
 import { collection, query, where, getDocs, limit } from 'firebase/firestore';
-import { db } from '@/Firebase/config';
+import { db } from '@/Firebase/data';
 import type { ClassSchedule, WeeklySchedule } from '../../../types/schedule';
 import { scheduleMatchesStudentDocument } from '../utils/studentScheduleMatching';
 

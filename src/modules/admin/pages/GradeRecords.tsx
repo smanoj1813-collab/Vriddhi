@@ -25,7 +25,7 @@ import {
 import { Link as RouterLink } from 'react-router-dom';
 import { collection, getDocs, limit, query, where } from 'firebase/firestore';
 import { httpsCallable } from 'firebase/functions';
-import { db, functions } from '@/Firebase/config';
+import { db, functions } from '@/Firebase/data';
 import { useAuth } from '../../auth/context/AuthContext';
 import DrillDown, { type DrillGroup, type DrillLevelSpec } from '@/shared/components/DrillDown';
 

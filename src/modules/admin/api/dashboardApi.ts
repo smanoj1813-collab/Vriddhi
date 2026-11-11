@@ -6,7 +6,7 @@ import {
   query, where, limit,
   getCountFromServer,
 } from 'firebase/firestore'
-import { db } from '@/Firebase/config'
+import { db } from '@/Firebase/data'
 
 const MAX_READS = 500
 

@@ -7,7 +7,7 @@ import {
 } from 'lucide-react'
 import { collection, query, where, getDocs, limit } from 'firebase/firestore'
 import { httpsCallable } from 'firebase/functions'
-import { db, functions } from '@/Firebase/config'
+import { db, functions } from '@/Firebase/data'
 import { useAuth } from '@/modules/auth/context/AuthContext'
 
 // ------------------------------------------------------------------

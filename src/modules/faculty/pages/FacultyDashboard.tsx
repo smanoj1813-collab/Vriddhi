@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/modules/auth/context/AuthContext';
-import { db } from '@/Firebase/config';
+import { db } from '@/Firebase/data';
 import {
   collection, query, where, getDocs, orderBy, limit,
 } from 'firebase/firestore';

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { collection, getDocs, limit, query, where, doc, updateDoc } from 'firebase/firestore';
 import { httpsCallable } from 'firebase/functions';
-import { db, functions } from '@/Firebase/config';
+import { db, functions } from '@/Firebase/data';
 import { useAuth } from '@/modules/auth/context/AuthContext';
 import AutoScheduleDialog from './AutoScheduleDialog';
 import ScheduleImportWorkflow from './ScheduleImportWorkflow';

@@ -12,7 +12,7 @@
 // ------------------------------------------------------------------
 import { useCallback, useEffect, useState } from 'react';
 import { httpsCallable } from 'firebase/functions';
-import { functions } from '@/Firebase/config';
+import { functions } from '@/Firebase/data';
 
 export type TopicState = 'completed' | 'current' | 'upcoming';
 

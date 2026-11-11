@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <meta charset="UTF-8">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --brand:#32c888; --brand-dark:#1b5e20; --bg:#f8fafc; --card:#fff;
+      --text:#1e293b; --muted:#64748b; --border:#e2e8f0;
+      --ok:#10b981; --warn:#f59e0b; --error:#ef4444;
+    }
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:'Poppins',sans-serif;background:var(--bg);color:var(--text);padding:24px;font-size:13px}
+    .head{display:flex;align-items:center;gap:12px;margin-bottom:6px}
+    .head h1{font-size:19px;font-weight:800;color:var(--brand-dark)}
+    .head p{font-size:12px;color:var(--muted);margin-top:3px}
+
+    .detected{
+      background:linear-gradient(135deg,#ecfdf5,#d1fae5);
+      border:1px solid #a7f3d0;border-left:5px solid var(--brand);
+      border-radius:12px;padding:16px;margin:16px 0;
+    }
+    .detected .label{font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:#047857}
+    .detected .name{font-size:20px;font-weight:800;color:#065f46;margin:6px 0;word-break:break-word}
+    .chip{display:inline-block;background:#fff;border:1px solid #a7f3d0;color:#047857;
+      font-size:10px;font-weight:600;padding:3px 9px;border-radius:20px}
+
+    .card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:14px}
+    .card h3{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin-bottom:10px}
+    .row{display:flex;justify-content:space-between;gap:12px;padding:5px 0;font-size:12px;border-bottom:1px dashed #eef2f7}
+    .row:last-child{border-bottom:none}
+    .row span:first-child{color:var(--muted)}
+    .row span:last-child{font-weight:600;text-align:right;word-break:break-word}
+    .ok{color:var(--ok)} .warn{color:var(--warn)} .bad{color:var(--error)}
+
+    .banner{display:none;border-radius:10px;padding:11px 14px;font-size:12px;margin-bottom:14px;line-height:1.5}
+    .banner.copy{background:#fef3c7;border-left:4px solid var(--warn);color:#92400e}
+    .banner.unknown{background:#fee2e2;border-left:4px solid var(--error);color:#991b1b}
+
+    label.field{display:block;font-weight:600;font-size:12px;margin-bottom:6px}
+    input[type=text]{width:100%;padding:11px 14px;border:2px solid var(--border);border-radius:10px;
+      font-family:'Poppins';font-size:13px;background:#fff;transition:.2s}
+    input[type=text]:focus{outline:none;border-color:var(--brand);box-shadow:0 0 0 4px rgba(50,200,136,.14)}
+    .hint{font-size:11px;color:#94a3b8;margin-top:6px;line-height:1.5}
+
+    details.card summary{cursor:pointer;font-size:12px;font-weight:700;text-transform:uppercase;
+      letter-spacing:.6px;color:var(--muted);list-style:none;display:flex;align-items:center;gap:7px}
+    details.card summary::-webkit-details-marker{display:none}
+    details.card summary::before{content:'▸';font-size:11px;transition:.2s}
+    details.card[open] summary::before{content:'▾'}
+    details.card summary small{text-transform:none;letter-spacing:0;font-weight:500;color:#94a3b8}
+    .branch-row{display:flex;gap:10px;flex-wrap:wrap}
+    .branch-col{flex:1;min-width:180px}
+    .pills{display:flex;flex-wrap:wrap;gap:5px;margin-top:7px}
+    .pill{font-size:10px;background:#eef2f7;border:1px solid var(--border);border-radius:20px;
+      padding:2px 8px;color:#475569}
+    .alias-row{display:grid;grid-template-columns:1fr 18px 1fr;gap:8px;align-items:center;margin-bottom:7px}
+    .alias-row .variant{font-size:11px;background:#fef3c7;border:1px solid #fcd34d;color:#92400e;
+      border-radius:7px;padding:6px 9px;word-break:break-word}
+    .alias-row .variant.mapped{background:#ecfdf5;border-color:#a7f3d0;color:#047857}
+    .alias-row .arrow{text-align:center;color:#94a3b8;font-size:12px}
+    .alias-row input{padding:6px 9px;font-size:11px;border-width:1.5px;border-radius:7px}
+    .check{display:flex;align-items:flex-start;gap:9px;margin-top:12px;font-size:12px;color:#475569}
+    .check input{width:16px;height:16px;margin-top:2px;accent-color:var(--brand)}
+
+    .actions{display:flex;gap:10px;margin-top:18px;flex-wrap:wrap}
+    .btn{flex:1;min-width:130px;padding:12px 16px;border:none;border-radius:10px;font-family:'Poppins';
+      font-weight:700;font-size:13px;cursor:pointer;transition:.2s}
+    .btn-primary{background:linear-gradient(135deg,var(--brand),var(--brand-dark));color:#fff;
+      box-shadow:0 8px 18px -6px rgba(50,200,136,.55)}
+    .btn-primary:hover:not(:disabled){transform:translateY(-1px)}
+    .btn-ghost{background:#f1f5f9;color:#475569}
+    .btn-ghost:hover:not(:disabled){background:#e2e8f0}
+    .btn:disabled{opacity:.55;cursor:not-allowed;transform:none}
+    .status{margin-top:12px;font-size:12px;min-height:18px;text-align:center}
+    .spinner{display:none;width:18px;height:18px;border:3px solid var(--border);border-top-color:var(--brand);
+      border-radius:50%;animation:spin .8s linear infinite;margin:12px auto 0}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .foot{font-size:11px;color:#94a3b8;line-height:1.6;margin-top:14px;text-align:center}
+  </style>
+</head>
+<body>
+  <div class="head">
+    <div>
+      <h1>🏫 College Setup</h1>
+      <p>One script, every college — confirm this spreadsheet's college once.</p>
+    </div>
+  </div>
+
+  <div class="banner copy" id="copyBanner">
+    ⚠️ <strong>Looks like a copy.</strong> The saved name doesn't match this file's name.
+    If this spreadsheet belongs to another college, click <em>Re-detect</em> and save the new name.
+  </div>
+  <div class="banner unknown" id="unknownBanner">
+    ⚠️ <strong>College not detected.</strong> Type the full college name below and save — reports and emails
+    will use it from now on.
+  </div>
+
+  <div class="detected">
+    <div class="label">Detected college</div>
+    <div class="name" id="detectedName">Loading…</div>
+    <span class="chip" id="detectedSource">—</span>
+  </div>
+
+  <div class="card">
+    <h3>This spreadsheet</h3>
+    <div class="row"><span>File name</span><span id="ssName">—</span></div>
+    <div class="row"><span>Saved override</span><span id="savedName">None (auto-detect)</span></div>
+    <div class="row"><span>Email Registry rows</span><span id="regRows">—</span></div>
+    <div class="row"><span>College column</span><span id="regCol">—</span></div>
+    <div class="row"><span>Rows with another college</span><span id="regOther">—</span></div>
+  </div>
+
+  <div class="card">
+    <h3>Set the college for this spreadsheet</h3>
+    <label class="field" for="collegeInput">College name</label>
+    <input type="text" id="collegeInput" placeholder="e.g., St. Joseph Engineering College" autocomplete="off">
+    <div class="hint">Used in report headers, PDF/CSV file names, email subjects and the Email Registry. You can leave it as detected.</div>
+    <div class="check">
+      <input type="checkbox" id="updateRows">
+      <label for="updateRows">Also relabel existing Email Registry rows with this name
+        <span class="hint" style="display:block;margin-top:2px">Needed when this spreadsheet was copied from another college. Off by default so history isn't rewritten.</span>
+      </label>
+    </div>
+  </div>
+
+  <details class="card" id="branchCard">
+    <summary>Programme groups <small>(CS / Non-CS filter in dashboards)</small></summary>
+    <div style="margin-top:12px;">
+      <div class="hint" style="margin-bottom:10px;">
+        These lists power the CS / Non-CS filter and branch grouping in the PrepInsta and TPO dashboards.
+        They ship with one college's programmes, so set yours here.
+      </div>
+      <div class="branch-row">
+        <div class="branch-col">
+          <label class="field" for="csInput">CS branches</label>
+          <input type="text" id="csInput" placeholder="B.Tech AIDS, B.E. CSE, B.Tech IT" autocomplete="off">
+        </div>
+        <div class="branch-col">
+          <label class="field" for="nonCsInput">Non-CS branches</label>
+          <input type="text" id="nonCsInput" placeholder="B.E. ECE, B.E. Mech, MBA" autocomplete="off">
+        </div>
+      </div>
+      <div class="hint">Comma-separated. Clear both to restore the built-in defaults.</div>
+      <div class="pills" id="masterBranches"></div>
+      <button class="btn btn-ghost" style="margin-top:10px;flex:none;min-width:auto;padding:9px 14px;"
+        id="branchBtn" onclick="saveBranches()">💾 Save programme groups</button>
+    </div>
+  </details>
+
+  <details class="card" id="aliasCard">
+    <summary>Branch name aliases <small>(merge “CSE AIDS” / “CSE-AIDS” / “CSEAIDS”)</small></summary>
+    <div style="margin-top:12px;">
+      <div class="hint" style="margin-bottom:10px;">
+        Every branch label found in the leaderboard is listed below. Type the canonical name to merge
+        variants into one row. Leave a row unchanged to keep it as it is.
+      </div>
+      <div id="auditNote" class="hint" style="margin-bottom:8px;"></div>
+      <div class="scroll" id="aliasRows" style="max-height:220px;"></div>
+      <button class="btn btn-ghost" style="margin-top:10px;flex:none;min-width:auto;padding:9px 14px;"
+        id="aliasBtn" onclick="saveAliases()">💾 Save aliases</button>
+    </div>
+  </details>
+
+  <div class="actions">
+    <button class="btn btn-primary" id="saveBtn" onclick="save()">💾 Save</button>
+    <button class="btn btn-ghost" id="detectBtn" onclick="redetect()">🔄 Re-detect</button>
+    <button class="btn btn-ghost" onclick="google.script.host.close()">✕ Close</button>
+  </div>
+
+  <div class="spinner" id="spinner"></div>
+  <div class="status" id="status" role="status" aria-live="polite"></div>
+
+  <div class="foot">
+    Tip: deploy this exact script to every college's spreadsheet — no code edits required.
+  </div>
+
+  <script>
+    let info = null;
+    let busy = false;
+
+    window.onload = function () { load(); };
+
+    function setStatus(msg, type) {
+      const el = document.getElementById('status');
+      el.textContent = msg || '';
+      el.style.color = type === 'error' ? '#ef4444' : type === 'success' ? '#10b981' : '#64748b';
+    }
+    function spin(on) {
+      document.getElementById('spinner').style.display = on ? 'block' : 'none';
+      document.getElementById('saveBtn').disabled = on;
+      document.getElementById('detectBtn').disabled = on;
+      busy = on;
+    }
+
+    function load() {
+      spin(true);
+      setStatus('Reading this spreadsheet…');
+      google.script.run
+        .withSuccessHandler(function (data) {
+          spin(false);
+          info = data;
+          render(data);
+          loadAudit();
+          setStatus('');
+        })
+        .withFailureHandler(function (err) {
+          spin(false);
+          setStatus('❌ ' + err.message, 'error');
+        })
+        .getCollegeInfo();
+    }
+
+    function render(data) {
+      if (!data) return;
+
+      document.getElementById('detectedName').textContent = data.name || 'Unknown College';
+      document.getElementById('detectedSource').textContent = 'Source: ' + (data.source || '—');
+      document.getElementById('ssName').textContent = data.spreadsheetName || '—';
+
+      const savedEl = document.getElementById('savedName');
+      savedEl.textContent = data.savedName || 'None (auto-detect)';
+      savedEl.className = data.savedName ? '' : 'warn';
+
+      const reg = data.registry || {};
+      document.getElementById('regRows').textContent = reg.exists ? (reg.rows || 0) : 'Sheet not created yet';
+      document.getElementById('regCol').textContent = reg.hasCollegeColumn ? '✅ Present' : 'Will be added on first use';
+      document.getElementById('regCol').className = reg.hasCollegeColumn ? 'ok' : 'warn';
+
+      const otherEl = document.getElementById('regOther');
+      otherEl.textContent = (reg.otherCollegeRows || 0) + (reg.otherCollegeRows ? ' — consider relabelling' : '');
+      otherEl.className = reg.otherCollegeRows ? 'warn' : 'ok';
+
+      const input = document.getElementById('collegeInput');
+      if (!input.value.trim()) {
+        input.value = (data.name && data.name !== 'Unknown College') ? data.name : '';
+      }
+
+      // Programme groups
+      const groups = data.branchGroups || { CS: [], NON_CS: [], isCustom: false };
+      const csEl = document.getElementById('csInput');
+      const nonCsEl = document.getElementById('nonCsInput');
+      if (!csEl.value.trim()) csEl.value = (groups.CS || []).join(', ');
+      if (!nonCsEl.value.trim()) nonCsEl.value = (groups.NON_CS || []).join(', ');
+
+      const master = data.masterBranches || [];
+      const pills = document.getElementById('masterBranches');
+      if (master.length) {
+        pills.innerHTML = '<span class="pill" style="background:#fff;border-color:#a7f3d0;color:#047857">' +
+          'Found in Master Data:</span>' +
+          master.map(b => '<span class="pill">' + escapeHtml(b) + '</span>').join('');
+      } else {
+        pills.innerHTML = '<span class="pill">No Branch column found in Master Data</span>';
+      }
+
+      document.getElementById('copyBanner').style.display = data.likelyCopy ? 'block' : 'none';
+      document.getElementById('unknownBanner').style.display = data.isUnknown ? 'block' : 'none';
+      document.getElementById('updateRows').checked = !!(reg.otherCollegeRows > 0);
+    }
+
+    function loadAudit() {
+      const box = document.getElementById('aliasRows');
+      const note = document.getElementById('auditNote');
+      box.innerHTML = '<div class="hint">Reading branch labels…</div>';
+      google.script.run
+        .withSuccessHandler(function (a) {
+          if (!a || !a.ok) {
+            box.innerHTML = '<div class="hint">' + escapeHtml((a && a.message) || 'No leaderboard yet — build one first.') + '</div>';
+            note.textContent = '';
+            return;
+          }
+          note.textContent = a.variants.length + ' label(s) across ' + a.canonicalCount +
+            ' canonical branch(es)' + (a.splitBranches ? ' · ' + a.splitBranches + ' split group(s)' : '') +
+            ' — from ' + a.sheetName;
+
+          if (!a.variants.length) {
+            box.innerHTML = '<div class="hint">No branch labels found.</div>';
+            return;
+          }
+          box.innerHTML = a.variants.map(function (v) {
+            return '<div class="alias-row" data-variant="' + escapeHtml(v.variant) + '">' +
+              '<div class="variant ' + (v.mapped ? 'mapped' : '') + '" title="' + v.students + ' student(s)">' +
+                escapeHtml(v.variant) + '</div>' +
+              '<div class="arrow">→</div>' +
+              '<input type="text" class="alias-input" value="' + escapeHtml(v.canonical) + '">' +
+            '</div>';
+          }).join('');
+        })
+        .withFailureHandler(function (e) {
+          box.innerHTML = '<div class="hint">❌ ' + escapeHtml(e.message) + '</div>';
+        })
+        .getBranchNameAudit('');
+    }
+
+    function saveAliases() {
+      const rows = Array.prototype.slice.call(document.querySelectorAll('#aliasRows .alias-row'));
+      if (!rows.length) { setStatus('Nothing to save — no branch labels found.', 'error'); return; }
+      const pairs = rows.map(function (r) {
+        const input = r.querySelector('.alias-input');
+        return { variant: r.getAttribute('data-variant'), canonical: (input.value || '').trim() };
+      }).filter(function (p) { return p.variant && p.canonical; });
+
+      const btn = document.getElementById('aliasBtn');
+      btn.disabled = true;
+      setStatus('Saving aliases…');
+      google.script.run
+        .withSuccessHandler(function (res) {
+          btn.disabled = false;
+          setStatus(res && res.count
+            ? '✅ ' + res.count + ' alias(es) saved.'
+            : '✅ Aliases cleared — every label stands on its own.', 'success');
+          loadAudit();
+        })
+        .withFailureHandler(function (e) {
+          btn.disabled = false;
+          setStatus('❌ ' + e.message, 'error');
+        })
+        .saveBranchAliasesFromDialog(pairs);
+    }
+
+    function escapeHtml(str) {
+      return String(str === null || str === undefined ? '' : str)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    }
+
+    function saveBranches() {
+      if (busy) return;
+      const cs = document.getElementById('csInput').value.trim();
+      const nonCs = document.getElementById('nonCsInput').value.trim();
+      const btn = document.getElementById('branchBtn');
+      btn.disabled = true;
+      setStatus('Saving programme groups…');
+
+      google.script.run
+        .withSuccessHandler(function (res) {
+          btn.disabled = false;
+          const g = (res && res.groups) || {};
+          setStatus(res && res.reset
+            ? '✅ Restored the default programme groups.'
+            : '✅ Saved: ' + (g.CS || []).length + ' CS · ' + (g.NON_CS || []).length + ' Non-CS branch(es).', 'success');
+          load();
+        })
+        .withFailureHandler(function (err) {
+          btn.disabled = false;
+          setStatus('❌ ' + err.message, 'error');
+        })
+        .saveBranchGroupsFromDialog(cs, nonCs);
+    }
+
+    function save() {
+      if (busy) return;
+      const name = document.getElementById('collegeInput').value.trim();
+      if (!name) { setStatus('Please enter the college name.', 'error'); return; }
+      if (name.length < 3) { setStatus('That name looks too short — please enter the full college name.', 'error'); return; }
+
+      const updateRows = document.getElementById('updateRows').checked;
+      spin(true);
+      setStatus('Saving…');
+
+      google.script.run
+        .withSuccessHandler(function (res) {
+          spin(false);
+          if (res && res.info) { info = res.info; render(res.info); }
+          const extra = res && res.updatedRows ? ' (' + res.updatedRows + ' registry row(s) relabelled)' : '';
+          setStatus('✅ Saved: ' + (res && res.college ? res.college : name) + extra, 'success');
+        })
+        .withFailureHandler(function (err) {
+          spin(false);
+          setStatus('❌ ' + err.message, 'error');
+        })
+        .saveCollegeNameFromDialog(name, updateRows);
+    }
+
+    function redetect() {
+      if (busy) return;
+      spin(true);
+      setStatus('Re-scanning…');
+      google.script.run
+        .withSuccessHandler(function () {
+          document.getElementById('collegeInput').value = '';
+          spin(false);
+          load();
+        })
+        .withFailureHandler(function (err) { spin(false); setStatus('❌ ' + err.message, 'error'); })
+        .clearCollegeCache();
+    }
+  </script>
+</body>
+</html>

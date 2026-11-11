@@ -83,7 +83,11 @@ export default defineConfig(({ mode }) => {
           'assets/index-*.js',
           'assets/index-*.css',
           'assets/react-core-*.js',
-          'assets/firebase-*.js',
+          // Was 'assets/firebase-*.js' until the boot/data split (P1-2) renamed
+          // the chunk. Only the auth half belongs in the offline shell; the data
+          // chunk is fetched after sign-in and covered by the /assets/ runtime
+          // route below, so precaching it would put 183 kB back into install.
+          'assets/firebase-auth-*.js',
           'assets/mui-core-*.js',
           'assets/mui-icons-*.js',
           'assets/utils-*.js',
@@ -215,12 +219,17 @@ export default defineConfig(({ mode }) => {
             'react-core': ['react', 'react-dom', 'react-router-dom'],
             'mui-core': ['@mui/material', '@emotion/react', '@emotion/styled'],
             'mui-icons': ['@mui/icons-material'],
-            'firebase': [
-              'firebase/app',
-              'firebase/auth',
+            // Split by "needed to boot" vs "needed once signed in". The entry
+            // only initialises the app handle and Auth (src/Firebase/config.ts);
+            // Firestore, Storage, RTDB and Functions live in src/Firebase/data.ts,
+            // which no entry-reachable module imports. One combined `firebase`
+            // chunk meant the login screen preloaded all of them.
+            'firebase-auth': ['firebase/app', 'firebase/auth'],
+            'firebase-data': [
               'firebase/firestore',
               'firebase/database',
               'firebase/storage',
+              'firebase/functions',
             ],
             'charts': ['recharts'],
             'pdf': ['jspdf', 'html2canvas'],

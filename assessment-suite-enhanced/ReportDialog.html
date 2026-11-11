@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(135deg, #32c888 0%, #1b5e20 100%);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+    .container {
+      background: rgba(255, 255, 255, 0.97);
+      border-radius: 24px;
+      padding: 35px;
+      width: 100%;
+      max-width: 520px;
+      box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
+      animation: slideIn 0.5s ease-out;
+    }
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(-30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .header {
+      text-align: center;
+      margin-bottom: 25px;
+    }
+    .header h1 {
+      font-size: 26px;
+      font-weight: 800;
+      background: linear-gradient(135deg, #32c888, #1b5e20);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 6px;
+    }
+    .header p {
+      color: #64748b;
+      font-size: 13px;
+    }
+    .input-group {
+      margin-bottom: 14px;
+    }
+    .input-group label {
+      display: block;
+      font-weight: 600;
+      color: #1e293b;
+      margin-bottom: 6px;
+      font-size: 13px;
+    }
+    .input-group label .required { color: #dc2626; }
+    .input-group .help {
+      font-size: 11px;
+      color: #94a3b8;
+      margin-top: 4px;
+      font-weight: 400;
+    }
+    .input-group input, .input-group select {
+      width: 100%;
+      padding: 12px 16px;
+      border: 2px solid #e2e8f0;
+      border-radius: 10px;
+      font-family: 'Poppins', sans-serif;
+      font-size: 13px;
+      transition: all 0.3s;
+      background: #f8fafc;
+    }
+    .input-group input:focus, .input-group select:focus {
+      outline: none;
+      border-color: #32c888;
+      background: white;
+      box-shadow: 0 0 0 4px rgba(50, 200, 136, 0.15);
+    }
+    .input-group input[aria-invalid="true"] {
+      border-color: #ef4444;
+      background: #fef2f2;
+    }
+    .btn {
+      width: 100%;
+      padding: 14px;
+      border: none;
+      border-radius: 10px;
+      font-family: 'Poppins', sans-serif;
+      font-weight: 700;
+      font-size: 15px;
+      cursor: pointer;
+      transition: all 0.3s;
+      margin-top: 8px;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, #32c888, #1b5e20);
+      color: white;
+      box-shadow: 0 10px 20px -5px rgba(50, 200, 136, 0.4);
+    }
+    .btn-primary:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 15px 30px -5px rgba(50, 200, 136, 0.5);
+    }
+    .btn-primary:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+    .status {
+      text-align: center;
+      margin-top: 12px;
+      font-size: 13px;
+      color: #64748b;
+      min-height: 20px;
+    }
+    .spinner {
+      display: none;
+      width: 20px;
+      height: 20px;
+      border: 3px solid #e2e8f0;
+      border-top-color: #32c888;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 10px auto 0;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    .optional {
+      font-weight: 400;
+      color: #94a3b8;
+      font-size: 11px;
+    }
+    .field-error {
+      font-size: 11px;
+      color: #dc2626;
+      margin-top: 4px;
+      display: none;
+    }
+  </style>
+<base target="_blank">
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>📝 Generate Report</h1>
+      <p>Enter assessment details to generate the report</p>
+      <p style="font-size:11px;color:#94a3b8;margin-top:4px;">Data source: <strong>Report generator</strong> sheet (Name, Email, Reg No, Batch, Branch, Score)</p>
+    </div>
+    <div class="input-group">
+      <label for="collegeInput">College Name <span class="required">*</span></label>
+      <input type="text" id="collegeInput" placeholder="e.g., KGiSL Institute of Technology" aria-required="true" autocomplete="off" onkeypress="if(event.key==='Enter') generate()">
+      <div class="auto-note" id="collegeNote">🏫 Auto-detected from this spreadsheet.</div>
+      <div class="field-error" id="err-collegeInput">Please enter College Name.</div>
+    </div>
+    <div class="input-group">
+      <label for="testName">Assessment Name <span class="required">*</span></label>
+      <input type="text" id="testName" placeholder="e.g., Weekly Test 1" aria-required="true" onkeypress="if(event.key==='Enter') generate()">
+      <div class="help">Use CTD / DCA / PMD prefix for auto leaderboard (e.g. CTD 1, PMD 1).</div>
+      <div class="field-error" id="err-testName">Please enter Assessment Name.</div>
+    </div>
+    <div class="input-group">
+      <label for="batchInput">Batch <span class="required">*</span></label>
+      <input type="text" id="batchInput" placeholder="e.g., 2027" aria-required="true" onkeypress="if(event.key==='Enter') generate()">
+      <div class="field-error" id="err-batchInput">Please enter Batch.</div>
+    </div>
+    <div class="input-group">
+      <label for="reportDate">Assessment Date <span class="required">*</span></label>
+      <input type="date" id="reportDate" aria-required="true" onkeypress="if(event.key==='Enter') generate()">
+      <div class="field-error" id="err-reportDate">Please select Assessment Date.</div>
+    </div>
+    <div class="input-group">
+      <label for="totalQuestions">Number of Questions <span class="required">*</span></label>
+      <input type="number" id="totalQuestions" placeholder="e.g., 50" min="1" aria-required="true" onkeypress="if(event.key==='Enter') generate()">
+      <div class="field-error" id="err-totalQuestions">Please enter Number of Questions.</div>
+    </div>
+    <div class="input-group">
+      <label for="totalMarks">Total Marks <span class="required">*</span></label>
+      <input type="number" id="totalMarks" placeholder="e.g., 100" min="1" aria-required="true" onkeypress="if(event.key==='Enter') generate()">
+      <div class="field-error" id="err-totalMarks">Please enter Total Marks (must be positive).</div>
+    </div>
+    <div class="input-group">
+      <label for="duration">Duration <span class="required">*</span></label>
+      <input type="text" id="duration" placeholder="e.g., 60 mins" aria-required="true" onkeypress="if(event.key==='Enter') generate()">
+      <div class="field-error" id="err-duration">Please enter Duration.</div>
+    </div>
+    <div class="input-group">
+      <label for="totalStrengthInput">Total Batch Strength <span class="optional">(optional)</span></label>
+      <input type="number" id="totalStrengthInput" placeholder="e.g., 320" min="1" onkeypress="if(event.key==='Enter') generate()">
+      <div class="help">Used for Attendance (e.g. 280 / 320) and absent count. Leave blank to auto-calculate.</div>
+    </div>
+    <div class="input-group">
+      <label for="answerKeyInput">Answer Key File ID or URL <span class="optional">(optional)</span></label>
+      <input type="text" id="answerKeyInput" placeholder="Google Drive File ID or direct link" onkeypress="if(event.key==='Enter') generate()">
+      <div class="help">Copied to Drive folder: All College Assessment Reports / College / Test</div>
+    </div>
+    <div class="input-group">
+      <label for="leaderboardSelect">Include Leaderboard Data</label>
+      <select id="leaderboardSelect">
+        <option value="">-- None --</option>
+        <option value="Class Test">📊 Class Test Leaderboard</option>
+        <option value="Company">📊 Company Specific Leaderboard</option>
+        <option value="Practice">📊 Practice Module Leaderboard</option>
+      </select>
+      <div class="help">Report will auto-update the selected leaderboard.</div>
+    </div>
+    <button class="btn btn-primary" id="generateBtn" onclick="generate()">
+      🚀 Generate Report
+    </button>
+    <div class="spinner" id="spinner" role="status" aria-label="Loading"></div>
+    <div class="status" id="status" role="status" aria-live="polite"></div>
+  </div>
+
+  <script>
+    let isGenerating = false;
+
+    /* GENERALIZED: pre-fill the college from the spreadsheet so nobody retypes it.
+       The field stays editable — the value sent to the backend is unchanged. */
+    window.onload = function () {
+      const note = document.getElementById('collegeNote');
+      google.script.run
+        .withSuccessHandler(function (info) {
+          const input = document.getElementById('collegeInput');
+          const name = (info && info.name) || '';
+          if (name && name !== 'Unknown College') {
+            if (!input.value.trim()) input.value = name;
+            note.textContent = '🏫 Auto-detected (' + (info.source || 'this spreadsheet') + '). Edit only if this spreadsheet serves a different college.';
+            note.style.display = 'block';
+          } else {
+            note.textContent = '⚠️ College not detected — type it here, or set it once in 📊 Assessment Suite → 🏫 College Setup.';
+            note.classList.add('warn');
+            note.style.display = 'block';
+            input.focus();
+          }
+        })
+        .withFailureHandler(function () {
+          note.textContent = '🏫 Type the college name (auto-detect unavailable).';
+          note.style.display = 'block';
+        })
+        .getCollegeInfo();
+    };
+
+    function setFieldError(id, hasError) {
+      const input = document.getElementById(id);
+      const err = document.getElementById('err-' + id);
+      if (input) input.setAttribute('aria-invalid', hasError ? 'true' : 'false');
+      if (err) err.style.display = hasError ? 'block' : 'none';
+    }
+
+    function generate() {
+      if (isGenerating) return;
+
+      const collegeName = document.getElementById('collegeInput').value.trim();
+      const testName = document.getElementById('testName').value.trim();
+      const batch = document.getElementById('batchInput').value.trim();
+      const totalQuestions = document.getElementById('totalQuestions').value.trim();
+      const totalMarks = document.getElementById('totalMarks').value.trim();
+      const duration = document.getElementById('duration').value.trim();
+      const reportDate = document.getElementById('reportDate').value;
+      const totalStrength = document.getElementById('totalStrengthInput').value.trim();
+      const answerKeyFileId = document.getElementById('answerKeyInput').value.trim();
+      const leaderboardType = document.getElementById('leaderboardSelect').value;
+
+      // Clear previous errors
+      ['collegeInput','testName','batchInput','reportDate','totalQuestions','totalMarks','duration'].forEach(id => setFieldError(id, false));
+
+      if (!collegeName) {
+        setFieldError('collegeInput', true);
+        showStatus('Please enter College Name.', 'error');
+        document.getElementById('collegeInput').focus();
+        return;
+      }
+      if (!testName) { setFieldError('testName', true); showStatus('Please enter Assessment Name.', 'error'); document.getElementById('testName').focus(); return; }
+      if (!batch) { setFieldError('batchInput', true); showStatus('Please enter Batch.', 'error'); document.getElementById('batchInput').focus(); return; }
+      if (!reportDate) { setFieldError('reportDate', true); showStatus('Please select Assessment Date.', 'error'); return; }
+      if (!totalQuestions) { setFieldError('totalQuestions', true); showStatus('Please enter Number of Questions.', 'error'); return; }
+      if (!totalMarks || parseFloat(totalMarks) <= 0) { setFieldError('totalMarks', true); showStatus('Total Marks must be a positive number.', 'error'); return; }
+      if (!duration) { setFieldError('duration', true); showStatus('Please enter Duration.', 'error'); return; }
+
+      isGenerating = true;
+      const btn = document.getElementById('generateBtn');
+      btn.disabled = true;
+      btn.textContent = '⏳ Generating...';
+      document.getElementById('spinner').style.display = 'block';
+      showStatus('Generating report... Please wait (do not close this dialog)', 'info');
+
+      google.script.run
+        .withSuccessHandler(function(result) {
+          isGenerating = false;
+          btn.disabled = false;
+          btn.textContent = '🚀 Generate Report';
+          document.getElementById('spinner').style.display = 'none';
+          showStatus('✅ Report generated successfully! Check Report_View sheet. Closing in 2s...', 'success');
+          setTimeout(function() {
+            google.script.host.close();
+          }, 2000);
+        })
+        .withFailureHandler(function(error) {
+          isGenerating = false;
+          btn.disabled = false;
+          btn.textContent = '🚀 Generate Report';
+          document.getElementById('spinner').style.display = 'none';
+          showStatus('❌ Error: ' + error.message + ' — Check Report generator headers and try again.', 'error');
+        })
+        .generateUniversalReport({
+          testName: testName,
+          totalQuestions: totalQuestions,
+          totalMarks: parseFloat(totalMarks),
+          duration: duration,
+          reportDate: reportDate,
+          leaderboardType: leaderboardType,
+          collegeName: collegeName,
+          batch: batch,
+          totalStrength: totalStrength || null,
+          answerKeyFileId: answerKeyFileId || null
+        });
+    }
+    function showStatus(msg, type) {
+      const el = document.getElementById('status');
+      el.textContent = msg;
+      el.style.color = type === 'error' ? '#ef4444' : type === 'success' ? '#10b981' : '#64748b';
+    }
+  </script>
+</body>
+</html>

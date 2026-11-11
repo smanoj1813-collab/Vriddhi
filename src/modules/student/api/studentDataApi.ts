@@ -22,7 +22,7 @@ import {
   getDoc,
 } from 'firebase/firestore';
 import { httpsCallable } from 'firebase/functions';
-import { db, functions } from '@/Firebase/config';
+import { db, functions } from '@/Firebase/data';
 import { resolveStudentRecord } from '../services/studentRecordResolver';
 import { scheduleMatchesStudentDocument } from '../utils/studentScheduleMatching';
 import {

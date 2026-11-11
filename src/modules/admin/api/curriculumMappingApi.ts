@@ -2,7 +2,7 @@
 // api/curriculumMappingApi.ts — Curriculum Faculty Mapping & Scheduling
 // ═══════════════════════════════════════════════════════════════════════
 
-import { db } from '@/Firebase/config';
+import { db } from '@/Firebase/data';
 import {
   collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc,
   query, where, limit, Timestamp, writeBatch,

@@ -1,4 +1,4 @@
-import { db } from '@/Firebase/config';
+import { db } from '@/Firebase/data';
 import {
   collection, query, where, getDocs, addDoc, updateDoc, doc,
   getDoc, Timestamp, orderBy, limit, startAfter, writeBatch,

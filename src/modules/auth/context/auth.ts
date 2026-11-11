@@ -1,6 +1,7 @@
 import { signInWithEmailAndPassword, signOut } from "firebase/auth";
 import { doc, getDoc, collection, query, where, getDocs, limit } from "firebase/firestore";
-import { auth, db } from '@/Firebase/config';
+import { auth } from '@/Firebase/config'
+import { db } from '@/Firebase/data';
 import { detectClaimStaleness } from '@/shared/utils/identityClaims';
 
 export type UserRole = 'superadmin' | 'admin' | 'principal' | 'faculty' | 'student' | 'parent' | 'hod' | 'mentor' | 'accounts' | 'operations' | 'employee';

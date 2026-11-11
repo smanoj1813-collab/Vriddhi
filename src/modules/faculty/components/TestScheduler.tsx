@@ -21,7 +21,7 @@ import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { usePapers, useScheduledTests } from '../../../hooks/useAssessment';
 import { collection, getDocs, limit, query, where } from 'firebase/firestore';
 import { httpsCallable } from 'firebase/functions';
-import { db, functions } from '../../../Firebase/config';
+import { db, functions } from '../../../Firebase/data';
 import { useAuth } from '../../auth/context/AuthContext';
 import {
   AssessmentPaper, ScheduledTest, ScheduleTestInput, TestVisibility,

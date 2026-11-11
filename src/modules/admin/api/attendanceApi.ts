@@ -8,7 +8,7 @@ import {
   updateDoc, deleteDoc, Timestamp, writeBatch,
   QueryConstraint, onSnapshot, Unsubscribe,
 } from 'firebase/firestore';
-import { db } from '@/Firebase/config';
+import { db } from '@/Firebase/data';
 import { ensureClassSession } from './classSessionApi';
 import { normalizeSessionDate } from '@/shared/utils/sessionDate';
 

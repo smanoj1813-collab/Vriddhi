@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+   
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(135deg, #32c888 0%, #1b5e20 100%);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+   
+    .container {
+      background: rgba(255, 255, 255, 0.97);
+      border-radius: 24px;
+      padding: 35px;
+      width: 100%;
+      max-width: 540px;
+      box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
+      animation: slideIn 0.5s ease-out;
+    }
+   
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(-30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+   
+    .header {
+      text-align: center;
+      margin-bottom: 25px;
+    }
+   
+    .header h1 {
+      font-size: 26px;
+      font-weight: 800;
+      background: linear-gradient(135deg, #32c888, #1b5e20);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 6px;
+    }
+   
+    .header p {
+      color: #64748b;
+      font-size: 13px;
+    }
+   
+    .input-group {
+      margin-bottom: 14px;
+    }
+   
+    .input-group label {
+      display: block;
+      font-weight: 600;
+      color: #1e293b;
+      margin-bottom: 6px;
+      font-size: 13px;
+    }
+   
+    .sheet-input, .max-input, .date-input {
+      padding: 12px 16px;
+      border: 2px solid #e2e8f0;
+      border-radius: 10px;
+      font-family: 'Poppins', sans-serif;
+      font-size: 13px;
+      transition: all 0.3s;
+      background: #f8fafc;
+    }
+   
+    .sheet-input:focus, .max-input:focus, .date-input:focus {
+      outline: none;
+      border-color: #32c888;
+      background: white;
+      box-shadow: 0 0 0 4px rgba(50, 200, 136, 0.15);
+    }
+   
+    .sheet-input { width: 46%; }
+    .max-input { width: 22%; }
+    .date-input { width: 28%; }
+   
+    .input-row {
+      display: flex;
+      gap: 8px;
+      align-items: flex-end;
+    }
+   
+    .sheet-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 12px;
+      min-height: 30px;
+    }
+   
+    .tag {
+      background: linear-gradient(135deg, #32c888, #1b5e20);
+      color: white;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      animation: popIn 0.3s ease-out;
+    }
+   
+    @keyframes popIn {
+      from { transform: scale(0); }
+      to { transform: scale(1); }
+    }
+   
+    .tag .remove {
+      cursor: pointer;
+      opacity: 0.8;
+      transition: opacity 0.2s;
+      font-size: 14px;
+    }
+   
+    .tag .remove:hover {
+      opacity: 1;
+      transform: scale(1.2);
+    }
+   
+    .tag .max-label {
+      opacity: 0.85;
+      font-weight: 400;
+      font-size: 11px;
+    }
+   
+    .btn {
+      width: 100%;
+      padding: 14px;
+      border: none;
+      border-radius: 10px;
+      font-family: 'Poppins', sans-serif;
+      font-weight: 700;
+      font-size: 15px;
+      cursor: pointer;
+      transition: all 0.3s;
+      margin-top: 8px;
+    }
+   
+    .btn-primary {
+      background: linear-gradient(135deg, #32c888, #1b5e20);
+      color: white;
+      box-shadow: 0 10px 20px -5px rgba(50, 200, 136, 0.4);
+    }
+   
+    .btn-primary:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 15px 30px -5px rgba(50, 200, 136, 0.5);
+    }
+    .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+   
+    .btn-secondary {
+      background: #f1f5f9;
+      color: #64748b;
+      margin-top: 8px;
+      padding: 10px;
+      font-size: 13px;
+    }
+   
+    .btn-secondary:hover {
+      background: #e2e8f0;
+    }
+   
+    .btn-small {
+      width: auto;
+      padding: 6px 14px;
+      font-size: 12px;
+      margin-top: 0;
+      margin-left: 0;
+    }
+   
+    .info-box {
+      background: linear-gradient(135deg, #dcfce7, #bbf7d0);
+      border-left: 4px solid #32c888;
+      padding: 10px 14px;
+      border-radius: 8px;
+      margin-bottom: 16px;
+      font-size: 12px;
+      color: #166534;
+    }
+   
+    .status {
+      text-align: center;
+      margin-top: 12px;
+      font-size: 13px;
+      color: #64748b;
+      min-height: 20px;
+    }
+   
+    .spinner {
+      display: none;
+      width: 20px;
+      height: 20px;
+      border: 3px solid #e2e8f0;
+      border-top-color: #32c888;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 10px auto 0;
+    }
+   
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+   
+    .divider {
+      height: 1px;
+      background: #e2e8f0;
+      margin: 16px 0;
+    }
+   
+    .checkbox-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+   
+    .checkbox-group input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      accent-color: #32c888;
+    }
+   
+    .checkbox-group label {
+      font-size: 13px;
+      color: #475569;
+      cursor: pointer;
+    }
+   
+    .college-section {
+      background: linear-gradient(135deg, #dcfce7, #bbf7d0);
+      padding: 14px;
+      border-radius: 12px;
+      margin-bottom: 16px;
+      border: 2px solid #86efac;
+    }
+   
+    .college-section label {
+      color: #1b5e20;
+      font-weight: 700;
+    }
+   
+    .college-section input {
+      border-color: #86efac;
+      background: white;
+      width: 100%;
+    }
+   
+    .college-section input:focus {
+      border-color: #32c888;
+      box-shadow: 0 0 0 4px rgba(50, 200, 136, 0.15);
+    }
+   
+    .total-max-box {
+      background: #f0fdf4;
+      border: 2px solid #86efac;
+      border-radius: 10px;
+      padding: 10px 14px;
+      margin-top: 10px;
+      font-size: 13px;
+      color: #166534;
+      font-weight: 600;
+      display: none;
+    }
+
+    .load-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .load-status {
+      font-size: 12px;
+      color: #64748b;
+    }
+
+    .inline-spinner {
+      width: 14px;
+      height: 14px;
+      border: 2px solid #e2e8f0;
+      border-top-color: #32c888;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      display: inline-block;
+      vertical-align: middle;
+    }
+    .help { font-size: 11px; color: #94a3b8; margin-top: 4px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>🏆 Leaderboard Generator</h1>
+      <p>Type sheet name, max score & test date</p>
+      <p style="font-size:11px;color:#94a3b8;margin-top:4px;">Needs: <strong>Master Data</strong> (Name, Email, Reg No, Branch) + test sheets with Reg No & Score</p>
+    </div>
+   
+    <div class="college-section">
+      <div class="input-group">
+        <label for="collegeInput">🏛️ College Name <span style="color:#dc2626;">*</span></label>
+        <input type="text" id="collegeInput" class="sheet-input" placeholder="e.g., ABC College of Engineering" style="width:100%;" aria-required="true">
+      </div>
+    </div>
+   
+    <div class="info-box">
+      💡 <strong>Type the sheet name</strong>, max score, and pick the test date. Then click Add. Use <strong>Load Sheet Names</strong> for suggestions.
+    </div>
+   
+    <div class="input-group">
+      <label>📄 Test Sheet Name, Max Score & Date</label>
+      <div class="input-row">
+        <input type="text" id="sheetInput" class="sheet-input" placeholder="e.g., Aptitude_Test_1" list="sheetList" aria-label="Test sheet name"
+               onkeypress="if(event.key==='Enter') addSheet()">
+        <datalist id="sheetList"></datalist>
+        <input type="number" id="maxScoreInput" class="max-input" placeholder="Max: 50" min="1" aria-label="Max score"
+               onkeypress="if(event.key==='Enter') addSheet()">
+        <input type="date" id="dateInput" class="date-input" aria-label="Test date"
+               onkeypress="if(event.key==='Enter') addSheet()">
+      </div>
+      <div class="help">Sheet must have Reg No / Roll No and Score columns. Max = total marks for that test.</div>
+      <div class="load-row">
+        <button class="btn btn-secondary btn-small" onclick="loadSheetNames()">🔄 Load Sheet Names</button>
+        <span class="load-status" id="loadStatus" role="status"></span>
+      </div>
+    </div>
+   
+    <button class="btn btn-secondary" onclick="addSheet()" style="margin-top:0;">
+      ➕ Add Test
+    </button>
+   
+    <div class="sheet-tags" id="sheetTags"></div>
+   
+    <div class="total-max-box" id="totalMaxBox">
+      📊 Total Maximum Score: <span id="totalMaxDisplay">0</span>
+    </div>
+   
+    <div class="divider"></div>
+   
+    <div class="checkbox-group">
+      <input type="checkbox" id="preserveData" checked>
+      <label for="preserveData">Preserve existing leaderboard data (append new test columns)</label>
+    </div>
+   
+    <button class="btn btn-primary" id="genBtn" onclick="generateLeaderboard()">
+      🚀 Generate Leaderboard
+    </button>
+   
+    <div class="spinner" id="spinner" role="status" aria-label="Loading"></div>
+    <div class="status" id="status" role="status" aria-live="polite"></div>
+  </div>
+
+  <script>
+    let sheets = [];
+    let isGenerating = false;
+
+    function loadSheetNames() {
+      const status = document.getElementById('loadStatus');
+      const datalist = document.getElementById('sheetList');
+     
+      status.innerHTML = '<span class="inline-spinner"></span> Loading...';
+     
+      let timedOut = false;
+      const timeoutId = setTimeout(function() {
+        timedOut = true;
+        status.innerHTML = '⏱️ Timed out. <a href="#" onclick="loadSheetNames();return false;" style="color:#32c888;">Retry</a> or type manually.';
+      }, 4000);
+
+      google.script.run
+        .withSuccessHandler(function(names) {
+          clearTimeout(timeoutId);
+          if (timedOut) return;
+         
+          datalist.innerHTML = '';
+          names.forEach(function(n) {
+            const opt = document.createElement('option');
+            opt.value = n;
+            datalist.appendChild(opt);
+          });
+          status.textContent = '✅ ' + names.length + ' sheets loaded — type to see suggestions';
+          status.style.color = '#10b981';
+        })
+        .withFailureHandler(function(err) {
+          clearTimeout(timeoutId);
+          if (timedOut) return;
+          status.innerHTML = '❌ ' + err.message + '. <a href="#" onclick="loadSheetNames();return false;" style="color:#32c888;">Retry</a>';
+          status.style.color = '#ef4444';
+        })
+        .getSheetNames();
+    }
+
+    setTimeout(loadSheetNames, 300);
+
+    function addSheet() {
+      const nameInput = document.getElementById('sheetInput');
+      const maxInput = document.getElementById('maxScoreInput');
+      const dateInput = document.getElementById('dateInput');
+      const name = nameInput.value.trim();
+      const max = parseFloat(maxInput.value);
+      const date = dateInput.value;
+     
+      if (!name) {
+        showStatus('Please enter a sheet name!', 'error');
+        nameInput.focus();
+        return;
+      }
+      if (isNaN(max) || max <= 0) {
+        showStatus('Please enter a valid max score (e.g., 50)!', 'error');
+        maxInput.focus();
+        return;
+      }
+      if (!date) {
+        showStatus('Please select a test date!', 'error');
+        dateInput.focus();
+        return;
+      }
+      if (sheets.find(s => s.name === name)) {
+        showStatus('Sheet already added!', 'error');
+        return;
+      }
+     
+      sheets.push({name: name, max: max, date: date});
+      nameInput.value = '';
+      maxInput.value = '';
+      dateInput.value = '';
+      nameInput.focus();
+      renderTags();
+      updateTotalMax();
+      showStatus('Added: ' + name + ' (Max: ' + max + ' | ' + date + ')', 'success');
+    }
+   
+    function removeSheet(index) {
+      sheets.splice(index, 1);
+      renderTags();
+      updateTotalMax();
+    }
+   
+    function renderTags() {
+      const container = document.getElementById('sheetTags');
+      container.innerHTML = sheets.map((s, i) => `
+        <div class="tag">
+          ${s.name} <span class="max-label">(Max: ${s.max} | ${s.date})</span>
+          <span class="remove" onclick="removeSheet(${i})" role="button" aria-label="Remove ${s.name}">✕</span>
+        </div>
+      `).join('');
+    }
+   
+    function updateTotalMax() {
+      const total = sheets.reduce((sum, s) => sum + s.max, 0);
+      const box = document.getElementById('totalMaxBox');
+      const display = document.getElementById('totalMaxDisplay');
+      display.textContent = total;
+      box.style.display = sheets.length > 0 ? 'block' : 'none';
+    }
+   
+    function showStatus(msg, type) {
+      const el = document.getElementById('status');
+      el.textContent = msg;
+      el.style.color = type === 'error' ? '#ef4444' : type === 'success' ? '#10b981' : '#64748b';
+    }
+   
+    function generateLeaderboard() {
+      if (isGenerating) return;
+      const collegeName = document.getElementById('collegeInput').value.trim();
+      if (!collegeName) {
+        showStatus('Please enter college name!', 'error');
+        document.getElementById('collegeInput').focus();
+        return;
+      }
+      if (sheets.length === 0) {
+        showStatus('Please add at least one test sheet!', 'error');
+        return;
+      }
+     
+      isGenerating = true;
+      const btn = document.getElementById('genBtn');
+      btn.disabled = true;
+      btn.textContent = '⏳ Generating...';
+      document.getElementById('spinner').style.display = 'block';
+      showStatus('Processing... Please wait (do not close)', 'info');
+     
+      const preserve = document.getElementById('preserveData').checked;
+     
+      google.script.run
+        .withSuccessHandler(function(result) {
+          isGenerating = false;
+          btn.disabled = false;
+          btn.textContent = '🚀 Generate Leaderboard';
+          document.getElementById('spinner').style.display = 'none';
+          showStatus(result, 'success');
+          setTimeout(function() {
+            google.script.host.close();
+          }, 2500);
+        })
+        .withFailureHandler(function(error) {
+          isGenerating = false;
+          btn.disabled = false;
+          btn.textContent = '🚀 Generate Leaderboard';
+          document.getElementById('spinner').style.display = 'none';
+          showStatus('Error: ' + error.message + ' — Check Master Data and test sheets.', 'error');
+        })
+        .processSheets(sheets, preserve, collegeName);
+    }
+  </script>
+</body>
+</html>

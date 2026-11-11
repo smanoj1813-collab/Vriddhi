@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { collection, getDocs, limit, query, updateDoc, where, doc } from 'firebase/firestore';
-import { db } from '@/Firebase/config';
+import { db } from '@/Firebase/data';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/modules/auth/context/AuthContext';
 

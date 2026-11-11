@@ -6,7 +6,7 @@
 // the academic score a score-based discount reads from.
 
 import { doc, getDoc, setDoc, updateDoc, serverTimestamp } from 'firebase/firestore'
-import { db } from '@/Firebase/config'
+import { db } from '@/Firebase/data'
 import { stripUndefined } from '@/shared/utils/firestoreClean'
 import type {
   DiscountPolicy,

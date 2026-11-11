@@ -11,7 +11,7 @@ import {
   Timestamp,
   writeBatch
 } from 'firebase/firestore';
-import { db } from '@/Firebase/config';
+import { db } from '@/Firebase/data';
 import { Paper, PaperConfig } from '../types/paper';
 
 const PAPERS_COLLECTION = 'papers';

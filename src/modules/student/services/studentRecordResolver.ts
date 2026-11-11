@@ -24,7 +24,7 @@
 // Access Control → Identity repair backfills the field for them.
 // ------------------------------------------------------------------
 import { collection, doc, getDoc, getDocs, limit, query, where } from 'firebase/firestore'
-import { db } from '@/Firebase/config'
+import { db } from '@/Firebase/data'
 
 export interface ResolvedStudentRecord {
   id: string

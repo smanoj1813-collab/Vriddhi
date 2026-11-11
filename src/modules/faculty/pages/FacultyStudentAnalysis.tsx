@@ -16,7 +16,7 @@ import {
   getDocs,
   limit
 } from 'firebase/firestore'
-import { db } from '@/Firebase/config'
+import { db } from '@/Firebase/data'
 import { useAuth } from '@/modules/auth/context/AuthContext'
 
 function normalizeMentorReference(value: unknown): string {

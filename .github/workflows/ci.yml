@@ -38,6 +38,25 @@ jobs:
       - name: Render-check course pages
         run: npm run test:render:courses
 
+      # The main render suite (~390 checks across every page section). It was
+      # missing from CI, which is how 20 stale checks sat red on main unnoticed.
+      - name: Render-check every page section
+        run: npm run test:render
+
+      - name: Render-check previous-year papers
+        run: npm run test:render:pyq
+
+      # Fails only on CRITICAL advisories: those are the ones with a known exploit
+      # path and a patch. High/moderate are reported in the log for triage —
+      # most of what remains is Node-only build tooling (grpc, undici, esbuild)
+      # that never reaches a browser, and the firebase range has no patched
+      # release to move to (see docs/COMPLETE_AUDIT_2026-11-11.md §3).
+      - name: Dependency audit (blocks on critical only)
+        run: |
+          npm audit --audit-level=critical
+          echo "── full report ──"
+          npm audit || true
+
       - name: Build the frontend
         run: npm run build
 
@@ -81,3 +100,48 @@ jobs:
       - name: Course and related Firestore rules tests
         working-directory: functions
         run: npm run test:rules:course-security
+
+      # The full rules suite (firestore + storage + database, ~100 cases).
+      # BLOCKING. It was never run by CI before, and the first run found a rule
+      # that could not be evaluated at all (classSessions update, 1000-expression
+      # budget) — i.e. an outage that no other test could see. The step below is
+      # kept so that any future failure names itself on the pull request.
+      - name: Full security-rules suite
+        id: rules
+        working-directory: functions
+        run: |
+          set -o pipefail
+          npm run test:rules 2>&1 | tee /tmp/rules.log
+
+      # Job logs are awkward to fetch from some environments, so the failing
+      # cases are also emitted as check-run annotations — visible on the PR's
+      # "Files changed"/checks tab without opening the raw log.
+      - name: Report rules outcome
+        if: always()
+        continue-on-error: true
+        run: |
+          # Always report how many cases ran, so a silently shrinking suite is
+          # visible on the pull request rather than looking like a pass.
+          echo "::notice title=Rules suite::$(grep -aE '^# (pass|fail) ' /tmp/rules.log | tr '\n' ' ')"
+
+          # Everything below is for a RED suite only. The log always contains
+          # PERMISSION_DENIED lines (that is what assertFails() asserts), so
+          # annotating them unconditionally painted a red annotation on green
+          # runs — the exact noise this step exists to remove.
+          if [ "${{ steps.rules.outcome }}" = "success" ]; then
+            exit 0
+          fi
+
+          {
+            echo "### Full security-rules suite is red"
+            echo
+            echo '```'
+            grep -aE '^not ok|^ *not ok ' /tmp/rules.log | head -30 || true
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          echo "::error title=Security rules::the full suite failed — see the step summary for the failing cases"
+          grep -aE '^not ok|^ *not ok ' /tmp/rules.log | head -30 | while IFS= read -r line; do
+            echo "::error title=Security rules::$line"
+          done
+          echo "::error title=Rules failure detail (log tail)::$(tail -c 2000 /tmp/rules.log | tr '\n' ' ' | head -c 900)"

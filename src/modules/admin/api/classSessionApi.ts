@@ -12,7 +12,7 @@
 // scheduleApi.ts is deliberately NOT used on these write paths (finding F7).
 
 import { httpsCallable } from 'firebase/functions'
-import { functions } from '@/Firebase/config'
+import { functions } from '@/Firebase/data'
 import {
   describeSessionError,
   SESSION_WRITER_MESSAGES,

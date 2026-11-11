@@ -12,7 +12,7 @@ import { useFacultyCurriculum } from '../hooks/useFacultyCurriculum'
 import type { MaterialType } from '../../../api/materialApi'
 import { useNotification } from '../../../shared/providers/NotificationProvider'
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
-import { storage } from '@/Firebase/config'
+import { storage } from '@/Firebase/data'
 import { extractCanonicalSubject, extractCanonicalTopic } from '@/shared/utils/curriculumMatcher'
 
 const TYPE_LABELS: Record<MaterialType, string> = {

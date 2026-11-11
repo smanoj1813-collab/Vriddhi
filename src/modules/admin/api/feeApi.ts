@@ -20,7 +20,8 @@ import {
   updateDoc,
   where,
 } from 'firebase/firestore'
-import { auth, db } from '@/Firebase/config'
+import { auth } from '@/Firebase/config'
+import { db } from '@/Firebase/data'
 import {
   creditLedger,
   normalizeReference,
@@ -1098,7 +1099,7 @@ export async function rejectChallan(challanId: string, reason: string): Promise<
 // the date and the student's note. `bankStampUrl` stays the field the office
 // itself fills in (markChallanPaidAtBank / verifyChallan).
 //
-// The write is deliberately narrow, and `current-firestore.rules` restricts a
+// The write is deliberately narrow, and `firestore.rules` restricts a
 // student's update to exactly these keys plus the paid timestamp: the addressee
 // and the amount are immutable, and `verified` remains a staff-only status.
 // Keep the validator and the rule in step — a new field here means updating the

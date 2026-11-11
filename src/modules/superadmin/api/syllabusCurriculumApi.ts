@@ -2,7 +2,7 @@
 // api/syllabusCurriculumApi.ts — Firestore CRUD (deepSanitized)
 // ═══════════════════════════════════════════════════════════════════════
 
-import { db, functions } from '@/Firebase/config';
+import { db, functions } from '@/Firebase/data';
 import { httpsCallable } from 'firebase/functions';
 import {
   collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc,
