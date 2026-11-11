@@ -31,17 +31,30 @@ test.describe('login screen accessibility', () => {
     const rest = results.violations.filter((v) => v.impact !== 'critical')
 
     // Surfaced as annotations: the job summary is readable from places the raw
-    // log is not.
+    // log is not, and an annotation survives truncation where the assertion
+    // message does not. One line per rule, with the failing selectors.
     for (const violation of rest) {
       console.log(
-        `::warning title=axe (${violation.impact})::${violation.id} — ${violation.help} (${violation.nodes.length} node(s))`,
+        `::warning title=axe (${violation.impact})::${violation.id} — ${violation.help} (${violation.nodes.length} node(s)): ${violation.nodes
+          .slice(0, 4)
+          .map((n) => n.target.join(' '))
+          .join(', ')}`,
       )
     }
 
-    expect(
-      critical.map((v) => `${v.id} [${v.impact}] ${v.help} → ${v.nodes.map((n) => n.target.join(' ')).join(', ')}`),
-      'critical accessibility violations on the login screen',
-    ).toEqual([])
+    const detail = critical.map(
+      (v) =>
+        `${v.id} [${v.impact}] ${v.help} → ${v.nodes
+          .map((n) => `${n.target.join(' ')} (${(n.failureSummary || n.html).replace(/\s+/g, ' ').slice(0, 160)})`)
+          .join(' | ')}`,
+    )
+    if (detail.length > 0) {
+      // Same reason as the warnings above: the assertion message is truncated in
+      // an annotation, so each critical rule gets its own line.
+      for (const line of detail) console.log(`::error title=axe critical::${line.replace(/\s+/g, ' ').slice(0, 400)}`)
+    }
+
+    expect(detail, 'critical accessibility violations on the login screen').toEqual([])
   })
 
   test('the form is reachable and usable by keyboard alone', async ({ page }) => {
