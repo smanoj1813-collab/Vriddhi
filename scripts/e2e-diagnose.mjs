@@ -82,8 +82,15 @@ try {
 } catch (error) {
   say(`diagnose script failed: ${error.message}`)
 } finally {
-  server.kill('SIGTERM')
+  server.kill('SIGKILL')
   if (process.env.GITHUB_STEP_SUMMARY) {
     appendFileSync(process.env.GITHUB_STEP_SUMMARY, `### Boot diagnosis\n\n${lines.join('\n')}\n`)
   }
+  // SIGTERM to `npm run dev` kills npm, not the vite process it spawned, and the
+  // inherited stdout/stderr pipes keep this Node process alive — so the step hung
+  // until the job was cancelled, which is also why the run-report step (queued
+  // behind it) never got to publish the results. Exit explicitly instead.
+  server.stdout?.destroy()
+  server.stderr?.destroy()
+  process.exit(0)
 }

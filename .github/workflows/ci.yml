@@ -209,18 +209,21 @@ jobs:
       - name: Run the browser smoke tests
         run: npm run test:e2e
 
-      # Turns "0/12 failed" into an actual state of the app: URL, title, visible
-      # text, console errors — as annotations, because the log is not readable.
-      - name: Diagnose the boot when the suite fails
-        if: failure()
-        run: node scripts/e2e-diagnose.mjs
-
       # Logs are not always reachable from where this pipeline is read, so the
-      # failures also go to the checks API and the job summary.
+      # failures go to the checks API and the job summary FIRST. Reporting must
+      # never queue behind diagnosis: the first time this step order was tried, the
+      # diagnosis hung and the results were never published at all.
       - name: Report browser results
         if: always()
         continue-on-error: true
         run: node scripts/e2e-annotate.mjs e2e-results.json
+
+      # Turns "0/12 failed" into an actual state of the app: URL, title, visible
+      # text, console errors — as annotations, because the log is not readable.
+      - name: Diagnose the boot when the suite fails
+        if: failure()
+        timeout-minutes: 6
+        run: node scripts/e2e-diagnose.mjs
 
       - name: Keep the traces for a failed run
         if: failure()
