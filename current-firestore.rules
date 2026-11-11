@@ -1397,14 +1397,32 @@ service cloud.firestore {
         && deptScoped(resource.data);
       allow list: if isSignedIn() && (isStaff() || sameCollege(resource.data));
       allow create: if tenantWrite(request.resource.data) && role() != 'principal';
+      // ATTENDANCE MARKS ITS SESSIONS THROUGH THIS RULE (src/modules/admin/api/
+      // attendanceApi.ts, FacultyReschedule, HODDashboard), so the expression
+      // budget matters as much as the logic does: the old form expanded
+      // isCollegeStaff() + sameCollege() twice + a 11-key hasOnly() for every
+      // caller, and the emulator refused the write with
+      //   "maximum of 1000 expressions to evaluate has been reached".
+      // A rule that cannot be evaluated denies everyone, so this is an outage,
+      // not a hardening detail. Rewritten with the same semantics and a much
+      // cheaper path:
+      //   · one tenancy read (resource) and one plain equality for the update
+      //     target — sameCollege(request.resource.data) re-expanded isSuperadmin()
+      //     and exists() for no extra safety, because a collegeId that has to
+      //     stay equal to a row we just proved belongs to the caller's college
+      //     needs only the equality;
+      //   · role() evaluated once, first, so the common staff caller never pays
+      //     for the principal-only branch.
       allow update: if isSuperadmin()
-        || (isCollegeStaff() && sameCollege(resource.data) && sameCollege(request.resource.data)
-          && (role() != 'principal'
-            || request.resource.data.diff(resource.data).affectedKeys().hasOnly([
-              'attendanceCount', 'presentCount', 'totalStudents', 'attendanceMarked',
-              'topicsCovered', 'topicsPlanned', 'topicIds', 'notes', 'updatedAt',
-              'updatedBy', 'markedAt'
-            ])));
+        || (sameCollege(resource.data)
+          && request.resource.data.collegeId == resource.data.collegeId
+          && (role() == 'principal'
+            ? request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+                'attendanceCount', 'presentCount', 'totalStudents', 'attendanceMarked',
+                'topicsCovered', 'topicsPlanned', 'topicIds', 'notes', 'updatedAt',
+                'updatedBy', 'markedAt'
+              ])
+            : isStaff()));
       allow delete: if tenantWrite(resource.data) && role() != 'principal';
     }
 
