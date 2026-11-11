@@ -38,6 +38,25 @@ jobs:
       - name: Render-check course pages
         run: npm run test:render:courses
 
+      # The main render suite (~390 checks across every page section). It was
+      # missing from CI, which is how 20 stale checks sat red on main unnoticed.
+      - name: Render-check every page section
+        run: npm run test:render
+
+      - name: Render-check previous-year papers
+        run: npm run test:render:pyq
+
+      # Fails only on CRITICAL advisories: those are the ones with a known exploit
+      # path and a patch. High/moderate are reported in the log for triage —
+      # most of what remains is Node-only build tooling (grpc, undici, esbuild)
+      # that never reaches a browser, and the firebase range has no patched
+      # release to move to (see docs/COMPLETE_AUDIT_2026-11-11.md §3).
+      - name: Dependency audit (blocks on critical only)
+        run: |
+          npm audit --audit-level=critical
+          echo "── full report ──"
+          npm audit || true
+
       - name: Build the frontend
         run: npm run build
 
@@ -81,3 +100,13 @@ jobs:
       - name: Course and related Firestore rules tests
         working-directory: functions
         run: npm run test:rules:course-security
+
+      # The full rules suite (firestore + storage + database, ~97 cases).
+      # Non-blocking on purpose: it has never run in this pipeline, so its first
+      # run is also its first measurement — it may surface pre-existing failures
+      # that are nobody's regression in the PR at hand. Read the log; once it is
+      # green on main, delete `continue-on-error` and it becomes a gate.
+      - name: Full security-rules suite
+        working-directory: functions
+        continue-on-error: true
+        run: npm run test:rules

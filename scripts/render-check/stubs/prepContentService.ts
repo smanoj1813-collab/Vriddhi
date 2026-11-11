@@ -154,6 +154,21 @@ export default {
 // Fixtures: __RC_PREP.papers (list), __RC_PREP.paper (single), __RC_PREP.frequent.
 export const PREP_PAPER_LEGACY_LABELS: Record<string, string> = { bbm: 'BBM' };
 
+// Paper-only programmes (original PDF papers). PrepPapersViews.tsx spreads this
+// at module scope, so it MUST stay in step with src/shared/services/prepContentService.ts
+// — a missing export here crashes every prep section of the render harness at
+// import time, not at render time, which is why one gap used to fail 15 checks.
+export const PREP_PAPER_FILE_PROGRAMS: Array<{ code: string; label: string; degreeLevel: string }> = [
+  { code: 'bsw', label: 'BSW', degreeLevel: 'undergraduate' },
+  { code: 'ma', label: 'MA', degreeLevel: 'postgraduate' },
+  { code: 'med', label: 'M.Ed', degreeLevel: 'postgraduate' },
+  { code: 'mlib', label: 'M.Lib', degreeLevel: 'postgraduate' },
+  { code: 'msw', label: 'MSW', degreeLevel: 'postgraduate' },
+  { code: 'languages', label: 'Languages', degreeLevel: 'undergraduate' },
+  { code: 'open-electives', label: 'Open Electives', degreeLevel: 'postgraduate' },
+  { code: 'ug-open-elective', label: 'UG Open Elective', degreeLevel: 'undergraduate' },
+];
+
 export async function fetchPrepPapers(params?: any): Promise<any> {
   record('papers', params);
   const papers = data().papers ?? [];
