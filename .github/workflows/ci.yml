@@ -101,7 +101,7 @@ jobs:
         working-directory: functions
         run: npm run test:rules:course-security
 
-      # The full rules suite (firestore + storage + database, 97 cases).
+      # The full rules suite (firestore + storage + database, ~100 cases).
       # BLOCKING. It was never run by CI before, and the first run found a rule
       # that could not be evaluated at all (classSessions update, 1000-expression
       # budget) — i.e. an outage that no other test could see. The step below is
@@ -122,16 +122,26 @@ jobs:
         run: |
           # Always report how many cases ran, so a silently shrinking suite is
           # visible on the pull request rather than looking like a pass.
-          CASE_TOTALS=$(grep -aE '^# (pass|fail) ' /tmp/rules.log | tr '\n' ' ')
-          echo "::notice title=Rules suite::$CASE_TOTALS"
-          if [ "${{ steps.rules.outcome }}" != "success" ]; then
-            echo "::notice title=Rules suite::full suite failed — failing cases annotated below"
+          echo "::notice title=Rules suite::$(grep -aE '^# (pass|fail) ' /tmp/rules.log | tr '\n' ' ')"
+
+          # Everything below is for a RED suite only. The log always contains
+          # PERMISSION_DENIED lines (that is what assertFails() asserts), so
+          # annotating them unconditionally painted a red annotation on green
+          # runs — the exact noise this step exists to remove.
+          if [ "${{ steps.rules.outcome }}" = "success" ]; then
+            exit 0
           fi
-          grep -aE '^not ok|^ *not ok |AssertionError|^ *error:|^ *expected:|^ *actual:' /tmp/rules.log \
-            | head -60 | while IFS= read -r line; do
-              echo "::error title=Security rules::$line"
-            done
-          grep -aE '^# (pass|fail) ' /tmp/rules.log | head -5 | while IFS= read -r line; do
-            echo "::warning title=Rules totals::$line"
+
+          {
+            echo "### Full security-rules suite is red"
+            echo
+            echo '```'
+            grep -aE '^not ok|^ *not ok ' /tmp/rules.log | head -30 || true
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          echo "::error title=Security rules::the full suite failed — see the step summary for the failing cases"
+          grep -aE '^not ok|^ *not ok ' /tmp/rules.log | head -30 | while IFS= read -r line; do
+            echo "::error title=Security rules::$line"
           done
-          echo "::error title=Rules failure detail (log tail)::$(tail -c 3000 /tmp/rules.log | tr '\n' ' ' | head -c 900)" 
+          echo "::error title=Rules failure detail (log tail)::$(tail -c 2000 /tmp/rules.log | tr '\n' ' ' | head -c 900)"
