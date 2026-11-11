@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react'
-import { resolveStudentRecord } from '@/modules/student/services/studentRecordResolver'
-import {
-  isCourseAssignedToStudent,
-  loadCourseAssignments,
-  type CourseAssignment,
-} from './courseCloud'
+import type { CourseAssignment } from './courseCloud'
+
+// Loaded inside the effect: this hook is reached from modules/courses/routes.tsx,
+// which the entry imports statically, so a top-level import of either module put
+// the Firestore SDK on the login screen's preload. Both are used exclusively
+// inside the async block below, which already runs after mount.
+const loadCourseData = () =>
+  Promise.all([import('./courseCloud'), import('@/modules/student/services/studentRecordResolver')])
 
 export interface UseCourseAssignmentsResult {
   loading: boolean
@@ -36,6 +38,8 @@ export function useCourseAssignments(
     setState((previous) => ({ ...previous, loading: true, error: null }))
     void (async () => {
       try {
+        const [{ loadCourseAssignments, isCourseAssignedToStudent }, { resolveStudentRecord }] =
+          await loadCourseData()
         const settings = await loadCourseAssignments(collegeId)
         const needsProgram = Object.values(settings.assignments).some(
           (assignment) => assignment.enabled && !!assignment.cohort?.programs?.length,

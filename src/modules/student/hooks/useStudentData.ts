@@ -14,30 +14,28 @@ import type {
   AttendanceSummary,
   StudentProfile,
 } from '../types/student';
-import {
-  fetchProfile,
-  fetchAttendance,
-  fetchAttendanceDigest,
-  fetchAssignments,
-  fetchFees,
-  fetchTodaySchedule,
-  fetchNotifications,
-  fetchStudentTests,
-  type StudentProfileData,
-  type StudentAssignmentData,
-  type StudentClassSession,
-  type StudentNotificationData,
-  type StudentFeeData,
-  type AttendanceSummaryData,
-  type StudentTestCardData,
+import type {
+  StudentProfileData,
+  StudentAssignmentData,
+  StudentClassSession,
+  StudentNotificationData,
+  StudentFeeData,
+  AttendanceSummaryData,
+  StudentTestCardData,
 } from '../api/studentDataApi';
+// The API modules are imported inside fetchData(), not here. This provider is
+// imported by modules/student/routes.tsx (statically, because a context provider
+// cannot be anything else) and by StudentLayout — both on the entry graph — so a
+// top-level import of studentDataApi dragged the entire Firestore SDK, plus the
+// coding-lab service, onto the login screen's preload: 183 kB gzip for data that
+// cannot be fetched until somebody is signed in. Every call site below already
+// lives in the async fetchData(), so only the import moved.
 import { useAuth } from '../../auth/context/AuthContext';
 import {
   isStudentAssessmentActionable,
   withEffectiveStudentAssessmentLifecycle,
 } from '@/shared/utils/assessmentLifecycle';
 import { canStudentUseCodingLab, isBcaStudent } from '../codingLabAccess';
-import { fetchCollegeCodingLabAccess } from '@/shared/services/codingLabAccessService';
 
 export interface UseStudentDataReturn {
   student: StudentProfile | null;
@@ -227,7 +225,12 @@ const useStudentDataSource = (explicitStudentId?: string): UseStudentDataReturn 
       setError(null);
       setWarnings([]);
 
-      const profileData = await fetchProfile(uid, user?.email || undefined);
+      const [api, codingLab] = await Promise.all([
+        import('../api/studentDataApi'),
+        import('@/shared/services/codingLabAccessService'),
+      ]);
+
+      const profileData = await api.fetchProfile(uid, user?.email || undefined);
       if (!profileData) {
         setProfile(null);
         setCodingLabEnabled(false);
@@ -247,10 +250,10 @@ const useStudentDataSource = (explicitStudentId?: string): UseStudentDataReturn 
       const results = await Promise.allSettled([
         // Item 3.1: the dashboard reads the one-document summary instead of up to
         // 500 attendance rows (~600 reads per open). Falls back on its own.
-        fetchAttendanceDigest(profileData.id, profileData.collegeId || user?.collegeId || ''),
-        fetchAssignments(profileData.id),
-        fetchFees(profileData.id, profileData.collegeId || user?.collegeId),
-        fetchTodaySchedule(
+        api.fetchAttendanceDigest(profileData.id, profileData.collegeId || user?.collegeId || ''),
+        api.fetchAssignments(profileData.id),
+        api.fetchFees(profileData.id, profileData.collegeId || user?.collegeId),
+        api.fetchTodaySchedule(
           {
             collegeId: profileData.collegeId || user?.collegeId || '',
             branch: profileData.branch,
@@ -261,10 +264,10 @@ const useStudentDataSource = (explicitStudentId?: string): UseStudentDataReturn 
           },
           today
         ),
-        fetchNotifications(profileData.id),
-        fetchStudentTests(profileData.collegeId || user?.collegeId, profileData.id),
+        api.fetchNotifications(profileData.id),
+        api.fetchStudentTests(profileData.collegeId || user?.collegeId, profileData.id),
         isBcaStudent(mappedProfile)
-          ? fetchCollegeCodingLabAccess(profileData.collegeId || user?.collegeId || '')
+          ? codingLab.fetchCollegeCodingLabAccess(profileData.collegeId || user?.collegeId || '')
           : Promise.resolve(false),
       ] as const);
 
