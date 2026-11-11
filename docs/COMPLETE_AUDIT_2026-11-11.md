@@ -573,6 +573,50 @@ vite advisory is gone, and the remaining highs have no patched version in range
 (`firebase`/`@grpc/grpc-js` — the advisory covers every published version — plus build-time
 `brace-expansion`/`undici`).
 
+#### 9.5.7 The `dangerouslySetInnerHTML` review — one live hole, and it was elsewhere
+
+§5.3 said the six `dangerouslySetInnerHTML` sites were "worth a glance each". Done, and the glance
+was worth it — but not at the sites the count named.
+
+**The six named sites are clean.**
+
+| Site | Verdict |
+|---|---|
+| `pdfGenerator.generatePaperHTML` | escapes every field via `escapeHtml` before interpolation |
+| `FacultyPaperGenerator.generatePreviewHTML` | same, with a comment explaining the print-window risk |
+| `PaperPDFPreview` | delegates to `generatePaperHTML` — escaped |
+| `prepPublicShared` ×2 (KaTeX) | `katex.renderToString(math, { throwOnError: false })` — KaTeX's `trust` defaults to **off**, so it emits no `\href`/`\htmlData`/raw HTML, and it escapes its own text |
+
+**The hole was in a sink the count never saw.** Counting `dangerouslySetInnerHTML` misses every
+other way a string becomes markup, and there are three more here: one `innerHTML =` assignment and
+two `document.write()` calls.
+
+- `timetableExport.buildHtml` → `innerHTML` — escapes everything. Clean.
+- `View360.printToPDF` — wrote `${title}` **raw** into a same-origin print window. `title` carries
+  student and college names, which staff type. Fixed (escaped).
+- **`AIStudyCompanionModal.handlePrint`** — wrote an entire AI-generated study pack into a
+  same-origin window **with no escaping at all**: title, subject, overview, summary bullets,
+  concept definitions, formulas, worked-example steps, exam questions, model answers and examiner
+  tips. Every one of those fields is language-model output, steered by the user's prompt and by any
+  source document fed to it.
+
+That is a **stored-XSS path**: a model reply containing `<img src=x onerror=…>` executes in the
+app's own origin, in a window whose `window.opener` points back at the app. It is reachable by
+anyone who can open the study companion, and it is precisely the class of bug a
+`dangerouslySetInnerHTML` grep gives you false comfort about.
+
+Fixed by extracting the markup into a pure, tested builder
+(`src/shared/utils/studyPackHtml.ts`) that escapes every interpolated value, with
+`escapeHtml` moved to a dependency-free module so a component does not have to import a PDF library
+to escape a string. Seven unit tests pin the behaviour: an `<img onerror>` payload and a
+`</div><script>` payload must arrive as inert text, and ordinary content with `&`, `<` and `%` must
+survive intact rather than being stripped — escaping must not become deletion.
+
+The general lesson, recorded because the repo still has this shape: **grep for sinks, not just for
+one sink name.** `innerHTML`, `outerHTML`, `insertAdjacentHTML`, `document.write` and
+`new Function` are the same risk class, and this codebase had three of them outside the count
+(no `eval` or `new Function` anywhere, which is worth saying out loud).
+
 ### 9.6 Verification after the second pass
 
 ```

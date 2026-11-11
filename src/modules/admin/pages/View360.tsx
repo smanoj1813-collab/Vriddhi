@@ -68,6 +68,17 @@ function generateCSV(data: Record<string, unknown>[], filename: string) {
   URL.revokeObjectURL(url)
 }
 
+// The print window is same-origin, so anything interpolated into it must be
+// escaped — `title` carries student/college names, which staff can type.
+function escapeHtml(value: unknown): string {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;')
+}
+
 // ─── Helper: Generate PDF (A4 Print) ────────────────────
 function printToPDF(title: string) {
   const printWindow = window.open('', '_blank')
@@ -79,7 +90,7 @@ function printToPDF(title: string) {
     <!DOCTYPE html>
     <html>
     <head>
-      <title>${title}</title>
+      <title>${escapeHtml(title)}</title>
       <style>
         @page { size: A4; margin: 15mm; }
         body { font-family: Arial, sans-serif; color: #333; background: #fff; padding: 20px; }

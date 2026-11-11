@@ -9,6 +9,7 @@ import {
   type FetchStudyMaterialInput
 } from '@/shared/services/aiStudyMaterialService';
 import { useAuth } from '@/modules/auth/context/AuthContext';
+import { buildStudyPackHtml } from '@/shared/utils/studyPackHtml';
 
 /**
  * Mirrors the server-side cost guard in functions/src/routes/ai-chat.ts:
@@ -117,69 +118,10 @@ export default function AIStudyCompanionModal({
     const win = window.open('', '_blank');
     if (!win) return;
 
-    let html = `
-      <div style="font-family: Arial, sans-serif; padding: 30px; color: #111; line-height: 1.6;">
-        <div style="border-bottom: 2px solid #0d9488; padding-bottom: 12px; margin-bottom: 20px;">
-          <h1 style="color: #0f766e; margin: 0 0 4px 0; font-size: 22px;">Vriddhi AI Study Guide: ${studyPack.title}</h1>
-          <p style="margin: 0; color: #666; font-size: 13px;">Course: ${studyPack.subject} | Module: ${context.moduleName || 'Syllabus'}</p>
-        </div>
-
-        <h2 style="font-size: 16px; color: #1e293b; border-bottom: 1px solid #e2e8f0; padding-bottom: 4px;">1. Core Concept Overview</h2>
-        <p style="font-size: 13px; color: #334155;">${studyPack.overview}</p>
-
-        <h3 style="font-size: 14px; margin-top: 15px;">Key Takeaways:</h3>
-        <ul style="font-size: 12px; color: #475569;">
-          ${studyPack.quickSummaryPoints.map(p => `<li>${p}</li>`).join('')}
-        </ul>
-
-        <h2 style="font-size: 16px; color: #1e293b; border-bottom: 1px solid #e2e8f0; padding-bottom: 4px; margin-top: 25px;">2. Formulas &amp; Definitions Cheat Sheet</h2>
-        <table style="width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 12px;">
-          <thead>
-            <tr style="background: #f1f5f9; text-align: left;">
-              <th style="padding: 8px; border: 1px solid #cbd5e1;">Term / Principle</th>
-              <th style="padding: 8px; border: 1px solid #cbd5e1;">Definition &amp; Rule</th>
-              <th style="padding: 8px; border: 1px solid #cbd5e1;">Exam Relevance</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${studyPack.keyConcepts.map(c => `
-              <tr>
-                <td style="padding: 8px; border: 1px solid #cbd5e1; font-weight: bold;">${c.term}</td>
-                <td style="padding: 8px; border: 1px solid #cbd5e1;">
-                  ${c.definition}
-                  ${c.formulaOrRule && c.formulaOrRule !== 'N/A' ? `<div style="margin-top: 4px; font-family: monospace; color: #0f766e;"><strong>Rule/Formula:</strong> ${c.formulaOrRule}</div>` : ''}
-                </td>
-                <td style="padding: 8px; border: 1px solid #cbd5e1; color: #64748b;">${c.importance || ''}</td>
-              </tr>
-            `).join('')}
-          </tbody>
-        </table>
-
-        ${studyPack.workedExample ? `
-          <h2 style="font-size: 16px; color: #1e293b; border-bottom: 1px solid #e2e8f0; padding-bottom: 4px; margin-top: 25px;">3. Practical Worked Problem / Case Study</h2>
-          <div style="background: #f8fafc; padding: 12px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 12px;">
-            <p style="font-weight: bold; margin: 0 0 8px 0;">Scenario: ${studyPack.workedExample.scenario}</p>
-            ${studyPack.workedExample.steps.map(s => `
-              <div style="margin-bottom: 6px;">
-                <strong>${s.step}:</strong> ${s.details}
-              </div>
-            `).join('')}
-            <div style="margin-top: 8px; padding-top: 6px; border-top: 1px dashed #cbd5e1; font-weight: bold; color: #047857;">
-              Result: ${studyPack.workedExample.solution}
-            </div>
-          </div>
-        ` : ''}
-
-        <h2 style="font-size: 16px; color: #1e293b; border-bottom: 1px solid #e2e8f0; padding-bottom: 4px; margin-top: 25px;">4. University Exam &amp; Viva Questions</h2>
-        ${studyPack.examPrep.map((q, idx) => `
-          <div style="margin-bottom: 12px; font-size: 12px;">
-            <p style="font-weight: bold; margin: 0;">Q${idx + 1}. [${q.marks} Marks] ${q.question}</p>
-            <p style="margin: 4px 0 0 15px; color: #334155;"><strong>Model Answer:</strong> ${q.expectedAnswer}</p>
-            ${q.examTip ? `<p style="margin: 2px 0 0 15px; font-size: 11px; color: #d97706;"><em>Examiner Tip: ${q.examTip}</em></p>` : ''}
-          </div>
-        `).join('')}
-      </div>
-    `;
+    // The markup builder is a tested pure function: every model-authored field in
+    // it is HTML-escaped, because this string is written into a same-origin
+    // window (see src/shared/utils/studyPackHtml.ts — it was a live XSS path).
+    const html = buildStudyPackHtml(studyPack, { moduleName: context.moduleName });
 
     win.document.write(html);
     win.document.close();
