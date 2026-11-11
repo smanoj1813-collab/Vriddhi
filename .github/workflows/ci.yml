@@ -159,7 +159,12 @@ jobs:
   # no emulator in CI, and faking a session would test the fake.
   browser:
     name: Browser smoke (Chromium)
-    runs-on: ubuntu-latest
+    # Pinned rather than ubuntu-latest: the -latest label is mid-migration to
+    # Ubuntu 26 (the runner prints a notice about it on every job), and
+    # Playwright's `install --with-deps` apt recipe targets the current LTS. This
+    # job failed on -latest for exactly that reason; a browser job that depends on
+    # a moving OS image is a flake generator.
+    runs-on: ubuntu-24.04
     steps:
       - name: Check out the code
         uses: actions/checkout@v5
@@ -174,7 +179,24 @@ jobs:
         run: npm ci
 
       - name: Install Chromium
-        run: npx playwright install --with-deps chromium
+        id: chromium
+        run: |
+          set -o pipefail
+          # --with-deps pulls the shared libraries the browser needs (apt). If that
+          # recipe breaks against the runner image, fall back to the browser alone
+          # before giving up — most runner images already carry the libraries.
+          npx playwright install --with-deps chromium 2>&1 | tee /tmp/pw-install.log || {
+            echo "::warning title=Chromium install::--with-deps failed, retrying without system packages"
+            npx playwright install chromium 2>&1 | tee -a /tmp/pw-install.log
+          }
+
+      # A bare "exit code 1" tells nobody anything, and this pipeline's logs are
+      # not reliably reachable — so the reason is pushed into an annotation.
+      - name: Explain a failed browser install
+        if: failure() && steps.chromium.outcome == 'failure'
+        run: |
+          echo "::error title=Chromium install failed::$(tail -c 900 /tmp/pw-install.log | tr '\n' ' ')"
+          exit 1
 
       - name: Typecheck the browser tests
         run: npm run typecheck:e2e
@@ -194,5 +216,8 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: playwright-traces
-          path: test-results/
+          path: |
+            test-results/
+            e2e-results.json
+          if-no-files-found: ignore
           retention-days: 7
