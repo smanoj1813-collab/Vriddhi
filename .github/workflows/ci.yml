@@ -121,9 +121,10 @@ jobs:
         continue-on-error: true
         run: |
           echo "::notice title=Rules suite::full suite failed — failing cases annotated below"
-          grep -aE '^not ok|^ *not ok ' /tmp/rules.log | head -40 | while IFS= read -r line; do
-            echo "::error title=Security rules::$line"
-          done
+          grep -aE '^not ok|^ *not ok |AssertionError|^ *error:|^ *expected:|^ *actual:' /tmp/rules.log \
+            | head -60 | while IFS= read -r line; do
+              echo "::error title=Security rules::$line"
+            done
           grep -aE '^# (pass|fail) ' /tmp/rules.log | head -5 | while IFS= read -r line; do
             echo "::warning title=Rules totals::$line"
           done
