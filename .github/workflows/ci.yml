@@ -113,29 +113,17 @@ jobs:
           set -o pipefail
           npm run test:rules 2>&1 | tee /tmp/rules.log
 
-      - name: Report rules failures on the pull request
+      # Job logs are awkward to fetch from some environments, so the failing
+      # cases are also emitted as check-run annotations — visible on the PR's
+      # "Files changed"/checks tab without opening the raw log.
+      - name: Annotate rules failures
         if: steps.rules.outcome == 'failure'
         continue-on-error: true
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          {
-            echo '### Full security-rules suite — failing cases'
-            echo
-            echo 'These come from the full suite (`npm run test:rules`), which was not in CI before.'
-            echo 'They are pre-existing: triage them, then remove `continue-on-error` from the step.'
-            echo
-            echo '```'
-            grep -aE '^not ok|^ *not ok ' /tmp/rules.log | head -40 || echo '(no "not ok" lines captured)'
-            echo '```'
-            echo
-            echo '```'
-            grep -aE '^# (pass|fail|tests) ' /tmp/rules.log | head -10 || true
-            echo '```'
-          } > /tmp/rules-report.md
-          if [ -n "${{ github.event.pull_request.number }}" ]; then
-            gh pr comment "${{ github.event.pull_request.number }}" \
-              --repo "${{ github.repository }}" --body-file /tmp/rules-report.md
-          else
-            cat /tmp/rules-report.md
-          fi
+          echo "::notice title=Rules suite::full suite failed — failing cases annotated below"
+          grep -aE '^not ok|^ *not ok ' /tmp/rules.log | head -40 | while IFS= read -r line; do
+            echo "::error title=Security rules::$line"
+          done
+          grep -aE '^# (pass|fail) ' /tmp/rules.log | head -5 | while IFS= read -r line; do
+            echo "::warning title=Rules totals::$line"
+          done
