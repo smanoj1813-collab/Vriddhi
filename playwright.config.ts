@@ -45,6 +45,21 @@ export default defineConfig({
     url: baseURL,
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,
+    // Placeholder, well-formed Firebase config. Without it `getAuth(app)` throws
+    // auth/invalid-api-key during module init and React never mounts — the first
+    // version of this suite failed 12/12 for exactly that reason, which looks
+    // like "the app is broken" and is really "the app was never configured".
+    // Nothing here talks to a network: with no persisted user, the auth restore
+    // resolves to null offline, which is the anonymous state under test.
+    env: {
+      VITE_FIREBASE_API_KEY: 'demo-e2e-key',
+      VITE_FIREBASE_AUTH_DOMAIN: 'demo-vriddhi.firebaseapp.com',
+      VITE_FIREBASE_PROJECT_ID: 'demo-vriddhi',
+      VITE_FIREBASE_APP_ID: '1:1:web:1',
+      VITE_FIREBASE_STORAGE_BUCKET: 'demo-vriddhi.appspot.com',
+      VITE_FIREBASE_MESSAGING_SENDER_ID: '1',
+      VITE_FIREBASE_DATABASE_URL: 'https://demo-vriddhi.firebaseio.com',
+    },
     // Dev, not preview: `main.tsx` only renders the app when the Firebase env is
     // present OR the build is non-production, and CI has no Firebase project.
     // A dev-server smoke test therefore exercises the real router, the real
