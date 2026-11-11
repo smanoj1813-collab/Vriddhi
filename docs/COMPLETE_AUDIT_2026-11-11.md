@@ -477,20 +477,30 @@ services moved to a new `src/Firebase/data.ts`; 114 files had their imports spli
 entry reaches statically stopped importing the data SDK at module scope (Layout's college-name
 lookup, `ChangePasswordForm`'s callable, `identityBackend.syncMyIdentity`).
 
-**Honest status: `firebase-data` is still preloaded.** Four static chains keep it there, all of
-them React context/hook consumers evaluated during render:
+**Still preloaded after that split** — the fix needed one more pass, done next.
 
-```
-Layout.tsx (useCollegeBranding, useAccessSettings)  ← modules/*/routes.tsx
-modules/student/routes.tsx  → StudentDataProvider   → studentDataApi     → firebase-data
-modules/courses/routes.tsx  → StudentCourseAccess   → courseCloud        → firebase-data
-```
+Four static chains connected the entry point to `firebase-data`, all through things that cannot be
+lazied without changing when state initialises: `Layout`'s two hooks, `StudentDataProvider`,
+`StudentLayout`, and `StudentCourseAccess`'s hook. Each was broken *inside the function that needs
+the SDK* instead, so no component mounts differently, nothing renders later, and there is no new
+loading state:
 
-Breaking them is a data-layer restructure — a provider that initialises after auth instead of at
-import — not an import edit, and it changes when state initialises. That is the next task for this
-item. The split above is its precondition and costs nothing meanwhile: the entry preload is now
-six chunks / **449.7 kB gz**, with Auth separated from the data SDK instead of merged into one
-213 kB chunk.
+| Chain | Cut made |
+|---|---|
+| `AuthContext → auth.ts → firebase-data` | `resolveIdentity()` imports Firestore + `db` before its first read. It only runs for a signed-in user, and this module is on the boot path. |
+| `Layout → useCollegeBranding / useAccessSettings` | the react-query `queryFn` imports its API module; the hooks no longer import it at module scope. |
+| `courses/routes → useCourseAssignments → courseCloud` | both modules imported inside the effect, the only place they are used. |
+| `student/routes → StudentLayout → useStudentData → studentDataApi` | the API modules imported inside `fetchData()`; every call site already lived in that async function. |
+
+**Entry preload: 457 kB → 449.7 kB (after the split) → 272.6 kB gzip, 5 chunks**, with
+`firebase-data` no longer among them. Firestore, Storage, RTDB and Functions now load at the first
+moment any of them can be used — when a session exists. That is **−184 kB gzip, −40 %**, at the top
+of the range this report predicted.
+
+The remaining 272.6 kB is the login screen itself: mui-core 133.7, react-core 57.5, framer-motion
+40.8 (the login card animation), firebase-auth 31.0, mui-icons 9.6. The original <250 kB target is
+therefore reachable only by dropping that animation or re-skinning the login form without MUI —
+both visual changes, so they are a product decision rather than a performance one.
 
 #### 9.5.4 P2 housekeeping
 
@@ -539,16 +549,16 @@ npm run test:render:courses   → 126/126
 npm run test:render:pyq       →  27/27
 npm run validate:courses      → 4/4 packs valid
 npm run check:dead-code       → 0 orphans (614 files, guard coverage widened)
-npx vite build (Vite 7)       → success; dist/assets 16 MB; entry preload 449.7 kB gz
+npx vite build (Vite 7)       → success; dist/assets 16 MB; entry preload 272.6 kB gz
 npm audit                     → 17, 0 critical
 functions test:rules (CI)     → 102/102, 0 fail
 ```
 
 ### 9.7 What is actually left
 
-1. **P1-2, the remaining 183 kB.** Move the four chains above to post-auth initialisation. This is
-   the only item from the original audit that is still open, and it is a design change, not a
-   chore.
+1. **The last 23 kB to the <250 kB target.** Only reachable by changing what the login screen
+   renders (drop the framer-motion animation, or replace MUI there). Product decision, not
+   engineering debt.
 2. **`firebase` / `@grpc/grpc-js` advisories.** No patched version exists; the only fix is a
    firebase downgrade, which is worse. Track upstream.
 3. **The other role-only reads from §4's "42".** Each was triaged in 9.5.1 and left as it is:
