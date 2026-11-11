@@ -116,11 +116,17 @@ jobs:
       # Job logs are awkward to fetch from some environments, so the failing
       # cases are also emitted as check-run annotations — visible on the PR's
       # "Files changed"/checks tab without opening the raw log.
-      - name: Annotate rules failures
-        if: steps.rules.outcome == 'failure'
+      - name: Report rules outcome
+        if: always()
         continue-on-error: true
         run: |
-          echo "::notice title=Rules suite::full suite failed — failing cases annotated below"
+          # Always report how many cases ran, so a silently shrinking suite is
+          # visible on the pull request rather than looking like a pass.
+          CASE_TOTALS=$(grep -aE '^# (pass|fail) ' /tmp/rules.log | tr '\n' ' ')
+          echo "::notice title=Rules suite::$CASE_TOTALS"
+          if [ "${{ steps.rules.outcome }}" != "success" ]; then
+            echo "::notice title=Rules suite::full suite failed — failing cases annotated below"
+          fi
           grep -aE '^not ok|^ *not ok |AssertionError|^ *error:|^ *expected:|^ *actual:' /tmp/rules.log \
             | head -60 | while IFS= read -r line; do
               echo "::error title=Security rules::$line"

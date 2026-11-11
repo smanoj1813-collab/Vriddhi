@@ -18,136 +18,136 @@ import { formatDifficultyBadge } from '@/shared/utils/prepHelpers';
 // Bundled prep illustrations. Seed markdown references these by bare filename
 // (e.g. `![SWOT Diagram](swot-analysis.png)`), so the renderer resolves them
 // through this map at display time — no re-seeding needed when assets change.
-import prepBcgMatrix from '../../assets/prep-images/bcg-matrix.png';
-import prepBigFivePersonality from '../../assets/prep-images/big-five-personality.png';
-import prepBreakEvenAnalysis from '../../assets/prep-images/break-even-analysis.png';
-import prepBudgetaryControl from '../../assets/prep-images/budgetary-control.png';
-import prepBusinessPlan from '../../assets/prep-images/business-plan.png';
-import prepBusinessProfession from '../../assets/prep-images/business-profession.png';
-import prepCalculusOptimization from '../../assets/prep-images/calculus-optimization.png';
-import prepCapitalGains from '../../assets/prep-images/capital-gains.png';
-import prepCapitalMarket from '../../assets/prep-images/capital-market.png';
-import prepCompanyDirectors from '../../assets/prep-images/company-directors.png';
-import prepCompanyIncorporation from '../../assets/prep-images/company-incorporation.png';
-import prepCompensationBenefits from '../../assets/prep-images/compensation-benefits.png';
-import prepConsumerProtection from '../../assets/prep-images/consumer-protection.png';
-import prepContractAct from '../../assets/prep-images/contract-act.png';
-import prepCostCurves from '../../assets/prep-images/cost-curves.png';
-import prepCultureChange from '../../assets/prep-images/culture-change.png';
-import prepCustomsBasics from '../../assets/prep-images/customs-basics.png';
-import prepDataPresentation from '../../assets/prep-images/data-presentation.png';
-import prepDirectingControl from '../../assets/prep-images/directing-control.png';
-import prepDistributionChannels from '../../assets/prep-images/distribution-channels.png';
-import prepDividendWorkingCapital from '../../assets/prep-images/dividend-working-capital.png';
-import prepEmployeeRelations from '../../assets/prep-images/employee-relations.png';
-import prepEntrepreneurshipIntro from '../../assets/prep-images/entrepreneurship-intro.png';
-import prepFinancialStatements from '../../assets/prep-images/financial-statements.png';
-import prepFinancialSystem from '../../assets/prep-images/financial-system.png';
-import prepFundFlowCashFlow from '../../assets/prep-images/fund-flow-cash-flow.png';
-import prepGstRegistration from '../../assets/prep-images/gst-registration.png';
-import prepGstReturns from '../../assets/prep-images/gst-returns.png';
-import prepHouseProperty from '../../assets/prep-images/house-property.png';
-import prepHrmFunctions from '../../assets/prep-images/hrm-functions.png';
-import prepIndexNumbers from '../../assets/prep-images/index-numbers.png';
-import prepInterestAnnuities from '../../assets/prep-images/interest-annuities.png';
-import prepLeadershipMotivation from '../../assets/prep-images/leadership-motivation.png';
-import prepMarketingMix4ps from '../../assets/prep-images/marketing-mix-4ps.png';
-import prepMarketStructures from '../../assets/prep-images/market-structures.png';
-import prepMaterialLabourOverheads from '../../assets/prep-images/material-labour-overheads.png';
-import prepMoneyMarket from '../../assets/prep-images/money-market.png';
-import prepNegotiableInstruments from '../../assets/prep-images/negotiable-instruments.png';
-import prepOrgStructure from '../../assets/prep-images/org-structure.png';
-import prepPerceptionLearning from '../../assets/prep-images/perception-learning.png';
-import prepPomIntro from '../../assets/prep-images/pom-intro.png';
-import prepProfitLossPartnership from '../../assets/prep-images/profit-loss-partnership.png';
-import prepPromotionMix from '../../assets/prep-images/promotion-mix.png';
-import prepQualityTqm from '../../assets/prep-images/quality-tqm.png';
-import prepRatioAnalysis from '../../assets/prep-images/ratio-analysis.png';
-import prepResidentialStatus from '../../assets/prep-images/residential-status.png';
-import prepSalaryIncome from '../../assets/prep-images/salary-income.png';
-import prepSaleOfGoods from '../../assets/prep-images/sale-of-goods.png';
-import prepSebiInvestor from '../../assets/prep-images/sebi-investor.png';
-import prepSharesDebentures from '../../assets/prep-images/shares-debentures.png';
-import prepStartupEcosystem from '../../assets/prep-images/startup-ecosystem.png';
-import prepStartupFinance from '../../assets/prep-images/startup-finance.png';
-import prepStrategicProcess from '../../assets/prep-images/strategic-process.png';
-import prepStrategyImplementation from '../../assets/prep-images/strategy-implementation.png';
-import prepSupplyChain from '../../assets/prep-images/supply-chain.png';
-import prepSupplyDemandCurve from '../../assets/prep-images/supply-demand-curve.png';
-import prepSwotAnalysis from '../../assets/prep-images/swot-analysis.png';
-import prepTaxPlanning from '../../assets/prep-images/tax-planning.png';
-import prepTeamsConflict from '../../assets/prep-images/teams-conflict.png';
-import prepTimeSeries from '../../assets/prep-images/time-series.png';
-import prepTotalIncome from '../../assets/prep-images/total-income.png';
-import prepTrainingDevelopment from '../../assets/prep-images/training-development.png';
-import prepVarianceAnalysis from '../../assets/prep-images/variance-analysis.png';
-import prepWindingUp from '../../assets/prep-images/winding-up.png';
+import prepBcgMatrix from '../../assets/prep-images/bcg-matrix.webp';
+import prepBigFivePersonality from '../../assets/prep-images/big-five-personality.webp';
+import prepBreakEvenAnalysis from '../../assets/prep-images/break-even-analysis.webp';
+import prepBudgetaryControl from '../../assets/prep-images/budgetary-control.webp';
+import prepBusinessPlan from '../../assets/prep-images/business-plan.webp';
+import prepBusinessProfession from '../../assets/prep-images/business-profession.webp';
+import prepCalculusOptimization from '../../assets/prep-images/calculus-optimization.webp';
+import prepCapitalGains from '../../assets/prep-images/capital-gains.webp';
+import prepCapitalMarket from '../../assets/prep-images/capital-market.webp';
+import prepCompanyDirectors from '../../assets/prep-images/company-directors.webp';
+import prepCompanyIncorporation from '../../assets/prep-images/company-incorporation.webp';
+import prepCompensationBenefits from '../../assets/prep-images/compensation-benefits.webp';
+import prepConsumerProtection from '../../assets/prep-images/consumer-protection.webp';
+import prepContractAct from '../../assets/prep-images/contract-act.webp';
+import prepCostCurves from '../../assets/prep-images/cost-curves.webp';
+import prepCultureChange from '../../assets/prep-images/culture-change.webp';
+import prepCustomsBasics from '../../assets/prep-images/customs-basics.webp';
+import prepDataPresentation from '../../assets/prep-images/data-presentation.webp';
+import prepDirectingControl from '../../assets/prep-images/directing-control.webp';
+import prepDistributionChannels from '../../assets/prep-images/distribution-channels.webp';
+import prepDividendWorkingCapital from '../../assets/prep-images/dividend-working-capital.webp';
+import prepEmployeeRelations from '../../assets/prep-images/employee-relations.webp';
+import prepEntrepreneurshipIntro from '../../assets/prep-images/entrepreneurship-intro.webp';
+import prepFinancialStatements from '../../assets/prep-images/financial-statements.webp';
+import prepFinancialSystem from '../../assets/prep-images/financial-system.webp';
+import prepFundFlowCashFlow from '../../assets/prep-images/fund-flow-cash-flow.webp';
+import prepGstRegistration from '../../assets/prep-images/gst-registration.webp';
+import prepGstReturns from '../../assets/prep-images/gst-returns.webp';
+import prepHouseProperty from '../../assets/prep-images/house-property.webp';
+import prepHrmFunctions from '../../assets/prep-images/hrm-functions.webp';
+import prepIndexNumbers from '../../assets/prep-images/index-numbers.webp';
+import prepInterestAnnuities from '../../assets/prep-images/interest-annuities.webp';
+import prepLeadershipMotivation from '../../assets/prep-images/leadership-motivation.webp';
+import prepMarketingMix4ps from '../../assets/prep-images/marketing-mix-4ps.webp';
+import prepMarketStructures from '../../assets/prep-images/market-structures.webp';
+import prepMaterialLabourOverheads from '../../assets/prep-images/material-labour-overheads.webp';
+import prepMoneyMarket from '../../assets/prep-images/money-market.webp';
+import prepNegotiableInstruments from '../../assets/prep-images/negotiable-instruments.webp';
+import prepOrgStructure from '../../assets/prep-images/org-structure.webp';
+import prepPerceptionLearning from '../../assets/prep-images/perception-learning.webp';
+import prepPomIntro from '../../assets/prep-images/pom-intro.webp';
+import prepProfitLossPartnership from '../../assets/prep-images/profit-loss-partnership.webp';
+import prepPromotionMix from '../../assets/prep-images/promotion-mix.webp';
+import prepQualityTqm from '../../assets/prep-images/quality-tqm.webp';
+import prepRatioAnalysis from '../../assets/prep-images/ratio-analysis.webp';
+import prepResidentialStatus from '../../assets/prep-images/residential-status.webp';
+import prepSalaryIncome from '../../assets/prep-images/salary-income.webp';
+import prepSaleOfGoods from '../../assets/prep-images/sale-of-goods.webp';
+import prepSebiInvestor from '../../assets/prep-images/sebi-investor.webp';
+import prepSharesDebentures from '../../assets/prep-images/shares-debentures.webp';
+import prepStartupEcosystem from '../../assets/prep-images/startup-ecosystem.webp';
+import prepStartupFinance from '../../assets/prep-images/startup-finance.webp';
+import prepStrategicProcess from '../../assets/prep-images/strategic-process.webp';
+import prepStrategyImplementation from '../../assets/prep-images/strategy-implementation.webp';
+import prepSupplyChain from '../../assets/prep-images/supply-chain.webp';
+import prepSupplyDemandCurve from '../../assets/prep-images/supply-demand-curve.webp';
+import prepSwotAnalysis from '../../assets/prep-images/swot-analysis.webp';
+import prepTaxPlanning from '../../assets/prep-images/tax-planning.webp';
+import prepTeamsConflict from '../../assets/prep-images/teams-conflict.webp';
+import prepTimeSeries from '../../assets/prep-images/time-series.webp';
+import prepTotalIncome from '../../assets/prep-images/total-income.webp';
+import prepTrainingDevelopment from '../../assets/prep-images/training-development.webp';
+import prepVarianceAnalysis from '../../assets/prep-images/variance-analysis.webp';
+import prepWindingUp from '../../assets/prep-images/winding-up.webp';
 
 const PREP_IMAGE_URLS: Record<string, string> = {
-  'bcg-matrix.png': prepBcgMatrix,
-  'big-five-personality.png': prepBigFivePersonality,
-  'break-even-analysis.png': prepBreakEvenAnalysis,
-  'budgetary-control.png': prepBudgetaryControl,
-  'business-plan.png': prepBusinessPlan,
-  'business-profession.png': prepBusinessProfession,
-  'calculus-optimization.png': prepCalculusOptimization,
-  'capital-gains.png': prepCapitalGains,
-  'capital-market.png': prepCapitalMarket,
-  'company-directors.png': prepCompanyDirectors,
-  'company-incorporation.png': prepCompanyIncorporation,
-  'compensation-benefits.png': prepCompensationBenefits,
-  'consumer-protection.png': prepConsumerProtection,
-  'contract-act.png': prepContractAct,
-  'cost-curves.png': prepCostCurves,
-  'culture-change.png': prepCultureChange,
-  'customs-basics.png': prepCustomsBasics,
-  'data-presentation.png': prepDataPresentation,
-  'directing-control.png': prepDirectingControl,
-  'distribution-channels.png': prepDistributionChannels,
-  'dividend-working-capital.png': prepDividendWorkingCapital,
-  'employee-relations.png': prepEmployeeRelations,
-  'entrepreneurship-intro.png': prepEntrepreneurshipIntro,
-  'financial-statements.png': prepFinancialStatements,
-  'financial-system.png': prepFinancialSystem,
-  'fund-flow-cash-flow.png': prepFundFlowCashFlow,
-  'gst-registration.png': prepGstRegistration,
-  'gst-returns.png': prepGstReturns,
-  'house-property.png': prepHouseProperty,
-  'hrm-functions.png': prepHrmFunctions,
-  'index-numbers.png': prepIndexNumbers,
-  'interest-annuities.png': prepInterestAnnuities,
-  'leadership-motivation.png': prepLeadershipMotivation,
-  'market-structures.png': prepMarketStructures,
-  'marketing-mix-4ps.png': prepMarketingMix4ps,
-  'material-labour-overheads.png': prepMaterialLabourOverheads,
-  'money-market.png': prepMoneyMarket,
-  'negotiable-instruments.png': prepNegotiableInstruments,
-  'org-structure.png': prepOrgStructure,
-  'perception-learning.png': prepPerceptionLearning,
-  'pom-intro.png': prepPomIntro,
-  'profit-loss-partnership.png': prepProfitLossPartnership,
-  'promotion-mix.png': prepPromotionMix,
-  'quality-tqm.png': prepQualityTqm,
-  'ratio-analysis.png': prepRatioAnalysis,
-  'residential-status.png': prepResidentialStatus,
-  'salary-income.png': prepSalaryIncome,
-  'sale-of-goods.png': prepSaleOfGoods,
-  'sebi-investor.png': prepSebiInvestor,
-  'shares-debentures.png': prepSharesDebentures,
-  'startup-ecosystem.png': prepStartupEcosystem,
-  'startup-finance.png': prepStartupFinance,
-  'strategic-process.png': prepStrategicProcess,
-  'strategy-implementation.png': prepStrategyImplementation,
-  'supply-chain.png': prepSupplyChain,
-  'supply-demand-curve.png': prepSupplyDemandCurve,
-  'swot-analysis.png': prepSwotAnalysis,
-  'tax-planning.png': prepTaxPlanning,
-  'teams-conflict.png': prepTeamsConflict,
-  'time-series.png': prepTimeSeries,
-  'total-income.png': prepTotalIncome,
-  'training-development.png': prepTrainingDevelopment,
-  'variance-analysis.png': prepVarianceAnalysis,
-  'winding-up.png': prepWindingUp,
+  'bcg-matrix.webp': prepBcgMatrix,
+  'big-five-personality.webp': prepBigFivePersonality,
+  'break-even-analysis.webp': prepBreakEvenAnalysis,
+  'budgetary-control.webp': prepBudgetaryControl,
+  'business-plan.webp': prepBusinessPlan,
+  'business-profession.webp': prepBusinessProfession,
+  'calculus-optimization.webp': prepCalculusOptimization,
+  'capital-gains.webp': prepCapitalGains,
+  'capital-market.webp': prepCapitalMarket,
+  'company-directors.webp': prepCompanyDirectors,
+  'company-incorporation.webp': prepCompanyIncorporation,
+  'compensation-benefits.webp': prepCompensationBenefits,
+  'consumer-protection.webp': prepConsumerProtection,
+  'contract-act.webp': prepContractAct,
+  'cost-curves.webp': prepCostCurves,
+  'culture-change.webp': prepCultureChange,
+  'customs-basics.webp': prepCustomsBasics,
+  'data-presentation.webp': prepDataPresentation,
+  'directing-control.webp': prepDirectingControl,
+  'distribution-channels.webp': prepDistributionChannels,
+  'dividend-working-capital.webp': prepDividendWorkingCapital,
+  'employee-relations.webp': prepEmployeeRelations,
+  'entrepreneurship-intro.webp': prepEntrepreneurshipIntro,
+  'financial-statements.webp': prepFinancialStatements,
+  'financial-system.webp': prepFinancialSystem,
+  'fund-flow-cash-flow.webp': prepFundFlowCashFlow,
+  'gst-registration.webp': prepGstRegistration,
+  'gst-returns.webp': prepGstReturns,
+  'house-property.webp': prepHouseProperty,
+  'hrm-functions.webp': prepHrmFunctions,
+  'index-numbers.webp': prepIndexNumbers,
+  'interest-annuities.webp': prepInterestAnnuities,
+  'leadership-motivation.webp': prepLeadershipMotivation,
+  'market-structures.webp': prepMarketStructures,
+  'marketing-mix-4ps.webp': prepMarketingMix4ps,
+  'material-labour-overheads.webp': prepMaterialLabourOverheads,
+  'money-market.webp': prepMoneyMarket,
+  'negotiable-instruments.webp': prepNegotiableInstruments,
+  'org-structure.webp': prepOrgStructure,
+  'perception-learning.webp': prepPerceptionLearning,
+  'pom-intro.webp': prepPomIntro,
+  'profit-loss-partnership.webp': prepProfitLossPartnership,
+  'promotion-mix.webp': prepPromotionMix,
+  'quality-tqm.webp': prepQualityTqm,
+  'ratio-analysis.webp': prepRatioAnalysis,
+  'residential-status.webp': prepResidentialStatus,
+  'salary-income.webp': prepSalaryIncome,
+  'sale-of-goods.webp': prepSaleOfGoods,
+  'sebi-investor.webp': prepSebiInvestor,
+  'shares-debentures.webp': prepSharesDebentures,
+  'startup-ecosystem.webp': prepStartupEcosystem,
+  'startup-finance.webp': prepStartupFinance,
+  'strategic-process.webp': prepStrategicProcess,
+  'strategy-implementation.webp': prepStrategyImplementation,
+  'supply-chain.webp': prepSupplyChain,
+  'supply-demand-curve.webp': prepSupplyDemandCurve,
+  'swot-analysis.webp': prepSwotAnalysis,
+  'tax-planning.webp': prepTaxPlanning,
+  'teams-conflict.webp': prepTeamsConflict,
+  'time-series.webp': prepTimeSeries,
+  'total-income.webp': prepTotalIncome,
+  'training-development.webp': prepTrainingDevelopment,
+  'variance-analysis.webp': prepVarianceAnalysis,
+  'winding-up.webp': prepWindingUp,
 };
 
 /** Resolve a markdown image src to a renderable URL, or null if unknown. */
