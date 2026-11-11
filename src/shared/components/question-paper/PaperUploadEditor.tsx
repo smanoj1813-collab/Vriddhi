@@ -22,7 +22,7 @@ import {
 import { collection, doc } from 'firebase/firestore';
 import { httpsCallable } from 'firebase/functions';
 import { deleteObject, ref, uploadBytes } from 'firebase/storage';
-import { db, functions, storage } from '@/Firebase/config';
+import { db, functions, storage } from '@/Firebase/data';
 import { DEFAULT_PROGRAMS, DEFAULT_SUBJECTS, DEFAULT_SEMESTERS } from '@/shared/constants/academicPrograms';
 import { QUESTION_TYPE_OPTIONS } from '@/shared/utils/questionFileParser';
 

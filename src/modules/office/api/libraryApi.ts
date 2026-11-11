@@ -34,7 +34,7 @@ import {
   type DocumentData,
   type QueryConstraint,
 } from 'firebase/firestore'
-import { db } from '@/Firebase/config'
+import { db } from '@/Firebase/data'
 import {
   actor,
   clean,

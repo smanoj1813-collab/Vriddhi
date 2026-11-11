@@ -8,7 +8,7 @@
 // tenancy); storage.rules enforces the same boundary.
 
 import { getDownloadURL, ref, uploadBytes } from 'firebase/storage'
-import { storage } from '@/Firebase/config'
+import { storage } from '@/Firebase/data'
 import { feeProofPath, proofObjectName, validateProofFile } from '../utils/feeProof'
 
 export { feeProofPath, proofObjectName, validateProofFile } from '../utils/feeProof'

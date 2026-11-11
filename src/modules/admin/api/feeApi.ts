@@ -20,7 +20,8 @@ import {
   updateDoc,
   where,
 } from 'firebase/firestore'
-import { auth, db } from '@/Firebase/config'
+import { auth } from '@/Firebase/config'
+import { db } from '@/Firebase/data'
 import {
   creditLedger,
   normalizeReference,

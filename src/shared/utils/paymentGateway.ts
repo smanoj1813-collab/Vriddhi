@@ -8,7 +8,7 @@
 // 'unavailable' }, so the caller can fall back to offline recording / proof.
 
 import { httpsCallable } from 'firebase/functions'
-import { functions } from '@/Firebase/config'
+import { functions } from '@/Firebase/data'
 
 type OrderResult =
   | { configured: false }

@@ -14,7 +14,7 @@ import {
   Delete as DeleteIcon,
 } from '@mui/icons-material';
 import { collection, getDocs, doc, deleteDoc, updateDoc, Timestamp } from 'firebase/firestore';
-import { db } from '@/Firebase/config';
+import { db } from '@/Firebase/data';
 import SyllabusUploader from '../components/SyllabusUploader';
 import { CurriculumReviewTable } from '../components/CurriculumReviewTable';
 import { CurriculumAssignmentDialog } from '../components/CurriculumAssignmentDialog';

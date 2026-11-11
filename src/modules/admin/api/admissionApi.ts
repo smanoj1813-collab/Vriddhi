@@ -5,7 +5,7 @@
 // never decides whether a transition is legal or how an applicant ranks.
 // ------------------------------------------------------------------
 import { httpsCallable } from 'firebase/functions';
-import { functions } from '@/Firebase/config';
+import { functions } from '@/Firebase/data';
 
 export const ADMISSION_STAGES = ['enquiry', 'application', 'screening', 'offer', 'fee', 'enrolled'] as const;
 export const ADMISSION_OUTCOMES = ['rejected', 'withdrawn'] as const;

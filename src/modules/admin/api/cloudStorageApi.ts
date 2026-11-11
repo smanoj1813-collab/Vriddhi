@@ -16,7 +16,7 @@ import {
   increment,
   Timestamp,
 } from 'firebase/firestore';
-import { db } from '@/Firebase/config';
+import { db } from '@/Firebase/data';
 import type {
   ApiResponse,
   QuestionContent,

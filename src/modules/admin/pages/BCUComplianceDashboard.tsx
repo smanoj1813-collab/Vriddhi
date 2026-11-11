@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { collection, getDocs, query, where, limit } from 'firebase/firestore';
-import { db } from '@/Firebase/config';
+import { db } from '@/Firebase/data';
 import {
   calculateSchemeInternalMarks,
   checkSchemePassCriteria,

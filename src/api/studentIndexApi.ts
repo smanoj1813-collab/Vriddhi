@@ -22,7 +22,7 @@ import {
   QueryDocumentSnapshot,
   QueryConstraint,
 } from 'firebase/firestore';
-import { db } from '../Firebase/config';
+import { db } from '../Firebase/data';
 import type {
   StudentIndex,
   StudentImportRow,

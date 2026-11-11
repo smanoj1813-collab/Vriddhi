@@ -1,11 +1,15 @@
 // src/Firebase/config.ts
-// PATCH: Add `functions` export for callable Cloud Functions
+//
+// ONLY the app handle, Auth, and the build-time config check live here.
+//
+// This module is imported by the entry point (main.tsx line 1), so everything in
+// it is preloaded before the login screen paints. Firestore, Storage and Cloud
+// Functions were initialised here too, which put ~213 kB gzip of `firebase` on
+// the critical path; they now live in ./data, which no entry-reachable module
+// imports. Keep it that way — see the note at the top of ./data.ts.
 
 import { initializeApp } from "firebase/app";
-import { getFirestore } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
-import { getStorage } from "firebase/storage";
-import { getFunctions } from "firebase/functions"; // ← ADD THIS
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -20,12 +24,7 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 
-export const db = getFirestore(app);
 export const auth = getAuth(app);
-export const storage = getStorage(app);
-// All callable functions in this repository are deployed in asia-south1.
-// Using the SDK default (us-central1) makes valid callables look unavailable.
-export const functions = getFunctions(app, 'asia-south1'); // ← ADD THIS
 
 export default app;
 

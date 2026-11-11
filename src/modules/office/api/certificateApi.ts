@@ -9,7 +9,7 @@
 // later edits its template wording.
 
 import { addDoc, collection, getDoc, getDocs, limit, query, runTransaction, setDoc, where, type DocumentData } from 'firebase/firestore'
-import { db } from '@/Firebase/config'
+import { db } from '@/Firebase/data'
 import { actor, clean, formatDocNo, nextCounter, nowIso, officeCol, officeDoc, str, num, todayIso } from './officeDb'
 import {
   canTransitionCertificate, certificateType, certificateVars, feeLinesTotal, hasOpenRequest,

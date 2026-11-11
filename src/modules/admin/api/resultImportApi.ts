@@ -3,7 +3,7 @@
 
 import * as XLSX from '@e965/xlsx';
 import { collection, getDocs, query, where, limit, writeBatch, doc, serverTimestamp } from 'firebase/firestore';
-import { db } from '@/Firebase/config';
+import { db } from '@/Firebase/data';
 import { calculateSGPA } from '@/shared/utils/bcuCompliance';
 import {
   checkSchemePassCriteria,

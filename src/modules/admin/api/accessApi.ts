@@ -4,7 +4,7 @@
 // role: accounts prepares/processes and the principal approves.
 
 import { doc, getDoc, setDoc } from 'firebase/firestore'
-import { db } from '@/Firebase/config'
+import { db } from '@/Firebase/data'
 import type { UserRole } from '@/modules/auth/context/auth'
 import { DEFAULT_ACCESS_SETTINGS, PAYROLL_GRANTABLE_ROLES, type AccessSettings } from '@/modules/auth/permissions'
 

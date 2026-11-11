@@ -78,8 +78,13 @@ import {
   AccountBalanceWallet,
   Layers as LayersIcon,
 } from "@mui/icons-material";
-import { doc, getDoc } from 'firebase/firestore';
-import { db } from '@/Firebase/config';
+// No static Firestore import here. Layout is imported eagerly by every
+// module's route table (src/modules/*/routes.tsx), which means anything it
+// imports statically is preloaded before the login screen paints — and this
+// component's only Firestore use is one college-name lookup that happens after
+// sign-in. The import lives inside that effect instead, so the data SDK
+// (Firestore, Storage, RTDB, Functions — ~213 kB gzip) stays out of the
+// critical path. Same pattern in shared/components/ChangePasswordForm.tsx.
 import { isPwaStandalone, requestPwaInstall } from '../pwa/install';
 import { canAccessAdminPath, type AccessSettings } from '@/modules/auth/permissions';
 import { useAccessSettings } from '@/modules/admin/hooks/useAccessSettings';
@@ -902,6 +907,10 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         return;
       }
       try {
+        const [{ doc, getDoc }, { db }] = await Promise.all([
+          import('firebase/firestore'),
+          import('@/Firebase/data'),
+        ]);
         const snap = await getDoc(doc(db, 'colleges', user.collegeId));
         if (snap.exists()) {
           const data = snap.data();

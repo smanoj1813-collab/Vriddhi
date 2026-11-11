@@ -23,7 +23,7 @@
 // store does not appear twice.
 
 import { collection, doc, query, where, getDocs, getDoc, limit } from 'firebase/firestore'
-import { db } from '@/Firebase/config'
+import { db } from '@/Firebase/data'
 import { resolveFacultyAliases, listMappings } from '../../admin/api/curriculumMappingApi'
 import { fetchFacultyWeeklySchedule } from '../../admin/api/scheduleApi'
 

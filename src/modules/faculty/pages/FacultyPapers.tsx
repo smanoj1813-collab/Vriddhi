@@ -6,7 +6,7 @@ import {
   FileUp, BookOpen, Calendar, Printer, Globe, Database, Trash2, Undo2
 } from 'lucide-react'
 import { httpsCallable } from 'firebase/functions'
-import { functions } from '@/Firebase/config'
+import { functions } from '@/Firebase/data'
 import { useAuth } from '../../auth/context/AuthContext'
 import { getPapers } from '../../admin/services/paperAPI'
 import { downloadPaperPDF } from '../../../shared/utils/pdfDownloader'

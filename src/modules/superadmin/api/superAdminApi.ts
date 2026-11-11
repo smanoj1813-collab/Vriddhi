@@ -2,7 +2,8 @@
 // Cleaned - No mock data. Connects to Firebase Firestore.
 // All types imported from ../types/superAdmin.ts (single source of truth)
 
-import { auth, db, functions } from '@/Firebase/config';
+import { auth } from '@/Firebase/config'
+import { db, functions } from '@/Firebase/data';
 import { httpsCallable } from 'firebase/functions';
 import { filterStudentRows } from '@/shared/utils/studentFilters';
 import {

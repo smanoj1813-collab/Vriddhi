@@ -4,7 +4,8 @@
 // so the PATH is the tenant boundary the security rules check.
 
 import { collection, doc, runTransaction, type DocumentData } from 'firebase/firestore'
-import { auth, db } from '@/Firebase/config'
+import { auth } from '@/Firebase/config'
+import { db } from '@/Firebase/data'
 import { stripUndefined } from '@/shared/utils/firestoreClean'
 
 export function officeCollegeId(explicit?: string | null): string {

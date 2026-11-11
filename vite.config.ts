@@ -215,12 +215,17 @@ export default defineConfig(({ mode }) => {
             'react-core': ['react', 'react-dom', 'react-router-dom'],
             'mui-core': ['@mui/material', '@emotion/react', '@emotion/styled'],
             'mui-icons': ['@mui/icons-material'],
-            'firebase': [
-              'firebase/app',
-              'firebase/auth',
+            // Split by "needed to boot" vs "needed once signed in". The entry
+            // only initialises the app handle and Auth (src/Firebase/config.ts);
+            // Firestore, Storage, RTDB and Functions live in src/Firebase/data.ts,
+            // which no entry-reachable module imports. One combined `firebase`
+            // chunk meant the login screen preloaded all of them.
+            'firebase-auth': ['firebase/app', 'firebase/auth'],
+            'firebase-data': [
               'firebase/firestore',
               'firebase/database',
               'firebase/storage',
+              'firebase/functions',
             ],
             'charts': ['recharts'],
             'pdf': ['jspdf', 'html2canvas'],

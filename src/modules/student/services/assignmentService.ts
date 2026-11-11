@@ -2,7 +2,7 @@
 // Server-authorized assignment submission with tracked Storage upload sessions.
 import { deleteObject, ref, uploadBytes } from 'firebase/storage';
 import { httpsCallable } from 'firebase/functions';
-import { functions, storage } from '@/Firebase/config';
+import { functions, storage } from '@/Firebase/data';
 import type { AssignmentSubmission, SubmissionFile } from '../types/student';
 import { validateDriveLink } from '@/shared/utils/driveLink';
 

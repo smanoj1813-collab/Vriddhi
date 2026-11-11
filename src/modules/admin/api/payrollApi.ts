@@ -23,7 +23,8 @@ import {
   setDoc,
   where,
 } from 'firebase/firestore'
-import { auth, db } from '@/Firebase/config'
+import { auth } from '@/Firebase/config'
+import { db } from '@/Firebase/data'
 import { stripUndefined } from '@/shared/utils/firestoreClean'
 import {
   canTransitionPayslip,

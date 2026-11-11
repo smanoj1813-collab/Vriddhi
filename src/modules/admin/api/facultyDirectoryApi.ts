@@ -4,7 +4,7 @@
 // by collegeId) shaped for the finance screens: guest billing and payroll.
 
 import { collection, getDocs, query, where } from 'firebase/firestore'
-import { db } from '@/Firebase/config'
+import { db } from '@/Firebase/data'
 
 export interface FacultyDirectoryEntry {
   profileId: string

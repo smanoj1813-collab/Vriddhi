@@ -47,7 +47,7 @@ import {
 } from '../api/attendanceApi';
 import { collection, getDocs, limit, query, where } from 'firebase/firestore';
 import { Link as RouterLink } from 'react-router-dom';
-import { db } from '@/Firebase/config';
+import { db } from '@/Firebase/data';
 import { useAuth } from '../../auth/context/AuthContext';
 import { shouldScopeToDepartment, docInDepartment } from '@/shared/utils/departmentScope';
 import type { AttendanceRecord, AttendanceSummary, ClassSession } from '../types/attendance';

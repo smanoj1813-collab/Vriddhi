@@ -1,7 +1,7 @@
 import { useState, useMemo, useRef, useEffect } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { useAuth } from '../../auth/context/AuthContext'
-import { db } from '@/Firebase/config'
+import { db } from '@/Firebase/data'
 import {
   collection, query, where, getDocs, limit
 } from 'firebase/firestore'

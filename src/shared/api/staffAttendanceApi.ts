@@ -20,7 +20,7 @@ import {
 // (setDoc removed with the direct write — staffAttendance is written by the
 //  saveMyStaffAttendance callable; see the note on saveMyStaffAttendance below.)
 import { httpsCallable } from 'firebase/functions';
-import { db, functions } from '@/Firebase/config';
+import { db, functions } from '@/Firebase/data';
 
 import {
   isStaffAttendanceStatus,

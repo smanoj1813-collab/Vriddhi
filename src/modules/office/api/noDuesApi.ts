@@ -8,7 +8,7 @@
 // "cleared" and an office issues the numbered certificate.
 
 import { addDoc, getDoc, getDocs, limit, query, runTransaction, setDoc, where, type DocumentData } from 'firebase/firestore'
-import { db } from '@/Firebase/config'
+import { db } from '@/Firebase/data'
 import { actor, clean, formatDocNo, financialYear, nextCounter, nowIso, officeCol, officeDoc, str } from './officeDb'
 import { loadPdfLibs } from '@/shared/utils/pdfRuntime'
 import { normalizeNoDuesSettings, overallStatus, type NoDuesSettings, type NoDuesStatus, type SectionState, type SectionStatus } from '../utils/noDuesEngine'

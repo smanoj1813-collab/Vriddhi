@@ -5,7 +5,7 @@ import {
   FileSpreadsheet, Download, RefreshCw, Loader2, Search, Filter
 } from 'lucide-react';
 import { collection, getDocs, query, where, limit, writeBatch, doc, serverTimestamp } from 'firebase/firestore';
-import { db } from '@/Firebase/config';
+import { db } from '@/Firebase/data';
 import type { UUCMSImportRow, UUCMSImportResult } from '../types/uucms';
 import { getUUCMSStatusLabel, getUUCMSStatusColor } from '../types/uucms';
 import ApaarTab from '../components/ApaarTab';

@@ -1,5 +1,5 @@
 import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore'
-import { db } from '@/Firebase/config'
+import { db } from '@/Firebase/data'
 
 const configDoc = (collegeId: string) => doc(db, 'colleges', collegeId, 'config', 'codingLab')
 

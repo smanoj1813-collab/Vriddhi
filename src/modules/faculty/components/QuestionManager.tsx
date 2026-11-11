@@ -15,7 +15,8 @@ import {
 import { useQuestions, useQuestion } from '../../../hooks/useAssessment';
 import { useAuth } from '../../../hooks/useAuth';
 import { addDoc, collection, deleteDoc, doc, serverTimestamp, updateDoc } from 'firebase/firestore';
-import { auth, db } from '../../../Firebase/config';
+import { auth } from '../../../Firebase/config'
+import { db } from '../../../Firebase/data';
 import {
   CreateQuestionInput, QuestionType, QuestionDifficulty, QuestionStatus, AssessmentQuestion,
 } from '../../../types/assessment';

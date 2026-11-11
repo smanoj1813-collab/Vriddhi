@@ -9,7 +9,7 @@ import {
   limit, startAfter, QueryConstraint,
 } from 'firebase/firestore';
 import { httpsCallable } from 'firebase/functions';
-import { db, functions as cloudFunctions } from '@/Firebase/config';
+import { db, functions as cloudFunctions } from '@/Firebase/data';
 
 import type {
   Assessment, StudentAssessment, StudentAnswer,

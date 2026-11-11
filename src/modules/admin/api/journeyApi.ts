@@ -10,7 +10,7 @@ import {
   where,
   limit,
 } from 'firebase/firestore'
-import { db } from '@/Firebase/config'
+import { db } from '@/Firebase/data'
 
 const MAX_READS = 500
 

@@ -10,7 +10,7 @@
 
 import { collection, doc, getDoc, getDocs, query, where } from 'firebase/firestore';
 import { httpsCallable } from 'firebase/functions';
-import { db, functions } from '@/Firebase/config';
+import { db, functions } from '@/Firebase/data';
 import {
   DEFAULT_SCHEME_PACK,
   SCHEME_PACK_PRESETS,

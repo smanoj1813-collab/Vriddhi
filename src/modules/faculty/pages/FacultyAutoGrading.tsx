@@ -11,7 +11,7 @@ import {
   type Rubric, type AutoGradingResult, type QuestionMarks
 } from '@/shared/utils/autoGrading';
 import { httpsCallable } from 'firebase/functions';
-import { functions } from '@/Firebase/config';
+import { functions } from '@/Firebase/data';
 import { useAuth } from '@/modules/auth/context/AuthContext';
 
 // Real pending submission from backend

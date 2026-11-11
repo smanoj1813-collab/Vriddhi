@@ -3,7 +3,7 @@
 // callable still records the mail and reports configured:false, so callers
 // must treat email as best-effort and never block the main workflow on it.
 import { httpsCallable } from 'firebase/functions'
-import { functions } from '@/Firebase/config'
+import { functions } from '@/Firebase/data'
 
 export type MailKind = 'fee_receipt' | 'fee_reminder' | 'hall_ticket_ready' | 'result_published' | 'certificate_issued' | 'exam_deadline' | 'announcement' | 'generic'
 

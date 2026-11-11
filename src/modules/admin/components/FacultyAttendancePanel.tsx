@@ -20,7 +20,7 @@ import {
 } from 'recharts';
 import { doc, getDoc } from 'firebase/firestore';
 
-import { db } from '@/Firebase/config';
+import { db } from '@/Firebase/data';
 import { useStaffAttendanceAnalytics } from '../hooks/useStaffAttendanceAnalytics';
 import {
   STAFF_STATUS_LABEL,

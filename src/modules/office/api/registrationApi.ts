@@ -5,7 +5,7 @@
 //   must be computed server-side; students cannot read other students).
 import { doc, getDoc, getDocs, limit, query, setDoc, updateDoc, where } from 'firebase/firestore'
 import { httpsCallable } from 'firebase/functions'
-import { db, functions } from '@/Firebase/config'
+import { db, functions } from '@/Firebase/data'
 import { actor, clean, officeCol, officeDoc, nowIso } from './officeDb'
 import { normalizeWindows, type RegWindow } from '../utils/registrationEngine'
 

@@ -5,7 +5,7 @@
 // ============================================================
 
 import { collection, doc, setDoc, updateDoc, getDocs, writeBatch } from 'firebase/firestore';
-import { db } from '../Firebase/config';
+import { db } from '../Firebase/data';
 import { createFirebaseAuthUser } from '../modules/superadmin/api/superAdminApi';
 
 /** Faculty onboarding data derived from student CSV + faculty CSV */

@@ -7,7 +7,7 @@
 // response and translates callable errors into admin-facing copy.
 
 import { httpsCallable } from 'firebase/functions'
-import { functions } from '@/Firebase/config'
+import { functions } from '@/Firebase/data'
 
 export interface AssignmentCompletionRow {
   assignmentId: string

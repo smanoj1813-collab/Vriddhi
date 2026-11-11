@@ -19,7 +19,7 @@ import {
   increment,
   Timestamp,
 } from 'firebase/firestore';
-import { db } from '@/Firebase/config';
+import { db } from '@/Firebase/data';
 import { extractCanonicalSubject, extractCanonicalTopic } from '@/shared/utils/curriculumMatcher';
 
 export type MaterialType = 'pdf' | 'video' | 'link' | 'image' | 'document' | 'presentation';

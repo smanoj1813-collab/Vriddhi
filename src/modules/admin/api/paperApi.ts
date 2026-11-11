@@ -1,4 +1,4 @@
-import { db } from '@/Firebase/config';
+import { db } from '@/Firebase/data';
 import {
   collection,
   doc,

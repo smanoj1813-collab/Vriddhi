@@ -5,7 +5,7 @@ import { shouldScopeToDepartment, docInDepartment } from '@/shared/utils/departm
 import FacultyAttendancePanel from '../components/FacultyAttendancePanel'
 import FacultyAttendanceTodayCard from '../components/FacultyAttendanceTodayCard'
 import AcademicInsightsCard from '../components/AcademicInsightsCard'
-import { db } from '@/Firebase/config'
+import { db } from '@/Firebase/data'
 import {
   collection, query, where, getDocs
 } from 'firebase/firestore'
@@ -709,7 +709,7 @@ function SystemSettings() {
       if (!user?.collegeId) return
       try {
         const { doc, getDoc } = await import('firebase/firestore')
-        const { db } = await import('@/Firebase/config')
+        const { db } = await import('@/Firebase/data')
         const snap = await getDoc(doc(db, 'colleges', user.collegeId))
         if (snap.exists()) {
           const data = snap.data() as any
@@ -727,7 +727,7 @@ function SystemSettings() {
     try {
       if (user?.collegeId) {
         const { doc, setDoc } = await import('firebase/firestore')
-        const { db } = await import('@/Firebase/config')
+        const { db } = await import('@/Firebase/data')
         await setDoc(doc(db, 'colleges', user.collegeId), { systemSettings: next, updatedAt: new Date().toISOString() }, { merge: true })
         setMsg('Saved to cloud ✓')
       } else {

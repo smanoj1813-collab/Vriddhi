@@ -14,7 +14,8 @@
 // (scripts/render-check/stubs/questionImportApi.ts) can replace it wholesale.
 
 import { apiUrl, assertJsonResponse } from '@/shared/api/apiBase'
-import { auth, db, storage } from '@/Firebase/config'
+import { auth } from '@/Firebase/config'
+import { db, storage } from '@/Firebase/data'
 import { ref, uploadBytesResumable } from 'firebase/storage'
 import { collection, doc, getDocs, query, where, writeBatch } from 'firebase/firestore'
 import { fingerprintMetaDoc } from '../data/questionBankSeed'

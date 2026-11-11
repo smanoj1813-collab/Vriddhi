@@ -21,7 +21,7 @@ import {
 } from '../../../types/assessment';
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
 import { httpsCallable } from 'firebase/functions';
-import { functions } from '../../../Firebase/config';
+import { functions } from '../../../Firebase/data';
 
 const PAPER_TYPES: { value: PaperType; label: string }[] = [
   { value: 'quiz', label: 'Quiz' },

@@ -4,7 +4,7 @@
 import {
   addDoc, doc, getDoc, getDocs, limit, query, runTransaction, setDoc, where,
 } from 'firebase/firestore'
-import { db } from '@/Firebase/config'
+import { db } from '@/Firebase/data'
 import { actor, clean, officeCol, officeDoc, nowIso } from './officeDb'
 import {
   SCHOLARSHIP_NEXT, academicYearOf, hasDuplicateApplication, normalizeScholarshipSettings,

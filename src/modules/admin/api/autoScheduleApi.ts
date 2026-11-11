@@ -8,7 +8,7 @@
 // and calendar/daily-load diagnostics in the preview.
 
 import { httpsCallable } from 'firebase/functions';
-import { functions } from '@/Firebase/config';
+import { functions } from '@/Firebase/data';
 import type { DayOfWeek } from '../types/schedule';
 import type { CalendarEventType } from '@/shared/types/calendarEvent';
 

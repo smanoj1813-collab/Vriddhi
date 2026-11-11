@@ -22,7 +22,7 @@ import {
   doc,
   limit
 } from 'firebase/firestore'
-import { db } from '@/Firebase/config'
+import { db } from '@/Firebase/data'
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 const HOD_DEPT = 'BA'

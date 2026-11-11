@@ -1,5 +1,5 @@
 // src/api/facultyAppointmentApi.ts
-import { functions, db } from '@/Firebase/config';
+import { functions, db } from '@/Firebase/data';
 import { httpsCallable } from 'firebase/functions';
 import {
   collection,

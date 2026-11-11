@@ -16,7 +16,7 @@ import {
   arrayUnion,
   arrayRemove,
 } from 'firebase/firestore';
-import { db } from '@/Firebase/config';
+import { db } from '@/Firebase/data';
 import {
   DEFAULT_BATCHES,
   DEFAULT_PROGRAMS,

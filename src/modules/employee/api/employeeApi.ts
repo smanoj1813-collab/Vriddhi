@@ -2,7 +2,7 @@
 // Client wrapper around the employeeAccess callables. The assignment document
 // itself is Admin-SDK-only (Firestore rules deny client writes), so every
 // mutation goes through these callables.
-import { functions } from '@/Firebase/config'
+import { functions } from '@/Firebase/data'
 import { httpsCallable } from 'firebase/functions'
 
 export type EmployeeGrant =

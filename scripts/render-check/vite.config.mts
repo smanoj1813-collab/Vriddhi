@@ -56,6 +56,10 @@ export default defineConfig({
       { find: /^firebase\/functions$/, replacement: stub('functions.ts') },
       // The app config's VitePWA plugin owns this virtual module; swap it for
       // a no-op so the module graph can resolve without the plugin chain.
+      { find: '@/Firebase/data', replacement: stub('firebaseData.ts') },
+      // Relative spellings ('./data' from config's siblings, '../../Firebase/data').
+      { find: /(?:\.\.\/)+Firebase\/data$/, replacement: stub('firebaseData.ts') },
+      { find: /^\.\/data$/, replacement: stub('firebaseData.ts') },
       { find: 'virtual:pwa-register/react', replacement: stub('pwaRegister.ts') },
       { find: /^react-router-dom$/, replacement: stub('react-router-dom.tsx') },
       { find: '@', replacement: path.resolve(root, './src') },

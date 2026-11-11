@@ -6,7 +6,7 @@
 // live in src/shared/utils/prepMedia.ts and are unit-tested there.
 
 import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
-import { storage } from '@/Firebase/config';
+import { storage } from '@/Firebase/data';
 import {
   prepImageExtension,
   prepMediaPathForFile,

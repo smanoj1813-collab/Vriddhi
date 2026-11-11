@@ -123,7 +123,7 @@ export function useAIQuestionGenerator() {
       let resolvedCollegeId = collegeId;
       if (!resolvedCollegeId) {
         try {
-          const { db } = await import('@/Firebase/config');
+          const { db } = await import('@/Firebase/data');
           const { doc, getDoc } = await import('firebase/firestore');
           // Try faculty doc directly
           if (user) {
