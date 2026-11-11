@@ -1,7 +1,5 @@
 import { signInWithEmailAndPassword, signOut } from "firebase/auth";
-import { doc, getDoc, collection, query, where, getDocs, limit } from "firebase/firestore";
 import { auth } from '@/Firebase/config'
-import { db } from '@/Firebase/data';
 import { detectClaimStaleness } from '@/shared/utils/identityClaims';
 
 export type UserRole = 'superadmin' | 'admin' | 'principal' | 'faculty' | 'student' | 'parent' | 'hod' | 'mentor' | 'accounts' | 'operations' | 'employee';
@@ -192,7 +190,26 @@ function classifyReadError(err: any): { kind: 'permission' | 'other'; text: stri
  * Reads are sequential on purpose: the first hit wins, so a healthy account
  * costs one document read instead of nineteen.
  */
+/**
+ * Firestore is loaded here, not at module scope.
+ *
+ * This module sits on the boot path (main.tsx → AuthProvider → auth.ts) and the
+ * entry point modulepreloads everything it can statically reach, so a top-level
+ * `firebase/firestore` import put the entire data SDK — Firestore, Storage,
+ * RTDB, Functions, 183 kB gzip — in front of the login form. resolveIdentity()
+ * only ever runs once a session exists; by then the chunk is needed and, after
+ * the first call, cached.
+ */
+const firestoreSdk = async () => {
+  const [firestore, data] = await Promise.all([
+    import('firebase/firestore'),
+    import('@/Firebase/data'),
+  ])
+  return { ...firestore, db: data.db }
+}
+
 export const resolveIdentity = async (uid: string, email?: string): Promise<IdentityResolution> => {
+  const { doc, getDoc, collection, query, where, getDocs, limit, db } = await firestoreSdk()
   const outcome: IdentityResolution = {
     user: null, permissionDenied: false, claimMissing: false,
     claimRoleMissing: false, claimCollegeMissing: false, source: null,
