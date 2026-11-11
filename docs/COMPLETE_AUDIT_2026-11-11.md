@@ -367,10 +367,35 @@ in the browser bundle), `brace-expansion`, `source-map-js`, `undici` (build tool
 - `npm run test:render:pyq`
 - `npm audit --audit-level=critical` as a gate, then the full report un-gated
 
-and the functions job runs the **full** rules suite (`npm run test:rules`) as a *non-blocking* step,
-with a comment explaining why: it has never run in this pipeline, so its first run is also its
-first measurement and may report pre-existing failures unrelated to the PR. Delete
-`continue-on-error` once it is green on main.
+and the functions job runs the **full** rules suite (`npm run test:rules`), now **blocking**.
+
+**That gate immediately paid for itself.** The suite had never run in this pipeline, so its first
+run was also its first measurement — and it came back **96 pass, 1 fail**:
+
+```
+not ok 26 - academic workflow schedule approvals
+  not ok 1 - keeps published legacy schedule readable but blocks direct staff edits
+    7 PERMISSION_DENIED: Unable to evaluate the expression as the maximum of
+    1000 expressions to evaluate has been reached. for 'update' @ L1400
+```
+
+L1400 was the `classSessions` `allow update` rule — the rule the client goes through to **mark
+attendance** (`src/modules/admin/api/attendanceApi.ts`), reschedule a session
+(`FacultyReschedule`), and touch one from the HOD dashboard. A rule that cannot be evaluated does
+not fall back to "allow" or "deny the field": **it denies every caller**. So this was not a
+hardening nit, it was an outage that no other test in the repository could see, sitting in the
+collection the product uses every day.
+
+The rule was rewritten with identical semantics and a fraction of the cost: one tenancy read plus a
+plain `collegeId` equality instead of `sameCollege()` on both sides (the request-side call
+re-expanded `isSuperadmin() → exists()` for no extra safety), and `role()` evaluated once up front
+so the common staff caller short-circuits before the principal-only `diff().affectedKeys()` branch.
+Suite is **97/97** and the step is a gate.
+
+Two CI notes, since they cost real time here: job logs were not reachable from this environment
+(`gh api .../actions/jobs/<id>/logs` returned 0 bytes), and the token cannot post PR comments, so
+the failing cases are emitted as **check-run annotations** — visible in the PR without opening a
+log. That step is kept permanently.
 
 ### 9.4 Docs
 
@@ -401,4 +426,8 @@ npm run validate:courses      → 4/4 packs valid
 npm run check:dead-code       → 0 orphans
 npx vite build                → success
 npm audit                     → 19, 0 critical
+functions test:rules (CI)     → 97/97, 0 fail
 ```
+
+CI run on the final commit: **both jobs green**, with the rules suite blocking and the render suite,
+`test:render:pyq`, and the `npm audit --audit-level=critical` gate all active.
