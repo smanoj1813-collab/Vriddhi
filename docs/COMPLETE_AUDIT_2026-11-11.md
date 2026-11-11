@@ -530,7 +530,41 @@ both visual changes, so they are a product decision rather than a performance on
 - **5.1 docs drift.** README's seed count and timetable path were corrected in the first pass;
   no other live document repeats the stale numbers.
 
-#### 9.5.5 Vite 5 → 7
+#### 9.5.5 A real browser, at last
+
+Everything in this repository was jsdom or pure logic: 391 render checks that mount components in
+isolation, 713 unit tests, 1,283 backend tests. Nothing had ever opened the app in a browser, so
+four ordinary regressions were structurally invisible — a broken `/` redirect, a guard that only
+works for in-app clicks and not for bookmarks, a language switch that does not repaint, and a
+phone-width layout that scrolls sideways.
+
+`npm run test:e2e` now runs six checks on two projects (desktop Chrome and a Pixel 7 — the budget
+Android this product is sold to):
+
+- `/` lands an anonymous visitor on `/login`, form usable;
+- a **cold** deep link to `/admin/dashboard` bounces to `/login`;
+- the same for `/student/dashboard`;
+- switching the interface language repaints the submit button in Kannada and survives a reload —
+  asserted on the button, not the page, because the language `<select>`'s own options are native
+  names and a whole-page Kannada assertion would pass before anything was switched;
+- no horizontal overflow at 390 px;
+- no uncaught exceptions during boot.
+
+The suite stops at the sign-in wall deliberately: there is no Firebase project in CI and the
+emulator archives cannot be fetched, so a faked session would test the fake. The authenticated
+contract stays with the render harness and the 102-case rules suite.
+
+Two things this cost, both worth recording because they will recur:
+
+1. **The first run failed 12/12, and the app was fine.** With `VITE_FIREBASE_*` unset,
+   `getAuth(app)` throws `auth/invalid-api-key` during module init, React never mounts, and every
+   assertion fails against a blank page. The dev server now receives a placeholder but well-formed
+   config; nothing in the suite touches a network.
+2. **The job is pinned to `ubuntu-24.04`.** On `ubuntu-latest` (mid-migration to Ubuntu 26)
+   Playwright's `install --with-deps` failed with a bare exit code and no explanation. The install
+   now tries the browser alone, probes that it launches, and only then reaches for apt.
+
+#### 9.5.6 Vite 5 → 7
 
 `npm audit fix --force` wanted to downgrade firebase to 9.14.0 alongside this, so it was done
 deliberately: `vite ^5.3.1 → ^7.3.8`, `@vitejs/plugin-react ^4.3.1 → ^5.2.0`.
@@ -564,6 +598,6 @@ functions test:rules (CI)     → 102/102, 0 fail
 3. **The other role-only reads from §4's "42".** Each was triaged in 9.5.1 and left as it is:
    platform catalogue data, published-only prep content, or personal-scoped (`uid`-keyed) rows.
    If a future collection is added to those families, scope it on the claim from day one.
-4. **A real browser.** Still no Playwright/Cypress: routing, focus order, mobile breakpoints and
-   field performance are unverified by anything in this repository. That remains the highest-value
-   test investment, more than any further unit test.
+4. **Field performance.** A real browser now runs (see 9.5.6), but the numbers in §P1-2 are still
+   build artefact sizes, not Lighthouse or RUM on a 4G connection in a tier-2 town. Worth measuring
+   once the app is deployed with real traffic.

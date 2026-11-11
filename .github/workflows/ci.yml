@@ -182,13 +182,18 @@ jobs:
         id: chromium
         run: |
           set -o pipefail
-          # --with-deps pulls the shared libraries the browser needs (apt). If that
-          # recipe breaks against the runner image, fall back to the browser alone
-          # before giving up — most runner images already carry the libraries.
-          npx playwright install --with-deps chromium 2>&1 | tee /tmp/pw-install.log || {
-            echo "::warning title=Chromium install::--with-deps failed, retrying without system packages"
-            npx playwright install chromium 2>&1 | tee -a /tmp/pw-install.log
-          }
+          # Browser only, first. The runner image already carries the shared
+          # libraries; `--with-deps` spends several minutes in apt and then fails
+          # here (its recipe targets the previous LTS), which made this job take
+          # 11 minutes to do 4 minutes of work. The launch probe below is what
+          # decides whether the system packages are actually needed.
+          npx playwright install chromium 2>&1 | tee /tmp/pw-install.log || true
+          if node -e "require('@playwright/test').chromium.launch().then(b=>b.close()).then(()=>process.exit(0),()=>process.exit(1))"; then
+            echo "Chromium launches — system libraries already present, no apt needed"
+          else
+            echo "::warning title=Chromium::launch failed without system packages, installing them"
+            npx playwright install --with-deps chromium 2>&1 | tee -a /tmp/pw-install.log
+          fi
 
       # A bare "exit code 1" tells nobody anything, and this pipeline's logs are
       # not reliably reachable — so the reason is pushed into an annotation.
