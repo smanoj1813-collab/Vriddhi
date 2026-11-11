@@ -403,18 +403,133 @@ log. That step is kept permanently.
   auto-timetable entry point corrected from "Class Schedule → Auto Generate" to
   "Academic workflow → Bulk timetable tools → Auto Generate".
 
-### 9.5 Still open (deliberately)
+### 9.5 Second pass — the rest of the audit, worked
 
-1. **P1-1, the 42 tenant-blind read rules.** Not touched: rules changes need the emulator to
-   verify, and there is no Java in this environment. Patch them one collection at a time with a
-   cross-tenant test each, locally, with `npm --prefix functions run test:rules` before/after.
-2. **P1-2 / P1-3, the 457 kB preload and the 43 MB of PNGs.** Structural work, next pass.
-3. **Vite 5 → 7/8**, and the `firebase` advisory that has no patched version.
-4. **`src/scripts/seedStudents.ts`** (5,077 lines, imported by nothing, invisible to the dead-code
-   guard because `src/scripts/` is excluded) — move it to `scripts/`.
-5. **i18n scope** — either finish the sweep or narrow the README claim.
+Everything below was done after the first fix log, in the same session and on the same branch.
 
-### 9.6 Verification after the fixes
+#### 9.5.1 P1-1, part 1 — thirteen read paths scoped, six emulator cases added
+
+Two families were role-checked and never college-checked. Both are now scoped on the claim.
+
+*The per-college collections* — `/colleges/{collegeId}/` + `schedules`, `attendance`,
+`attendanceRecords`, `assessments`, `scores`, `activities`, `milestones`. The block's own comment
+claimed "the collection path itself is the tenant boundary". It is not: `{collegeId}` is a path
+segment the caller supplies, and `isStaff()` alone let a faculty token at college A read
+`colleges/B/attendance` by naming B. The neighbouring `announcements`, `feeStructures` and
+`feePayments` blocks already compared the claim, so this was an oversight in seven blocks, not a
+design decision. Fix: `isSuperadmin() || (isStaff() && collegeId() == collegeId)` — a claim
+comparison, no document read, and **no client query change**, because the path is fixed for the
+whole list query.
+
+*The top-level collections* — `resumes` (list), `resumeDownloads` (list), `proctoringLogs` (read),
+`assignments` (read), `submissions` (list), `attendanceSummaries` (list). In each, the `get` rule
+was scoped and the `list` rule was not, so any staff account could enumerate every college's rows:
+student résumés, who downloaded them, proctoring evidence (another student's exam behaviour), and
+attendance summaries. Each now requires `sameCollege(resource.data)`. `submissions` keeps a
+`studentUid`/`studentId` arm because the student path in `assignmentApi.fetchStudentSubmission`
+asks for its own row by `studentUid` with no college filter — verified by a test rather than
+assumed.
+
+Six new cases in `functions/test/firestore.rules.test.ts` (`legacy reads stay inside the caller's
+college`): own college allowed, one college over denied for all seven path-scoped and all six
+top-level collections, superadmin unaffected, student self-service intact. Suite 97 → **102 cases,
+all green**, run on the emulator in CI.
+
+*What is deliberately NOT scoped, and why.* The remaining role-only reads in the file were
+triaged one by one; these are correct as they are:
+
+- `universities`, `prep_subjects`/`topics`/`prep_papers`/`prep_mcq_sets`/`universalQuestions`
+  (published-only), `accessProducts`, `questionBank_meta`/`questionBank_content`,
+  `systemConfig`: platform-wide or catalogue data, not tenant data.
+- `platform_employees`, `officeStaff`, `prep_progress`, `ai_generation_logs`, `notifications`,
+  `reads`: personal-scoped (`request.auth.uid == …`), which is tighter than a college check.
+- `payments`, `fees`, `feeStructures`, `issuedBooks`: already owner-or-finance scoped.
+- `questions`, `papers`, `testPapers`, `papers_universal`, `questionReviews`, `reviewQueue`,
+  `topics`, `facultyTopics`, `curriculum`: shared authoring catalogues spanning colleges by
+  design — the paper/question bank is cross-college, and the file documents that intent.
+
+The rest of the "42" in §4 of this report is that list: the count was right, but most of the 42
+turned out to be deliberate platform-wide or personal data, and the seven path-scoped blocks plus
+six top-level ones were the real leak.
+
+#### 9.5.2 P1-3 — images: 41.3 MB → 2.7 MB
+
+All 64 prep-course illustrations were PNGs at full resolution, imported through the bundler. 54 of
+them were over 300 kB; the largest, `bcg-matrix.png`, was 1.7 MB. They are now WebP, capped at
+1280 px wide (no enlargement), quality 82: **41.3 MB → 2.7 MB, 15.5× smaller**. Every one was
+imported from a single file (`src/modules/prep/prepPublicShared.tsx`), so the switch is 64 import
+paths and no component changes.
+
+`dist/assets` 55 MB → **16 MB**, and zero emitted images over 300 kB. The offline shell shrank with
+it: PWA precache 25 entries / 2,928 KiB → 24 / 2,215 KiB.
+
+#### 9.5.3 P1-2 — the preload: split done, the rest is a data-layer job
+
+`main.tsx` imports `src/Firebase/config` on its first line, and Vite modulepreloads everything
+statically reachable from the entry. That module initialised all four services, so the login
+screen pulled Firestore, Storage, RTDB and Functions — 182.7 kB gzip — before it could ask for a
+password. Additionally, one merged `'firebase'` manual chunk made Auth and Firestore
+indistinguishable to the bundler.
+
+Done: `config.ts` now holds only the app handle, Auth and the build-time config check; the data
+services moved to a new `src/Firebase/data.ts`; 114 files had their imports split mechanically;
+`manualChunks` splits `firebase-auth` (33.5 kB gz) from `firebase-data`; and three modules the
+entry reaches statically stopped importing the data SDK at module scope (Layout's college-name
+lookup, `ChangePasswordForm`'s callable, `identityBackend.syncMyIdentity`).
+
+**Honest status: `firebase-data` is still preloaded.** Four static chains keep it there, all of
+them React context/hook consumers evaluated during render:
+
+```
+Layout.tsx (useCollegeBranding, useAccessSettings)  ← modules/*/routes.tsx
+modules/student/routes.tsx  → StudentDataProvider   → studentDataApi     → firebase-data
+modules/courses/routes.tsx  → StudentCourseAccess   → courseCloud        → firebase-data
+```
+
+Breaking them is a data-layer restructure — a provider that initialises after auth instead of at
+import — not an import edit, and it changes when state initialises. That is the next task for this
+item. The split above is its precondition and costs nothing meanwhile: the entry preload is now
+six chunks / **449.7 kB gz**, with Auth separated from the data SDK instead of merged into one
+213 kB chunk.
+
+#### 9.5.4 P2 housekeeping
+
+- **5.2 i18n.** Dictionaries are complete (6 languages × 233 keys, full parity) but only 15
+  components and 147 `t()` calls use them — the student area and shared chrome. README now says
+  exactly that and states the gap is reach, not content.
+- **5.3 `src/scripts/`.** `seedStudents.ts` (5,077 lines) and `seedFaculty.ts` moved to
+  `scripts/`, imports repointed, header comments rewritten. The dead-code guard's `src/scripts`
+  exclusion is **deleted** — that exclusion is exactly why the largest file in the repository was
+  invisible to the guard.
+- **5.4 rules naming.** `current-firestore.rules` → `firestore.rules`, with `firebase.json`, the
+  emulator tests (which read the file by path), the render harness, README and code comments
+  updated. Dated reports under `docs/` keep the old name; they are historical records.
+- **5.6 hosting headers.** `X-Content-Type-Options: nosniff`, `Referrer-Policy`, `X-Frame-Options:
+  SAMEORIGIN`, an **enforced** CSP limited to `base-uri 'self'; object-src 'none'; frame-ancestors
+  'self'; form-action 'self'`, and a **report-only** full CSP (script/style/connect/img/font/
+  worker/frame for Firebase, Google Fonts, Storage, Sentry). Deliberate: only directives that
+  cannot break a fetch are enforced, because a wrong enforced `script-src` takes the app down on
+  the first deploy and there is no staging project to rehearse on. Watch the report-only
+  violations in the browser console, then promote it in one step.
+- **5.5 PWA precache warning.** This report's diagnosis was wrong. `globIgnores` only carried
+  `**/stats.html`, and `workbox-*.js` matched real emitted files — there was no warning to fix.
+  What *was* wrong is adjacent and my own doing: after the P1-2 chunk split the precache glob still
+  named `assets/firebase-*.js`, which no longer existed, so the offline shell silently lost the
+  auth chunk. It now precaches `assets/firebase-auth-*.js` and deliberately leaves the data chunk
+  to the runtime `/assets/` route.
+- **5.1 docs drift.** README's seed count and timetable path were corrected in the first pass;
+  no other live document repeats the stale numbers.
+
+#### 9.5.5 Vite 5 → 7
+
+`npm audit fix --force` wanted to downgrade firebase to 9.14.0 alongside this, so it was done
+deliberately: `vite ^5.3.1 → ^7.3.8`, `@vitejs/plugin-react ^4.3.1 → ^5.2.0`.
+`vite-plugin-pwa` 1.3.0 already declared `^7` in its peer range. Advisory count 19 → **17**; the
+vite advisory is gone, and the remaining highs have no patched version in range
+(`firebase`/`@grpc/grpc-js` — the advisory covers every published version — plus build-time
+`brace-expansion`/`undici`).
+
+### 9.6 Verification after the second pass
 
 ```
 npx tsc --noEmit              → 0 errors
@@ -423,11 +538,22 @@ npm run test:render           → 391/391
 npm run test:render:courses   → 126/126
 npm run test:render:pyq       →  27/27
 npm run validate:courses      → 4/4 packs valid
-npm run check:dead-code       → 0 orphans
-npx vite build                → success
-npm audit                     → 19, 0 critical
-functions test:rules (CI)     → 97/97, 0 fail
+npm run check:dead-code       → 0 orphans (614 files, guard coverage widened)
+npx vite build (Vite 7)       → success; dist/assets 16 MB; entry preload 449.7 kB gz
+npm audit                     → 17, 0 critical
+functions test:rules (CI)     → 102/102, 0 fail
 ```
 
-CI run on the final commit: **both jobs green**, with the rules suite blocking and the render suite,
-`test:render:pyq`, and the `npm audit --audit-level=critical` gate all active.
+### 9.7 What is actually left
+
+1. **P1-2, the remaining 183 kB.** Move the four chains above to post-auth initialisation. This is
+   the only item from the original audit that is still open, and it is a design change, not a
+   chore.
+2. **`firebase` / `@grpc/grpc-js` advisories.** No patched version exists; the only fix is a
+   firebase downgrade, which is worse. Track upstream.
+3. **The other role-only reads from §4's "42".** Each was triaged in 9.5.1 and left as it is:
+   platform catalogue data, published-only prep content, or personal-scoped (`uid`-keyed) rows.
+   If a future collection is added to those families, scope it on the claim from day one.
+4. **A real browser.** Still no Playwright/Cypress: routing, focus order, mobile breakpoints and
+   field performance are unverified by anything in this repository. That remains the highest-value
+   test investment, more than any further unit test.
