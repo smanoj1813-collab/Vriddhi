@@ -14,11 +14,24 @@ if (!existsSync(path)) {
 
 const report = JSON.parse(readFileSync(path, 'utf8'))
 
+// Playwright's JSON reporter spells a test's outcome two different ways
+// depending on the field: `test.status` is expected/unexpected/flaky/skipped,
+// while `results[].status` is passed/failed/timedOut/skipped/interrupted. The
+// first version of this script compared the *results* spelling against
+// 'expected', so every passing test was annotated as a failure — 12 red
+// annotations on a green run. Accept both spellings, and only report a test that
+// actually failed.
+const outcomeOf = (test) => {
+  if (test.status) return test.status
+  const last = test.results?.[test.results.length - 1]?.status ?? 'unknown'
+  return last === 'passed' ? 'expected' : last === 'skipped' ? 'skipped' : 'unexpected'
+}
+
 const walk = (suite, out = []) => {
   for (const spec of suite.specs ?? []) {
     for (const t of spec.tests ?? []) {
-      const state = t.results?.[t.results.length - 1]?.status ?? 'unknown'
-      if (state !== 'expected') {
+      const state = outcomeOf(t)
+      if (state === 'unexpected' || state === 'failed' || state === 'timedOut') {
         const error = t.results?.flatMap((r) => r.errors?.map((e) => e.message) ?? []).join(' ') ?? ''
         out.push({ title: [suite.title, spec.title].filter(Boolean).join(' › '), state, error })
       }
