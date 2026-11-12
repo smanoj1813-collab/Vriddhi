@@ -17,9 +17,15 @@ const KANNADA = /[\u0C80-\u0CFF]/
 const EXPECTED_WITHOUT_BACKEND = /firebase|auth\/|Firestore|Firestore|permission-denied|api-key|network|Failed to fetch/i
 
 test.describe('the app boots', () => {
-  test('lands an anonymous visitor on the login screen', async ({ page }) => {
+  test('welcomes an anonymous visitor on the public landing page', async ({ page }) => {
     await page.goto('/')
-    await expect(page).toHaveURL(/\/login$/)
+    await expect(page).toHaveURL(/\/$/)
+    await expect(page.getByRole('heading', { level: 1 })).toContainText('Less busywork.')
+    await expect(page.getByRole('tab')).toHaveCount(6)
+
+    await page.getByRole('link', { name: 'Find your role', exact: true }).click()
+    await expect(page.getByRole('link', { name: 'Sign in as Principal' })).toBeVisible()
+    await page.getByRole('link', { name: 'Sign in as Principal' }).click()
     await expect(page.locator('input[type="email"]')).toBeVisible()
     await expect(page.locator('input[type="password"]')).toBeVisible()
     await expect(page.locator('button[type="submit"]')).toBeEnabled()

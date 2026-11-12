@@ -11,6 +11,7 @@ import LanguageSwitcher from '../../../shared/components/LanguageSwitcher';
 
 import { dashboardPathFor, portalForRole } from '../roleRoutes';
 import { IDLE_SIGNOUT_FLAG } from '../../../shared/utils/idleTimeout';
+import { landingRoleFromSearch } from '@/modules/landing/roles';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -41,6 +42,8 @@ export default function Login() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
+  const landingRole = landingRoleFromSearch(location.search);
+  const roleHint = landingRole && landingRole.id !== 'students' ? landingRole.label : null;
   const hasRedirected = React.useRef(false);
 
   React.useEffect(() => {
@@ -152,6 +155,12 @@ export default function Login() {
           transition={{ delay: 0.08 }}
           className="bg-white dark:bg-[#131b2e] rounded-3xl border border-slate-200 dark:border-slate-800 p-7 sm:p-8 shadow-xl shadow-slate-200/50 dark:shadow-none"
         >
+          {roleHint && (
+            <div className="mb-5 rounded-xl border border-teal-200 bg-teal-50 px-3.5 py-3 dark:border-teal-800 dark:bg-teal-950/30">
+              <strong className="block text-xs font-bold text-teal-800 dark:text-teal-200">{roleHint} sign-in</strong>
+              <p className="mt-1 text-xs leading-relaxed text-teal-700 dark:text-teal-300">Use the account provided by your college. Your assigned role determines your workspace.</p>
+            </div>
+          )}
           {/* Portal Switcher Tabs */}
           <div className="flex rounded-2xl bg-slate-100 dark:bg-slate-900/60 p-1 mb-6 border border-slate-200/80 dark:border-slate-800">
             <button
@@ -285,6 +294,9 @@ export default function Login() {
             </p>
           </div>
         </motion.div>
+        <div className="mt-5 text-center">
+          <Link to="/" className="text-xs font-medium text-slate-500 hover:text-teal-700 dark:text-slate-400 dark:hover:text-teal-300">← Back to homepage</Link>
+        </div>
       </div>
     </div>
   );

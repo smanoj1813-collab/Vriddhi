@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { sendPasswordResetEmail } from 'firebase/auth';
 import { School, Eye, EyeOff, Lock, Mail, ArrowRight, BookOpen, Users } from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { auth } from '../../../Firebase/config';
 import { useAuth } from '../hooks/useAuth';
 import { useTranslation } from '../../../shared/contexts/LanguageProvider';
@@ -34,6 +34,10 @@ export default function StudentLogin() {
 
   const { login, logout, isLoading } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  // The homepage's course CTA uses a fixed destination, never an arbitrary
+  // return URL. All course access checks still run after authentication.
+  const wantsCourses = new URLSearchParams(location.search).get('next') === 'courses';
   const { t } = useTranslation();
   const { resolvedMode } = useThemeMode();
 
@@ -48,7 +52,7 @@ export default function StudentLogin() {
         setLocalError(t('auth.notStudent'));
         return;
       }
-      navigate('/student/dashboard', { replace: true });
+      navigate(wantsCourses ? '/student/courses' : '/student/dashboard', { replace: true });
     } catch (err: any) {
       const msg = err?.message || '';
       if (msg.startsWith('AUTHORIZATION_STALE')) {
@@ -127,6 +131,12 @@ export default function StudentLogin() {
           transition={{ delay: 0.08 }}
           className="bg-white dark:bg-[#131b2e] rounded-3xl border border-slate-200 dark:border-slate-800 p-7 sm:p-8 shadow-xl shadow-slate-200/50 dark:shadow-none"
         >
+          {wantsCourses && (
+            <div className="mb-5 rounded-xl border border-teal-200 bg-teal-50 px-3.5 py-3 dark:border-teal-800 dark:bg-teal-950/30">
+              <strong className="block text-xs font-bold text-teal-800 dark:text-teal-200">Your next skill starts here.</strong>
+              <p className="mt-1 text-xs leading-relaxed text-teal-700 dark:text-teal-300">Sign in to explore the upskill courses assigned to your college.</p>
+            </div>
+          )}
           {/* Portal Switcher Tabs */}
           <div className="flex rounded-2xl bg-slate-100 dark:bg-slate-900/60 p-1 mb-6 border border-slate-200/80 dark:border-slate-800">
             <Link
@@ -260,6 +270,9 @@ export default function StudentLogin() {
             </p>
           </div>
         </motion.div>
+        <div className="mt-5 text-center">
+          <Link to="/" className="text-xs font-medium text-slate-500 hover:text-teal-700 dark:text-slate-400 dark:hover:text-teal-300">← Back to homepage</Link>
+        </div>
       </div>
     </div>
   );
