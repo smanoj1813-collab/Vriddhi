@@ -11,6 +11,12 @@ Self-contained learning programmes rendered by the Vriddhi app under **Courses**
 | `project-management/` | VPM-101 | Project Management — Certificate Program | 60 |
 | `hr-analytics/` | VHR-101 | HR Analytics — Certificate Program | 60 |
 
+### Digital Marketing — illustrated edition (v1.1.0)
+
+VDM-101 includes **162 inline visual explanations across all 31 lessons and 5 project briefs**. Every Core ideas subtopic and every project section has a diagram, a short additional explanation and a takeaway; every topic has a revealable understanding checkpoint. The original Markdown explanations, slides, quizzes, assessment weights, reading gates and certificates are unchanged.
+
+The visual layer includes step-by-step flows, system maps, feedback loops, comparisons, decision matrices, zero-based bar charts and schematic funnels. Lesson 1.2 has an interactive funnel/CPA lab with adjustable rates, a practice media budget, reset and an accessible data table. All numeric examples are labelled synthetic; forecasts are not performance promises. Learners can switch illustrations off for an exact text-only rendering.
+
 ### Project Management and HR Analytics
 
 Both new packs contain **8 modules, 24 lessons, 4 project blocks and a 12-hour capstone**. Each has five formative questions per lesson, ten advanced questions per module (**200 quiz items**), three companion slides per lesson (**72 slides**), worked examples, labs, journals, rubrics, certification policy and a facilitator guide. The 60 learning hours are 36 lesson hours (including labs) plus 12 project-block hours and 12 capstone hours; the institutional 90-minute final is scheduled separately.
@@ -22,6 +28,14 @@ Both new packs contain **8 modules, 24 lessons, 4 project blocks and a 12-hour c
 - Platform reading/quiz certificate eligibility is distinct from the institutional award, which also requires marked projects, capstone, final assessment and applicable attendance/integrity checks.
 - The app discovers both packs automatically. College/programme assignment is still required for visibility in the protected student catalog; no assignment or production deployment is performed by adding content.
 
+### Project Management — illustrated edition (v1.1.0)
+
+VPM-101 includes **117 inline visual explanations across all 24 lessons and 5 project briefs**. They cover every Core ideas subtopic and project section, with additional explanations, takeaways and revealable formative checks. Original lesson/project text, the 200 quiz items, 72 slides, rubrics and completion requirements are unchanged.
+
+The course adds working-day timelines, dependency networks, a role-based RACI table, work boards with visible blockers/WIP policies, qualitative risk matrices and zero-based cost/capacity charts. Lesson **2.2** includes an interactive schedule sandbox: edit task durations, switch between timeline and network, inspect both CPM passes/float, apply one explicit shared-specialist order and reset. It distinguishes the four-task lesson (**8 days**) from the eight-task fixture (**14 days**, or **17** with B before C). The model uses finish-to-start dependencies, no lag and a day-zero working-day calendar; it is not a general resource optimiser or a promised launch date.
+
+The new layer retains the course’s interpretation safeguards: rupee schedule variance is not days; ordinal risk scores are not probabilities; a mandatory defect cannot be averaged away by a high test-pass rate; theoretical service capacity is not a guarantee; and forecasts, simulated approvals and live results are different. Tables and wide networks scroll inside their own labelled keyboard-accessible regions on narrow screens. Illustrations remain optional, locally bundled and independently retryable.
+
 ## Pack layout
 
 ```
@@ -30,7 +44,8 @@ content/courses/<course-id>/
 ├── modules/<module-slug>/
 │   ├── <n.n>-<lesson-slug>.md  # one lesson per topic
 │   ├── quiz.json               # lesson MCQs + optional advanced module assessment
-│   └── slides.json             # optional in-app visual walkthroughs, keyed by topic id
+│   ├── slides.json             # optional in-app slide walkthroughs, keyed by topic id
+│   └── illustrations.json      # optional inline visuals, keyed by topic id + exact heading
 ├── projects/*.md               # project-block and capstone briefs with rubrics
 ├── assessments/
 │   ├── final-assessment-blueprint.md
@@ -88,14 +103,36 @@ Style: ~1,200–1,500 words per lesson; version-agnostic tool names (product fam
 
 A module may include `slides.json` beside its quiz bank. The bank is keyed by lesson topic id and contains short, plain-language slides with a visual grouping (`cards`, `compare` or `flow`), explanation, everyday example and takeaway. Slides render inside the lesson player; they are a companion to the Markdown lesson, do not count as reading completion, and have no file-download option. Start with a small module pilot and add decks only when content has been reviewed for accuracy and accessibility.
 
+### Inline illustrated explanations
+
+Opt a pack in with `course.json.illustrations: { "title": "…", "description": "…" }` and add `modules/<slug>/illustrations.json` for **every module**, including its project topics. The shape is `{ moduleId, topics: { "m1-t1": { introduction, sections: [...] } } }`. Each section contains:
+
+- `id`: unique lowercase slug; `section`: the **exact source heading**, including its number.
+- `title`, `explanation`, `takeaway`, `caption`: plain-language teaching content. This is additional explanation, not a replacement for the reading.
+- `diagram`: one of `flow`, `compare`, `cycle`, `hub`, `bars`, `funnel`, `matrix`, `schedule`, `board`, `raci`. Most kinds have 2–6 labelled items with explanatory details; a schedule supports 2–12 tasks. See `src/shared/courses/illustrationTypes.ts` and the Digital Marketing/Project Management banks for reviewed examples.
+- Optional `checkpoint: { question, answer }`; at least one is required per topic.
+
+An illustrated pack must cover every `###` within **Core ideas** in a lesson and every `##` in a project brief, in source order. The renderer inserts each figure **after the complete original section**. Do not edit the Markdown to add images or duplicate the explanation. If a source heading changes, update its mapping; validation rejects missing, duplicate or orphaned mappings.
+
+Numeric charts need finite, non-negative values, explicit units and a caption identifying synthetic/illustrative data. Bar charts use a zero baseline; funnel widths are explicitly schematic. Matrices require labelled axes and four row-major cells. An interactive funnel has exactly four positive initial counts; forecasts retain fractional expected values, and CPA is undefined when customers are zero. Conceptual illustrations are not current platform screenshots, legal advice, secure exams or new rubric requirements.
+
+Project-specific schemas add these checks:
+
+- `schedule`: `unit: "working days"`; tasks have a unique `id`, positive whole-day `duration` (1–60), `predecessors[]`, label and detail. Dependencies must reference known tasks and form a DAG. `view` is `timeline` or `network`; optional `interactive: true` uses 1–20-day sliders. An optional `{ before, after, label }` resource constraint adds the explicit order without mutating the source; cyclic orders are rejected. Captions must label the numeric model synthetic/illustrative. Both forward and backward passes are calculated, including multiple critical branches and total float. The resource switch models only that stated precedence, not general resource levelling.
+- `board`: each column has label/detail and 0–12 cards with unique `id`, label/detail and optional boolean `blocked`; an optional positive `wipLimit` describes active work. Explicitly `complete` columns are excluded from the example’s WIP boundary and do not have active WIP limits. Blocked cards still count. Use a clearly labelled classroom policy rather than implying a live Jira configuration or individual productivity ranking.
+- `raci`: 2–6 distinct `roles`; each row has label/detail and a matching `assignments[]` of `R`, `A`, `C`, `I`, `RA` or `—`. Each deliverable needs exactly one accountable and at least one responsible role (`RA` satisfies both). Label proposals as illustrative agreements, not real appointments.
+
+Only the asset URLs enter the catalog. The app fetches and validates the current module's JSON on demand, caches successful loads and offers retry without blocking the original reading. Assets are bundled locally, require no image service, and production assets use the existing `/assets/` PWA runtime cache after a successful visit. Public and assigned-student routes use the same visual renderer; visibility and progress permissions are unchanged.
+
 ## Adding or changing a pack
 
 1. Create the folder and `course.json`; add lessons and quiz banks following the conventions above.
 2. The app discovers packs automatically via `import.meta.glob` in `src/shared/courses/courseCatalog.ts` — no code change needed for a new pack.
 3. Run the checks:
-   - `npm run validate:courses` — every manifest path exists, quiz IDs/answer indices are valid, declared question counts and advanced module banks match, and weights sum to 100.
-   - `npm run test:unit` — includes `courseModel.test.ts`.
-   - `npm run test:render:courses` — renders the catalog, overview, lesson and quiz pages in jsdom.
+   - `npm run validate:courses` — manifest paths, quiz banks, weights, visual schema and exact source-heading coverage.
+   - `npm run test:unit` — includes course models, illustration validation, funnel arithmetic, both CPM passes/resource scenarios, board counts and RACI invariants.
+   - `npm run test:render:courses` — renders the catalog, overview, lesson and quizzes; discovers every illustrated pack, sweeps all **279 illustrations across 65 topics**, and compares each topic's original DOM exactly after removing the additive figures. It also checks both public/student route families and interactive calculations.
+   - `npx playwright test e2e/course-illustrations.spec.ts` — public-preview desktop/mobile flows for both illustrated courses: keyboard controls, schedule/funnel scenarios, charts, boards, RACI, original completion/quiz behaviour, navigation, network retry and scoped light/dark WCAG checks. Requires Playwright Chromium.
 4. Bump `version` and `lastReviewed` in `course.json`; note the change in the facilitator guide if it affects delivery.
 
 ## Maintenance cadence

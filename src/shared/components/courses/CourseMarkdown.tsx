@@ -448,19 +448,42 @@ export interface CourseMarkdownProps {
   /** Skip the first H1 when the page already renders the title. */
   skipTitle?: boolean
   className?: string
+  /** Optional additions after complete heading sections; original blocks stay untouched. */
+  afterSections?: ReadonlyMap<string, React.ReactNode>
 }
 
-export default function CourseMarkdown({ source, skipTitle = false, className = '' }: CourseMarkdownProps) {
+export default function CourseMarkdown({ source, skipTitle = false, className = '', afterSections }: CourseMarkdownProps) {
   const blocks = useMemo(() => {
     const parsed = parseBlocks(source || '')
     if (skipTitle && parsed[0]?.kind === 'heading' && parsed[0].level === 1) return parsed.slice(1)
     return parsed
   }, [source, skipTitle])
 
+  const additions = useMemo(() => {
+    const ends = new Map<number, React.ReactNode[]>()
+    if (!afterSections?.size) return ends
+    blocks.forEach((block, index) => {
+      if (block.kind !== 'heading' || !afterSections.has(block.text)) return
+      let end = index + 1
+      while (end < blocks.length) {
+        const next = blocks[end]
+        if (next.kind === 'heading' && next.level <= block.level) break
+        end += 1
+      }
+      const existing = ends.get(end - 1) ?? []
+      existing.push(afterSections.get(block.text))
+      ends.set(end - 1, existing)
+    })
+    return ends
+  }, [blocks, afterSections])
+
   return (
     <div className={`course-markdown text-[15px] ${className}`}>
       {blocks.map((block, idx) => (
-        <BlockView key={idx} block={block} keyBase={`b${idx}`} depth={0} />
+        <React.Fragment key={idx}>
+          <BlockView block={block} keyBase={`b${idx}`} depth={0} />
+          {additions.get(idx)}
+        </React.Fragment>
       ))}
     </div>
   )

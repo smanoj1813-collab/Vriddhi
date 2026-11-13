@@ -1,0 +1,688 @@
+{
+  "moduleId": "m7",
+  "topics": {
+    "m7-t1": {
+      "introduction": "Build a permission-based relationship after the first click. See the sender, message and measurement as one system rather than a list of addresses.",
+      "sections": [
+        {
+          "title": "Email connects the second half of the funnel",
+          "explanation": "Acquisition starts the relationship; useful follow-up helps people act, succeed and return.",
+          "diagram": {
+            "kind": "cycle",
+            "items": [
+              {
+                "label": "Enquiry",
+                "detail": "Answer an unresolved question with relevant information.",
+                "icon": "message"
+              },
+              {
+                "label": "First purchase",
+                "detail": "Confirm and help the customer get value.",
+                "icon": "check"
+              },
+              {
+                "label": "Repeat relationship",
+                "detail": "Offer relevant updates at the agreed cadence.",
+                "icon": "heart"
+              },
+              {
+                "label": "Re-engagement / exit",
+                "detail": "Re-earn attention or respect the decision to leave.",
+                "icon": "mail"
+              }
+            ],
+            "center": "Useful follow-up"
+          },
+          "takeaway": "A contact address is not blanket permission for any future promotion.",
+          "caption": "Concept illustration, not a platform screenshot. Follow the labels and the relationships shown.",
+          "id": "m7-t1-v1",
+          "section": "1. The strategic role: retention and repeat"
+        },
+        {
+          "title": "Deliverability has four foundations",
+          "explanation": "A sending tool is only one part of a responsible email programme.",
+          "diagram": {
+            "kind": "hub",
+            "items": [
+              {
+                "label": "Tool",
+                "detail": "Use an appropriate provider with the needed controls.",
+                "icon": "mail"
+              },
+              {
+                "label": "Sender identity",
+                "detail": "Configure the required domain authentication using current provider guidance.",
+                "icon": "shield"
+              },
+              {
+                "label": "Permission",
+                "detail": "Record the purpose, source and scope of signup.",
+                "icon": "check"
+              },
+              {
+                "label": "Hygiene",
+                "detail": "Handle hard bounces, complaints and suppression promptly.",
+                "icon": "filter"
+              }
+            ],
+            "center": "Trusted sending"
+          },
+          "takeaway": "Provider requirements vary by sender and change over time. An authentication check does not guarantee inbox placement.",
+          "caption": "Concept illustration, not a platform screenshot. Follow the labels and the relationships shown.",
+          "id": "m7-t1-v2",
+          "section": "2. The mechanics: tool, sender, list"
+        },
+        {
+          "title": "Five email jobs to master first",
+          "explanation": "Each email needs a reason to exist from the recipient’s point of view.",
+          "diagram": {
+            "kind": "compare",
+            "items": [
+              {
+                "label": "Welcome",
+                "detail": "Deliver the promised resource and set expectations.",
+                "icon": "mail"
+              },
+              {
+                "label": "Newsletter",
+                "detail": "Offer repeatable useful value at the agreed cadence.",
+                "icon": "file"
+              },
+              {
+                "label": "Offer",
+                "detail": "Explain one genuine promotion with clear conditions.",
+                "icon": "target"
+              },
+              {
+                "label": "Win-back",
+                "detail": "Invite a dormant subscriber back, then stop if the agreed series ends.",
+                "icon": "heart"
+              },
+              {
+                "label": "Receipt / onboarding",
+                "detail": "Confirm the transaction and help the customer succeed.",
+                "icon": "check"
+              }
+            ]
+          },
+          "takeaway": "Transactional messages and promotional messages have different purposes; do not hide marketing inside a necessary service message.",
+          "caption": "Concept illustration, not a platform screenshot. Follow the labels and the relationships shown.",
+          "id": "m7-t1-v3",
+          "section": "3. The five emails every business needs"
+        },
+        {
+          "title": "An email is a promise-to-action path",
+          "explanation": "The subject and preview earn attention, while the body delivers the promised value.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Subject + preview",
+                "detail": "State a specific, honest reason to open.",
+                "icon": "message"
+              },
+              {
+                "label": "One useful idea",
+                "detail": "Make the meaning easy to scan.",
+                "icon": "file"
+              },
+              {
+                "label": "One primary CTA",
+                "detail": "Name the appropriate next step.",
+                "icon": "cursor"
+              },
+              {
+                "label": "Identity + exit",
+                "detail": "Make the sender and withdrawal route easy to find.",
+                "icon": "shield"
+              }
+            ]
+          },
+          "takeaway": "Read the email on a phone and test every link before sending.",
+          "caption": "Concept illustration, not a platform screenshot. Follow the labels and the relationships shown.",
+          "id": "m7-t1-v4",
+          "section": "4. The repeatable structure"
+        },
+        {
+          "title": "Read the denominator and the limitation",
+          "explanation": "Rates become useful only when you know what the provider actually counts.",
+          "diagram": {
+            "kind": "compare",
+            "items": [
+              {
+                "label": "Delivery",
+                "detail": "Usually accepted delivery ÷ attempted sends; not proof of inbox placement.",
+                "icon": "check"
+              },
+              {
+                "label": "Opens",
+                "detail": "Often opens ÷ delivered; privacy features and image loading can distort it.",
+                "icon": "mail"
+              },
+              {
+                "label": "Clicks",
+                "detail": "Check unique versus total clicks and the denominator; automated activity can affect counts.",
+                "icon": "cursor"
+              },
+              {
+                "label": "Unsubscribes / complaints",
+                "detail": "Watch for expectation or relevance problems and suppress appropriately.",
+                "icon": "shield"
+              }
+            ]
+          },
+          "takeaway": "Use your own history and current provider guidance. The visual layer does not treat a universal benchmark as a promise.",
+          "caption": "Concept illustration, not a platform screenshot. Follow the labels and the relationships shown.",
+          "checkpoint": {
+            "question": "Does a 98% delivery rate prove 98% of messages reached the inbox?",
+            "answer": "No. A provider’s delivery count generally means accepted rather than bounced. Inbox placement, spam filtering and engagement are different questions."
+          },
+          "id": "m7-t1-v5",
+          "section": "5. The four metrics and honest benchmarks"
+        }
+      ]
+    },
+    "m7-t2": {
+      "introduction": "Draw lifecycle journeys before building them in a tool. Every journey needs a trigger, useful steps, an exit and suppression rules.",
+      "sections": [
+        {
+          "title": "A lifecycle map explains the next useful job",
+          "explanation": "The same message is not useful to a new subscriber, an active customer and someone who has withdrawn consent.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Subscriber",
+                "detail": "Deliver the promise and explain the relationship.",
+                "icon": "mail"
+              },
+              {
+                "label": "Lead",
+                "detail": "Answer objections and invite a suitable next step.",
+                "icon": "message"
+              },
+              {
+                "label": "Customer",
+                "detail": "Onboard and help the person succeed.",
+                "icon": "check"
+              },
+              {
+                "label": "Active / dormant",
+                "detail": "Support repeat value or a limited re-engagement route.",
+                "icon": "heart"
+              },
+              {
+                "label": "Exit",
+                "detail": "Respect withdrawal and apply the appropriate suppression.",
+                "icon": "shield"
+              }
+            ]
+          },
+          "takeaway": "Business lifecycle stages and permission status are related but not interchangeable.",
+          "caption": "Concept illustration, not a platform screenshot. Follow the labels and the relationships shown.",
+          "id": "m7-t2-v1",
+          "section": "1. The lifecycle map"
+        },
+        {
+          "title": "Trigger → steps → exit, with guardrails",
+          "explanation": "A complete automation includes the conditions under which it must stop sending.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Trigger",
+                "detail": "A permitted action starts the right journey.",
+                "icon": "cursor"
+              },
+              {
+                "label": "Delay / branch",
+                "detail": "Wait deliberately and choose a labelled path.",
+                "icon": "clock"
+              },
+              {
+                "label": "Goal / exit",
+                "detail": "Stop selling once the person completes the intended action.",
+                "icon": "check"
+              },
+              {
+                "label": "Suppression",
+                "detail": "Prevent conflicting messages and honour opt-outs at every step.",
+                "icon": "shield"
+              }
+            ]
+          },
+          "takeaway": "Check exit and suppression conditions before each send, not just at enrolment.",
+          "caption": "Concept illustration, not a platform screenshot. Follow the labels and the relationships shown.",
+          "id": "m7-t2-v2",
+          "section": "2. Journey anatomy: trigger → steps → exit"
+        },
+        {
+          "title": "Build three clear journeys before a complex web",
+          "explanation": "Start with a small number of well-defined journeys that correspond to genuine customer needs.",
+          "diagram": {
+            "kind": "compare",
+            "items": [
+              {
+                "label": "Welcome series",
+                "detail": "Deliver value, introduce the business and make a gentle next-step invitation.",
+                "icon": "mail"
+              },
+              {
+                "label": "Lead nurture",
+                "detail": "Answer one real objection at a time and stop when the goal is reached.",
+                "icon": "message"
+              },
+              {
+                "label": "Win-back",
+                "detail": "Make a limited useful invitation, then exit or suppress as planned.",
+                "icon": "heart"
+              }
+            ]
+          },
+          "takeaway": "A longer sequence is not necessarily a more effective sequence.",
+          "caption": "Concept illustration, not a platform screenshot. Follow the labels and the relationships shown.",
+          "id": "m7-t2-v3",
+          "section": "3. The three core journeys (build these first)"
+        },
+        {
+          "title": "Relevant does not have to feel intrusive",
+          "explanation": "Use permitted behaviour to select a helpful message without narrating surveillance.",
+          "diagram": {
+            "kind": "compare",
+            "items": [
+              {
+                "label": "Creepy framing",
+                "detail": "“We watched you revisit our pricing page six times.”",
+                "icon": "search"
+              },
+              {
+                "label": "Helpful framing",
+                "detail": "“Still comparing options? Here is the fee and batch guide.”",
+                "icon": "message"
+              },
+              {
+                "label": "Data restraint",
+                "detail": "Use only permitted, necessary signals and respect the person’s choice.",
+                "icon": "shield"
+              }
+            ]
+          },
+          "takeaway": "Personalisation should reduce effort for the recipient, not demonstrate how much the business knows.",
+          "caption": "Concept illustration, not a platform screenshot. Follow the labels and the relationships shown.",
+          "id": "m7-t2-v4",
+          "section": "4. Behavioural triggers: personal without being creepy"
+        },
+        {
+          "title": "Count progress across the whole journey",
+          "explanation": "A journey-level goal rate is the final goal completions divided by eligible entrants, not the last email’s click rate.",
+          "diagram": {
+            "kind": "funnel",
+            "unit": "people",
+            "items": [
+              {
+                "label": "Eligible entrants",
+                "value": 200,
+                "detail": "Synthetic leads joining one defined nurture journey."
+              },
+              {
+                "label": "Demo bookings",
+                "value": 40,
+                "detail": "20% of eligible entrants book."
+              },
+              {
+                "label": "Enrolments",
+                "value": 10,
+                "detail": "25% of bookings enrol; 5% of all entrants."
+              }
+            ]
+          },
+          "takeaway": "Track drop-off, exits and suppression alongside goal conversions. Do not force people through every step after they have already acted.",
+          "caption": "Synthetic worked example, not live campaign data or an industry benchmark.",
+          "checkpoint": {
+            "question": "A lead enrols after the first nurture message. Should the remaining sales sequence continue?",
+            "answer": "No. The goal exit should stop that sales sequence. Apply the appropriate onboarding journey only where permitted, and prevent conflicting campaigns."
+          },
+          "id": "m7-t2-v5",
+          "section": "5. Measure journeys, not emails"
+        }
+      ]
+    },
+    "m7-t3": {
+      "introduction": "A CRM is a shared memory of status, history and the next action. Make the pipeline reflect real decisions and keep follow-up accountable.",
+      "sections": [
+        {
+          "title": "The smallest useful CRM record",
+          "explanation": "Start with a record that stops enquiries being lost between people, not with a complex dashboard.",
+          "diagram": {
+            "kind": "hub",
+            "items": [
+              {
+                "label": "Status",
+                "detail": "What stage is the enquiry actually at?",
+                "icon": "filter"
+              },
+              {
+                "label": "History",
+                "detail": "What happened, when and through which permitted channel?",
+                "icon": "file"
+              },
+              {
+                "label": "Owner",
+                "detail": "Who is responsible for the next step?",
+                "icon": "users"
+              },
+              {
+                "label": "Permission / access",
+                "detail": "What contact is allowed, and who can see the record?",
+                "icon": "shield"
+              }
+            ],
+            "center": "Next action"
+          },
+          "takeaway": "Collect only the fields needed for the purpose and control access to customer data.",
+          "caption": "Concept illustration, not a platform screenshot. Follow the labels and the relationships shown.",
+          "id": "m7-t3-v1",
+          "section": "1. What a CRM is, honestly"
+        },
+        {
+          "title": "A stage needs an entry rule",
+          "explanation": "A pipeline is trustworthy only if the team agrees what each stage means.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "New / contacted",
+                "detail": "Record the enquiry and whether contact actually occurred.",
+                "icon": "message"
+              },
+              {
+                "label": "Qualified",
+                "detail": "Apply the written fit criteria consistently.",
+                "icon": "filter"
+              },
+              {
+                "label": "Demo / proposal",
+                "detail": "Record the agreed next commitment and date.",
+                "icon": "clock"
+              },
+              {
+                "label": "Won / lost",
+                "detail": "Confirm the outcome and capture an honest lost reason.",
+                "icon": "check"
+              }
+            ]
+          },
+          "takeaway": "Do not move a lead forward just to make the dashboard look healthy.",
+          "caption": "Concept illustration, not a platform screenshot. Follow the labels and the relationships shown.",
+          "id": "m7-t3-v2",
+          "section": "2. The pipeline: stages that mirror reality"
+        },
+        {
+          "title": "A score is a routing aid, not a truth",
+          "explanation": "These hypothetical scores show how the reading’s example thresholds route attention. They are not predicted conversion probabilities.",
+          "diagram": {
+            "kind": "bars",
+            "unit": "illustrative points",
+            "items": [
+              {
+                "label": "Lead A",
+                "value": 65,
+                "detail": "At least 60: personal follow-up under the example rule."
+              },
+              {
+                "label": "Lead B",
+                "value": 40,
+                "detail": "30–59: nurture plus an agreed follow-up rhythm."
+              },
+              {
+                "label": "Lead C",
+                "value": 20,
+                "detail": "Below 30: lower-intensity permitted nurture."
+              }
+            ]
+          },
+          "takeaway": "Validate scoring against outcomes and fairness. Permission and suppression override a high score; a score is never consent.",
+          "caption": "Synthetic worked example, not live campaign data or an industry benchmark.",
+          "id": "m7-t3-v3",
+          "section": "3. Lead scoring: attention where it pays"
+        },
+        {
+          "title": "The follow-up loop ends with a recorded next step",
+          "explanation": "A contact attempt is not finished until the outcome and next action are visible to the team.",
+          "diagram": {
+            "kind": "cycle",
+            "items": [
+              {
+                "label": "Review",
+                "detail": "Check due actions and permission status.",
+                "icon": "clock"
+              },
+              {
+                "label": "Contact",
+                "detail": "Use the appropriate channel and helpful context.",
+                "icon": "message"
+              },
+              {
+                "label": "Record",
+                "detail": "Log outcome, stage and relevant facts without unnecessary sensitive notes.",
+                "icon": "file"
+              },
+              {
+                "label": "Schedule / close",
+                "detail": "Assign the next action or close with a reason.",
+                "icon": "check"
+              }
+            ],
+            "center": "No lost leads"
+          },
+          "takeaway": "Stop repeated pursuit when the person opts out or the agreed contact policy is exhausted.",
+          "caption": "Concept illustration, not a platform screenshot. Follow the labels and the relationships shown.",
+          "id": "m7-t3-v4",
+          "section": "4. The follow-up discipline"
+        },
+        {
+          "title": "Use the smallest tool that stays reliable",
+          "explanation": "Move up in tooling when shared ownership and control become hard, not because a larger product looks more professional.",
+          "diagram": {
+            "kind": "compare",
+            "items": [
+              {
+                "label": "Controlled sheet",
+                "detail": "Useful for a small authorised team with clear fields and access.",
+                "icon": "file"
+              },
+              {
+                "label": "Entry CRM",
+                "detail": "Useful when reminders, ownership and a shared pipeline need stronger support.",
+                "icon": "briefcase"
+              },
+              {
+                "label": "Integrated system",
+                "detail": "Useful when volume, controls and lifecycle hand-offs justify the complexity.",
+                "icon": "layers"
+              }
+            ]
+          },
+          "takeaway": "Plan access, retention, export and deletion before importing a real customer list.",
+          "caption": "Concept illustration, not a platform screenshot. Follow the labels and the relationships shown.",
+          "checkpoint": {
+            "question": "A lead has a high score but has opted out of marketing. What wins?",
+            "answer": "The opt-out and applicable contact restrictions win. A score only prioritises permitted actions; it cannot create permission."
+          },
+          "id": "m7-t3-v5",
+          "section": "5. Tooling at the right size"
+        }
+      ]
+    },
+    "m7-t4": {
+      "introduction": "Use a purpose-first privacy workflow: collect less, explain clearly, record permission and make withdrawal work. Legal requirements must be checked for the actual context.",
+      "sections": [
+        {
+          "title": "Privacy begins before the form is built",
+          "explanation": "Treat privacy as an operating design, not a paragraph added after the campaign is ready.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Purpose",
+                "detail": "Write why the business needs each piece of information.",
+                "icon": "target"
+              },
+              {
+                "label": "Minimise",
+                "detail": "Remove fields that are not necessary for that purpose.",
+                "icon": "filter"
+              },
+              {
+                "label": "Inform / obtain permission",
+                "detail": "Use the required notice and lawful permission for the actual context.",
+                "icon": "shield"
+              },
+              {
+                "label": "Manage",
+                "detail": "Control access, retention, requests and withdrawal.",
+                "icon": "check"
+              }
+            ]
+          },
+          "takeaway": "This diagram is a learning aid, not legal advice. Confirm current law, commencement stages and provider rules with the facilitator or qualified adviser.",
+          "caption": "Concept illustration, not a platform screenshot. Follow the labels and the relationships shown.",
+          "id": "m7-t4-v1",
+          "section": "1. The legal backbone, in plain terms"
+        },
+        {
+          "title": "Permission has a purpose and a channel",
+          "explanation": "The reason a person shared data determines what the business should do next.",
+          "diagram": {
+            "kind": "compare",
+            "items": [
+              {
+                "label": "Service communication",
+                "detail": "Use information for the requested transaction or support.",
+                "icon": "check"
+              },
+              {
+                "label": "Marketing permission",
+                "detail": "Make the promotional purpose and channel clear and optional where required.",
+                "icon": "mail"
+              },
+              {
+                "label": "Partner use",
+                "detail": "Do not silently extend the original purpose to unrelated organisations.",
+                "icon": "shield"
+              }
+            ]
+          },
+          "takeaway": "Agreeing to an order update is not automatically agreeing to promotional WhatsApp messages.",
+          "caption": "Concept illustration, not a platform screenshot. Follow the labels and the relationships shown.",
+          "id": "m7-t4-v2",
+          "section": "2. Consent types and what each permits"
+        },
+        {
+          "title": "A small compliant-flow design",
+          "explanation": "Make the entry, proof and exit visible as one connected process.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Explain",
+                "detail": "Name the sender, purpose and expected type of communication.",
+                "icon": "message"
+              },
+              {
+                "label": "Choose",
+                "detail": "Use a clear, affirmative choice where consent is required.",
+                "icon": "cursor"
+              },
+              {
+                "label": "Record",
+                "detail": "Keep evidence of the wording, time, source and scope.",
+                "icon": "file"
+              },
+              {
+                "label": "Withdraw",
+                "detail": "Make the exit easy and propagate suppression to all relevant tools.",
+                "icon": "shield"
+              }
+            ]
+          },
+          "takeaway": "Test the unsubscribe route end-to-end. A visible link that does not change sending behaviour is not a working exit.",
+          "caption": "Concept illustration, not a platform screenshot. Follow the labels and the relationships shown.",
+          "id": "m7-t4-v3",
+          "section": "3. The compliant flows, built small"
+        },
+        {
+          "title": "A useful notice answers practical questions",
+          "explanation": "Plain language helps people understand the relationship. Completeness still depends on the applicable requirements.",
+          "diagram": {
+            "kind": "hub",
+            "items": [
+              {
+                "label": "What / why",
+                "detail": "Explain the data collected and the purpose of use.",
+                "icon": "target"
+              },
+              {
+                "label": "Who / access",
+                "detail": "Explain relevant recipients and who operates the service.",
+                "icon": "users"
+              },
+              {
+                "label": "How long",
+                "detail": "State retention principles and the request route.",
+                "icon": "clock"
+              },
+              {
+                "label": "Choice / contact",
+                "detail": "Explain withdrawal and the named help or grievance contact.",
+                "icon": "shield"
+              }
+            ],
+            "center": "Clear notice"
+          },
+          "takeaway": "Do not promise a legal response deadline that the business has not checked and cannot meet.",
+          "caption": "Concept illustration, not a platform screenshot. Follow the labels and the relationships shown.",
+          "id": "m7-t4-v4",
+          "section": "4. The privacy notice a small business can actually post"
+        },
+        {
+          "title": "Seven failures share a small set of causes",
+          "explanation": "Grouping the failure modes helps the team check the whole journey instead of only the signup box.",
+          "diagram": {
+            "kind": "compare",
+            "items": [
+              {
+                "label": "Invalid choice",
+                "detail": "Bundled consent and pre-ticked boxes weaken the decision.",
+                "icon": "cursor"
+              },
+              {
+                "label": "Broken exit",
+                "detail": "A difficult unsubscribe and invisible request contact block control.",
+                "icon": "shield"
+              },
+              {
+                "label": "Unjustified reuse",
+                "detail": "Purpose creep and bought or scraped lists break expectations.",
+                "icon": "filter"
+              },
+              {
+                "label": "Missing evidence",
+                "detail": "Without records the business cannot show the permission it relied on.",
+                "icon": "file"
+              }
+            ]
+          },
+          "takeaway": "Check collection, use, proof and exit together before approving a campaign.",
+          "caption": "Concept illustration, not a platform screenshot. Follow the labels and the relationships shown.",
+          "checkpoint": {
+            "question": "A customer gave a number for delivery. Can it be added to a promotional broadcast by default?",
+            "answer": "Do not assume so. Separate the delivery purpose from marketing, check the applicable legal and platform requirements, obtain the appropriate permission and provide a working exit."
+          },
+          "id": "m7-t4-v5",
+          "section": "5. The seven failure modes"
+        }
+      ]
+    }
+  }
+}

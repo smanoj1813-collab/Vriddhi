@@ -366,6 +366,12 @@ export function validateManifest(manifest: CourseManifest): string[] {
   const problems: string[] = []
   if (!manifest.id) problems.push('manifest.id is required')
   if (!manifest.title) problems.push('manifest.title is required')
+  if (manifest.illustrations !== undefined) {
+    for (const field of ['title', 'description'] as const) {
+      const value = manifest.illustrations?.[field]
+      if (typeof value !== 'string' || !value.trim()) problems.push(`illustrations.${field} is required`)
+    }
+  }
   if (!Array.isArray(manifest.modules) || manifest.modules.length === 0) {
     problems.push('manifest.modules must be a non-empty array')
     return problems

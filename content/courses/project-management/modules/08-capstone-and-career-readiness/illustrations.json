@@ -1,0 +1,727 @@
+{
+  "moduleId": "m8",
+  "topics": {
+    "m8-t1": {
+      "introduction": "Make the portfolio a short verifiable delivery story. The diagrams keep claims, artefacts and corrections connected without turning a classroom simulation into invented professional experience.",
+      "sections": [
+        {
+          "id": "pm-m8-t1-1",
+          "section": "1. Tell a verifiable delivery story",
+          "title": "Use a claim chain a reviewer can follow",
+          "explanation": "Start with the problem and boundary, describe your actions and show the evidence that supports the stated result. Separate outputs, observed outcomes and forecast benefits. Label the case as simulated and state your own contribution when artefacts were shared.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Problem and constraints",
+                "detail": "What needed to change, and what was outside scope?",
+                "icon": "target"
+              },
+              {
+                "label": "Your actions",
+                "detail": "What did you personally build, check or coordinate?",
+                "icon": "users"
+              },
+              {
+                "label": "Evidence and result",
+                "detail": "Which versioned artefact supports each bounded claim?",
+                "icon": "file"
+              },
+              {
+                "label": "Learning",
+                "detail": "What changed after checking, and what remains uncertain?",
+                "icon": "repeat"
+              }
+            ]
+          },
+          "caption": "Conceptual case-study narrative. A synthetic plan is valid learning evidence but not a live client delivery claim.",
+          "takeaway": "A small defensible claim is stronger than an invented business result."
+        },
+        {
+          "id": "pm-m8-t1-2",
+          "section": "2. Trace claims to artefacts",
+          "title": "Trace the chronology through versions",
+          "explanation": "The charter, baseline, change decision, test and handover records should agree on what happened in the simulation and when. Use an evidence index to connect claims to source files, versions and dates. Screenshots can orient the reviewer but do not replace editable calculations.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Charter and baseline",
+                "detail": "Identify the agreed/proposed reference and its authority status.",
+                "icon": "file"
+              },
+              {
+                "label": "Disruption and decision",
+                "detail": "Show the changed assumption, options and simulated decision record.",
+                "icon": "link"
+              },
+              {
+                "label": "Tests and handover",
+                "detail": "Reconcile acceptance evidence and receiving ownership.",
+                "icon": "check"
+              },
+              {
+                "label": "Public portfolio copy",
+                "detail": "Remove identifiers, credentials and restricted information.",
+                "icon": "shield"
+              }
+            ]
+          },
+          "caption": "Conceptual evidence chronology, not a time-scaled or actual approval record.",
+          "takeaway": "Contradictory versions weaken even an attractive portfolio."
+        },
+        {
+          "id": "pm-m8-t1-3",
+          "section": "3. Show correction and judgement",
+          "title": "A correction is evidence of judgement",
+          "explanation": "Keep the original error, the check that exposed it and the corrected conclusion. Then select the artefacts most relevant to the target role. Do not rewrite the history to remove every difficulty or imply shared work was solely yours.",
+          "diagram": {
+            "kind": "compare",
+            "items": [
+              {
+                "label": "Coordinator evidence",
+                "detail": "A revised schedule, action log or clear escalation.",
+                "icon": "clock"
+              },
+              {
+                "label": "PMO analyst evidence",
+                "detail": "A reconciled forecast, checked filter and defined status policy.",
+                "icon": "chart"
+              },
+              {
+                "label": "Operations evidence",
+                "detail": "A usable SOP, support owner and measured improvement limitation.",
+                "icon": "repeat"
+              }
+            ]
+          },
+          "caption": "Illustrative role-focused portfolio selection. Job responsibilities differ by employer and no role placement is promised.",
+          "takeaway": "Show why evidence changed a decision, not just the finished visual.",
+          "checkpoint": {
+            "question": "Which is credible: a synthetic eight-package plan or an unobserved ₹5 lakh saving?",
+            "answer": "The bounded synthetic plan, with source values and your contribution stated. Do not claim real savings or live delivery that the evidence does not establish."
+          }
+        }
+      ]
+    },
+    "m8-t2": {
+      "introduction": "Practise an evidence-led answer rather than a memorised definition. These visuals connect an honest narrative, a diagnosis and the approval boundaries of entry-level work.",
+      "sections": [
+        {
+          "id": "pm-m8-t2-1",
+          "section": "1. Use structure without scripting away the facts",
+          "title": "Structure the answer without inventing the result",
+          "explanation": "Use STAR to keep the situation brief and the action specific. A hypothetical scenario must be described as what you would do, while a simulation should be labelled as such. A result can be a checked decision or correction rather than an invented financial success.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Situation and Task",
+                "detail": "State the context, constraint and your actual responsibility.",
+                "icon": "target"
+              },
+              {
+                "label": "Action",
+                "detail": "Explain your own checks, alternatives and communication.",
+                "icon": "file"
+              },
+              {
+                "label": "Result",
+                "detail": "Show what the evidence establishes, or what you would verify next.",
+                "icon": "check"
+              },
+              {
+                "label": "Reflection",
+                "detail": "Name a correction, limitation and next learning step.",
+                "icon": "repeat"
+              }
+            ]
+          },
+          "caption": "Conceptual STAR-plus-reflection structure. It does not imply that a hypothetical example happened in a real workplace.",
+          "takeaway": "Specific actions and honest limits matter more than inflated metrics."
+        },
+        {
+          "id": "pm-m8-t2-2",
+          "section": "2. Diagnose before proposing a solution",
+          "title": "Diagnose → compare → escalate honestly",
+          "explanation": "A late supplier first requires a confirmed date, affected dependency and credible recovery evidence. Apply the pre-agreed status policy even under pressure. Compare a fallback, scope choice or revised date, then ask the role that can authorise the consequence.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Confirm the facts",
+                "detail": "Latest supplier date, affected milestone and known uncertainty.",
+                "icon": "search"
+              },
+              {
+                "label": "Evaluate options",
+                "detail": "Recovery, fallback, scope or timing with cost and quality consequences.",
+                "icon": "layers"
+              },
+              {
+                "label": "Report and recommend",
+                "detail": "Use honest thresholds, evidence, owner and decision deadline.",
+                "icon": "message"
+              },
+              {
+                "label": "Stay within authority",
+                "detail": "Do not approve extra spend or promise an unsupported date.",
+                "icon": "shield"
+              }
+            ]
+          },
+          "caption": "Illustrative interview/workplace decision route, not an actual supplier escalation.",
+          "takeaway": "Changing a colour under pressure hides the decision risk rather than solving it."
+        },
+        {
+          "id": "pm-m8-t2-3",
+          "section": "3. Connect skills to entry-level responsibilities",
+          "title": "Match your first-week contribution to the actual role",
+          "explanation": "Read the job description, learn the workflow and confirm data definitions before proposing a redesign. Each role needs evidence and authority awareness, but the immediate emphasis differs. A useful first-week plan starts with listening and checking.",
+          "diagram": {
+            "kind": "compare",
+            "items": [
+              {
+                "label": "Project Coordinator",
+                "detail": "Maintain plans, actions, dependencies and clear communication.",
+                "icon": "clock"
+              },
+              {
+                "label": "PMO Analyst",
+                "detail": "Reconcile source records and support defined governance reporting.",
+                "icon": "chart"
+              },
+              {
+                "label": "Operations Associate",
+                "detail": "Run repeatable services, handle exceptions and improve within controls.",
+                "icon": "repeat"
+              }
+            ]
+          },
+          "caption": "Illustrative entry-level responsibilities; titles and approval rights vary by organisation.",
+          "takeaway": "Understand the current system before promising to transform it.",
+          "checkpoint": {
+            "question": "What should you do if asked to mark a delayed project green?",
+            "answer": "Confirm the evidence, apply the agreed thresholds honestly, show the impact and options, and escalate the decision within authority. Do not change status to conceal the delay."
+          }
+        }
+      ]
+    },
+    "m8-t3": {
+      "introduction": "Use the short presentation to reveal a decision path, then be ready to reproduce the calculations behind it. Feedback becomes a small checked practice plan, not a claim of external certification.",
+      "sections": [
+        {
+          "id": "pm-m8-t3-1",
+          "section": "1. Build a decision narrative",
+          "title": "Five sections, one delivery argument",
+          "explanation": "Select evidence that explains judgement rather than listing every task. Show the simulation label, constraints and unresolved limitations openly. A concise narrative lets the jury find the decision and then ask for the underlying source.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Problem and boundaries",
+                "detail": "What the pilot should and should not do.",
+                "icon": "target"
+              },
+              {
+                "label": "Plan and approach",
+                "detail": "Dependencies, capacity and delivery method.",
+                "icon": "layers"
+              },
+              {
+                "label": "Disruption and decision",
+                "detail": "Options, consequences and the simulated authority route.",
+                "icon": "message"
+              },
+              {
+                "label": "Acceptance and handover",
+                "detail": "Evidence, mandatory conditions and operational owner.",
+                "icon": "check"
+              },
+              {
+                "label": "Learning",
+                "detail": "Correction, limitation and next practice action.",
+                "icon": "repeat"
+              }
+            ]
+          },
+          "caption": "Conceptual five-section presentation map for the published five-minute pitch; not five additional deliverables or a revised rubric.",
+          "takeaway": "Choose the detail that explains why a decision was defensible."
+        },
+        {
+          "id": "pm-m8-t3-2",
+          "section": "2. Prepare for evidence questions",
+          "title": "Be able to rebuild, not just display",
+          "explanation": "The defence tests whether the source values, rules and assumptions are understood. Open the working evidence, reproduce the calculation and say where the model stops. If a question exceeds the evidence, describe the check you would perform instead of guessing.",
+          "diagram": {
+            "kind": "compare",
+            "items": [
+              {
+                "label": "Dependency calculation",
+                "detail": "Trace path sums, resource assumptions and changed finish.",
+                "icon": "link"
+              },
+              {
+                "label": "Cost forecast",
+                "detail": "Use actual cost plus the current ETC; compare with baseline.",
+                "icon": "chart"
+              },
+              {
+                "label": "Risk and handover decision",
+                "detail": "Explain trigger, response, residual owner and acceptance limits.",
+                "icon": "shield"
+              }
+            ]
+          },
+          "caption": "Conceptual defence prompts. Completing this course does not award PMI, Scrum or Jira credentials.",
+          "takeaway": "A visible formula and an honest limitation are stronger than an unexplained answer."
+        },
+        {
+          "id": "pm-m8-t3-3",
+          "section": "3. Turn feedback into practice",
+          "title": "Turn a correction into a testable practice action",
+          "explanation": "Feedback is useful when it leads to a bounded task, evidence and a review date. If EAC used the wrong remaining estimate, repair the calculation and reconcile related reports. Then practise with new cases rather than decorating the slide that held the error.",
+          "diagram": {
+            "kind": "cycle",
+            "items": [
+              {
+                "label": "Capture the feedback",
+                "detail": "Accuracy, communication or tool fluency: name the precise issue.",
+                "icon": "message"
+              },
+              {
+                "label": "Repair and reconcile",
+                "detail": "Recompute from the current source and correct linked claims.",
+                "icon": "check"
+              },
+              {
+                "label": "Practise a small task",
+                "detail": "Reconcile new forecast cases or audit a fresh filter.",
+                "icon": "file"
+              },
+              {
+                "label": "Review the evidence",
+                "detail": "Peer-check by a stated date and choose the next focus.",
+                "icon": "repeat"
+              }
+            ],
+            "center": "Deliberate practice"
+          },
+          "caption": "Illustrative professional-development loop. Additional practice is formative and does not change course assessment conditions.",
+          "takeaway": "“Become an expert” is not a reviewable next action.",
+          "checkpoint": {
+            "question": "What is a useful response when a reviewer finds the wrong ETC in your EAC?",
+            "answer": "Show the formula, acknowledge the source mismatch, recompute AC + the current ETC, reconcile affected reports and record a specific checked practice task."
+          }
+        }
+      ]
+    },
+    "m8-cap": {
+      "introduction": "Bring the checked artefacts together as one honest delivery and operations story. These visuals support integration, a defensible decision and a handover—not a fabricated success or automatic assessment award.",
+      "sections": [
+        {
+          "id": "pm-m8-cap-1",
+          "section": "The brief",
+          "title": "Integrate the evidence instead of inventing a happy ending",
+          "explanation": "The core service must support booking, cancellation and staff oversight without duplicate allocation. Optional reminders need a defensible choice. A valid recommendation can defer, reduce or stop a component when the evidence requires it, with the simulation label preserved.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Reconcile prior blocks",
+                "detail": "Charter, plan, backlog, board and control records use consistent versions.",
+                "icon": "link"
+              },
+              {
+                "label": "Handle a disruption",
+                "detail": "Show changed evidence, options and simulated authorised-role decision.",
+                "icon": "message"
+              },
+              {
+                "label": "Check acceptance",
+                "detail": "Make mandatory defects, limitations and conditions explicit.",
+                "icon": "shield"
+              },
+              {
+                "label": "Hand over responsibly",
+                "detail": "SOP, support, access and residual-risk ownership.",
+                "icon": "users"
+              },
+              {
+                "label": "Defend the judgement",
+                "detail": "Trace the claim and reproduce the central calculation.",
+                "icon": "check"
+              }
+            ]
+          },
+          "caption": "Conceptual capstone integration route for the fictional service. No live delivery, approval or realised business benefit is asserted.",
+          "takeaway": "The goal is a defensible recommendation, not a compulsory success story."
+        },
+        {
+          "id": "pm-m8-cap-2",
+          "section": "Inputs and working boundaries",
+          "title": "Preserve the original before modelling disruption",
+          "explanation": "The published eight-task fixture is a reference for reconstruction. Your integrated case must keep the original, any revised scenario and the reason for the change distinct. Do not silently replace source durations, pretend a proposed baseline is approved or derive costs from these day counts.",
+          "diagram": {
+            "kind": "schedule",
+            "unit": "working days",
+            "view": "timeline",
+            "items": [
+              {
+                "id": "A",
+                "label": "Charter and access approval",
+                "duration": 2,
+                "predecessors": [],
+                "detail": "Approval precedes configuration and preparation.",
+                "icon": "clock"
+              },
+              {
+                "id": "B",
+                "label": "Booking workflow",
+                "duration": 4,
+                "predecessors": [
+                  "A"
+                ],
+                "detail": "Specialist configures the workflow.",
+                "icon": "clock"
+              },
+              {
+                "id": "C",
+                "label": "Test cases and staff guide",
+                "duration": 3,
+                "predecessors": [
+                  "A"
+                ],
+                "detail": "Specialist prepares evidence and guidance.",
+                "icon": "clock"
+              },
+              {
+                "id": "D",
+                "label": "Integrated test",
+                "duration": 2,
+                "predecessors": [
+                  "B",
+                  "C"
+                ],
+                "detail": "Testing waits for both incoming paths.",
+                "icon": "clock"
+              },
+              {
+                "id": "E",
+                "label": "Staff training",
+                "duration": 2,
+                "predecessors": [
+                  "D"
+                ],
+                "detail": "Training uses the tested workflow.",
+                "icon": "clock"
+              },
+              {
+                "id": "F",
+                "label": "Pilot run",
+                "duration": 1,
+                "predecessors": [
+                  "E"
+                ],
+                "detail": "Operations runs the trained pilot.",
+                "icon": "clock"
+              },
+              {
+                "id": "G",
+                "label": "Corrections and acceptance",
+                "duration": 2,
+                "predecessors": [
+                  "F"
+                ],
+                "detail": "Reviewer checks corrections and acceptance evidence.",
+                "icon": "clock"
+              },
+              {
+                "id": "H",
+                "label": "Handover and closure",
+                "duration": 1,
+                "predecessors": [
+                  "G"
+                ],
+                "detail": "Operations takes ownership at handover.",
+                "icon": "clock"
+              }
+            ]
+          },
+          "caption": "Synthetic original practice fixture: fourteen working days with unconstrained resources. It is a teaching reference, not the capstone’s automatically approved or latest forecast.",
+          "takeaway": "A revised plan needs an explicit assumption and decision trail."
+        },
+        {
+          "id": "pm-m8-cap-3",
+          "section": "Work plan",
+          "title": "Twelve hours includes integration, checking and defence",
+          "explanation": "The capstone is more than a short pitch. Allocate time to repair inconsistencies, build the final decision view, verify readiness and revise after peer review. The presentation and individual questions use only part of the final reflection/defence allocation.",
+          "diagram": {
+            "kind": "bars",
+            "unit": "classroom minutes",
+            "items": [
+              {
+                "label": "Frame and reconcile",
+                "detail": "Question, boundaries and evidence versions.",
+                "value": 90,
+                "icon": "chart"
+              },
+              {
+                "label": "Integrate and repair",
+                "detail": "Correct analysis and the delivery plan.",
+                "value": 180,
+                "icon": "chart"
+              },
+              {
+                "label": "Build final board and pack",
+                "detail": "Create the decision-ready view.",
+                "value": 150,
+                "icon": "chart"
+              },
+              {
+                "label": "Test safeguards and handover",
+                "detail": "Quality, acceptance and operating ownership.",
+                "value": 120,
+                "icon": "chart"
+              },
+              {
+                "label": "Peer review and prepare",
+                "detail": "Revise the evidence and presentation.",
+                "value": 120,
+                "icon": "chart"
+              },
+              {
+                "label": "Present, defend and reflect",
+                "detail": "Individual calculation questions and reflection.",
+                "value": 60,
+                "icon": "chart"
+              }
+            ]
+          },
+          "caption": "Published illustrative classroom allocation: 90 + 180 + 150 + 120 + 120 + 60 = 720 minutes, or twelve hours. It is not a delivery-calendar estimate.",
+          "takeaway": "Protect time to reconcile and verify, not only to present."
+        },
+        {
+          "id": "pm-m8-cap-4",
+          "section": "What to submit",
+          "title": "Six outputs must describe the same case",
+          "explanation": "An evidence index is useful only if the linked versions actually agree. Make the disruption visible in the plan, board and report, then carry acceptance limits into the handover. Keep an attributable contribution record even when some artefacts were shared.",
+          "diagram": {
+            "kind": "hub",
+            "items": [
+              {
+                "label": "Evidence index",
+                "detail": "Charter, plan, backlog/board, risks, tests, changes and status.",
+                "icon": "link"
+              },
+              {
+                "label": "Reconciled control story",
+                "detail": "Original/revised references, disruption and simulated-role decision.",
+                "icon": "chart"
+              },
+              {
+                "label": "Acceptance recommendation",
+                "detail": "Critical defects, conditions and limitations remain explicit.",
+                "icon": "shield"
+              },
+              {
+                "label": "Operational handover",
+                "detail": "SOP, support, access checklist and residual-risk owners.",
+                "icon": "users"
+              },
+              {
+                "label": "Benefits and improvement",
+                "detail": "Review plan, bounded PDCA trial and closure lessons.",
+                "icon": "repeat"
+              },
+              {
+                "label": "Individual defence",
+                "detail": "Five-minute pitch, reproducible method and 300-word reflection/contribution.",
+                "icon": "briefcase"
+              }
+            ],
+            "center": "One coherent case"
+          },
+          "caption": "Conceptual map of the unchanged six capstone submissions. Files and marking use institutional channels; the app records reading and quizzes only.",
+          "takeaway": "The capstone integrates checked work; it does not erase its history."
+        },
+        {
+          "id": "pm-m8-cap-5",
+          "section": "Acceptance and self-check",
+          "title": "Check consistency, safeguards and ownership together",
+          "explanation": "Before presenting, follow one material claim through every affected artefact. A date, cost or approval mismatch needs repair. Then check what the receiving operation still owns and whether a claimed benefit was actually measured rather than forecast.",
+          "diagram": {
+            "kind": "compare",
+            "items": [
+              {
+                "label": "Version integrity",
+                "detail": "Keep original and revised baseline/forecast references and the change rationale.",
+                "icon": "file"
+              },
+              {
+                "label": "Honest authority",
+                "detail": "Label every classroom approval as simulated; pending remains pending.",
+                "icon": "briefcase"
+              },
+              {
+                "label": "Operational ownership",
+                "detail": "Open issues, residual risks, support and review actions have named roles.",
+                "icon": "users"
+              },
+              {
+                "label": "Benefit integrity",
+                "detail": "Forecast savings remain forecasts until comparable observations support them.",
+                "icon": "shield"
+              }
+            ]
+          },
+          "caption": "Conceptual capstone self-check. It preserves the original acceptance conditions without adding a new automatic gate.",
+          "takeaway": "A coherent narrative must remain coherent when its source files are opened.",
+          "checkpoint": {
+            "question": "Can a forecast staff-hour saving be presented as a realised capstone benefit?",
+            "answer": "No. Label it as a forecast, keep the baseline and assumptions, and name the operational owner and review plan for later measurement. All classroom approvals must be labelled simulated."
+          }
+        },
+        {
+          "id": "pm-m8-cap-6",
+          "section": "Rubric",
+          "title": "Thirty marks cover scope, method, judgement and defence",
+          "explanation": "Read the rubric as a balanced review of the whole case. The strongest technical result still needs a safe decision and usable handover, while a polished presentation still needs reproducible evidence. The separate minimum capstone condition remains unchanged.",
+          "diagram": {
+            "kind": "bars",
+            "unit": "rubric marks",
+            "items": [
+              {
+                "label": "Problem and scope",
+                "detail": "Bounded question and aligned objectives.",
+                "value": 5,
+                "icon": "chart"
+              },
+              {
+                "label": "Technical method and reproducibility",
+                "detail": "Traceable calculations, definitions and evidence.",
+                "value": 8,
+                "icon": "chart"
+              },
+              {
+                "label": "Judgement and safeguards",
+                "detail": "Honest uncertainty, authority and safe practice.",
+                "value": 6,
+                "icon": "chart"
+              },
+              {
+                "label": "Decision or handover quality",
+                "detail": "Actionable recommendation and sustainable ownership.",
+                "value": 6,
+                "icon": "chart"
+              },
+              {
+                "label": "Presentation and individual defence",
+                "detail": "Clear pitch and personal command of the evidence.",
+                "value": 5,
+                "icon": "chart"
+              }
+            ]
+          },
+          "caption": "Illustrative display of the published 30-mark capstone rubric. At least 12/30 is required for the institutional award alongside the other existing conditions; marking is external.",
+          "takeaway": "A reading-completion flag is not an external capstone mark."
+        },
+        {
+          "id": "pm-m8-cap-7",
+          "section": "Review questions",
+          "title": "Use a reviewer to follow the weakest evidence link",
+          "explanation": "Choose the claim most likely to affect the recommendation and invite the reviewer to reconstruct it. Look for a missing assumption, an authority gap or an unsafe sharing decision. Keep the comment and your response rather than hiding the correction from the final story.",
+          "diagram": {
+            "kind": "hub",
+            "items": [
+              {
+                "label": "Reproduce a claim",
+                "detail": "Can a peer rebuild the schedule or forecast from the source?",
+                "icon": "chart"
+              },
+              {
+                "label": "Reverse an assumption",
+                "detail": "What input could make defer, reduce or stop the better choice?",
+                "icon": "search"
+              },
+              {
+                "label": "Locate the authority",
+                "detail": "Which action needs a separate real decision outside the simulation?",
+                "icon": "briefcase"
+              },
+              {
+                "label": "Inspect safe sharing",
+                "detail": "Does the public copy omit identifiers, accounts and restricted evidence?",
+                "icon": "shield"
+              }
+            ],
+            "center": "Evidence defence"
+          },
+          "caption": "Conceptual capstone peer-review and individual-defence aid. A real approval or confidential record is not required for the synthetic case.",
+          "takeaway": "Transparent revision is part of the evidence of learning."
+        },
+        {
+          "id": "pm-m8-cap-8",
+          "section": "AI-use statement",
+          "title": "Disclose assistance and keep responsibility",
+          "explanation": "For the integrated capstone, assistance can support drafting or checking, but it cannot create evidence that never existed. Complete the statement even if the answer is “none”. Keep only synthetic inputs in public tools and make your own verification visible.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Disclose use",
+                "detail": "Tool or none, task assisted, and synthetic inputs shared.",
+                "icon": "file"
+              },
+              {
+                "label": "Record your choices",
+                "detail": "Suggestions accepted, changed or rejected, with your own contribution.",
+                "icon": "users"
+              },
+              {
+                "label": "Verify independently",
+                "detail": "Rebuild central calculations, reconcile all versions, check simulated approvals and distinguish measured outcomes from forecast benefits.",
+                "icon": "check"
+              },
+              {
+                "label": "Respect assessment boundaries",
+                "detail": "Do not infer final-exam permission from project-tool permission.",
+                "icon": "shield"
+              }
+            ]
+          },
+          "caption": "Conceptual project AI-use workflow. It does not fabricate approvals, interviews, sources, business results or personal experience.",
+          "takeaway": "The learner remains responsible for the final numbers, claims and safeguards."
+        },
+        {
+          "id": "pm-m8-cap-9",
+          "section": "Optional extension",
+          "title": "Higher demand changes more than a desk count",
+          "explanation": "For the optional extension, copy the original demand model and change one labelled assumption. Compare service capacity, peaks, support ownership and residual risk without silently editing the baseline. More theoretical capacity still does not guarantee the target during variable arrivals.",
+          "diagram": {
+            "kind": "compare",
+            "items": [
+              {
+                "label": "Original demand model",
+                "detail": "180 requests in three hours at three minutes each: three desks are the theoretical minimum, without buffer.",
+                "icon": "chart"
+              },
+              {
+                "label": "Higher-demand scenario",
+                "detail": "Label the new demand and recompute with consistent request/time units.",
+                "icon": "layers"
+              },
+              {
+                "label": "Operational consequences",
+                "detail": "Review peaks, practical availability, quality, support and escalation.",
+                "icon": "shield"
+              }
+            ]
+          },
+          "caption": "Synthetic optional capacity extension. Retain the original fixture and do not claim causation, measured savings or guaranteed service from a simple theoretical model.",
+          "takeaway": "Complete the required integrated evidence before adding optional complexity."
+        }
+      ]
+    }
+  }
+}

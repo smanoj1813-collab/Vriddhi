@@ -1,0 +1,316 @@
+{
+  "moduleId": "m7",
+  "topics": {
+    "m7-t1": {
+      "introduction": "Move from a request to an owned operational service. The visuals make handoffs, capacity limits and balanced service measures explicit rather than treating a maximum-capacity calculation as an SLA.",
+      "sections": [
+        {
+          "id": "pm-m7-t1-1",
+          "section": "1. Describe a service from request to resolution",
+          "title": "An SOP must cover the exception as well as the happy path",
+          "explanation": "Map what triggers the work, what information is needed, who acts and what result closes the request. An incomplete request needs a visible exception route with ownership and customer communication. Keep the SOP findable, versioned and maintainable by the receiving team.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Request and inputs",
+                "detail": "Check the booking request and required information.",
+                "icon": "message"
+              },
+              {
+                "label": "Triage decision",
+                "detail": "Complete input follows the standard path; missing input enters an owned exception queue.",
+                "icon": "filter"
+              },
+              {
+                "label": "Resolve and check",
+                "detail": "Perform the service, verify the outcome and communicate it.",
+                "icon": "check"
+              },
+              {
+                "label": "Record and maintain",
+                "detail": "Retain appropriate evidence, owner and SOP revision date.",
+                "icon": "file"
+              }
+            ]
+          },
+          "caption": "Conceptual request-to-resolution map. The exception queue must not be silently treated as completed work.",
+          "takeaway": "A new staff member should be able to follow both routine and exception routes."
+        },
+        {
+          "id": "pm-m7-t1-2",
+          "section": "2. Capacity is constrained by actual availability",
+          "title": "Three desks meet only the theoretical average",
+          "explanation": "At three minutes per request, one fully available desk can handle sixty requests in the three-hour window. Three desks provide 180 theoretical slots, exactly equal to demand. This leaves no allowance for breaks, variable handling time, peaks or other duties.",
+          "diagram": {
+            "kind": "bars",
+            "unit": "requests / 3-hour window",
+            "items": [
+              {
+                "label": "Demand",
+                "detail": "180 requests in the morning window.",
+                "value": 180,
+                "icon": "chart"
+              },
+              {
+                "label": "One desk: theoretical",
+                "detail": "3 hours × 60 minutes ÷ 3 minutes/request = 60.",
+                "value": 60,
+                "icon": "chart"
+              },
+              {
+                "label": "Three desks: theoretical",
+                "detail": "3 × 60 = 180, with no capacity buffer.",
+                "value": 180,
+                "icon": "chart"
+              }
+            ]
+          },
+          "caption": "Synthetic operations fixture. Equal demand and theoretical capacity is not a guarantee of no queues or a service-level commitment.",
+          "takeaway": "Add practical availability and variability before committing a target."
+        },
+        {
+          "id": "pm-m7-t1-3",
+          "section": "3. Measures should balance speed and quality",
+          "title": "Pair a speed measure with a quality check",
+          "explanation": "A fast closure can be a bad outcome if the request remains unresolved. Agree clock boundaries, exceptions and owners before treating a target as a commitment. Compare trends and case mix rather than punishing staff for one complex case.",
+          "diagram": {
+            "kind": "compare",
+            "items": [
+              {
+                "label": "Timeliness",
+                "detail": "Define start/stop clocks, target and excluded waiting conditions.",
+                "icon": "clock"
+              },
+              {
+                "label": "Resolution quality",
+                "detail": "Check first-contact resolution, rework or verified outcome.",
+                "icon": "shield"
+              },
+              {
+                "label": "Exception visibility",
+                "detail": "Keep missing documents, next action and customer communication visible.",
+                "icon": "message"
+              }
+            ]
+          },
+          "caption": "Conceptual balanced service measures. An informal aspiration is not automatically an enforceable SLA.",
+          "takeaway": "Do not improve speed by closing unresolved requests.",
+          "checkpoint": {
+            "question": "Why are three desks not automatically a robust plan for 180 requests?",
+            "answer": "They provide only the theoretical 180-request capacity in the three-hour window. Breaks, variability, peak arrivals and quality work require practical capacity or demand changes."
+          }
+        }
+      ]
+    },
+    "m7-t2": {
+      "introduction": "Compare supplier offers on the same requirement and cost basis. Keep the recommendation, approval, receipt and invoice evidence distinct so that coordination never becomes an unauthorised purchase.",
+      "sections": [
+        {
+          "id": "pm-m7-t2-1",
+          "section": "1. Specify the need before seeking prices",
+          "title": "A clear need makes quotations comparable",
+          "explanation": "Specify required capability, service period, delivery location, acceptance evidence and constraints before asking for prices. Document clarifications fairly, protect confidential pricing and follow actual procurement thresholds and conflict rules.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Define the requirement",
+                "detail": "Capabilities, period, location and mandatory conditions.",
+                "icon": "target"
+              },
+              {
+                "label": "Specify acceptance",
+                "detail": "What evidence will prove delivery and support are adequate?",
+                "icon": "check"
+              },
+              {
+                "label": "Seek fair clarification",
+                "detail": "Comparable questions, recorded assumptions and protected pricing.",
+                "icon": "message"
+              },
+              {
+                "label": "Route the recommendation",
+                "detail": "Apply the institution’s procurement and approval rules.",
+                "icon": "briefcase"
+              }
+            ]
+          },
+          "caption": "Conceptual procurement preparation. This course and its diagrams do not authorise a purchase or set institutional thresholds.",
+          "takeaway": "A weak requirement produces prices that cannot be fairly compared."
+        },
+        {
+          "id": "pm-m7-t2-2",
+          "section": "2. Compare total relevant cost and risk",
+          "title": "Compare the whole basket, not the headline price",
+          "explanation": "A’s cheaper headline excludes setup and support. Add those required services before comparing with B’s inclusive offer. Then review payment timing, quality and exclusions; a ₹1,000 difference on this basis is evidence for a recommendation, not a purchase order.",
+          "diagram": {
+            "kind": "bars",
+            "unit": "₹",
+            "items": [
+              {
+                "label": "A headline only",
+                "detail": "Excludes required setup and support; not the complete comparison.",
+                "value": 18000,
+                "icon": "chart"
+              },
+              {
+                "label": "A comparable total",
+                "detail": "18,000 + 4,000 setup + 3,000 support = 25,000.",
+                "value": 25000,
+                "icon": "chart"
+              },
+              {
+                "label": "B comparable total",
+                "detail": "24,000 includes those services on the stated basis.",
+                "value": 24000,
+                "icon": "chart"
+              }
+            ]
+          },
+          "caption": "Synthetic vendor example from the lesson. No real quotations; verify tax basis, service scope, exclusions and payment timing before a real comparison.",
+          "takeaway": "Lowest headline price and lowest relevant total can be different."
+        },
+        {
+          "id": "pm-m7-t2-3",
+          "section": "3. Track obligations and acceptance",
+          "title": "Verify delivery before certifying receipt",
+          "explanation": "Track milestones and contractual obligations through evidence, not only friendly assurances. If a delivery slips, show the affected milestone, alternatives and decision needed. Changes follow the authorised contract mechanism; receipt and invoice review must reflect what was actually verified.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Track obligations",
+                "detail": "Deliverable, milestone, owner and acceptance condition.",
+                "icon": "file"
+              },
+              {
+                "label": "Verify evidence",
+                "detail": "Check the received service against the agreed requirement.",
+                "icon": "check"
+              },
+              {
+                "label": "Resolve exceptions",
+                "detail": "Late or deficient delivery needs an owner, option and escalation.",
+                "icon": "clock"
+              },
+              {
+                "label": "Confirm the record",
+                "detail": "Use approved receipt, invoice and change-control processes.",
+                "icon": "shield"
+              }
+            ]
+          },
+          "caption": "Conceptual supplier-control route. No receipt or payment is certified by this illustration.",
+          "takeaway": "Fair, explicit obligations support a better supplier relationship than blame.",
+          "checkpoint": {
+            "question": "On the stated comparable basis, which vendor is lower and by how much?",
+            "answer": "B is ₹1,000 lower: A totals ₹25,000 and B ₹24,000. Requirements, exclusions, service risk, payment timing and approval still need review."
+          }
+        }
+      ]
+    },
+    "m7-t3": {
+      "introduction": "Treat readiness, closure and improvement as different checks. A go-live is not a complete handover, and a before/after improvement is not automatically causal proof.",
+      "sections": [
+        {
+          "id": "pm-m7-t3-1",
+          "section": "1. Transition is a deliverable",
+          "title": "Prove the receiving team can run the service",
+          "explanation": "A manual and a meeting invitation do not establish readiness. The receiving owner should be able to perform important tasks, find support and handle exceptions. Transfer access securely and keep credentials out of a portfolio.",
+          "diagram": {
+            "kind": "hub",
+            "items": [
+              {
+                "label": "Ownership and support",
+                "detail": "Service owner, contact route and escalation responsibilities.",
+                "icon": "users"
+              },
+              {
+                "label": "Usable instructions",
+                "detail": "Findable SOP, training evidence and recovery steps.",
+                "icon": "file"
+              },
+              {
+                "label": "Access and controls",
+                "detail": "Approved secure transfer and verified permissions.",
+                "icon": "shield"
+              },
+              {
+                "label": "Acceptance and residual work",
+                "detail": "Receiving-team checks plus owned unresolved issues.",
+                "icon": "check"
+              }
+            ],
+            "center": "Ready to operate"
+          },
+          "caption": "Conceptual transition checklist, not a record that a handover has occurred.",
+          "takeaway": "Operational readiness is a deliverable to demonstrate, not assume."
+        },
+        {
+          "id": "pm-m7-t3-2",
+          "section": "2. Closure makes obligations visible",
+          "title": "Close the project without erasing obligations",
+          "explanation": "Acceptance, financial actions, records retention and residual risk can have different owners and dates. Leave those responsibilities visible when the temporary project ends. Lessons should connect context, observed effect and an actionable recommendation rather than assign blame.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Confirm acceptance",
+                "detail": "Record conditions and outstanding deliverables honestly.",
+                "icon": "check"
+              },
+              {
+                "label": "Assign residual obligations",
+                "detail": "Contractual actions, finances, support and risks retain owners.",
+                "icon": "users"
+              },
+              {
+                "label": "Archive and remove access",
+                "detail": "Use institutional retention rules and close unneeded permissions.",
+                "icon": "shield"
+              },
+              {
+                "label": "Keep useful lessons",
+                "detail": "Context → observed effect → future action.",
+                "icon": "repeat"
+              }
+            ]
+          },
+          "caption": "Conceptual closure route; unresolved work is not automatically complete because a project is labelled closed.",
+          "takeaway": "Closure changes ownership; it must not make responsibilities disappear."
+        },
+        {
+          "id": "pm-m7-t3-3",
+          "section": "3. Improve with a small learning cycle",
+          "title": "Measure the trial, then decide what to learn next",
+          "explanation": "Plan a bounded change with a prediction, run it safely and compare like-for-like evidence. The different denominators below yield rates of 30% and 20%, not a raw twelve-case proof. Investigate case mix and staffing before attributing the whole change to the intervention.",
+          "diagram": {
+            "kind": "bars",
+            "unit": "% of requests needing rework",
+            "items": [
+              {
+                "label": "Before: 30 / 100",
+                "detail": "30% on the first trial’s case mix.",
+                "value": 30,
+                "icon": "chart"
+              },
+              {
+                "label": "After: 18 / 90",
+                "detail": "20% on a different-size trial; check comparability.",
+                "value": 20,
+                "icon": "chart"
+              }
+            ]
+          },
+          "caption": "Synthetic improvement fixture: ten percentage points lower, approximately 33.3% relative reduction. A simple before/after comparison alone does not prove causation.",
+          "takeaway": "Use Plan–Do–Check–Act to adopt, revise or stop based on checked evidence.",
+          "checkpoint": {
+            "question": "Is the change from 30% to 20% a 10% relative reduction?",
+            "answer": "No. It is ten percentage points absolute and (30 − 20) / 30 ≈ 33.3% relative. Different denominators and case mix also limit causal interpretation."
+          }
+        }
+      ]
+    }
+  }
+}

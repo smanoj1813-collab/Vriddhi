@@ -1,0 +1,765 @@
+{
+  "moduleId": "m5",
+  "topics": {
+    "m5-t1": {
+      "introduction": "Choose a small channel mix you can operate well. Tie platform choice to customer behaviour, a content promise and a useful business outcome.",
+      "sections": [
+        {
+          "title": "Attention is also a team capacity problem",
+          "explanation": "Spreading the same time across too many accounts leaves less time to research, respond and improve.",
+          "diagram": {
+            "kind": "bars",
+            "unit": "hours / week",
+            "items": [
+              {
+                "label": "Five accounts: time per account",
+                "value": 2,
+                "detail": "A hypothetical ten-hour weekly budget split evenly."
+              },
+              {
+                "label": "Two accounts: time per account",
+                "value": 5,
+                "detail": "The same weekly budget split between two priorities."
+              }
+            ]
+          },
+          "takeaway": "This is time allocation, not a prediction that a particular number of platforms performs best.",
+          "caption": "Synthetic worked example, not live campaign data or an industry benchmark.",
+          "id": "m5-t1-v1",
+          "section": "1. Why \"be everywhere\" fails"
+        },
+        {
+          "title": "Choose the job before the platform",
+          "explanation": "Platform audiences and features evolve. Use the audience’s actual behaviour and the content’s job rather than stereotypes.",
+          "diagram": {
+            "kind": "compare",
+            "items": [
+              {
+                "label": "Discovery / demonstration",
+                "detail": "Choose places where relevant people watch and explore.",
+                "icon": "megaphone"
+              },
+              {
+                "label": "Professional credibility",
+                "detail": "Choose contexts where expertise and work evidence are useful.",
+                "icon": "briefcase"
+              },
+              {
+                "label": "Local conversation",
+                "detail": "Choose a manageable route for real questions and support.",
+                "icon": "message"
+              },
+              {
+                "label": "Deep explanation",
+                "detail": "Choose a format that can answer the question properly.",
+                "icon": "file"
+              }
+            ]
+          },
+          "takeaway": "Review the current platform landscape before a cohort; do not treat a platform label as a permanent strategy.",
+          "caption": "Concept illustration, not a platform screenshot. Follow the labels and the relationships shown.",
+          "id": "m5-t1-v2",
+          "section": "2. The platform jobs (2026, India-focused)"
+        },
+        {
+          "title": "The social strategy sentence",
+          "explanation": "A compact strategy connects the audience, promise, format, cadence and outcome so a teammate can evaluate a new idea.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "For whom?",
+                "detail": "Name a specific audience and its situation.",
+                "icon": "users"
+              },
+              {
+                "label": "What value?",
+                "detail": "State the recurring question or benefit you will deliver.",
+                "icon": "target"
+              },
+              {
+                "label": "How / how often?",
+                "detail": "Choose a sustainable format and rhythm.",
+                "icon": "clock"
+              },
+              {
+                "label": "To what end?",
+                "detail": "Define the useful action and how it will be measured.",
+                "icon": "chart"
+              }
+            ]
+          },
+          "takeaway": "Keep a stop-list: what you will deliberately not publish or operate this cycle.",
+          "caption": "Concept illustration, not a platform screenshot. Follow the labels and the relationships shown.",
+          "id": "m5-t1-v3",
+          "section": "3. The social strategy one-liner"
+        },
+        {
+          "title": "Applause and outcomes live on different branches",
+          "explanation": "Likes can describe a response but do not by themselves show business value.",
+          "diagram": {
+            "kind": "hub",
+            "items": [
+              {
+                "label": "Reach",
+                "detail": "Did relevant people have a chance to see the content?",
+                "icon": "users"
+              },
+              {
+                "label": "Meaningful engagement",
+                "detail": "Did saves, replies or questions indicate usefulness?",
+                "icon": "message"
+              },
+              {
+                "label": "Qualified action",
+                "detail": "Did people make an appropriate enquiry or visit?",
+                "icon": "cursor"
+              },
+              {
+                "label": "Cost / effort",
+                "detail": "Was the result worth the time and spend?",
+                "icon": "chart"
+              }
+            ],
+            "center": "Business goal"
+          },
+          "takeaway": "Define denominators and time windows before comparing engagement rates.",
+          "caption": "Concept illustration, not a platform screenshot. Follow the labels and the relationships shown.",
+          "checkpoint": {
+            "question": "Why might a stop-list improve a social strategy?",
+            "answer": "It protects capacity for the audience, formats and channels that serve the goal. A deliberate “not now” is more useful than five neglected accounts."
+          },
+          "id": "m5-t1-v4",
+          "section": "4. Social KPIs: beyond applause"
+        }
+      ]
+    },
+    "m5-t2": {
+      "introduction": "Make social delivery repeatable: choose formats with a purpose, batch the work, keep a small brand kit and schedule with a human review step.",
+      "sections": [
+        {
+          "title": "Different formats remove different barriers",
+          "explanation": "Choose a format because it helps the customer make progress, not because the format is fashionable.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Discover",
+                "detail": "A short visual hook introduces a relevant idea.",
+                "icon": "megaphone"
+              },
+              {
+                "label": "Understand",
+                "detail": "A carousel or guide explains the steps.",
+                "icon": "layers"
+              },
+              {
+                "label": "Trust",
+                "detail": "A genuine demonstration or authorised story supplies proof.",
+                "icon": "check"
+              },
+              {
+                "label": "Act",
+                "detail": "A clear offer post or useful link names the next step.",
+                "icon": "cursor"
+              }
+            ]
+          },
+          "takeaway": "One format can serve more than one stage. Judge its message and customer context.",
+          "caption": "Concept illustration, not a platform screenshot. Follow the labels and the relationships shown.",
+          "id": "m5-t2-v1",
+          "section": "1. Formats and their funnel jobs"
+        },
+        {
+          "title": "Batch by task, not by last-minute panic",
+          "explanation": "Separating research, drafting and production reduces switching and makes review easier.",
+          "diagram": {
+            "kind": "cycle",
+            "items": [
+              {
+                "label": "Plan",
+                "detail": "Choose topics, stages, owners and dates.",
+                "icon": "target"
+              },
+              {
+                "label": "Produce",
+                "detail": "Group writing, filming and design tasks.",
+                "icon": "file"
+              },
+              {
+                "label": "Review / schedule",
+                "detail": "Check facts, accessibility, links and timing.",
+                "icon": "check"
+              },
+              {
+                "label": "Listen / learn",
+                "detail": "Reply, record outcomes and feed the next batch.",
+                "icon": "message"
+              }
+            ],
+            "center": "Monthly engine"
+          },
+          "takeaway": "Leave room for timely updates and corrections rather than filling every available slot.",
+          "caption": "Concept illustration, not a platform screenshot. Follow the labels and the relationships shown.",
+          "id": "m5-t2-v2",
+          "section": "2. Batching: the monthly engine"
+        },
+        {
+          "title": "A small kit creates recognisable work",
+          "explanation": "A brand kit is a set of reusable decisions, not a rule that every post must look identical.",
+          "diagram": {
+            "kind": "hub",
+            "items": [
+              {
+                "label": "Visual rules",
+                "detail": "Use a readable colour palette, type styles and spacing.",
+                "icon": "layers"
+              },
+              {
+                "label": "Templates",
+                "detail": "Create a few reusable layouts for real formats.",
+                "icon": "file"
+              },
+              {
+                "label": "Voice",
+                "detail": "Keep tone and wording consistent with the business.",
+                "icon": "message"
+              },
+              {
+                "label": "Quality check",
+                "detail": "Check contrast, captions, permissions and logo use.",
+                "icon": "check"
+              }
+            ],
+            "center": "Brand kit"
+          },
+          "takeaway": "Consistency should make the content easier to recognise and use, not harder to read.",
+          "caption": "Concept illustration, not a platform screenshot. Follow the labels and the relationships shown.",
+          "id": "m5-t2-v3",
+          "section": "3. The brand kit: recognisable without a designer"
+        },
+        {
+          "title": "A scheduler is not an approval process",
+          "explanation": "Tools can queue a post; people must still check whether it is accurate and appropriate when it goes live.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Prepare",
+                "detail": "Keep approved assets and copy together.",
+                "icon": "file"
+              },
+              {
+                "label": "Validate",
+                "detail": "Check the destination link, preview and accessibility.",
+                "icon": "check"
+              },
+              {
+                "label": "Schedule",
+                "detail": "Use an available approved tool and record the owner.",
+                "icon": "clock"
+              },
+              {
+                "label": "Monitor",
+                "detail": "Confirm publication and respond to the audience.",
+                "icon": "message"
+              }
+            ]
+          },
+          "takeaway": "Pause queued content when context changes. Scheduling is not permission to stop paying attention.",
+          "caption": "Concept illustration, not a platform screenshot. Follow the labels and the relationships shown.",
+          "checkpoint": {
+            "question": "What is still needed after a post is scheduled?",
+            "answer": "A publication check, context awareness, audience response and outcome logging. The scheduling tool does not replace editorial ownership."
+          },
+          "id": "m5-t2-v4",
+          "section": "4. Scheduling and the free stack"
+        }
+      ]
+    },
+    "m5-t3": {
+      "introduction": "Treat replies as part of the customer experience. Separate ordinary questions from complaints and sensitive incidents before deciding who responds.",
+      "sections": [
+        {
+          "title": "The conversation is part of the offer",
+          "explanation": "A public reply teaches everyone watching what the business is like to deal with.",
+          "diagram": {
+            "kind": "cycle",
+            "items": [
+              {
+                "label": "Listen",
+                "detail": "Read the actual question and context.",
+                "icon": "message"
+              },
+              {
+                "label": "Respond",
+                "detail": "Answer helpfully without unnecessary defensiveness.",
+                "icon": "heart"
+              },
+              {
+                "label": "Resolve",
+                "detail": "Route the real issue to someone who can act.",
+                "icon": "check"
+              },
+              {
+                "label": "Learn",
+                "detail": "Record repeated concerns and improve the offer or content.",
+                "icon": "chart"
+              }
+            ],
+            "center": "Community trust"
+          },
+          "takeaway": "A reply count is not a service outcome. Check whether the issue was actually resolved.",
+          "caption": "Concept illustration, not a platform screenshot. Follow the labels and the relationships shown.",
+          "id": "m5-t3-v1",
+          "section": "1. Comments are the product"
+        },
+        {
+          "title": "A reply matrix reduces improvisation",
+          "explanation": "Choose the response route by the nature of the message and the risk involved.",
+          "diagram": {
+            "kind": "matrix",
+            "xLabel": "Response route",
+            "yLabel": "Message type",
+            "columns": [
+              "Public answer",
+              "Private / specialist route"
+            ],
+            "rows": [
+              "Ordinary",
+              "Sensitive"
+            ],
+            "items": [
+              {
+                "label": "Helpful answer",
+                "detail": "Answer a genuine general question clearly.",
+                "icon": "message"
+              },
+              {
+                "label": "Order support",
+                "detail": "Move account-specific details into an approved private channel.",
+                "icon": "users"
+              },
+              {
+                "label": "Calm acknowledgement",
+                "detail": "Acknowledge concern without repeating private facts.",
+                "icon": "heart"
+              },
+              {
+                "label": "Escalate",
+                "detail": "Route safety, legal or serious privacy issues to the named owner.",
+                "icon": "shield"
+              }
+            ]
+          },
+          "takeaway": "Do not ask for phone numbers, order IDs or other personal details in a public comment.",
+          "caption": "Concept illustration, not a platform screenshot. Follow the labels and the relationships shown.",
+          "id": "m5-t3-v2",
+          "section": "2. The reply matrix"
+        },
+        {
+          "title": "The four-part complaint reply",
+          "explanation": "A complaint response should show understanding and a path to action, not a public argument.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Acknowledge",
+                "detail": "Recognise the experience the person describes.",
+                "icon": "heart"
+              },
+              {
+                "label": "Take responsibility",
+                "detail": "Own the investigation without inventing facts.",
+                "icon": "shield"
+              },
+              {
+                "label": "Move safely",
+                "detail": "Offer an appropriate private support route.",
+                "icon": "message"
+              },
+              {
+                "label": "Close the loop",
+                "detail": "Name the next step and follow through.",
+                "icon": "check"
+              }
+            ]
+          },
+          "takeaway": "Avoid promising a refund, deadline or outcome before the responsible team confirms it.",
+          "caption": "Concept illustration, not a platform screenshot. Follow the labels and the relationships shown.",
+          "id": "m5-t3-v3",
+          "section": "3. The anatomy of a public complaint reply"
+        },
+        {
+          "title": "Decide the escalation route before a crisis",
+          "explanation": "Write down who owns serious incidents, who approves communication and what must not be disclosed.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Triage",
+                "detail": "Identify urgency, potential harm and private information.",
+                "icon": "filter"
+              },
+              {
+                "label": "Route",
+                "detail": "Notify the accountable owner through the approved channel.",
+                "icon": "users"
+              },
+              {
+                "label": "Respond safely",
+                "detail": "Use a factual holding response if authorised.",
+                "icon": "shield"
+              },
+              {
+                "label": "Record / review",
+                "detail": "Keep the incident trail and update the playbook.",
+                "icon": "file"
+              }
+            ]
+          },
+          "takeaway": "Do not leave safety or legal issues to the least experienced person on the account.",
+          "caption": "Concept illustration, not a platform screenshot. Follow the labels and the relationships shown.",
+          "id": "m5-t3-v4",
+          "section": "4. Escalation rules — written before the crisis"
+        },
+        {
+          "title": "Rituals create a reason to return",
+          "explanation": "A small repeatable activity can support a real community when participation is voluntary and useful.",
+          "diagram": {
+            "kind": "compare",
+            "items": [
+              {
+                "label": "Weekly questions",
+                "detail": "Offer a predictable time for practical answers.",
+                "icon": "message"
+              },
+              {
+                "label": "Member contributions",
+                "detail": "Invite stories or tips with permission to share.",
+                "icon": "users"
+              },
+              {
+                "label": "Recognition",
+                "detail": "Thank people without exposing personal details.",
+                "icon": "heart"
+              }
+            ]
+          },
+          "takeaway": "A ritual should serve participants, not pressure them into promotional work.",
+          "caption": "Concept illustration, not a platform screenshot. Follow the labels and the relationships shown.",
+          "checkpoint": {
+            "question": "A customer posts an order number and a complaint. Should the brand repeat those details?",
+            "answer": "No. Acknowledge calmly, avoid amplifying personal information and move the specific case to an approved private support route. Escalate if the issue is sensitive or urgent."
+          },
+          "id": "m5-t3-v5",
+          "section": "5. Community rituals"
+        }
+      ]
+    },
+    "m5-t4": {
+      "introduction": "Choose creators for fit and evidence, not follower count alone. Make rights, disclosure and measurement part of the brief, then build a responsible UGC loop.",
+      "sections": [
+        {
+          "title": "Creator size is one dimension, not the verdict",
+          "explanation": "Different scales can serve different objectives. Reach does not automatically equal relevant influence or useful action.",
+          "diagram": {
+            "kind": "compare",
+            "items": [
+              {
+                "label": "Local / niche",
+                "detail": "A smaller relevant audience may support trust and precise community fit.",
+                "icon": "users"
+              },
+              {
+                "label": "Broader specialist",
+                "detail": "A larger topic-focused audience can extend a relevant message.",
+                "icon": "megaphone"
+              },
+              {
+                "label": "Mass reach",
+                "detail": "A large audience needs careful cost, fit and outcome reasoning.",
+                "icon": "chart"
+              }
+            ]
+          },
+          "takeaway": "Follower-tier labels are rough categories, not a standardised guarantee of reach, price or performance.",
+          "caption": "Concept illustration, not a platform screenshot. Follow the labels and the relationships shown.",
+          "id": "m5-t4-v1",
+          "section": "1. The tiers and what each is actually for"
+        },
+        {
+          "title": "Evaluate the audience behind the number",
+          "explanation": "Review recent work, genuine interaction and audience relevance before agreeing to a collaboration.",
+          "diagram": {
+            "kind": "hub",
+            "items": [
+              {
+                "label": "Audience match",
+                "detail": "Check geography, need and likely relevance to the offer.",
+                "icon": "users"
+              },
+              {
+                "label": "Content quality",
+                "detail": "Inspect clarity, claims and consistency.",
+                "icon": "file"
+              },
+              {
+                "label": "Interaction quality",
+                "detail": "Read comments; look beyond a raw engagement total.",
+                "icon": "message"
+              },
+              {
+                "label": "Commercial integrity",
+                "detail": "Check disclosure habits, permissions and realistic reporting.",
+                "icon": "shield"
+              }
+            ],
+            "center": "Creator fit"
+          },
+          "takeaway": "Engagement rates only compare fairly when the numerator, denominator and time window match.",
+          "caption": "Concept illustration, not a platform screenshot. Follow the labels and the relationships shown.",
+          "id": "m5-t4-v2",
+          "section": "2. Evaluating a creator honestly"
+        },
+        {
+          "title": "The brief protects both sides",
+          "explanation": "A useful creator brief joins the creative job to commercial and ethical boundaries.",
+          "diagram": {
+            "kind": "compare",
+            "items": [
+              {
+                "label": "Creative job",
+                "detail": "Audience, key message, supported claims and CTA.",
+                "icon": "target"
+              },
+              {
+                "label": "Deliverables",
+                "detail": "Formats, dates, review rounds and approval owner.",
+                "icon": "clock"
+              },
+              {
+                "label": "Rights / disclosure",
+                "detail": "Usage period, editing rights, paid amplification and clear sponsorship disclosure.",
+                "icon": "shield"
+              },
+              {
+                "label": "Measurement",
+                "detail": "Agreed evidence, tagged destinations and reporting dates.",
+                "icon": "chart"
+              }
+            ]
+          },
+          "takeaway": "Do not assume a fee buys unlimited reuse or permission to run the creator’s content as an ad.",
+          "caption": "Concept illustration, not a platform screenshot. Follow the labels and the relationships shown.",
+          "id": "m5-t4-v3",
+          "section": "3. The brief: protect both sides"
+        },
+        {
+          "title": "UGC compounds only with permission",
+          "explanation": "A repeatable user-generated-content system asks, obtains permission, credits appropriately and measures usefulness.",
+          "diagram": {
+            "kind": "cycle",
+            "items": [
+              {
+                "label": "Invite",
+                "detail": "Ask for a genuine story without demanding positive claims.",
+                "icon": "message"
+              },
+              {
+                "label": "Obtain permission",
+                "detail": "Agree how and where the content can be reused.",
+                "icon": "shield"
+              },
+              {
+                "label": "Curate / publish",
+                "detail": "Preserve meaning and credit as agreed.",
+                "icon": "file"
+              },
+              {
+                "label": "Respond / learn",
+                "detail": "Thank contributors and record helpful outcomes.",
+                "icon": "heart"
+              }
+            ],
+            "center": "Real voices"
+          },
+          "takeaway": "A public post is not automatically permission for a business to reuse the image in advertising.",
+          "caption": "Concept illustration, not a platform screenshot. Follow the labels and the relationships shown.",
+          "checkpoint": {
+            "question": "Can a brand reuse a public customer photo in a paid ad without asking?",
+            "answer": "Do not assume so. Obtain the necessary permissions and usage rights, respect personal data and any people depicted, and keep the agreed disclosure and reuse scope clear."
+          },
+          "id": "m5-t4-v4",
+          "section": "4. UGC: the engine that compounds"
+        }
+      ]
+    },
+    "m5-pb3": {
+      "introduction": "Bring the earlier modules into one executable two-week plan. Check coherence between the brief, arithmetic, calendar and measurement before a teammate runs it.",
+      "sections": [
+        {
+          "title": "One campaign, connected channel roles",
+          "explanation": "An integrated campaign is not several unrelated posts and ads. Each component should support the same audience and goal.",
+          "diagram": {
+            "kind": "hub",
+            "items": [
+              {
+                "label": "Search / content",
+                "detail": "Answer the needs identified by research.",
+                "icon": "search"
+              },
+              {
+                "label": "Paid",
+                "detail": "Use a justified structure, landing page and pre-flight forecast.",
+                "icon": "megaphone"
+              },
+              {
+                "label": "Social / community",
+                "detail": "Operate formats, replies and appropriate creator or UGC work.",
+                "icon": "users"
+              },
+              {
+                "label": "Measurement",
+                "detail": "Define useful outcomes, tags and decision rules.",
+                "icon": "chart"
+              }
+            ],
+            "center": "One brief"
+          },
+          "takeaway": "The plan should be executable by another person without guessing at the campaign’s purpose.",
+          "caption": "Concept illustration, not a platform screenshot. Follow the labels and the relationships shown.",
+          "id": "m5-pb3-v1",
+          "section": "The brief"
+        },
+        {
+          "title": "The handover pack has a dependency chain",
+          "explanation": "Put the strategy and numbers before the task list so every action has a reason.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Brief + funnel",
+                "detail": "State the audience, goal, rates and margin-aware cost guardrail.",
+                "icon": "target"
+              },
+              {
+                "label": "Channel plans",
+                "detail": "Link organic, paid and social components to those assumptions.",
+                "icon": "layers"
+              },
+              {
+                "label": "Daily calendar",
+                "detail": "Name assets, owners, dates, destinations and tags.",
+                "icon": "clock"
+              },
+              {
+                "label": "Controls + integrity",
+                "detail": "Add measurement, contingencies, reflection and AI disclosure.",
+                "icon": "shield"
+              }
+            ]
+          },
+          "takeaway": "Use the original submission list to check all required documents; this flow is an organising aid.",
+          "caption": "Concept illustration, not a platform screenshot. Follow the labels and the relationships shown.",
+          "id": "m5-pb3-v2",
+          "section": "What to submit"
+        },
+        {
+          "title": "A budget needs an explicit allocation",
+          "explanation": "This hypothetical ₹10,000 allocation is a practice example of a core, secondary and experimental split, not a required spend.",
+          "diagram": {
+            "kind": "bars",
+            "unit": "₹ planned allocation",
+            "items": [
+              {
+                "label": "Core activity",
+                "value": 7000,
+                "detail": "70% for the best-supported role in this example."
+              },
+              {
+                "label": "Secondary activity",
+                "value": 2000,
+                "detail": "20% for a complementary role."
+              },
+              {
+                "label": "Experiment",
+                "value": 1000,
+                "detail": "10% for one controlled learning question."
+              }
+            ]
+          },
+          "takeaway": "The actual plan needs at least three channels including one owned route. Organic-only plans can allocate time and disclose zero media spend; do not pretend effort is free.",
+          "caption": "Synthetic worked example, not live campaign data or an industry benchmark.",
+          "id": "m5-pb3-v3",
+          "section": "Coverage requirements"
+        },
+        {
+          "title": "Review the arithmetic before the calendar locks",
+          "explanation": "A peer challenge is useful when it can still change the plan.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Update the brief",
+                "detail": "Use the evidence learned since Module 1.",
+                "icon": "target"
+              },
+              {
+                "label": "Build the components",
+                "detail": "Complete paid, organic and social operational detail.",
+                "icon": "layers"
+              },
+              {
+                "label": "Challenge",
+                "detail": "Ask a partner to find one unsupported number and one missing calendar row.",
+                "icon": "users"
+              },
+              {
+                "label": "Resolve / submit",
+                "detail": "Check the forecast, owners, stop rules and contingencies.",
+                "icon": "check"
+              }
+            ]
+          },
+          "takeaway": "A realistic plan states what happens if tracking fails, costs rise or the team misses an asset deadline.",
+          "caption": "Concept illustration, not a platform screenshot. Follow the labels and the relationships shown.",
+          "id": "m5-pb3-v4",
+          "section": "Process (suggested)"
+        },
+        {
+          "title": "Judge the plan by executability",
+          "explanation": "The strongest campaign document makes trade-offs, actions and controls visible.",
+          "diagram": {
+            "kind": "compare",
+            "items": [
+              {
+                "label": "Strategic coherence",
+                "detail": "Every component traces back to the audience, brief and funnel.",
+                "icon": "target"
+              },
+              {
+                "label": "Operational craft",
+                "detail": "Campaign structure, creative, replies and calendar are usable.",
+                "icon": "layers"
+              },
+              {
+                "label": "Measurable control",
+                "detail": "Arithmetic, thresholds and contingencies are explicit.",
+                "icon": "chart"
+              }
+            ]
+          },
+          "takeaway": "The published rubric remains the assessment authority; the visual summary adds no new grading requirements.",
+          "caption": "Concept illustration, not a platform screenshot. Follow the labels and the relationships shown.",
+          "checkpoint": {
+            "question": "A plan contains three channels but no clear owned route. Is it ready?",
+            "answer": "No. Check the original coverage requirements, add an appropriate permission-based owned relationship, and make its role, owner and measurement explicit."
+          },
+          "id": "m5-pb3-v5",
+          "section": "Rubric (7 marks)"
+        }
+      ]
+    }
+  }
+}

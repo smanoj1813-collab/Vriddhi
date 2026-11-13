@@ -5,8 +5,12 @@
   "title": "Project Management — Certificate Program",
   "shortTitle": "Project Management",
   "tagline": "Plan, coordinate and improve delivery with Agile, Scrum, risk discipline and Jira — backed by an evidence-led portfolio.",
-  "version": "1.0.0",
-  "lastReviewed": "2026-09-28",
+  "version": "1.1.0",
+  "lastReviewed": "2026-11-13",
+  "illustrations": {
+    "title": "See the plan. Understand the trade-offs.",
+    "description": "An illustrated companion for every lesson and project brief: dependency maps, working-day timelines, risk matrices, work boards and decision charts. Explore the schedule sandbox, then check your reasoning against the original reading."
+  },
   "owner": "Vriddhi Academic Cloud — Learning Content",
   "audience": "Beginner undergraduate learners (B.Com, BBA, BA, B.Sc) preparing for Project Coordinator, PMO Analyst, Operations Associate roles. No coding or prior industry experience required.",
   "level": "Beginner → applied workplace practice",

@@ -16,6 +16,8 @@ const stub = (f: string) => path.resolve(here, 'stubs', f);
 
 export default defineConfig({
   root,
+  // The stubbed SSR graph must not invalidate a running dev server's prebundle.
+  cacheDir: path.resolve(root, 'node_modules/.vite-render-check'),
   plugins: [react()],
   logLevel: 'error',
   resolve: {

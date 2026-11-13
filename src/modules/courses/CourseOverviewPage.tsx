@@ -27,6 +27,7 @@ import { certificateEligibility, coursePercent, formatMinutes, hasReadTopic, isM
 import { useCourseProgress } from '@/shared/courses/courseProgress'
 import { downloadCourseCertificate } from '@/shared/courses/courseCertificate'
 import CourseModuleAssessment from '@/shared/components/courses/CourseModuleAssessment'
+import IllustratedCourseBanner from '@/shared/components/courses/IllustratedCourseBanner'
 import type { CourseModuleManifest } from '@/shared/courses/types'
 import { Breadcrumb, Card, Chip, EmptyState, ProgressBar, SectionTitle } from './courseUi'
 
@@ -128,6 +129,8 @@ export default function CourseOverviewPage({ basePath, uid, collegeId, learnerNa
           ) : null}
         </div>
       </section>
+
+      {manifest.illustrations ? <IllustratedCourseBanner manifest={manifest} firstLessonPath={resume ? `${basePath}/${manifest.id}/learn/${resume.id}` : undefined} /> : null}
 
       {/* Outcomes + audience */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">

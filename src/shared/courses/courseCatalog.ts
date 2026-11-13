@@ -13,6 +13,8 @@
 
 import type { CourseManifest, CourseQuizBank, CourseQuizQuestion, CourseSlide, CourseSlideBank, CourseTopicRef } from './types'
 import { flattenTopics, validateManifest } from './courseModel'
+import type { CourseIllustrationBank, CourseTopicIllustrations } from './illustrationTypes'
+import { validateIllustrationBank } from './courseIllustrations'
 
 const PACK_ROOT_RE = /content\/courses\/([^/]+)\/(.*)$/
 
@@ -30,6 +32,21 @@ const slideModules = import.meta.glob('../../../content/courses/*/modules/*/slid
   eager: true,
   import: 'default',
 }) as Record<string, CourseSlideBank>
+
+// Only tiny asset URLs enter the catalog; teaching data is fetched on demand.
+// Fetching JSON rather than dynamically importing it permits a real retry after
+// a network failure (browsers cache failed ES-module imports for the document).
+const illustrationUrls = import.meta.glob('../../../content/courses/*/modules/*/illustrations.json', {
+  query: '?url',
+  eager: true,
+  import: 'default',
+}) as Record<string, string>
+
+// SSR has no browser origin to fetch from. This branch is eliminated from the
+// browser build and lets the renderer consume the same original JSON files.
+const illustrationSsrLoaders = import.meta.env.SSR
+  ? import.meta.glob('../../../content/courses/*/modules/*/illustrations.json', { import: 'default' }) as Record<string, () => Promise<CourseIllustrationBank>>
+  : {}
 
 const lessonLoaders = import.meta.glob('../../../content/courses/*/**/*.md', {
   query: '?raw',
@@ -131,6 +148,43 @@ export function loadLesson(courseId: string, lessonPath: string): Promise<string
   lessonCache.set(cacheKey, promise)
   promise.catch(() => lessonCache.delete(cacheKey))
   return promise
+}
+
+const illustrationCache = new Map<string, Promise<CourseIllustrationBank>>()
+
+/** Load only the current module's optional visual companion. Failed loads can be retried. */
+export async function loadTopicIllustrations(courseId: string, moduleId: string, topicId: string): Promise<CourseTopicIllustrations | null> {
+  const course = getCourse(courseId)
+  if (!course?.manifest.illustrations) return null
+  const module = course.manifest.modules.find((item) => item.id === moduleId)
+  if (!module || !module.topics.some((topic) => topic.id === topicId)) throw new Error('Visual topic not found in this module.')
+  const cacheKey = `${courseId}/${moduleId}`
+  let promise = illustrationCache.get(cacheKey)
+  if (!promise) {
+    const rel = `modules/${module.slug}/illustrations.json`
+    const entry = Object.entries(illustrationUrls).find(([key]) => {
+      const split = splitPackPath(key)
+      return split?.courseId === courseId && split.rel === rel
+    })
+    promise = entry ? (async () => {
+      let bank: CourseIllustrationBank
+      if (import.meta.env.SSR) {
+        bank = await illustrationSsrLoaders[entry[0]]()
+      } else {
+        const response = await fetch(entry[1])
+        if (!response.ok) throw new Error(`Visual companion download failed (${response.status}).`)
+        bank = await response.json()
+      }
+      const problems = validateIllustrationBank(bank, module)
+      if (problems.length) throw new Error(`Invalid visual companion: ${problems.join('; ')}`)
+      return bank
+    })() : Promise.reject(new Error('Visual companion is not included in this build.'))
+    illustrationCache.set(cacheKey, promise)
+    promise.catch(() => illustrationCache.delete(cacheKey))
+  }
+  const bank = await promise
+  if (!bank.topics[topicId]) throw new Error('Visual companion is missing for this topic.')
+  return bank.topics[topicId]
 }
 
 /** Paths of every bundled lesson for a course — used by the dev-time checks. */

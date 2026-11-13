@@ -1,0 +1,823 @@
+{
+  "moduleId": "m2",
+  "topics": {
+    "m2-t1": {
+      "introduction": "Separate what must be delivered, how uncertain the estimate is and how availability turns effort into duration. Hours and working days are intentionally kept apart.",
+      "sections": [
+        {
+          "id": "pm-m2-t1-1",
+          "section": "1. Start with deliverables, then work",
+          "title": "Break down deliverables before adding dates",
+          "explanation": "A deliverable map checks coverage of the agreed scope. It should include training, testing and transition as well as the visible booking flow. Dependencies come later; putting boxes next to one another does not establish a schedule.",
+          "diagram": {
+            "kind": "hub",
+            "items": [
+              {
+                "label": "Booking workflow",
+                "detail": "Booking, cancellation and capacity behaviour.",
+                "icon": "cursor"
+              },
+              {
+                "label": "Test evidence",
+                "detail": "Ordinary, boundary, access and failure cases.",
+                "icon": "shield"
+              },
+              {
+                "label": "Training materials",
+                "detail": "Staff guide and a usable training session.",
+                "icon": "file"
+              },
+              {
+                "label": "Handover package",
+                "detail": "Owner, SOP, support and residual actions.",
+                "icon": "link"
+              }
+            ],
+            "center": "Pilot scope"
+          },
+          "caption": "Conceptual deliverable-based WBS view, not a dated schedule or an exhaustive submission template.",
+          "takeaway": "Check for missing scope and double counting before estimating."
+        },
+        {
+          "id": "pm-m2-t1-2",
+          "section": "2. Estimate with assumptions and ranges",
+          "title": "Two estimating conventions, two answers",
+          "explanation": "The same three inputs can produce different summary estimates because the weighting rules differ. Show the rule next to the result and preserve the pessimistic case; an average does not remove the possibility of overrunning it.",
+          "diagram": {
+            "kind": "bars",
+            "unit": "effort-hours",
+            "items": [
+              {
+                "label": "Optimistic input",
+                "detail": "A favourable case, not a commitment.",
+                "value": 6,
+                "icon": "chart"
+              },
+              {
+                "label": "Most likely input",
+                "detail": "Central judgement under the stated assumptions.",
+                "value": 9,
+                "icon": "chart"
+              },
+              {
+                "label": "Pessimistic input",
+                "detail": "A difficult case that remains visible.",
+                "value": 18,
+                "icon": "chart"
+              },
+              {
+                "label": "Triangular estimate",
+                "detail": "(6 + 9 + 18) / 3 = 11.",
+                "value": 11,
+                "icon": "chart"
+              },
+              {
+                "label": "Weighted PERT estimate",
+                "detail": "(6 + 4 × 9 + 18) / 6 = 10.",
+                "value": 10,
+                "icon": "chart"
+              }
+            ]
+          },
+          "caption": "Synthetic training-guide estimate from the lesson. The final two bars are calculated summaries, not extra work to add to the inputs.",
+          "takeaway": "An estimate needs a convention, assumptions and a range."
+        },
+        {
+          "id": "pm-m2-t1-3",
+          "section": "3. Effort does not equal elapsed time",
+          "title": "Availability is the bridge from effort to duration",
+          "explanation": "Dividing effort by available focused hours gives a lower-bound duration for this simple sequential task. Dependencies, reviews and interruptions can extend it. Adding a second person helps only if the work can be divided without losing the assumed productivity.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Effort: 10 person-hours",
+                "detail": "Weighted estimate for the training guide.",
+                "icon": "file"
+              },
+              {
+                "label": "Availability: 2 hours/day",
+                "detail": "Focused time actually available to this work.",
+                "icon": "clock"
+              },
+              {
+                "label": "Duration: at least 5 days",
+                "detail": "10 ÷ 2 = 5 working days before other constraints.",
+                "icon": "chart"
+              }
+            ]
+          },
+          "caption": "Synthetic sequential-task example. This is not an assumption that a working day always contains two hours or that extra staff halve duration.",
+          "takeaway": "Effort-hours cannot be copied directly into a calendar.",
+          "checkpoint": {
+            "question": "Why is a ten-hour guide not automatically a one-day task?",
+            "answer": "The person has only two focused hours per day in this example, so it needs at least five working days before dependencies and interruptions."
+          }
+        }
+      ]
+    },
+    "m2-t2": {
+      "introduction": "Trace real dependency arrows, read a proportional timeline and test a shared-specialist constraint. The four-task lesson example and eight-task practice fixture are labelled separately so their finishes are not confused.",
+      "sections": [
+        {
+          "id": "pm-m2-t2-1",
+          "section": "1. Dependencies describe necessary order",
+          "title": "A merge waits for both incoming paths",
+          "explanation": "A precedes both B and C, while D requires both to finish. That is a real merge, not an instruction to do B and C in spreadsheet order. The network shows dependency structure; horizontal distance is not a measure of duration.",
+          "diagram": {
+            "kind": "schedule",
+            "unit": "working days",
+            "view": "network",
+            "items": [
+              {
+                "id": "A",
+                "label": "Charter and access approval",
+                "duration": 2,
+                "predecessors": [],
+                "detail": "Approval precedes configuration and preparation.",
+                "icon": "clock"
+              },
+              {
+                "id": "B",
+                "label": "Booking workflow",
+                "duration": 4,
+                "predecessors": [
+                  "A"
+                ],
+                "detail": "Specialist configures the workflow.",
+                "icon": "clock"
+              },
+              {
+                "id": "C",
+                "label": "Test cases and staff guide",
+                "duration": 3,
+                "predecessors": [
+                  "A"
+                ],
+                "detail": "Specialist prepares evidence and guidance.",
+                "icon": "clock"
+              },
+              {
+                "id": "D",
+                "label": "Integrated test",
+                "duration": 2,
+                "predecessors": [
+                  "B",
+                  "C"
+                ],
+                "detail": "Testing waits for both incoming paths.",
+                "icon": "clock"
+              }
+            ]
+          },
+          "caption": "Synthetic four-task lesson example only: A2, B4 after A, C3 after A, D2 after both. Finish-to-start, no lag, day zero; unconstrained resources.",
+          "takeaway": "D can start only when the slower incoming path is ready."
+        },
+        {
+          "id": "pm-m2-t2-2",
+          "section": "2. Find the longest dependent path",
+          "title": "Eight days is set by A–B–D",
+          "explanation": "The bars use a shared working-day scale. C finishes at day five but D waits until B finishes at day six. C has one day of total float under this model; reducing C by one day alone cannot move the project finish.",
+          "diagram": {
+            "kind": "schedule",
+            "unit": "working days",
+            "view": "timeline",
+            "items": [
+              {
+                "id": "A",
+                "label": "Charter and access approval",
+                "duration": 2,
+                "predecessors": [],
+                "detail": "Approval precedes configuration and preparation.",
+                "icon": "clock"
+              },
+              {
+                "id": "B",
+                "label": "Booking workflow",
+                "duration": 4,
+                "predecessors": [
+                  "A"
+                ],
+                "detail": "Specialist configures the workflow.",
+                "icon": "clock"
+              },
+              {
+                "id": "C",
+                "label": "Test cases and staff guide",
+                "duration": 3,
+                "predecessors": [
+                  "A"
+                ],
+                "detail": "Specialist prepares evidence and guidance.",
+                "icon": "clock"
+              },
+              {
+                "id": "D",
+                "label": "Integrated test",
+                "duration": 2,
+                "predecessors": [
+                  "B",
+                  "C"
+                ],
+                "detail": "Testing waits for both incoming paths.",
+                "icon": "clock"
+              }
+            ]
+          },
+          "caption": "Synthetic four-task lesson example: A–B–D = 8 working days; A–C–D = 7. Dashed space is total float, not extra task duration.",
+          "takeaway": "The critical path is about dependent duration, not how busy a person appears."
+        },
+        {
+          "id": "pm-m2-t2-3",
+          "section": "3. Resource levelling can change the answer",
+          "title": "Test the specialist assumption, then recalculate",
+          "explanation": "This sandbox uses the separate eight-task practice fixture. Start at 14 days with unlimited resources, then switch on the explicit B-before-C specialist order. The finish becomes 17 days because the work that previously overlapped must now be sequential. Change a duration to see the critical set and float recalculate.",
+          "diagram": {
+            "kind": "schedule",
+            "unit": "working days",
+            "view": "timeline",
+            "items": [
+              {
+                "id": "A",
+                "label": "Charter and access approval",
+                "duration": 2,
+                "predecessors": [],
+                "detail": "Approval precedes configuration and preparation.",
+                "icon": "clock"
+              },
+              {
+                "id": "B",
+                "label": "Booking workflow",
+                "duration": 4,
+                "predecessors": [
+                  "A"
+                ],
+                "detail": "Specialist configures the workflow.",
+                "icon": "clock"
+              },
+              {
+                "id": "C",
+                "label": "Test cases and staff guide",
+                "duration": 3,
+                "predecessors": [
+                  "A"
+                ],
+                "detail": "Specialist prepares evidence and guidance.",
+                "icon": "clock"
+              },
+              {
+                "id": "D",
+                "label": "Integrated test",
+                "duration": 2,
+                "predecessors": [
+                  "B",
+                  "C"
+                ],
+                "detail": "Testing waits for both incoming paths.",
+                "icon": "clock"
+              },
+              {
+                "id": "E",
+                "label": "Staff training",
+                "duration": 2,
+                "predecessors": [
+                  "D"
+                ],
+                "detail": "Training uses the tested workflow.",
+                "icon": "clock"
+              },
+              {
+                "id": "F",
+                "label": "Pilot run",
+                "duration": 1,
+                "predecessors": [
+                  "E"
+                ],
+                "detail": "Operations runs the trained pilot.",
+                "icon": "clock"
+              },
+              {
+                "id": "G",
+                "label": "Corrections and acceptance",
+                "duration": 2,
+                "predecessors": [
+                  "F"
+                ],
+                "detail": "Reviewer checks corrections and acceptance evidence.",
+                "icon": "clock"
+              },
+              {
+                "id": "H",
+                "label": "Handover and closure",
+                "duration": 1,
+                "predecessors": [
+                  "G"
+                ],
+                "detail": "Operations takes ownership at handover.",
+                "icon": "clock"
+              }
+            ],
+            "interactive": true,
+            "resourceConstraint": {
+              "before": "B",
+              "after": "C",
+              "label": "One specialist: finish B before starting C (no B/C overlap)"
+            }
+          },
+          "caption": "Synthetic eight-task fixture from resources/practice-data.md, not the shorter four-task example above. The switch models one specific resource order only; no costs or part-time calendars are inferred.",
+          "takeaway": "A dependency-only finish is not automatically a resource-feasible commitment.",
+          "checkpoint": {
+            "question": "Why can the eight-task plan finish in 14 days on paper but need 17 with one specialist?",
+            "answer": "The unconstrained network overlaps B and C. Adding the stated B-before-C order removes that overlap; their 4 + 3 days push the merge and downstream work three days later."
+          }
+        }
+      ]
+    },
+    "m2-t3": {
+      "introduction": "Read the baseline, the latest forecast and earned-value measures as different kinds of evidence. All charts use rupees and a zero baseline; schedule variance here is not a count of days.",
+      "sections": [
+        {
+          "id": "pm-m2-t3-1",
+          "section": "1. Separate cost categories and assumptions",
+          "title": "Put setup and service costs in separate lanes",
+          "explanation": "A project can appear affordable while leaving recurring support unfunded. Identify the quantity, rate and coverage period for each cost line, including exclusions. Keep taxes or provider charges explicit rather than assuming they are included.",
+          "diagram": {
+            "kind": "compare",
+            "items": [
+              {
+                "label": "One-time setup",
+                "detail": "Labour, configuration, materials and initial training.",
+                "icon": "briefcase"
+              },
+              {
+                "label": "Recurring operation",
+                "detail": "Support, licences, provider usage and ongoing ownership.",
+                "icon": "repeat"
+              },
+              {
+                "label": "Basis and authority",
+                "detail": "Date, quantities, classroom rates, exclusions and approval route.",
+                "icon": "file"
+              }
+            ]
+          },
+          "caption": "Conceptual cost classification. Classroom rates are modelling assumptions, not vendor quotations.",
+          "takeaway": "A handover budget must show the service that continues after the project."
+        },
+        {
+          "id": "pm-m2-t3-2",
+          "section": "2. Baseline, actual and forecast have different jobs",
+          "title": "Forecasting does not rewrite approval",
+          "explanation": "The current bottom-up forecast is actual cost plus the latest remaining estimate. Compare that result with the unchanged approved baseline. The bars have different roles and are not all additive: only AC and ETC combine to form EAC.",
+          "diagram": {
+            "kind": "bars",
+            "unit": "₹",
+            "items": [
+              {
+                "label": "Approved baseline",
+                "detail": "Reference for control; not silently replaced by the forecast.",
+                "value": 35000,
+                "icon": "chart"
+              },
+              {
+                "label": "Actual cost (AC)",
+                "detail": "Incurred at the reporting cut-off.",
+                "value": 18000,
+                "icon": "chart"
+              },
+              {
+                "label": "Estimate to complete (ETC)",
+                "detail": "Fresh expected remaining cost.",
+                "value": 22000,
+                "icon": "chart"
+              },
+              {
+                "label": "Estimate at completion (EAC)",
+                "detail": "18,000 + 22,000 = 40,000; forecast overrun 5,000.",
+                "value": 40000,
+                "icon": "chart"
+              }
+            ]
+          },
+          "caption": "Synthetic cost snapshot from resources/practice-data.md. The baseline, components and total are comparison measures, not four amounts to sum.",
+          "takeaway": "A ₹40,000 forecast against ₹35,000 needs a decision, not a hidden baseline edit."
+        },
+        {
+          "id": "pm-m2-t3-3",
+          "section": "3. Relate spend to accepted work",
+          "title": "Spend is meaningful only beside accepted progress",
+          "explanation": "Earned value puts completed work on a budgeted-cost basis so it can be compared with planned value and actual cost. EV below AC indicates adverse cost variance; EV below PV indicates less budgeted work completed than planned. It does not tell you how many calendar days late the project is.",
+          "diagram": {
+            "kind": "bars",
+            "unit": "₹",
+            "items": [
+              {
+                "label": "Planned value (PV)",
+                "detail": "Budgeted work scheduled by the cut-off.",
+                "value": 20000,
+                "icon": "chart"
+              },
+              {
+                "label": "Earned value (EV)",
+                "detail": "Budgeted completed work with credible acceptance.",
+                "value": 15000,
+                "icon": "chart"
+              },
+              {
+                "label": "Actual cost (AC)",
+                "detail": "Cost incurred for the work by the same cut-off.",
+                "value": 18000,
+                "icon": "chart"
+              }
+            ]
+          },
+          "caption": "Synthetic lesson example at one cut-off: CV = EV − AC = −₹3,000; SV = EV − PV = −₹5,000 in rupees; CPI = 15,000 / 18,000 ≈ 0.833.",
+          "takeaway": "Low spend can be delayed work rather than efficient delivery.",
+          "checkpoint": {
+            "question": "Is SV = −₹5,000 the same as five days late?",
+            "answer": "No. This schedule variance is in budgeted-work rupees. Use the dependency schedule and forecast dates to explain a delay in working days."
+          }
+        }
+      ]
+    },
+    "m2-pb1": {
+      "introduction": "Connect the first six lessons into an authorised-plan proposal. The figures are review aids for the published brief, not completed submission files or real sponsor approval.",
+      "sections": [
+        {
+          "id": "pm-m2-pb1-1",
+          "section": "The brief",
+          "title": "A plan must join scope, authority, time and cost",
+          "explanation": "Begin with the useful booking pilot and the fixed event constraint. The eight-task dependency model can inform feasibility, but the resource conflict, cost basis and acceptance still need checking. Keep proposed decisions distinct from authorised ones.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Bound the pilot",
+                "detail": "Six-week placement-registration simulation; core journeys and exclusions.",
+                "icon": "target"
+              },
+              {
+                "label": "Establish the authority route",
+                "detail": "Classroom ceiling ₹35,000; show proposed versus authorised status.",
+                "icon": "briefcase"
+              },
+              {
+                "label": "Build a feasible plan",
+                "detail": "WBS, dependency network, resource availability and cost estimate.",
+                "icon": "layers"
+              },
+              {
+                "label": "Recommend with evidence",
+                "detail": "Acceptance checks, remaining assumption and a decision owner.",
+                "icon": "check"
+              }
+            ]
+          },
+          "caption": "Synthetic PB1 framing from the published brief. The six-week window is not the same quantity as the model’s 14 working days.",
+          "takeaway": "A feasible-looking network is only one part of an approvable plan."
+        },
+        {
+          "id": "pm-m2-pb1-2",
+          "section": "Inputs and working boundaries",
+          "title": "Keep the two schedule fixtures separate",
+          "explanation": "The lesson’s four-task network explains the method, while PB1 requires the full eight-task seed. Copy the raw fixture unchanged, label the calendar and create a separate resource scenario. Do not infer effort rates or real approval from task durations.",
+          "diagram": {
+            "kind": "compare",
+            "items": [
+              {
+                "label": "Four-task lesson",
+                "detail": "A–D only: eight-day finish under unconstrained resources.",
+                "icon": "file"
+              },
+              {
+                "label": "Eight-task PB1 seed",
+                "detail": "A–H: fourteen-day finish before the specialist conflict.",
+                "icon": "layers"
+              },
+              {
+                "label": "Resource extension",
+                "detail": "One specialist doing B and C sequentially gives seventeen days under the stated assumptions.",
+                "icon": "users"
+              },
+              {
+                "label": "Safe working copy",
+                "detail": "Retain raw inputs, scenario changes and synthetic labels.",
+                "icon": "shield"
+              }
+            ]
+          },
+          "caption": "Synthetic fixture distinction. All durations are working days, not person-hours; no paid tool or production access is required.",
+          "takeaway": "State which fixture a number belongs to before interpreting it."
+        },
+        {
+          "id": "pm-m2-pb1-3",
+          "section": "Work plan",
+          "title": "PB1: reserve time to verify and revise",
+          "explanation": "The classroom block is not all build time. Use the reproduction checkpoint to trace the headline result to source values, then retain the peer comment and correction. The final recommendation should follow the revised evidence, not the first attractive draft.",
+          "diagram": {
+            "kind": "bars",
+            "unit": "classroom minutes",
+            "items": [
+              {
+                "label": "Frame and inspect",
+                "detail": "Read the brief, boundaries and source fixtures.",
+                "value": 20,
+                "icon": "chart"
+              },
+              {
+                "label": "Build required artefacts",
+                "detail": "Create the linked outputs for this block.",
+                "value": 80,
+                "icon": "chart"
+              },
+              {
+                "label": "Reproduce and review",
+                "detail": "Check calculations, definitions and decisions.",
+                "value": 35,
+                "icon": "chart"
+              },
+              {
+                "label": "Peer review and revise",
+                "detail": "Keep the comment and the response.",
+                "value": 30,
+                "icon": "chart"
+              },
+              {
+                "label": "Recommendation and AI statement",
+                "detail": "Explain the decision and assistance transparently.",
+                "value": 15,
+                "icon": "chart"
+              }
+            ]
+          },
+          "caption": "Published synthetic classroom allocation for PB1: 20 + 80 + 35 + 30 + 15 = 180 minutes. This is learner work time, not the delivery schedule’s working days.",
+          "takeaway": "A checked second version is more valuable than an unchecked first draft."
+        },
+        {
+          "id": "pm-m2-pb1-4",
+          "section": "What to submit",
+          "title": "Five artefacts must support one recommendation",
+          "explanation": "Treat the submission as a connected evidence pack. The charter establishes the boundary, ownership shows who can decide, the schedule and cost establish feasibility, and acceptance defines how success will be checked. An evidence index makes the links reviewable.",
+          "diagram": {
+            "kind": "hub",
+            "items": [
+              {
+                "label": "Charter",
+                "detail": "One page, exclusions and proposed/authorised status.",
+                "icon": "file"
+              },
+              {
+                "label": "Stakeholders and RACI",
+                "detail": "At least four distinct deliverables or approval rows.",
+                "icon": "users"
+              },
+              {
+                "label": "WBS and network",
+                "detail": "Longest path, milestones and resource-conflict check.",
+                "icon": "link"
+              },
+              {
+                "label": "Cost estimate",
+                "detail": "Quantities, rates, support, reserve basis and ₹35,000 comparison.",
+                "icon": "chart"
+              },
+              {
+                "label": "Acceptance and recommendation",
+                "detail": "Testable checks, one unresolved assumption and evidence index.",
+                "icon": "check"
+              }
+            ],
+            "center": "Reviewable plan"
+          },
+          "caption": "Conceptual map of the unchanged PB1 submission list. Submit editable files through the institution; the app does not collect or mark them.",
+          "takeaway": "The recommendation should cite the evidence it depends on."
+        },
+        {
+          "id": "pm-m2-pb1-5",
+          "section": "Acceptance and self-check",
+          "title": "Verify the full seed before resolving the conflict",
+          "explanation": "Follow A–B–D–E–F–G–H through the network and sum fourteen days. The C branch is one day shorter, but that float does not solve the shared-specialist overlap. Explain the resource order and recalculate rather than promising the unconstrained date.",
+          "diagram": {
+            "kind": "schedule",
+            "unit": "working days",
+            "view": "network",
+            "items": [
+              {
+                "id": "A",
+                "label": "Charter and access approval",
+                "duration": 2,
+                "predecessors": [],
+                "detail": "Approval precedes configuration and preparation.",
+                "icon": "clock"
+              },
+              {
+                "id": "B",
+                "label": "Booking workflow",
+                "duration": 4,
+                "predecessors": [
+                  "A"
+                ],
+                "detail": "Specialist configures the workflow.",
+                "icon": "clock"
+              },
+              {
+                "id": "C",
+                "label": "Test cases and staff guide",
+                "duration": 3,
+                "predecessors": [
+                  "A"
+                ],
+                "detail": "Specialist prepares evidence and guidance.",
+                "icon": "clock"
+              },
+              {
+                "id": "D",
+                "label": "Integrated test",
+                "duration": 2,
+                "predecessors": [
+                  "B",
+                  "C"
+                ],
+                "detail": "Testing waits for both incoming paths.",
+                "icon": "clock"
+              },
+              {
+                "id": "E",
+                "label": "Staff training",
+                "duration": 2,
+                "predecessors": [
+                  "D"
+                ],
+                "detail": "Training uses the tested workflow.",
+                "icon": "clock"
+              },
+              {
+                "id": "F",
+                "label": "Pilot run",
+                "duration": 1,
+                "predecessors": [
+                  "E"
+                ],
+                "detail": "Operations runs the trained pilot.",
+                "icon": "clock"
+              },
+              {
+                "id": "G",
+                "label": "Corrections and acceptance",
+                "duration": 2,
+                "predecessors": [
+                  "F"
+                ],
+                "detail": "Reviewer checks corrections and acceptance evidence.",
+                "icon": "clock"
+              },
+              {
+                "id": "H",
+                "label": "Handover and closure",
+                "duration": 1,
+                "predecessors": [
+                  "G"
+                ],
+                "detail": "Operations takes ownership at handover.",
+                "icon": "clock"
+              }
+            ]
+          },
+          "caption": "Synthetic eight-task practice seed, finish-to-start with no lag. This figure is the unconstrained reference, not a resource-levelled commitment.",
+          "takeaway": "Retain both the original dependency result and the resource-constrained scenario.",
+          "checkpoint": {
+            "question": "Which path sets the unconstrained PB1 finish, and why is that not automatically feasible?",
+            "answer": "A–B–D–E–F–G–H totals fourteen working days. B and C overlap in that model but share one specialist; the stated sequential extension finishes in seventeen days."
+          }
+        },
+        {
+          "id": "pm-m2-pb1-6",
+          "section": "Rubric",
+          "title": "Seven marks reward evidence and judgement",
+          "explanation": "Use the published rubric to inspect the work, not to invent new requirements. Correct arithmetic needs traceable inputs, professional judgement includes safeguards and authority, and clarity includes an evidence trail and reflection. The diagram does not award or upload marks.",
+          "diagram": {
+            "kind": "bars",
+            "unit": "rubric marks",
+            "items": [
+              {
+                "label": "Correctness and reproducibility",
+                "detail": "Show the method, source values and a manual check.",
+                "value": 3,
+                "icon": "chart"
+              },
+              {
+                "label": "Judgement and safeguards",
+                "detail": "Make limits, provenance, authority and safe sharing explicit.",
+                "value": 2,
+                "icon": "chart"
+              },
+              {
+                "label": "Clarity, evidence and reflection",
+                "detail": "Keep the files navigable and explain the correction.",
+                "value": 2,
+                "icon": "chart"
+              }
+            ]
+          },
+          "caption": "Illustrative display of the unchanged PB1 rubric: 3 + 2 + 2 = 7. Four blocks contribute 28 overall; external facilitator marking remains required.",
+          "takeaway": "Appearance alone cannot earn credit for an unsupported claim."
+        },
+        {
+          "id": "pm-m2-pb1-7",
+          "section": "Review questions",
+          "title": "Review the decision, not only the arithmetic",
+          "explanation": "Have the reviewer challenge the claim that most affects feasibility. A correct path sum is not enough if approval is absent or a recurring support cost is omitted. Keep the exact review comment and your correction with the versioned evidence.",
+          "diagram": {
+            "kind": "hub",
+            "items": [
+              {
+                "label": "Reproduce",
+                "detail": "Where is the source for the longest path and cost total?",
+                "icon": "chart"
+              },
+              {
+                "label": "Challenge",
+                "detail": "Which resource or acceptance assumption could change the plan?",
+                "icon": "search"
+              },
+              {
+                "label": "Check authority",
+                "detail": "Which commitment still needs someone else’s decision?",
+                "icon": "briefcase"
+              },
+              {
+                "label": "Share safely",
+                "detail": "Which evidence is suitable for the public portfolio?",
+                "icon": "shield"
+              }
+            ],
+            "center": "Peer review"
+          },
+          "caption": "Conceptual PB1 peer-review prompts supplement the published review questions; they do not add marks or require a live sponsor.",
+          "takeaway": "A useful review can change the recommendation."
+        },
+        {
+          "id": "pm-m2-pb1-8",
+          "section": "AI-use statement",
+          "title": "Disclose assistance and keep responsibility",
+          "explanation": "For the pilot plan, assistance can support drafting or checking, but it cannot create evidence that never existed. Complete the statement even if the answer is “none”. Keep only synthetic inputs in public tools and make your own verification visible.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Disclose use",
+                "detail": "Tool or none, task assisted, and synthetic inputs shared.",
+                "icon": "file"
+              },
+              {
+                "label": "Record your choices",
+                "detail": "Suggestions accepted, changed or rejected, with your own contribution.",
+                "icon": "users"
+              },
+              {
+                "label": "Verify independently",
+                "detail": "Rebuild path sums, check cost quantities/rates and confirm every approval label is simulated or pending.",
+                "icon": "check"
+              },
+              {
+                "label": "Respect assessment boundaries",
+                "detail": "Do not infer final-exam permission from project-tool permission.",
+                "icon": "shield"
+              }
+            ]
+          },
+          "caption": "Conceptual project AI-use workflow. It does not fabricate approvals, interviews, sources, business results or personal experience.",
+          "takeaway": "The learner remains responsible for the final numbers, claims and safeguards."
+        },
+        {
+          "id": "pm-m2-pb1-9",
+          "section": "Optional extension",
+          "title": "Compare a larger option without weakening the core",
+          "explanation": "The optional extension asks for a trade-off, not more decorative scope. Hold mandatory access, safety and acceptance conditions fixed, then show how a larger option changes effort, resource needs, cost and risk. Finish the core pack first.",
+          "diagram": {
+            "kind": "compare",
+            "items": [
+              {
+                "label": "Minimum useful pilot",
+                "detail": "Safe core journeys, training, acceptance and an owned handover.",
+                "icon": "check"
+              },
+              {
+                "label": "Larger option",
+                "detail": "Additional value needs a visible cost, schedule and support basis.",
+                "icon": "sparkles"
+              },
+              {
+                "label": "Non-negotiable checks",
+                "detail": "Do not trade away mandatory conditions to fit a preferred date.",
+                "icon": "shield"
+              }
+            ]
+          },
+          "caption": "Conceptual optional comparison. The extension is not required for full marks and does not change the published rubric.",
+          "takeaway": "Extra scope is useful only when its consequences can be explained."
+        }
+      ]
+    }
+  }
+}

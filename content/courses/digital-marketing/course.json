@@ -5,8 +5,12 @@
   "title": "Digital Marketing for Career Impact — Certificate Program",
   "shortTitle": "Digital Marketing",
   "tagline": "Learn SEO, SEM, social media, analytics and AI content by running real campaigns — and walk out with a portfolio, not just a certificate.",
-  "version": "1.0.1",
-  "lastReviewed": "2026-09-28",
+  "version": "1.1.0",
+  "lastReviewed": "2026-11-13",
+  "illustrations": {
+    "title": "See the system. Understand the numbers.",
+    "description": "A visual companion to every lesson and project: follow the diagrams, explore worked charts and put the ideas into practice. Your original course reading stays exactly as it is."
+  },
   "owner": "Vriddhi Academic Cloud — Learning Content",
   "audience": "Non-technical undergraduate students (B.Com, BBA, BA, B.Sc) in affiliated colleges. No coding required.",
   "level": "Beginner → job-ready practitioner",

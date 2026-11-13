@@ -1,12 +1,24 @@
 # Facilitator guide — VPM-101 Project Management
 
-Version 1.0.0 · Authored pack date 2026-09-28. Verify tool access and applicable guidance before each cohort; this is not a claim of external accreditation or independent legal review.
+Version 1.1.0 · Original authored pack date 2026-09-28 · Additive visual-layer review 2026-11-13. The November review covers the illustrated companion only, not a fresh validation of external sources, tool access or applicable guidance. Verify these before each cohort; this is not a claim of external accreditation or independent legal review.
 
 ## 1. Audience and delivery model
 
 A beginner, job-oriented 60-hour course for undergraduate learners preparing for Project Coordinator, PMO Analyst, Operations Associate. No coding, paid subscription or real organisational dataset is required. Teach with a shared computer lab, a spreadsheet and a document editor; named software can be replaced by an equivalent workflow with the same evidence.
 
 There are eight modules, 24 lessons, four project blocks and one 12-hour capstone. Each lesson has five formative MCQs and a three-slide conceptual walkthrough. Each module has ten advanced scenario questions and a 60% pass gate. In total the pack contains 200 quiz items and 72 slides. Slides support understanding but do not substitute for reading completion, lab work or quizzes.
+
+### Illustrated companion — v1.1.0 delivery notes
+
+- All **24 lessons and five project briefs** have an optional inline visual layer: **117 additional explanations**, covering every Core ideas subtopic and project section. Each topic has a revealable formative check. Original lesson prose, labs, project requirements, quiz/slide banks, rubrics, weights and eligibility conditions have not been rewritten.
+- Use the **Illustrations on/off** switch for the exact original reading and the visual jump menu for recap. These checks are ungraded aids: opening a figure or changing a slider does not submit a quiz or bypass reading completion. External project files still use institutional submission and marking.
+- In Lesson **2.2**, first reproduce the **four-task** example: A–B–D = eight working days, with one day of C float. The third figure is the separate **eight-task** practice fixture: fourteen days with unconstrained resources. Ask learners to predict the result of shortening C before changing it; the finish does not move until the controlling path changes. Applying the single-specialist **B-before-C** scenario gives seventeen days under the stated assumptions. Reset restores original durations, unlimited resources and the timeline view.
+- The schedule sandbox calculates earliest/latest starts and finishes, total float and the critical set, including ties. It assumes day zero, whole working days, finish-to-start links, no lag and no holidays. Its one resource switch adds a specific precedence; it is **not** a general resource optimiser, cost model, effort calendar or guaranteed launch forecast. Keep original and scenario results side by side in the workbook.
+- Timelines are proportional to working days; dependency-network spacing is schematic. Labelled scroll regions keep wide networks and calculation/RACI tables inside the mobile screen and support keyboard access. Text descriptions, calculations and captions explain the figures without relying on colour alone.
+- The RACI example separates pilot acceptance from a security approval; its role assignments are illustrative agreements to confirm, not actual appointments. Boards keep blocked work inside the stated WIP boundary; a WIP breach signals help is needed, not permission to hide cards. The six-record filter fixture is not the complete eight-record PB3 submission.
+- Reinforce the numerical distinctions: lesson Sprint capacity is **140** focused hours before PB2’s support reservation, while PB2 has **130**; CV/SV here are in **rupees, not days**; ordinal risk score **12 is not 12%**; three theoretical desks leave **no capacity buffer**; and 30% to 20% rework is **ten percentage points**, not ten percent relative. A mandatory last-slot defect cannot be averaged away by the 20/21 pass count.
+- All examples are synthetic. Charts are not live Jira screenshots, supplier quotes, measured savings or real approvals. New visual guidance does not change the published assessment or confer external Scrum, Jira or PMI credentials. Continue the source/tool checks in §8 before delivery.
+- Companions load per module from bundled local assets, without extra paid accounts or remote image services. A failed visual download preserves the reading and provides retry. College assignment, progression and certificate rules remain unchanged.
 
 ## 2. Preparation checklist
 

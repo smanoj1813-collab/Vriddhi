@@ -4,7 +4,7 @@
 // lesson body or its quiz on the right, previous / next and "mark complete".
 // Lesson Markdown is fetched lazily from the bundle (courseCatalog.loadLesson).
 
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import {
   ArrowLeft,
@@ -25,10 +25,13 @@ import {
 import CourseMarkdown from '@/shared/components/courses/CourseMarkdown'
 import CourseQuiz from '@/shared/components/courses/CourseQuiz'
 import CourseSlides from '@/shared/components/courses/CourseSlides'
-import { getCourse, loadLesson } from '@/shared/courses/courseCatalog'
+import { getCourse, loadLesson, loadTopicIllustrations } from '@/shared/courses/courseCatalog'
+import type { CourseTopicIllustrations } from '@/shared/courses/illustrationTypes'
 import { coursePercent, findTopic, formatMinutes, hasReadTopic, isModuleUnlocked, isTopicUnlocked, modulePercent, neighbours } from '@/shared/courses/courseModel'
 import { useCourseProgress } from '@/shared/courses/courseProgress'
 import { Breadcrumb, Chip, EmptyState, ProgressBar } from './courseUi'
+
+const CourseIllustratedLesson = lazy(() => import('@/shared/components/courses/CourseIllustratedLesson'))
 
 interface CourseLessonPageProps {
   basePath: string
@@ -57,6 +60,26 @@ export default function CourseLessonPage({ basePath, uid, collegeId }: CourseLes
   const [error, setError] = useState<string | null>(null)
   const [outlineOpen, setOutlineOpen] = useState(false)
   const readingEndRef = useRef<HTMLDivElement | null>(null)
+  const [visualState, setVisualState] = useState<{ key: string; companion?: CourseTopicIllustrations; error?: string }>({ key: '' })
+  const [visualRetry, setVisualRetry] = useState(0)
+  const visualKey = `${courseId}/${topicId}`
+  // A topic-keyed result prevents the previous lesson's visuals flashing during navigation.
+  const companion = visualState.key === visualKey ? visualState.companion : undefined
+  const visualError = visualState.key === visualKey ? visualState.error : undefined
+
+  useEffect(() => {
+    if (!course?.manifest.illustrations || !topic || !topicUnlocked) return
+    let cancelled = false
+    setVisualState({ key: visualKey })
+    loadTopicIllustrations(course.manifest.id, topic.moduleId, topic.id)
+      .then((data) => {
+        if (!cancelled && data) setVisualState({ key: visualKey, companion: data })
+      })
+      .catch(() => {
+        if (!cancelled) setVisualState({ key: visualKey, error: 'The visual companion could not be loaded. The original lesson is still available.' })
+      })
+    return () => { cancelled = true }
+  }, [course, topic, topicUnlocked, visualKey, visualRetry])
 
   // Load the Markdown for this topic; reset the tab and scroll on change.
   useEffect(() => {
@@ -293,7 +316,16 @@ export default function CourseLessonPage({ basePath, uid, collegeId }: CourseLes
                 <EmptyState title="Could not load this lesson" body={error} />
               ) : (
                 <>
-                  <CourseMarkdown source={body} skipTitle />
+                  {visualError ? (
+                    <div role="status" className="mb-4 rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs leading-6 text-amber-900 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-200">
+                      {visualError} <button type="button" onClick={() => setVisualRetry((value) => value + 1)} className="font-bold underline underline-offset-2">Retry illustrations</button>
+                    </div>
+                  ) : null}
+                  {companion ? (
+                    <Suspense fallback={<CourseMarkdown source={body} skipTitle />}>
+                      <CourseIllustratedLesson key={visualKey} source={body} companion={companion} topicId={topic.id} />
+                    </Suspense>
+                  ) : <CourseMarkdown source={body} skipTitle />}
                   <div ref={readingEndRef} className="mt-6 border-t border-dashed border-slate-200 pt-4 text-center text-xs text-slate-500 dark:text-slate-400 dark:border-slate-700" aria-live="polite">
                     {done ? 'End of topic · content read' : 'End of topic · reaching this point marks the content as read'}
                   </div>

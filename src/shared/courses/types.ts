@@ -101,6 +101,11 @@ export interface CourseManifest {
   lessonQuizQuestionCount?: number
   certificateEligibility?: CourseCertificateEligibilityManifest
   toolkit?: CourseToolkitGroup[]
+  /** Opt in to a complete, additive visual layer in per-module illustrations.json. */
+  illustrations?: {
+    title: string
+    description: string
+  }
   modules: CourseModuleManifest[]
   finalAssessment?: { title: string; minutes: number; blueprint?: string }
   documents?: Record<string, string>

@@ -1,0 +1,324 @@
+{
+  "moduleId": "m1",
+  "topics": {
+    "m1-t1": {
+      "introduction": "See how a temporary project becomes an owned service, then trace a delivered form to a benefit that still needs measurement. The diagrams add a decision lens to the original reading.",
+      "sections": [
+        {
+          "id": "pm-m1-t1-1",
+          "section": "1. Temporary change versus repeatable service",
+          "title": "Build the change; then run the service",
+          "explanation": "The project ends when its agreed change is accepted and handed over. The service continues to receive requests. Place the handover between the two so that support, recurring capacity and exceptions do not disappear when the project team leaves.",
+          "diagram": {
+            "kind": "compare",
+            "items": [
+              {
+                "label": "Project: introduce booking",
+                "detail": "Temporary work: design, test, train and obtain acceptance.",
+                "icon": "briefcase"
+              },
+              {
+                "label": "Handover: confirm readiness",
+                "detail": "Show the service owner, support route and unresolved actions.",
+                "icon": "link"
+              },
+              {
+                "label": "Operations: run the desk",
+                "detail": "Repeat registration, support users and monitor service quality.",
+                "icon": "repeat"
+              }
+            ]
+          },
+          "caption": "Conceptual lifecycle comparison for the fictional placement service; these are responsibilities, not recorded approvals.",
+          "takeaway": "A launch date does not remove the need for an operational owner."
+        },
+        {
+          "id": "pm-m1-t1-2",
+          "section": "2. Outputs, outcomes and benefits",
+          "title": "A delivered form is only the first link",
+          "explanation": "Each arrow is a hypothesis to test. A working form might reduce repeat visits, but only if learners can use it and staff adopt the new process. A benefit review must check quality and access alongside handling time.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Output: booking form",
+                "detail": "Evidence: a tested, accepted deliverable.",
+                "icon": "file"
+              },
+              {
+                "label": "Outcome: fewer repeat visits",
+                "detail": "Evidence: observed journeys and repeat-visit records.",
+                "icon": "users"
+              },
+              {
+                "label": "Benefit: staff time released",
+                "detail": "Evidence: comparable handling times, errors and access after handover.",
+                "icon": "chart"
+              }
+            ]
+          },
+          "caption": "Conceptual benefit chain. The lesson’s 240 × (6 − 4) = 480 minutes is a synthetic forecast, not observed savings.",
+          "takeaway": "Assign an owner and a measurement point to the benefit, not only to the output."
+        },
+        {
+          "id": "pm-m1-t1-3",
+          "section": "3. Constraints and a minimum useful change",
+          "title": "Protect the useful core, negotiate the optional edge",
+          "explanation": "A fixed event date makes trade-offs necessary; it does not make every constraint negotiable. Keep safe, accessible booking inside the minimum useful change. Route optional additions and unauthorised spending to the sponsor with evidence.",
+          "diagram": {
+            "kind": "hub",
+            "items": [
+              {
+                "label": "Time",
+                "detail": "Check the event date and the work that must precede it.",
+                "icon": "clock"
+              },
+              {
+                "label": "Cost",
+                "detail": "Show the proposed estimate and who can authorise it.",
+                "icon": "chart"
+              },
+              {
+                "label": "Scope",
+                "detail": "Separate core journeys from optional reminders.",
+                "icon": "layers"
+              },
+              {
+                "label": "Quality and risk",
+                "detail": "Do not remove mandatory access or safety checks.",
+                "icon": "shield"
+              }
+            ],
+            "center": "Useful pilot"
+          },
+          "caption": "Conceptual constraints map. It does not grant authority or assert that a real pilot has been approved.",
+          "takeaway": "Reduce optional scope before quietly weakening mandatory acceptance.",
+          "checkpoint": {
+            "question": "Does installing the form prove eight staff-hours were saved?",
+            "answer": "No. Eight hours is the synthetic handling-time forecast. Check measured time, errors and equitable access before making a benefit claim."
+          }
+        }
+      ]
+    },
+    "m1-t2": {
+      "introduction": "Turn a broad request into a visible approval route, a clear boundary and a testable acceptance decision. Read the diagrams as draft planning aids, not evidence of real authorisation.",
+      "sections": [
+        {
+          "id": "pm-m1-t2-1",
+          "section": "1. A charter creates a shared starting point",
+          "title": "A proposal must cross an explicit approval boundary",
+          "explanation": "The same charter can exist first as a draft and later as an authorised reference. What changes is the decision evidence: the named authority, decision, date and conditions. A polished document without that record is still a proposal.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Draft the charter",
+                "detail": "Problem, objective, sponsor, scope, deadline, budget limit and assumptions.",
+                "icon": "file"
+              },
+              {
+                "label": "Route the decision",
+                "detail": "Ask the appropriate authority; flag unapproved funding.",
+                "icon": "users"
+              },
+              {
+                "label": "Record the decision",
+                "detail": "Keep the approver, date, conditions and version, or show pending status.",
+                "icon": "check"
+              }
+            ]
+          },
+          "caption": "Conceptual approval route; no real sponsor decision is implied.",
+          "takeaway": "Preparation and authorisation are separate events."
+        },
+        {
+          "id": "pm-m1-t2-2",
+          "section": "2. Scope includes exclusions",
+          "title": "Draw three scope zones",
+          "explanation": "Use the approved boundary to classify work before promising it. Core booking journeys belong inside the proposed pilot; payments and external integrations need an explicit exclusion or separate decision. Recording a reminder request preserves it without silently accepting it.",
+          "diagram": {
+            "kind": "compare",
+            "items": [
+              {
+                "label": "Inside the proposed pilot",
+                "detail": "Create, amend and cancel bookings with agreed checks.",
+                "icon": "check"
+              },
+              {
+                "label": "Outside the pilot",
+                "detail": "Payments or external employer integration unless separately approved.",
+                "icon": "shield"
+              },
+              {
+                "label": "Logged for decision",
+                "detail": "Optional reminders: explain value, impact and decision owner.",
+                "icon": "message"
+              }
+            ]
+          },
+          "caption": "Illustrative scope classification for the fictional case. Confirm the actual agreed baseline before treating a request as a change.",
+          "takeaway": "A useful request can be outside the current scope."
+        },
+        {
+          "id": "pm-m1-t2-3",
+          "section": "3. Acceptance is evidence, not enthusiasm",
+          "title": "Set the test rule before seeing the result",
+          "explanation": "An acceptance proportion is an observation, not a self-approving threshold. Define the journeys, reviewer, test conditions and pass rule first. Then compare the evidence, record defects and make the decision within the correct authority.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Agree the criteria",
+                "detail": "Who tests what, with which sample and expected result?",
+                "icon": "target"
+              },
+              {
+                "label": "Run the journeys",
+                "detail": "Create, amend and cancel; record independent completion and defects.",
+                "icon": "users"
+              },
+              {
+                "label": "Compare and decide",
+                "detail": "37/40 = 92.5%; apply the previously agreed rule and mandatory conditions.",
+                "icon": "check"
+              },
+              {
+                "label": "Record exceptions",
+                "detail": "Name the acceptor, outstanding actions and owners.",
+                "icon": "file"
+              }
+            ]
+          },
+          "caption": "Synthetic lesson example: 37 of 40 volunteers complete all journeys without assistance. A small volunteer sample does not establish universal usability.",
+          "takeaway": "Do not choose a convenient threshold after the test.",
+          "checkpoint": {
+            "question": "Does 92.5% automatically mean the pilot passes?",
+            "answer": "No. The pass rule and mandatory conditions must have been agreed before the test. Record exceptions and the authorised acceptance decision."
+          }
+        }
+      ]
+    },
+    "m1-t3": {
+      "introduction": "Make affected voices, ownership and communication visible. The RACI table is an illustrative role agreement, not a way to appoint people who have not agreed to the work.",
+      "sections": [
+        {
+          "id": "pm-m1-t3-1",
+          "section": "1. Interest, influence and impact are different",
+          "title": "Influence is not the same as impact",
+          "explanation": "Map influence and impact separately so that a low-power but highly affected learner has a feedback route. The grid helps choose engagement; it must not decide whose needs deserve consideration. Review the map when the service changes.",
+          "diagram": {
+            "kind": "matrix",
+            "xLabel": "Influence on decisions →",
+            "yLabel": "Impact of the change",
+            "columns": [
+              "Lower influence",
+              "Higher influence"
+            ],
+            "rows": [
+              "Higher impact",
+              "Lower impact"
+            ],
+            "items": [
+              {
+                "label": "Listen and enable input",
+                "detail": "Affected learners need accessible prototype feedback.",
+                "icon": "users"
+              },
+              {
+                "label": "Work closely",
+                "detail": "Service owners help shape acceptance and handover.",
+                "icon": "link"
+              },
+              {
+                "label": "Keep a route open",
+                "detail": "A less-affected group may still identify an important exception.",
+                "icon": "message"
+              },
+              {
+                "label": "Inform and consult as needed",
+                "detail": "Decision authority still needs relevant evidence without every meeting.",
+                "icon": "briefcase"
+              }
+            ]
+          },
+          "caption": "Illustrative engagement grid, not a ranking of people’s importance or a record of actual stakeholder positions.",
+          "takeaway": "High impact deserves an accessible voice even when influence is low."
+        },
+        {
+          "id": "pm-m1-t3-2",
+          "section": "2. RACI clarifies one deliverable at a time",
+          "title": "One decision per RACI row",
+          "explanation": "Pilot acceptance and a technical security approval are different decisions. Separating them lets each row have exactly one accountable role while retaining the appropriate expertise. The coordinator assembles evidence without automatically becoming every approver.",
+          "diagram": {
+            "kind": "raci",
+            "roles": [
+              "Sponsor",
+              "Coordinator",
+              "Student rep",
+              "IT admin",
+              "Staff"
+            ],
+            "items": [
+              {
+                "label": "Pilot acceptance",
+                "detail": "Sponsor answers for the acceptance decision; coordinator assembles evidence.",
+                "assignments": [
+                  "A",
+                  "R",
+                  "C",
+                  "C",
+                  "I"
+                ]
+              },
+              {
+                "label": "Separate security approval",
+                "detail": "Illustrative proposal: IT owns and performs its own security approval.",
+                "assignments": [
+                  "I",
+                  "C",
+                  "C",
+                  "RA",
+                  "I"
+                ]
+              }
+            ]
+          },
+          "caption": "The first row follows the lesson’s synthetic example; the separate IT row is an illustrative agreement to confirm, not a real appointment.",
+          "takeaway": "Do not put two unrelated approvals in one row to justify two Accountable roles."
+        },
+        {
+          "id": "pm-m1-t3-3",
+          "section": "3. Communication is a designed service",
+          "title": "Design each message around a recipient and a trigger",
+          "explanation": "Communication is more than sending a common update to everyone. Give each audience a useful decision or action, an accessible format and an escalation trigger. Put sensitive commercial information only in the appropriate restricted channel.",
+          "diagram": {
+            "kind": "compare",
+            "items": [
+              {
+                "label": "Sponsor decision brief",
+                "detail": "Sender: coordinator. Weekly summary, plus escalation when authority is exceeded.",
+                "icon": "briefcase"
+              },
+              {
+                "label": "Learner prototype review",
+                "detail": "Sender: team. Accessible review before acceptance; capture concerns and response.",
+                "icon": "users"
+              },
+              {
+                "label": "Operations readiness check",
+                "detail": "Sender: receiving owner. Before handover, verify support and unresolved actions.",
+                "icon": "repeat"
+              }
+            ]
+          },
+          "caption": "Illustrative communication plan. Actual cadence, recipients and channels require agreement.",
+          "takeaway": "A meeting should leave a decision or an action with an owner and a date.",
+          "checkpoint": {
+            "question": "Who is Accountable for pilot acceptance in the lesson example?",
+            "answer": "The placement sponsor. The coordinator is Responsible for assembling evidence; a separate security approval needs its own row."
+          }
+        }
+      ]
+    }
+  }
+}
