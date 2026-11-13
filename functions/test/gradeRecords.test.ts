@@ -1,47 +1,89 @@
 import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
-import {
-  deterministicGradeRecordId,
-  gradeStageAllows,
-  validateDraftGradeRecord,
-} from '../src/gradeRecords'
+import { deterministicGradeRecordId, gradeStageAllows, validateDraftGradeRecord } from '../src/gradeRecords'
 
 describe('official grade record validation', () => {
   it('normalizes a complete registrar draft', () => {
-    assert.deepEqual(validateDraftGradeRecord({
-      studentId: 'student-a',
-      semester: 3,
-      subject: 'Data Structures',
-      code: ' cs201 ',
-      credits: 4,
-      internal: 40,
-      external: 50,
-      total: 90,
-      grade: ' a+ ',
-      gradePoint: 10,
-    }), {
-      studentId: 'student-a',
-      semester: 3,
-      subject: 'Data Structures',
-      code: 'CS201',
-      credits: 4,
-      internal: 40,
-      external: 50,
-      total: 90,
-      grade: 'A+',
-      gradePoint: 10,
-    })
+    assert.deepEqual(
+      validateDraftGradeRecord({
+        studentId: 'student-a',
+        semester: 3,
+        subject: 'Data Structures',
+        code: ' cs201 ',
+        credits: 4,
+        internal: 40,
+        external: 50,
+        total: 90,
+        grade: ' a+ ',
+        gradePoint: 10,
+      }),
+      {
+        studentId: 'student-a',
+        semester: 3,
+        subject: 'Data Structures',
+        code: 'CS201',
+        credits: 4,
+        internal: 40,
+        external: 50,
+        total: 90,
+        grade: 'A+',
+        gradePoint: 10,
+      },
+    )
   })
 
   it('rejects inconsistent marks and out-of-range grade points', () => {
-    assert.throws(() => validateDraftGradeRecord({
-      studentId: 'student-a', semester: 1, subject: 'Physics', code: 'PHY1',
-      internal: 30, external: 50, total: 90, grade: 'A', gradePoint: 8,
-    }), /Total must equal/)
-    assert.throws(() => validateDraftGradeRecord({
-      studentId: 'student-a', semester: 1, subject: 'Physics', code: 'PHY1',
-      grade: 'A', gradePoint: 11,
-    }), /gradePoint must be between/)
+    assert.throws(
+      () =>
+        validateDraftGradeRecord({
+          studentId: 'student-a',
+          semester: 1,
+          subject: 'Physics',
+          code: 'PHY1',
+          internal: 30,
+          external: 50,
+          total: 90,
+          grade: 'A',
+          gradePoint: 8,
+        }),
+      /Total must equal/,
+    )
+    assert.throws(
+      () =>
+        validateDraftGradeRecord({
+          studentId: 'student-a',
+          semester: 1,
+          subject: 'Physics',
+          code: 'PHY1',
+          grade: 'A',
+          gradePoint: 11,
+        }),
+      /gradePoint must be between/,
+    )
+  })
+
+  it('rejects boolean and array numeric inputs rather than coercing them into marks', () => {
+    for (const internal of [true, false, [20], {}, Infinity, NaN]) {
+      assert.throws(() =>
+        validateDraftGradeRecord({
+          studentId: 'student-a',
+          semester: 1,
+          subject: 'Physics',
+          code: 'PHY1',
+          internal,
+        }),
+      )
+    }
+    assert.throws(
+      () =>
+        validateDraftGradeRecord({
+          studentId: 'student-a',
+          semester: true,
+          subject: 'Physics',
+          code: 'PHY1',
+        }),
+      /Student and semester/,
+    )
   })
 
   it('uses a stable tenant-qualified identity for one student/course/semester', () => {

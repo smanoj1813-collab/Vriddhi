@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   Upload, FileSpreadsheet, Download, CheckCircle, AlertTriangle,
   Loader2, Database, GraduationCap, TrendingUp, Users, Award,
@@ -7,7 +7,7 @@ import {
 } from 'lucide-react';
 import { parseResultFile, groupResultsByStudent, importResults, downloadResultTemplate } from '../api/resultImportApi';
 import type { ResultImportPreview, ParsedResult } from '../types/resultImport';
-import { checkBCUPassCriteria, getGradeFromMarks } from '@/shared/utils/bcuCompliance';
+import { getCollegeSchemePack } from '../api/schemePackApi';
 
 export default function ResultImporter() {
   const queryClient = useQueryClient();
@@ -18,9 +18,10 @@ export default function ResultImporter() {
   const [isParsing, setIsParsing] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
   const [importResult, setImportResult] = useState<{ imported: number; updated: number; failed: number; errors: any[] } | null>(null);
-  const [academicYear, setAcademicYear] = useState('2024-25');
+  const [academicYear, setAcademicYear] = useState('2026-27');
   const [examType, setExamType] = useState<'regular' | 'supplementary' | 'revaluation'>('regular');
-  const [scheme, setScheme] = useState('SEP 2024');
+  const collegeId = localStorage.getItem('vriddhi_college_id') || '';
+  const schemeQuery = useQuery({ queryKey: ['schemePack', collegeId, 'assigned'], queryFn: () => getCollegeSchemePack(collegeId), enabled: !!collegeId, retry: false });
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
@@ -34,9 +35,8 @@ export default function ResultImporter() {
     try {
       const result = await parseResultFile(selectedFile);
       setPreview(result);
-      // G1: grade/pass outcomes use the same scheme pack parseResultFile
-      // validated against (the college's assigned university pack).
-      const grouped = groupResultsByStudent(result.rows, result.schemePack);
+      // Preview and the server write path share the same course/assessment engine.
+      const grouped = groupResultsByStudent(result.rows, result.schemeConfiguration);
       setParsedResults(grouped);
       setActiveTab('preview');
     } catch (err) {
@@ -47,10 +47,10 @@ export default function ResultImporter() {
   };
 
   const handleImport = async () => {
-    if (parsedResults.length === 0) return;
+    if (parsedResults.length === 0 || !preview || preview.errors.length > 0) return;
     setIsImporting(true);
     try {
-      const result = await importResults(parsedResults, academicYear, examType, scheme);
+      const result = await importResults(parsedResults, academicYear, examType);
       setImportResult(result);
       queryClient.invalidateQueries({ queryKey: ['gradeRecords'] });
       queryClient.invalidateQueries({ queryKey: ['students'] });
@@ -70,11 +70,13 @@ export default function ResultImporter() {
           University Result Importer
         </h1>
         <p className="text-sm text-slate-500 mt-1">
-          Import BCU, BNU, Davangere, Rani Channamma results — graded against the college's scheme pack
-          {preview?.schemePack ? ` (${preview.schemePack.code}: ${preview.schemePack.semesterEndExam.defaultMaxMarks}+${preview.schemePack.internalAssessment.totalMarks}, ${preview.schemePack.passCriteria.aggregatePassPercentage}% agg)` : ''}
+          Karnataka college results — each student/semester follows its assigned programme/cohort scheme
+          {preview?.schemePack ? ` (primary ${preview.schemePack.code}: ${preview.schemePack.semesterEndExam.defaultMaxMarks}+${preview.schemePack.internalAssessment.totalMarks}, ${preview.schemePack.passCriteria.aggregatePassPercentage}% agg)` : ''}
         </p>
       </div>
 
+      {(!collegeId || schemeQuery.isError) && <div role="alert" className="rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900">{schemeQuery.error?.message || 'Select a college first.'} <a href="/admin/scheme-packs" className="underline">Configure Scheme Packs</a></div>}
+      <div className="rounded-xl border border-blue-200 bg-blue-50 p-4 text-sm text-blue-900">Import saves server-verified drafts to Official Grade Records. The college must review and publish them. Existing published results cannot be overwritten. No semester SGPA is written into the student’s CGPA.</div>
       {/* Stats Banner */}
       <div className="bg-gradient-to-br from-teal-600 to-teal-700 rounded-2xl p-5 text-white">
         <div className="flex items-start gap-4">
@@ -82,9 +84,9 @@ export default function ResultImporter() {
             <Database size={24} />
           </div>
           <div className="flex-1">
-            <h3 className="font-bold text-lg">Beat Uniclare + Manual Entry</h3>
+            <h3 className="font-bold text-lg">Review, validate and prepare official grade drafts</h3>
             <p className="text-sm text-teal-50 mt-1">
-              Uniclare only showed results. Vriddhi auto-imports from university Excel, calculates SGPA/CGPA per NEP, checks BCU pass criteria (35% uni + 40% aggregate), creates official grade records, and notifies students.
+              Course credits, component maxima, pass conditions and grade bands come from the explicitly activated policy. Failed courses retain their attempted credits in GPA but do not earn credits.
             </p>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-4">
               <div className="bg-slate-500/10 dark:bg-white/10 rounded-xl p-3">
@@ -92,16 +94,16 @@ export default function ResultImporter() {
                 <p className="font-bold">Calculated</p>
               </div>
               <div className="bg-slate-500/10 dark:bg-white/10 rounded-xl p-3">
-                <p className="text-xs text-teal-100 uppercase font-bold">BCU Pass Check</p>
-                <p className="font-bold">35% + 40%</p>
+                <p className="text-xs text-teal-100 uppercase font-bold">Pass criteria</p>
+                <p className="font-bold">Course policy</p>
               </div>
               <div className="bg-slate-500/10 dark:bg-white/10 rounded-xl p-3">
                 <p className="text-xs text-teal-100 uppercase font-bold">Grade Records</p>
-                <p className="font-bold">Auto Published</p>
+                <p className="font-bold">Approval required</p>
               </div>
               <div className="bg-slate-500/10 dark:bg-white/10 rounded-xl p-3">
                 <p className="text-xs text-teal-100 uppercase font-bold">Time Saved</p>
-                <p className="font-bold">~90% vs Manual</p>
+                <p className="font-bold">Bulk preparation</p>
               </div>
             </div>
           </div>
@@ -141,6 +143,7 @@ export default function ResultImporter() {
                   onChange={e => setAcademicYear(e.target.value)}
                   className="w-full px-3 py-2.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm"
                 >
+                  <option>2026-27</option>
                   <option>2024-25</option>
                   <option>2023-24</option>
                   <option>2025-26</option>
@@ -160,16 +163,7 @@ export default function ResultImporter() {
               </div>
               <div>
                 <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Scheme</label>
-                <select
-                  value={scheme}
-                  onChange={e => setScheme(e.target.value)}
-                  className="w-full px-3 py-2.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm"
-                >
-                  <option>SEP 2024</option>
-                  <option>SEP 2024-25</option>
-                  <option>NEP 2020</option>
-                  <option>CBCS</option>
-                </select>
+                <p className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm">{schemeQuery.data ? `${schemeQuery.data.pack.code} · revision ${schemeQuery.data.revision}` : 'Configuration required'}</p>
               </div>
             </div>
           </div>
@@ -191,9 +185,9 @@ export default function ResultImporter() {
               <FileSpreadsheet className="w-12 h-12 text-slate-600 dark:text-slate-300 mx-auto mb-3" />
               <h4 className="font-bold text-slate-700 dark:text-slate-300">Upload Excel/CSV from University</h4>
               <p className="text-sm text-slate-500 mt-1 mb-4">
-                BCU/BNU portal export or manual Excel with regNo, subjectCode, internal, external, total, grade
+                University export or reviewed spreadsheet with regNo, semester, course, subjectCode and assessment marks
               </p>
-              <input type="file" accept=".xlsx,.xls,.csv" onChange={handleFileChange} className="hidden" id="result-file" />
+              <input disabled={!schemeQuery.data || isParsing || isImporting} type="file" accept=".xlsx,.xls,.csv" onChange={handleFileChange} className="hidden" id="result-file" />
               <label
                 htmlFor="result-file"
                 className="inline-flex items-center gap-2 px-6 py-3 bg-teal-600 hover:bg-teal-700 text-white rounded-xl text-sm font-bold cursor-pointer"
@@ -212,13 +206,13 @@ export default function ResultImporter() {
             <div className="mt-6 p-4 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 rounded-xl">
               <h4 className="font-bold text-amber-900 dark:text-amber-100 text-sm">Expected Columns</h4>
               <p className="text-xs font-mono bg-white dark:bg-slate-900 p-3 rounded-xl mt-2 overflow-x-auto">
-                regNo, name, semester, subjectCode, subjectName, credits, internal (0-20), external (0-80), total (0-100), grade (O,A+,A,B+...), gradePoint, result (P/F), course, batch, sgpa
+                regNo, name, semester, course, batch, subjectCode, subjectName, internal, external, total, credits (optional verification), grade (optional verification), gradePoint (optional verification), result (P/F/A/W)
               </p>
               <p className="text-xs text-amber-800 dark:text-amber-200 mt-2">
                 • internal+external auto-calculated to total if total missing<br />
                 • grade/gradePoint auto-calculated from total if missing<br />
-                • BCU pass check: 35% in external (28/80) + 40% aggregate<br />
-                • SGPA auto-calculated from credits × gradePoint
+                • Component maxima and pass criteria come from the course assessment profile<br />
+                • SGPA = Σ(credits × gradePoint) / GPA credits, including failed courses; withheld rows must be resolved
               </p>
             </div>
           </div>
@@ -322,7 +316,7 @@ export default function ResultImporter() {
                           <td className="py-3 px-4">{result.subjects.length} subs</td>
                           <td className="py-3 px-4">{result.totalMarks}/{result.maxTotalMarks}</td>
                           <td className="py-3 px-4">{result.percentage.toFixed(1)}%</td>
-                          <td className="py-3 px-4 font-bold text-teal-600">{result.sgpa.toFixed(2)}</td>
+                          <td className="py-3 px-4 font-bold text-teal-600">{result.sgpa?.toFixed(2) ?? '—'}</td>
                           <td className="py-3 px-4">
                             <span className={`px-2 py-0.5 rounded-full text-xs font-bold border ${
                               result.result === 'PASS' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
@@ -349,11 +343,11 @@ export default function ResultImporter() {
                 </button>
                 <button
                   onClick={handleImport}
-                  disabled={isImporting || preview.errors.length > 5}
+                  disabled={isImporting || !schemeQuery.data || preview.errors.length > 0 || parsedResults.length === 0 || !!importResult}
                   className="px-8 py-3 bg-teal-600 hover:bg-teal-700 text-white rounded-xl text-sm font-bold disabled:opacity-50 flex items-center gap-2"
                 >
                   {isImporting ? <Loader2 size={16} className="animate-spin" /> : <Database size={16} />}
-                  {isImporting ? 'Importing...' : `Import ${parsedResults.length} Students - Auto Publish Grade Records`}
+                  {isImporting ? 'Importing...' : `Save ${parsedResults.length} Student-Semester Drafts`}
                 </button>
               </div>
 
@@ -361,16 +355,16 @@ export default function ResultImporter() {
                 <div className="bg-white dark:bg-[#131b2e] border border-slate-200 dark:border-slate-800 rounded-2xl p-5">
                   <h3 className="font-bold mb-3 flex items-center gap-2">
                     <CheckCircle className="text-emerald-600" size={20} />
-                    Import Completed
+                    Draft import finished — review before publishing
                   </h3>
                   <div className="grid grid-cols-3 gap-4 mb-4">
                     <div className="text-center p-3 bg-emerald-50 dark:bg-emerald-950/20 rounded-xl">
                       <p className="text-2xl font-black text-emerald-600">{importResult.imported}</p>
-                      <p className="text-xs">Imported</p>
+                      <p className="text-xs">New drafts</p>
                     </div>
                     <div className="text-center p-3 bg-blue-50 dark:bg-blue-950/20 rounded-xl">
                       <p className="text-2xl font-black text-blue-600">{importResult.updated}</p>
-                      <p className="text-xs">Updated</p>
+                      <p className="text-xs">Existing drafts updated</p>
                     </div>
                     <div className="text-center p-3 bg-rose-50 dark:bg-rose-950/20 rounded-xl">
                       <p className="text-2xl font-black text-rose-600">{importResult.failed}</p>
@@ -395,7 +389,7 @@ export default function ResultImporter() {
         <div className="bg-white dark:bg-[#131b2e] border border-slate-200 dark:border-slate-800 rounded-2xl p-8 text-center">
           <BarChart3 className="w-12 h-12 text-slate-600 dark:text-slate-300 mx-auto mb-3" />
           <p className="font-bold">Import History</p>
-          <p className="text-sm text-slate-500 mt-1">Previous imports will appear here with stats: pass %, avg SGPA, grade distribution</p>
+          <p className="text-sm text-slate-500 mt-1">Review saved imports and their audit trail in Official Grade Records. Published corrections and supplementary attempt policies require a separate approved workflow.</p>
         </div>
       )}
     </div>

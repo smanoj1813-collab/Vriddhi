@@ -54,6 +54,7 @@ export default defineConfig({
       // A string `find` (not a regex) because Vite replaces only the matched
       // span: a regex that does not anchor at ^ would leave the '@/' prefix on.
       { find: '@/shared/providers/NotificationProvider', replacement: stub('notificationProvider.ts') },
+      { find: /^(?:\.\.\/)+shared\/providers\/NotificationProvider$/, replacement: stub('notificationProvider.ts') },
       { find: /^firebase\/firestore$/, replacement: stub('firestore.ts') },
       { find: /^firebase\/functions$/, replacement: stub('functions.ts') },
       // The app config's VitePWA plugin owns this virtual module; swap it for

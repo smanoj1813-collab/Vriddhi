@@ -153,6 +153,15 @@ export interface StudentNotificationData {
 }
 
 export interface StudentGradeData {
+  result?: string;
+  isPass?: boolean;
+  includeInGpa?: boolean;
+  category?: string;
+  updatedAt?: string;
+  publishedAt?: string;
+  createdAt?: string;
+  schemePackId?: string;
+  schemePackRevision?: number;
   id: string;
   subject: string;
   code: string;
@@ -662,21 +671,20 @@ export async function fetchGrades(collegeId: string | undefined, studentId: stri
   // Official transcript rows are separate from test attempts. The portal must
   // never invent credits, internal/external splits, grades, or grade points
   // from assessment percentages.
-  return safeQuery<StudentGradeData>(
+  const rows = await safeQuery<StudentGradeData>(
     query(
       collection(db, 'gradeRecords'),
       where('collegeId', '==', collegeId),
       where('studentId', '==', studentId),
       where('status', '==', 'published'),
-      orderBy('semester', 'desc'),
-      limit(200)
+      limit(500)
     ),
     (d) => {
       const grade = d.data() as Record<string, any>;
       return {
         id: d.id,
-        subject: String(grade.subject || grade.courseName || ''),
-        code: String(grade.code || grade.courseCode || ''),
+        subject: String(grade.subject || grade.subjectName || grade.courseName || ''),
+        code: String(grade.code || grade.subjectCode || grade.courseCode || ''),
         credits: typeof grade.credits === 'number' ? grade.credits : undefined,
         internal: typeof grade.internal === 'number' ? grade.internal : undefined,
         external: typeof grade.external === 'number' ? grade.external : undefined,
@@ -684,9 +692,22 @@ export async function fetchGrades(collegeId: string | undefined, studentId: stri
         grade: String(grade.grade || ''),
         gradePoint: typeof grade.gradePoint === 'number' ? grade.gradePoint : undefined,
         semester: Number(grade.semester) || 0,
+        result: typeof grade.result === 'string' ? grade.result : undefined,
+        isPass: typeof grade.isPass === 'boolean' ? grade.isPass : undefined,
+        includeInGpa: typeof grade.includeInGpa === 'boolean' ? grade.includeInGpa : undefined,
+        category: typeof grade.category === 'string' ? grade.category : undefined,
+        updatedAt: toIso(grade.updatedAt),
+        publishedAt: toIso(grade.publishedAt),
+        createdAt: toIso(grade.createdAt),
+        schemePackId: typeof grade.schemePackId === 'string' ? grade.schemePackId : undefined,
+        schemePackRevision: typeof grade.schemePackRevision === 'number' ? grade.schemePackRevision : undefined,
       };
     }
   );
+  // Never report a GPA from a silently truncated transcript. This is the same
+  // safe bound as Journey's student-specific grade query.
+  if (rows.length >= 500) throw new Error('Transcript exceeds the safe summary limit. Ask the college to review its grade records.');
+  return rows.sort((left, right) => right.semester - left.semester || left.code.localeCompare(right.code));
 }
 
 // ─── Notifications: mark read ─────────────────────────────────────────

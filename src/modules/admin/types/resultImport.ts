@@ -19,7 +19,7 @@ export interface ResultImportRow {
   subjectName: string;
   credits?: number;
   
-  // Marks - BCU pattern: Internal 20 + External 80 = 100
+  // Marks maxima and credits are resolved from an approved course/profile mapping.
   internal?: number;
   external?: number;
   total?: number;
@@ -84,13 +84,10 @@ export interface ResultImportBatch {
 }
 
 export interface ResultImportPreview {
+  schemeConfiguration: import('../../../../functions/src/academic/collegeSchemes').CollegeSchemeConfiguration;
   rows: ResultImportRow[];
-  /**
-   * G1: the scheme pack this file was validated against (college's assigned
-   * university pack; BCU default when unassigned). Pass it to
-   * groupResultsByStudent so grades/pass outcomes use the same rules.
-   */
-  schemePack?: import('@/shared/types/schemePack').UniversitySchemePack;
+  /** Primary display only. Row/group evaluation must use the full configuration. */
+  schemePack: import('@/shared/types/schemePack').UniversitySchemePack;
   summary: {
     totalStudents: number;
     totalSubjects: number;
@@ -117,6 +114,9 @@ export interface ParsedResult {
   regNo: string;
   usn?: string;
   semester: number;
+  schemePackId: string;
+  schemePackRevision: number;
+  schemeConfigurationRevision?: number;
   course?: string;
   batch?: string;
   
@@ -130,14 +130,16 @@ export interface ParsedResult {
     maxMarks: number;
     grade: string;
     gradePoint: number;
-    result: 'P' | 'F';
+    result: 'P' | 'F' | 'A';
+    includeInGpa: boolean;
+    category: string;
     isPass: boolean;
   }>;
   
   totalMarks: number;
   maxTotalMarks: number;
   percentage: number;
-  sgpa: number;
+  sgpa: number | null;
   result: 'PASS' | 'FAIL' | 'ATKT';
   creditsEarned: number;
   totalCredits: number;

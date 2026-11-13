@@ -3,20 +3,10 @@ import { motion } from 'framer-motion';
 import { TrendingUp, Award, BookOpen, ChevronDown, ChevronUp, GraduationCap, Loader2, BarChart2 } from 'lucide-react';
 import { useAuth } from '../../auth/context/AuthContext';
 import { useStudentProfile } from '../hooks/useStudentProfile';
-import { fetchGrades } from '../api/studentDataApi';
+import { latestCreditRows, summarizeCredits } from '@/shared/utils/creditEngine';
+import { fetchGrades, type StudentGradeData } from '../api/studentDataApi';
 
-interface GradeRecord {
-  id: string;
-  subject: string;
-  code: string;
-  credits?: number;
-  internal?: number;
-  external?: number;
-  total?: number;
-  grade: string;
-  gradePoint?: number;
-  semester: number;
-}
+type GradeRecord = StudentGradeData;
 
 const gradeColors: Record<string, string> = {
   'A+': 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800',
@@ -46,7 +36,7 @@ export default function StudentGrades() {
     setLoading(true);
     setLoadError(null);
     fetchGrades(profile.collegeId || user?.collegeId, profile.id)
-      .then((data) => !cancelled && setGrades(data))
+      .then((data) => !cancelled && setGrades(latestCreditRows(data)))
       .catch((err) => {
         console.error('[StudentGrades] load failed:', err);
         if (!cancelled) {
@@ -59,7 +49,7 @@ export default function StudentGrades() {
 
   const semesterWise = useMemo(() => {
     return grades.reduce((acc, g) => {
-      const sem = g.semester || 1;
+      const sem = g.semester;
       if (!acc[sem]) acc[sem] = [];
       acc[sem].push(g);
       return acc;
@@ -80,22 +70,10 @@ export default function StudentGrades() {
     if (expandedSemester == null && semesters.length) setExpandedSemester(semesters[0]);
   }, [semesters, expandedSemester]);
 
-  const totalCredits = grades.reduce((sum, g) => sum + (g.credits ?? 0), 0);
-  const totalGradePoints = grades.reduce(
-    (sum, g) => sum + (g.gradePoint ?? 0) * (g.credits ?? 0),
-    0
-  );
-  const cgpa = totalCredits ? (totalGradePoints / totalCredits).toFixed(2) : '—';
-
-  const semesterGPA = (semester: number) => {
-    const list = semesterWise[semester] || [];
-    const credits = list.reduce((s, g) => s + (g.credits ?? 0), 0);
-    const points = list.reduce(
-      (s, g) => s + (g.gradePoint ?? 0) * (g.credits ?? 0),
-      0
-    );
-    return credits ? (points / credits).toFixed(2) : '—';
-  };
+  const creditSummary = summarizeCredits(grades);
+  const totalCredits = creditSummary.earnedCredits;
+  const cgpa = creditSummary.gpa?.toFixed(2) ?? '—';
+  const semesterGPA = (semester: number) => summarizeCredits(semesterWise[semester] || []).gpa?.toFixed(2) ?? '—';
 
   if (profileLoading || loading) {
     return (
@@ -176,6 +154,11 @@ export default function StudentGrades() {
         </div>
       </motion.div>
 
+      {grades.length > 0 && <div role="note" className="rounded-xl border border-blue-200 bg-blue-50 p-4 text-sm text-blue-900">
+        {creditSummary.attemptedCredits} attempted credits · {creditSummary.gpaCredits} GPA credits · {creditSummary.earnedCredits} earned credits.
+        GPA includes zero-point failures; only passed courses earn credits. Non-GPA courses are excluded from the GPA denominator.
+        {(creditSummary.invalidRows > 0 || creditSummary.pendingRows > 0) && ' Some published rows have incomplete credit/grade data. GPA is unavailable until the college resolves them.'}
+      </div>}
       {grades.length === 0 ? (
         <div className="text-center py-16 rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#131b2e] p-8 shadow-sm">
           <GraduationCap className="w-12 h-12 text-slate-600 dark:text-slate-400 mx-auto mb-3" />
@@ -218,7 +201,7 @@ export default function StudentGrades() {
                         {semester}
                       </span>
                       <div className="text-left">
-                        <p className="text-sm font-bold text-slate-900 dark:text-white">Semester {semester}</p>
+                        <p className="text-sm font-bold text-slate-900 dark:text-white">{semester ? `Semester ${semester}` : 'Semester not recorded'}</p>
                         <p className="text-xs text-slate-500 font-medium">{semesterWise[semester].length} courses &bull; SGPA: <span className="font-bold text-teal-600 dark:text-teal-400">{semesterGPA(semester)}</span></p>
                       </div>
                     </div>
@@ -282,13 +265,13 @@ export default function StudentGrades() {
                   .slice()
                   .sort((a, b) => a - b)
                   .map((semester) => {
-                    const gpa = parseFloat(semesterGPA(semester));
-                    const percentage = (gpa / 10) * 100;
+                    const gpa = summarizeCredits(semesterWise[semester]).gpa;
+                    const percentage = gpa === null ? 0 : (gpa / 10) * 100;
                     return (
                       <div key={semester} className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800">
                         <div className="flex justify-between text-xs font-bold mb-2">
                           <span className="text-slate-800 dark:text-slate-200">Semester {semester}</span>
-                          <span className="text-teal-700 dark:text-teal-400 font-extrabold text-sm">{gpa} SGPA</span>
+                          <span className="text-teal-700 dark:text-teal-400 font-extrabold text-sm">{gpa ?? '—'} SGPA</span>
                         </div>
                         <div className="h-3 bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden">
                           <motion.div

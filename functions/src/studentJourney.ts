@@ -15,6 +15,8 @@
 
 import * as admin from 'firebase-admin'
 import { HttpsError, onCall } from 'firebase-functions/v2/https'
+import { latestCreditRows, summarizeCredits, auditAssignedProgrammeCredits, type CreditRow } from './academic/creditEngine'
+import { resolveCollegeSchemesOnServer } from './schemePacks'
 
 interface JourneyStudent {
   uid: string
@@ -59,7 +61,7 @@ async function resolveStudent(uid: string, token: Record<string, unknown>): Prom
     collegeId,
     name: String(student.name || userData?.name || ''),
     regNo: String(student.regNo || student.registrationNumber || ''),
-    course: String(student.course || student.program || ''),
+    course: String(student.course || student.programme || student.program || ''),
     branch: String(student.branch || student.department || ''),
     batch: String(student.batch || student.academicYear || ''),
     division: String(student.division || student.section || ''),
@@ -85,13 +87,8 @@ function round(value: number, places = 2): number {
 }
 
 /** Credit-weighted mean of real grade points. Returns null when unpublished. */
-export function weightedCgpa(rows: Array<{ credits: number; gradePoint: number }>): number | null {
-  const usable = rows.filter((row) => row.credits > 0 && row.gradePoint > 0)
-  if (usable.length === 0) return null
-  const credits = usable.reduce((sum, row) => sum + row.credits, 0)
-  if (credits === 0) return null
-  const points = usable.reduce((sum, row) => sum + row.credits * row.gradePoint, 0)
-  return round(points / credits)
+export function weightedCgpa(rows: CreditRow[]): number | null {
+  return summarizeCredits(rows).gpa
 }
 
 // ─── Placement readiness ────────────────────────────────────────────────────
@@ -172,7 +169,7 @@ export const getMyAcademicJourney = onCall(
     const student = await resolveStudent(uid, request.auth?.token || {})
     const db = admin.firestore()
 
-    const [attendanceSnap, assessmentSnap, gradeSnap, rosterSnap] = await Promise.all([
+    const [attendanceSnap, assessmentSnap, gradeSnap, rosterSnap, myGradeSnap] = await Promise.all([
       db
         .collection('attendanceRecords')
         .where('collegeId', '==', student.collegeId)
@@ -191,7 +188,9 @@ export const getMyAcademicJourney = onCall(
         .where('collegeId', '==', student.collegeId)
         .limit(2000)
         .get(),
+      db.collection('gradeRecords').where('collegeId', '==', student.collegeId).where('studentId', '==', student.studentId).where('status', '==', 'published').limit(500).get(),
     ])
+    if (myGradeSnap.size >= 500) throw new HttpsError('resource-exhausted', 'Transcript exceeds the safe summary limit. Ask the college to review its grade records.')
 
     // ── Attendance: real marked rows, late counts as attended (matches the
     //    student attendance page so the two numbers can never disagree).
@@ -232,36 +231,37 @@ export const getMyAcademicJourney = onCall(
 
     // ── Grades: published transcript rows only. The portal never derives a
     //    grade or credit from a test percentage.
-    const myGrades = gradeSnap.docs
-      .map((doc) => doc.data())
-      .filter((row) => row.studentId === student.studentId)
-      .map((row) => ({
-        code: String(row.code || ''),
-        subject: String(row.subject || row.courseName || ''),
-        credits: Number(row.credits) || 0,
-        gradePoint: Number(row.gradePoint) || 0,
-        grade: String(row.grade || ''),
-        total: typeof row.total === 'number' ? row.total : null,
-        semester: Number(row.semester) || 0,
-      }))
-
-    const bySemester = new Map<number, Array<{ credits: number; gradePoint: number }>>()
-    myGrades.forEach((row) => {
+    const myGrades = latestCreditRows(myGradeSnap.docs.map(doc => {
+      const row = doc.data()
+      return {
+        id: doc.id, code: String(row.code || row.subjectCode || ''), subject: String(row.subject || row.subjectName || row.courseName || ''),
+        ...(typeof row.credits === 'number' ? { credits: row.credits } : {}),
+        ...(typeof row.gradePoint === 'number' ? { gradePoint: row.gradePoint } : {}),
+        grade: String(row.grade || ''), result: String(row.result || ''),
+        ...(typeof row.isPass === 'boolean' ? { isPass: row.isPass } : {}),
+        ...(typeof row.includeInGpa === 'boolean' ? { includeInGpa: row.includeInGpa } : {}),
+        category: String(row.category || ''), updatedAt: iso(row.updatedAt),
+        publishedAt: iso(row.publishedAt), createdAt: iso(row.createdAt),
+        total: typeof row.total === 'number' ? row.total : null, semester: Number(row.semester) || 0,
+      }
+    }))
+    const bySemester = new Map<number, CreditRow[]>()
+    myGrades.forEach(row => {
       const bucket = bySemester.get(row.semester) || []
-      bucket.push({ credits: row.credits, gradePoint: row.gradePoint })
-      bySemester.set(row.semester, bucket)
+      bucket.push(row); bySemester.set(row.semester, bucket)
     })
-
-    const semesters = [...bySemester.entries()]
-      .sort((left, right) => left[0] - right[0])
-      .map(([semester, rows]) => ({
-        semester,
-        sgpa: weightedCgpa(rows),
-        credits: rows.reduce((sum, row) => sum + row.credits, 0),
-      }))
-
-    const cgpa = weightedCgpa(myGrades)
-    const creditsEarned = myGrades.reduce((sum, row) => sum + row.credits, 0)
+    const semesters = [...bySemester.entries()].sort((a, b) => a[0] - b[0]).map(([semester, rows]) => {
+      const summary = summarizeCredits(rows)
+      return { semester, sgpa: summary.gpa, credits: summary.attemptedCredits, earnedCredits: summary.earnedCredits, gpaCredits: summary.gpaCredits }
+    })
+    const creditSummary = summarizeCredits(myGrades)
+    const cgpa = creditSummary.gpa
+    const creditsEarned = creditSummary.earnedCredits
+    // Historical transcripts remain viewable without today's configuration.
+    // An unavailable current plan is reported explicitly; it is never BCU.
+    const creditAudit = await resolveCollegeSchemesOnServer(student.collegeId)
+      .then(configuration => auditAssignedProgrammeCredits(myGrades, configuration, { programme: student.course || student.branch, batch: student.batch }))
+      .catch(err => ({ configured: false as const, creditRequirementsMet: false, reason: err instanceof Error ? err.message : 'College scheme unavailable' }))
 
     // ── Standing: rank across the real published CGPAs of the student's own
     //    batch and branch. Students with no published grades are excluded
@@ -281,13 +281,13 @@ export const getMyAcademicJourney = onCall(
         .map((doc) => doc.id)
     )
 
-    const cgpaByStudent = new Map<string, Array<{ credits: number; gradePoint: number }>>()
+    const cgpaByStudent = new Map<string, CreditRow[]>()
     gradeSnap.docs.forEach((doc) => {
       const row = doc.data()
       const studentId = String(row.studentId || '')
       if (!cohortIds.has(studentId)) return
       const bucket = cgpaByStudent.get(studentId) || []
-      bucket.push({ credits: Number(row.credits) || 0, gradePoint: Number(row.gradePoint) || 0 })
+      bucket.push(row as CreditRow)
       cgpaByStudent.set(studentId, bucket)
     })
 
@@ -298,7 +298,8 @@ export const getMyAcademicJourney = onCall(
 
     const myPosition = rankedCgpas.findIndex((entry) => entry.studentId === student.studentId)
     const cohortSize = rankedCgpas.length
-    const rank = myPosition >= 0 ? myPosition + 1 : null
+    const standingIncomplete = gradeSnap.size >= 2000 || rosterSnap.size >= 2000
+    const rank = !standingIncomplete && myPosition >= 0 ? myPosition + 1 : null
     // Percentile = share of the ranked cohort scoring below this student.
     const percentile =
       rank !== null && cohortSize > 1 ? round(((cohortSize - rank) / (cohortSize - 1)) * 100, 1) : null
@@ -349,11 +350,16 @@ export const getMyAcademicJourney = onCall(
         semesters,
         cgpa,
         creditsEarned,
+        attemptedCredits: creditSummary.attemptedCredits,
+        gpaCredits: creditSummary.gpaCredits,
+        incompleteRows: creditSummary.invalidRows + creditSummary.pendingRows,
+        creditAudit,
       },
       standing: {
         branch: student.branch,
         batch: student.batch,
         cohortSize,
+        incomplete: standingIncomplete,
         rank,
         percentile,
       },

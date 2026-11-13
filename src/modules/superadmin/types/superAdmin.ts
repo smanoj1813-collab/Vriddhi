@@ -32,6 +32,11 @@ export type PlanType = "basic" | "standard" | "premium" | "enterprise" | "pro";
 export type BillingCycle = "monthly" | "quarterly" | "yearly";
 
 export interface College {
+  /** Callable transport only; never a client-written academic snapshot. */
+  schemeSelection?: import('../../../../functions/src/academic/collegeSchemes').CollegeSchemeSelection;
+  expectedConfigurationRevision?: number;
+  schemeConfigurationRevision?: number;
+  primarySchemePackId?: string | null;
   id: string;
   name: string;
   code: string;
@@ -80,6 +85,8 @@ export interface College {
 }
 
 export interface CreateCollegeInput {
+  expectedConfigurationRevision?: number;
+  schemeSelection?: import('../../../../functions/src/academic/collegeSchemes').CollegeSchemeSelection;
   name: string;
   code: string;
   shortName?: string;

@@ -486,9 +486,14 @@ service cloud.firestore {
       // only in the Create College UI. Missing config preserves the historical
       // default of allowing onboarding until a superadmin explicitly disables it.
       allow create: if isSuperadmin()
+        && !request.resource.data.keys().hasAny(['schemePackId', 'schemePackSnapshot', 'schemePackRevision', 'schemePackAssignedAt', 'schemePackAssignedBy', 'schemePackAssignments', 'primarySchemePackId', 'schemePackRoutes', 'schemeConfigurationRevision'])
         && (!exists(/databases/$(database)/documents/systemConfig/app)
           || get(/databases/$(database)/documents/systemConfig/app).data.allowCollegeOnboarding == true);
-      allow update, delete: if isSuperadmin();
+      // Academic binding/snapshot changes are callable-only, even for platform
+      // clients. The server records explicit activation and the approved revision.
+      allow update: if isSuperadmin()
+        && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['schemePackId', 'schemePackSnapshot', 'schemePackRevision', 'schemePackAssignedAt', 'schemePackAssignedBy', 'schemePackAssignments', 'primarySchemePackId', 'schemePackRoutes', 'schemeConfigurationRevision']);
+      allow delete: if isSuperadmin();
 
       match /students/{id} {
         allow get: if ownsStudentProfile(id, resource.data)
@@ -1381,8 +1386,21 @@ service cloud.firestore {
     // (Admin SDK), which is the single door that validates slab/IA/grade
     // structure before a pack can poison result imports or hall tickets.
     match /schemePacks/{packId} {
-      allow get, list: if isSignedIn() && (isStaff() || sameCollege(resource.data));
+      allow get, list: if isSignedIn() && sameCollege(resource.data);
       allow create, update, delete: if false;
+
+      // Academic reviewers may inspect their own college's immutable policy
+      // history. A parent allow does not grant subcollection access implicitly.
+      match /revisions/{revisionId} {
+        allow read: if isSignedIn() && (isSuperadmin() || (role() in ['admin', 'principal', 'hod'] && sameCollege(resource.data)));
+        allow write: if false;
+      }
+    }
+
+    // Scheme revisions/audit are server-owned. Clients cannot rewrite policy history.
+    match /schemePackAudit/{auditId} {
+      allow read: if isSignedIn() && (isSuperadmin() || (role() in ['admin', 'principal', 'hod'] && sameCollege(resource.data)));
+      allow write: if false;
     }
 
     // Academic calendar (Auto-Scheduler v2 P4): public/college holidays,

@@ -43,6 +43,9 @@ jobs:
       - name: Render-check every page section
         run: npm run test:render
 
+      - name: Render-check academic configuration and result imports
+        run: npm run test:render:academic
+
       - name: Render-check previous-year papers
         run: npm run test:render:pyq
 

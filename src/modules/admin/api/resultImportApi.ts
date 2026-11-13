@@ -1,37 +1,15 @@
 // src/modules/admin/api/resultImportApi.ts
-// University Result Importer API - BCU, BNU, Davangere, Rani Channamma
+// Karnataka college result import: explicit scheme, approved courses, audited drafts.
 
 import * as XLSX from '@e965/xlsx';
-import { collection, getDocs, query, where, limit, writeBatch, doc, serverTimestamp } from 'firebase/firestore';
-import { db } from '@/Firebase/data';
-import { calculateSGPA } from '@/shared/utils/bcuCompliance';
-import {
-  checkSchemePassCriteria,
-  getSchemeGradeFromMarks,
-  DEFAULT_SCHEME_PACK,
-  type UniversitySchemePack,
-} from '@/shared/utils/schemeEngine';
-import { getCollegeSchemePack } from './schemePackApi';
+import { collection, getDocs, query, where, limit } from 'firebase/firestore';
+import { httpsCallable } from 'firebase/functions';
+import { db, functions } from '@/Firebase/data';
+import { getCollegeSchemeConfiguration } from './schemePackApi';
+import { evaluateImportRow } from '../utils/resultImportEngine';
+import { selectCollegeScheme } from '../../../../functions/src/academic/collegeSchemes';
+export { groupResultsByStudent } from '../utils/resultImportEngine';
 
-/**
- * G1: the college's assigned university pack, resolved once and reused for
- * the whole import session. parseResultFile awaits the first call; callers
- * that go straight to groupResultsByStudent pass `preview.schemePack` so no
- * import ever mixes two universities' rules.
- */
-let packMemo: { collegeId: string; promise: Promise<UniversitySchemePack> } | null = null;
-async function resolveSchemePack(): Promise<UniversitySchemePack> {
-  let collegeId = '';
-  try { collegeId = getCollegeId(); } catch { /* fall through to default */ }
-  if (!collegeId) return DEFAULT_SCHEME_PACK;
-  if (!packMemo || packMemo.collegeId !== collegeId) {
-    packMemo = {
-      collegeId,
-      promise: getCollegeSchemePack(collegeId).then((r) => r.pack).catch(() => DEFAULT_SCHEME_PACK),
-    };
-  }
-  return packMemo.promise;
-}
 import type { ResultImportRow, ResultImportPreview, ParsedResult } from '../types/resultImport';
 
 function getCollegeId(): string {
@@ -40,18 +18,14 @@ function getCollegeId(): string {
   return id;
 }
 
-function numeric(value: unknown): number {
-  const n = Number(value);
-  return Number.isFinite(n) ? n : 0;
-}
-
 function toString(value: unknown): string {
   return value == null ? '' : String(value).trim();
 }
 
 // Parse Excel/CSV file for result import
 export async function parseResultFile(file: File): Promise<ResultImportPreview> {
-  const pack = await resolveSchemePack();
+  const configuration = await getCollegeSchemeConfiguration(getCollegeId());
+  const { pack } = selectCollegeScheme(configuration);
   const buffer = await file.arrayBuffer();
   const workbook = XLSX.read(buffer, { type: 'array' });
   const sheetName = workbook.SheetNames[0];
@@ -79,9 +53,10 @@ export async function parseResultFile(file: File): Promise<ResultImportPreview> 
     if (h === 'internalmarks' || h === 'ia' || h === 'internal') headerMap['internal'] = idx;
     if (h === 'externalmarks' || h === 'external' || h === 'university' || h === 'ue') headerMap['external'] = idx;
     if (h === 'totalmarks' || h === 'total' || h === 'marks') headerMap['total'] = idx;
+    if (h === 'program' || h === 'programme') headerMap['course'] = idx;
   });
 
-  const requiredHeaders = ['regno', 'subjectcode', 'subjectname'];
+  const requiredHeaders = ['regno', 'semester', 'subjectcode', 'course'];
   const missingHeaders = requiredHeaders.filter(h => headerMap[h] === undefined);
   if (missingHeaders.length > 0) {
     throw new Error(`Missing required columns: ${missingHeaders.join(', ')}. Found: ${headers.join(', ')}. Expected: regNo, name, semester, subjectCode, subjectName, internal, external, total, credits, grade etc.`);
@@ -115,85 +90,27 @@ export async function parseResultFile(file: File): Promise<ResultImportPreview> 
       continue;
     }
 
-    const internal = getNum('internal');
-    const external = getNum('external');
-    let total = getNum('total');
-    const credits = getNum('credits') || 4;
-    const semester = getNum('semester') || 1;
-    const maxMarks = getNum('maxmarks') || 100;
-
-    // Auto-calculate total if not provided but internal+external present
-    if (total === undefined && internal !== undefined && external !== undefined) {
-      total = internal + external;
-    }
-
-    // Validate marks
     const rowErrors: string[] = [];
     const rowWarnings: string[] = [];
-
-    if (internal !== undefined && (internal < 0 || internal > 20)) {
-      rowWarnings.push(`Internal ${internal} out of expected 0-20 range`);
+    for (const field of ['internal', 'external', 'total', 'credits', 'semester', 'maxmarks', 'gradepoint']) {
+      if (get(field) && getNum(field) === undefined) rowErrors.push(`${field} is not a finite number`);
     }
-    if (external !== undefined && (external < 0 || external > 80)) {
-      rowWarnings.push(`External ${external} out of expected 0-80 range (BCU)`);
-    }
-    if (total !== undefined && (total < 0 || total > maxMarks)) {
-      rowErrors.push(`Total ${total} out of 0-${maxMarks} range`);
-    }
-
-    // Check pass criteria against the college's active scheme pack
-    if (external !== undefined && total !== undefined) {
-      const passCheck = checkSchemePassCriteria(
-        {
-          semesterEndMarks: external,
-          internalMarks: internal || 0,
-          maxSemesterEndMarks: pack.semesterEndExam.defaultMaxMarks,
-          maxInternalMarks: pack.internalAssessment.totalMarks,
-        },
-        pack,
-      );
-      if (!passCheck.isPass) {
-        rowWarnings.push(`Fail per ${pack.code}: ${passCheck.remarks}`);
-      }
-    }
-
-    const grade = get('grade');
-    const gradePoint = getNum('gradepoint');
-    const resultRaw = get('result').toUpperCase();
-    let result: 'P' | 'F' | 'A' | 'W' | 'PASS' | 'FAIL' = 'P';
-    if (resultRaw) {
-      if (['F', 'FAIL', 'FAILED'].includes(resultRaw)) result = 'F';
-      else if (['A', 'ABSENT'].includes(resultRaw)) result = 'A';
-      else if (['W', 'WITHHELD'].includes(resultRaw)) result = 'W';
-      else result = 'P';
-    }
-
-    rows.push({
-      rowNumber: i + 1,
-      regNo,
-      usn: get('usn') || regNo,
-      name: get('name') || get('studentname') || 'Unknown',
-      email: get('email'),
-      course: get('course') || get('program'),
-      batch: get('batch') || get('academicyear'),
-      semester,
-      subjectCode,
-      subjectName,
-      credits,
-      internal,
-      external,
-      total,
-      maxMarks,
-      grade,
-      gradePoint,
-      result,
-      sgpa: getNum('sgpa'),
-      cgpa: getNum('cgpa'),
-      marksCardNo: get('markscardno'),
-      isValid: rowErrors.length === 0,
-      errors: rowErrors,
-      warnings: rowWarnings,
-    });
+    const row: ResultImportRow = {
+      rowNumber: i + 1, regNo, usn: get('usn') || regNo, name: get('name') || 'Unknown', email: get('email'),
+      course: get('course'), batch: get('batch') || get('academicyear'), semester: getNum('semester') ?? NaN,
+      subjectCode, subjectName, credits: getNum('credits'), internal: getNum('internal'), external: getNum('external'),
+      total: getNum('total'), maxMarks: getNum('maxmarks'), grade: get('grade') || undefined, gradePoint: getNum('gradepoint'),
+      result: (get('result').toUpperCase() || undefined) as ResultImportRow['result'], marksCardNo: get('markscardno'),
+    };
+    try {
+      const rowPack = selectCollegeScheme(configuration, { programme: row.course, batch: row.batch, semester: row.semester }).pack;
+      const evaluated = evaluateImportRow(row, rowPack);
+      Object.assign(row, { credits: evaluated.credits, internal: evaluated.internal, external: evaluated.external, total: evaluated.total, maxMarks: evaluated.maxMarks, grade: evaluated.grade, gradePoint: evaluated.gradePoint, result: evaluated.result, subjectName: evaluated.subject });
+      if (!evaluated.isPass) rowWarnings.push(evaluated.remarks);
+    } catch (err) { rowErrors.push(err instanceof Error ? err.message : 'Invalid academic result'); }
+    row.isValid = rowErrors.length === 0;
+    row.errors = rowErrors; row.warnings = rowWarnings;
+    rows.push(row);
 
     if (rowErrors.length > 0) {
       errors.push({ rowNumber: i + 1, message: rowErrors.join('; ') });
@@ -203,11 +120,21 @@ export async function parseResultFile(file: File): Promise<ResultImportPreview> 
     }
   }
 
+  const identities = new Map<string, ResultImportRow>();
+  for (const row of rows) {
+    const key = `${row.regNo.trim().toUpperCase()}|${row.semester}|${row.subjectCode.trim().toUpperCase()}`;
+    const previous = identities.get(key);
+    if (previous) {
+      const message = `Duplicate student/semester/course (also row ${previous.rowNumber})`;
+      row.isValid = false; previous.isValid = false;
+      row.errors?.push(message); errors.push({ rowNumber: row.rowNumber, message });
+    } else identities.set(key, row);
+  }
   // Summary
   const uniqueStudents = new Set(rows.map(r => r.regNo)).size;
   const totalSubjects = rows.length;
-  const passCount = rows.filter(r => r.result === 'P' || r.result === 'PASS').length;
-  const failCount = rows.filter(r => r.result === 'F' || r.result === 'FAIL').length;
+  const passCount = rows.filter(r => r.isValid && (r.result === 'P' || r.result === 'PASS')).length;
+  const failCount = rows.filter(r => r.isValid && ['F', 'FAIL', 'A'].includes(r.result || '')).length;
   const totalMarks = rows.reduce((sum, r) => sum + (r.total || 0), 0);
   const averageMarks = rows.length > 0 ? totalMarks / rows.length : 0;
 
@@ -220,7 +147,8 @@ export async function parseResultFile(file: File): Promise<ResultImportPreview> 
 
   return {
     rows,
-    schemePack: pack,
+    schemePack: pack, // PRIMARY display only — each row is routed independently
+    schemeConfiguration: configuration,
     summary: {
       totalStudents: uniqueStudents,
       totalSubjects,
@@ -236,317 +164,48 @@ export async function parseResultFile(file: File): Promise<ResultImportPreview> 
   };
 }
 
-// Group rows by student for SGPA calculation
-export function groupResultsByStudent(
-  rows: ResultImportRow[],
-  pack: UniversitySchemePack = DEFAULT_SCHEME_PACK,
-): ParsedResult[] {
-  const byStudent = new Map<string, ResultImportRow[]>();
-
-  rows.forEach(row => {
-    if (!byStudent.has(row.regNo)) {
-      byStudent.set(row.regNo, []);
-    }
-    byStudent.get(row.regNo)!.push(row);
-  });
-
-  const results: ParsedResult[] = [];
-
-  byStudent.forEach((studentRows, regNo) => {
-    const first = studentRows[0];
-    
-    const subjects = studentRows.map(r => {
-      const internal = r.internal || 0;
-      const external = r.external || 0;
-      const total = r.total || (internal + external);
-      const maxMarks = r.maxMarks || 100;
-
-      // Auto grade if not provided
-      let grade = r.grade;
-      let gradePoint = r.gradePoint;
-      let isPass = r.result === 'P' || r.result === 'PASS';
-
-      if (!grade || gradePoint === undefined) {
-        const gradeInfo = getSchemeGradeFromMarks(total, maxMarks, pack);
-        grade = grade || gradeInfo.grade;
-        gradePoint = gradePoint ?? gradeInfo.gradePoint;
-        isPass = gradeInfo.grade !== 'F';
-      }
-
-      // Check pass per the college's scheme pack (max marks scale per course:
-      // maxMarks * SEE-share / (SEE + IA-split share)).
-      const maxTotal = pack.semesterEndExam.defaultMaxMarks + pack.internalAssessment.totalMarks;
-      const passCheck = checkSchemePassCriteria(
-        {
-          semesterEndMarks: external,
-          internalMarks: internal,
-          maxSemesterEndMarks: Math.round((pack.semesterEndExam.defaultMaxMarks * maxMarks) / maxTotal),
-          maxInternalMarks: Math.round((pack.internalAssessment.totalMarks * maxMarks) / maxTotal),
-        },
-        pack,
-      );
-      if (!passCheck.isPass) isPass = false;
-
-      return {
-        subjectCode: r.subjectCode,
-        subjectName: r.subjectName,
-        credits: r.credits || 4,
-        internal,
-        external,
-        total,
-        maxMarks,
-        grade: grade || 'F',
-        gradePoint: gradePoint || 0,
-        result: isPass ? 'P' as const : 'F' as const,
-        isPass,
-      };
-    });
-
-    const totalMarks = subjects.reduce((sum, s) => sum + s.total, 0);
-    const maxTotalMarks = subjects.reduce((sum, s) => sum + s.maxMarks, 0);
-    const percentage = maxTotalMarks > 0 ? (totalMarks / maxTotalMarks) * 100 : 0;
-    
-    const sgpa = calculateSGPA(subjects.map(s => ({ credits: s.credits, gradePoint: s.gradePoint })));
-    const creditsEarned = subjects.filter(s => s.isPass).reduce((sum, s) => sum + s.credits, 0);
-    const totalCredits = subjects.reduce((sum, s) => sum + s.credits, 0);
-    
-    const failedSubjects = subjects.filter(s => !s.isPass).length;
-    let result: 'PASS' | 'FAIL' | 'ATKT' = 'PASS';
-    if (failedSubjects > 0) {
-      result = failedSubjects <= 2 ? 'ATKT' : 'FAIL'; // ATKT if 1-2 subjects failed (BCU)
-    }
-
-    results.push({
-      studentId: undefined, // Will be resolved
-      studentName: first.name,
-      regNo,
-      usn: first.usn,
-      semester: first.semester,
-      course: first.course,
-      batch: first.batch,
-      subjects,
-      totalMarks,
-      maxTotalMarks,
-      percentage,
-      sgpa,
-      result,
-      creditsEarned,
-      totalCredits,
-    });
-  });
-
-  return results;
-}
-
-// Import results to Firestore
+// Official imports now use the SAME server-validated draft/publish workflow as
+// manual grade entry. Never publish nested shadow transcripts or overwrite CGPA.
 export async function importResults(
   parsedResults: ParsedResult[],
   academicYear: string,
   examType: 'regular' | 'supplementary' | 'revaluation' = 'regular',
-  scheme: string = 'SEP 2024'
-): Promise<{
-  imported: number;
-  updated: number;
-  failed: number;
-  errors: Array<{ regNo: string; message: string }>;
-}> {
+): Promise<{ imported: number; updated: number; failed: number; errors: Array<{ regNo: string; message: string }> }> {
   const collegeId = getCollegeId();
-  let imported = 0;
-  let updated = 0;
-  let failed = 0;
+  const configuration = await getCollegeSchemeConfiguration(collegeId); // fresh snapshots, never a fallback
+  if (parsedResults.some(r => { const policy = selectCollegeScheme(configuration, { programme: r.course, batch: r.batch, semester: r.semester }); return r.schemePackId !== policy.schemePackId || r.schemePackRevision !== policy.revision || r.schemeConfigurationRevision !== configuration.revision; })) throw new Error('College scheme changed since preview. Parse the file again before saving.');
+  const save = httpsCallable<Record<string, unknown>, { saved: number; created?: number; updated?: number }>(functions, 'saveDraftGradeRecords');
+  let imported = 0; let updated = 0; let failed = 0;
   const errors: Array<{ regNo: string; message: string }> = [];
-
-  // Batch processing - Firestore batch max 500 operations
-  const batches: Array<ReturnType<typeof writeBatch>> = [];
-  let currentBatch = writeBatch(db);
-  let operationCount = 0;
-
   for (const result of parsedResults) {
     try {
-      // Find student by regNo
-      const studentQuery = query(
-        collection(db, 'students'),
-        where('collegeId', '==', collegeId),
-        where('regNo', '==', result.regNo),
-        limit(1)
-      );
-      let studentSnap = await getDocs(studentQuery);
-      
-      // Try USN if regNo not found
-      if (studentSnap.docs.length === 0 && result.usn) {
-        const usnQuery = query(
-          collection(db, 'students'),
-          where('collegeId', '==', collegeId),
-          where('usn', '==', result.usn),
-          limit(1)
-        );
-        studentSnap = await getDocs(usnQuery);
+      let students: Awaited<ReturnType<typeof getDocs>> | undefined;
+      for (const [field, value] of [['regNo', result.regNo], ['usn', result.usn], ['registrationNumber', result.regNo]]) {
+        if (!value) continue;
+        const snap = await getDocs(query(collection(db, 'students'), where('collegeId', '==', collegeId), where(field!, '==', value), limit(2)));
+        if (snap.size > 1) throw new Error('Multiple student profiles match this registration number. Resolve the duplicate first.');
+        if (!snap.empty) { students = snap; break; }
       }
-
-      // Try registrationNumber
-      if (studentSnap.docs.length === 0) {
-        const regQuery = query(
-          collection(db, 'students'),
-          where('collegeId', '==', collegeId),
-          where('registrationNumber', '==', result.regNo),
-          limit(1)
-        );
-        studentSnap = await getDocs(regQuery);
-      }
-
-      if (studentSnap.docs.length === 0) {
-        errors.push({ regNo: result.regNo, message: `Student not found in Vriddhi for ${result.regNo} (${result.studentName})` });
-        failed++;
-        continue;
-      }
-
-      const studentId = studentSnap.docs[0].id;
-      const studentData = studentSnap.docs[0].data();
-
-      // For each subject, create/update grade record
-      for (const subject of result.subjects) {
-        if (operationCount >= 400) {
-          batches.push(currentBatch);
-          currentBatch = writeBatch(db);
-          operationCount = 0;
-        }
-
-        // Check if grade record exists
-        const gradeQuery = query(
-          collection(db, 'colleges', collegeId, 'gradeRecords'),
-          where('studentId', '==', studentId),
-          where('code', '==', subject.subjectCode),
-          where('semester', '==', result.semester),
-          limit(1)
-        );
-        const gradeSnap = await getDocs(gradeQuery);
-
-        const gradeData = {
-          collegeId,
-          studentId,
-          studentName: result.studentName || studentData.name || 'Unknown',
-          studentRegNo: result.regNo,
-          semester: result.semester,
-          subject: subject.subjectName,
-          code: subject.subjectCode,
-          credits: subject.credits,
-          internal: subject.internal,
-          external: subject.external,
-          total: subject.total,
-          grade: subject.grade,
-          gradePoint: subject.gradePoint,
-          status: 'published' as const,
-          result: subject.result,
-          isPass: subject.isPass,
-          academicYear,
-          examType,
-          scheme,
-          percentage: (subject.total / subject.maxMarks) * 100,
-          sgpa: result.sgpa,
-          resultStatus: result.result,
-          creditsEarned: result.creditsEarned,
-          totalCredits: result.totalCredits,
-          importedAt: serverTimestamp(),
-          updatedAt: serverTimestamp(),
-        };
-
-        if (gradeSnap.docs.length > 0) {
-          currentBatch.update(gradeSnap.docs[0].ref, {
-            ...gradeData,
-            updatedAt: serverTimestamp(),
-          });
-          updated++;
-        } else {
-          const newRef = doc(collection(db, 'colleges', collegeId, 'gradeRecords'));
-          currentBatch.set(newRef, {
-            ...gradeData,
-            createdAt: serverTimestamp(),
-          });
-          imported++;
-        }
-        operationCount++;
-
-        // Also create university result entry
-        if (operationCount >= 400) {
-          batches.push(currentBatch);
-          currentBatch = writeBatch(db);
-          operationCount = 0;
-        }
-
-        const resultRef = doc(collection(db, 'colleges', collegeId, 'universityResults'));
-        currentBatch.set(resultRef, {
-          collegeId,
-          studentId,
-          studentName: result.studentName,
-          regNo: result.regNo,
-          usn: result.usn || result.regNo,
-          course: result.course || studentData.course || '',
-          semester: result.semester,
-          academicYear,
-          subjectCode: subject.subjectCode,
-          subjectName: subject.subjectName,
-          credits: subject.credits,
-          internalMarks: subject.internal,
-          externalMarks: subject.external,
-          totalMarks: subject.total,
-          maxMarks: subject.maxMarks,
-          grade: subject.grade,
-          gradePoint: subject.gradePoint,
-          result: subject.result,
-          percentage: result.percentage,
-          sgpa: result.sgpa,
-          resultStatus: result.result,
-          examType,
-          scheme,
-          publishedAt: serverTimestamp(),
-          createdAt: serverTimestamp(),
-          updatedAt: serverTimestamp(),
-        });
-        operationCount++;
-      }
-
-      // Update student's overall SGPA/CGPA
-      if (operationCount >= 400) {
-        batches.push(currentBatch);
-        currentBatch = writeBatch(db);
-        operationCount = 0;
-      }
-
-      currentBatch.update(studentSnap.docs[0].ref, {
-        sgpa: result.sgpa,
-        cgpa: result.sgpa, // Simplified - would need all sems for CGPA
-        totalMarks: result.totalMarks,
-        percentage: result.percentage,
-        resultStatus: result.result,
-        lastResultSyncAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
+      if (!students || students.empty) throw new Error(`Student not found for ${result.regNo}`);
+      if (result.subjects.length > 200) throw new Error('At most 200 courses per student/semester can be saved at once');
+      const response = await save({ collegeId, schemePackId: result.schemePackId, schemePackRevision: result.schemePackRevision, schemeConfigurationRevision: configuration.revision,
+        importMetadata: { academicYear, examType },
+        records: result.subjects.map(subject => ({ studentId: students!.docs[0].id, semester: result.semester, code: subject.subjectCode, subject: subject.subjectName,
+          credits: subject.credits, internal: subject.internal, external: subject.external, total: subject.total, grade: subject.grade, gradePoint: subject.gradePoint, result: subject.result })),
       });
-      operationCount++;
-
-    } catch (err) {
-      errors.push({ regNo: result.regNo, message: err instanceof Error ? err.message : 'Unknown error' });
-      failed++;
-    }
+      imported += response.data.created ?? response.data.saved;
+      updated += response.data.updated ?? 0;
+    } catch (err) { failed++; errors.push({ regNo: result.regNo, message: err instanceof Error ? err.message : 'Draft could not be saved' }); }
   }
-
-  if (operationCount > 0) {
-    batches.push(currentBatch);
-  }
-
-  // Commit all batches
-  for (const batch of batches) {
-    await batch.commit();
-  }
-
   return { imported, updated, failed, errors };
 }
 
 export function downloadResultTemplate() {
-  const headers = ['regNo', 'name', 'semester', 'subjectCode', 'subjectName', 'credits', 'internal', 'external', 'total', 'grade', 'gradePoint', 'result', 'course', 'batch', 'sgpa'];
+  // Placeholders, not fictional BCU regulations, credits, grade points or SGPA.
+  // Optional derived columns stay blank; the assigned approved course supplies them.
+  const headers = ['regNo', 'name', 'semester', 'subjectCode', 'subjectName', 'credits', 'internal', 'external', 'total', 'grade', 'gradePoint', 'result', 'course', 'batch'];
   const sampleRows = [
-    ['BCU2024BCA001', 'Ramesh Kumar', '3', 'BCA301', 'Data Structures', '4', '18', '65', '83', 'A+', '9', 'P', 'BCA', '2024-25', '8.5'],
-    ['BCU2024BCA001', 'Ramesh Kumar', '3', 'BCA302', 'DBMS', '4', '16', '58', '74', 'A', '8', 'P', 'BCA', '2024-25', '8.5'],
-    ['BCU2024BCA002', 'Priya S', '3', 'BCA301', 'Data Structures', '4', '15', '35', '50', 'B', '6', 'P', 'BCA', '2024-25', '6.5'],
+    ['REPLACE_WITH_REG_NO', 'Student name', '1', 'APPROVED_COURSE_CODE', '', '', '', '', '', '', '', '', 'EXACT_PROGRAMME', 'ADMISSION_BATCH'],
   ];
 
   const csvContent = [headers.join(','), ...sampleRows.map(row => row.join(','))].join('\n');
@@ -554,7 +213,7 @@ export function downloadResultTemplate() {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = 'bcu_result_import_template.csv';
+  a.download = 'college_result_import_template.csv';
   a.click();
   URL.revokeObjectURL(url);
 }

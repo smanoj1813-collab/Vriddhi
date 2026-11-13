@@ -1,11 +1,17 @@
 import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
-import { evaluatePromotion, liveBacklogs, normalizePolicy, DEFAULT_PROMOTION_POLICY, type GradeLite } from '../src/promotionCore'
+import { evaluatePromotion, liveBacklogs, isFail, normalizePolicy, DEFAULT_PROMOTION_POLICY, type GradeLite } from '../src/promotionCore'
 
 const pass = (code: string, sem = 3): GradeLite => ({ subjectCode: code, subjectName: code, semester: sem, grade: 'A', gradePoint: 8, result: 'Pass', createdAt: '2026-06-01' })
 const fail = (code: string, sem = 3): GradeLite => ({ subjectCode: code, subjectName: code, semester: sem, grade: 'F', gradePoint: 0, result: 'Fail', createdAt: '2026-06-01' })
 
 describe('liveBacklogs', () => {
+  it('keeps absent/withheld courses uncleared without misclassifying passed non-GPA activities', () => {
+    assert.equal(isFail({ result: 'A', gradePoint: 8 }), true)
+    assert.equal(isFail({ result: 'W', gradePoint: 8 }), true)
+    assert.equal(isFail({ result: 'P', grade: 'P', gradePoint: 0, credits: 0, includeInGpa: false, isPass: true }), false)
+    assert.equal(isFail({ result: 'P', grade: 'P', gradePoint: 0, credits: 4, includeInGpa: true }), true)
+  })
   it('lists only subjects whose latest attempt failed', () => {
     const rows = liveBacklogs([
       fail('BCA301'), pass('BCA302'), fail('BCA303'),

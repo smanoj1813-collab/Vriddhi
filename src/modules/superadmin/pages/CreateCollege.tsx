@@ -4,8 +4,14 @@ import { useCreateCollege, useSystemConfig, useCollege, useUpdateCollege } from 
 import { useNotification } from '../../../shared/providers/NotificationProvider'
 import { Building2, ArrowLeft, Save, Loader2, Globe, MapPin, Phone, Mail } from 'lucide-react'
 import type { PlanType } from '../types/superAdmin'
+import { useQuery } from '@tanstack/react-query'
+import { listUniversities } from '../api/universityApi'
+import { CollegeSchemeSelector, useCollegeSchemeEditor } from '../../admin/components/CollegeSchemeSelector'
+import SchemeResearchCatalogue from '../../admin/components/SchemeResearchCatalogue'
+import { normalizeCollegeSchemeSelection } from '../../../../functions/src/academic/collegeSchemes'
 
 interface FormData {
+  universityId: string
   name: string
   code: string
   shortName: string
@@ -29,6 +35,7 @@ interface CreateCollegeProps {
 }
 
 const initialFormData: FormData = {
+  universityId: '',
   name: '',
   code: '',
   shortName: '',
@@ -57,13 +64,18 @@ const CreateCollege: React.FC<CreateCollegeProps> = ({ collegeId }) => {
   const [formData, setFormData] = useState<FormData>(initialFormData)
   const [errors, setErrors] = useState<Partial<Record<keyof FormData, string>>>({})
   const [prefilled, setPrefilled] = useState(false)
+  const academic = useCollegeSchemeEditor(collegeId)
+  const universities = useQuery({ queryKey: ['universities', 'college-onboarding'], queryFn: () => listUniversities({ limit: 100 }), retry: false })
+
+  useEffect(() => { setPrefilled(false); setFormData(initialFormData); setErrors({}) }, [collegeId])
 
   // Prefill the form once the existing college loads (edit mode only).
   useEffect(() => {
     if (!isEdit || prefilled) return
     const c = collegeQuery.data
-    if (!c) return
+    if (!c || c.id !== collegeId) return
     setFormData({
+      universityId: c.universityId || '',
       name: c.name || '',
       code: c.code || '',
       shortName: c.shortName || '',
@@ -81,7 +93,7 @@ const CreateCollege: React.FC<CreateCollegeProps> = ({ collegeId }) => {
       courses: c.courses ?? 0,
     })
     setPrefilled(true)
-  }, [isEdit, prefilled, collegeQuery.data])
+  }, [isEdit, prefilled, collegeQuery.data, collegeId])
 
   const validateForm = (): boolean => {
     const newErrors: Partial<Record<keyof FormData, string>> = {}
@@ -116,8 +128,12 @@ const CreateCollege: React.FC<CreateCollegeProps> = ({ collegeId }) => {
       return
     }
     if (!validateForm()) return
+    if (academic.loading || academic.error || academic.validationError) { showError(academic.error || academic.validationError || 'Wait for the college’s academic configuration to load'); return }
 
     const payload = {
+      universityId: formData.universityId,
+      schemeSelection: normalizeCollegeSchemeSelection(academic.selection),
+      expectedConfigurationRevision: academic.revision,
       name: formData.name.trim(),
       code: formData.code.trim(),
       shortName: formData.shortName.trim(),
@@ -430,12 +446,31 @@ const CreateCollege: React.FC<CreateCollegeProps> = ({ collegeId }) => {
           </div>
         </div>
 
+        <section className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 p-6 space-y-5">
+          <div>
+            <label className={labelClasses} htmlFor="college-university">Affiliated university</label>
+            <select id="college-university" name="universityId" value={formData.universityId} onChange={handleChange} className={inputClasses('universityId')} disabled={universities.isPending}>
+              <option value="">Not configured / autonomous institution</option>
+              {universities.data?.items.map(u => <option key={u.id} value={u.id}>{u.name} ({u.code})</option>)}
+            </select>
+            <p className="text-xs text-slate-500 mt-2">Affiliation uses the seeded university record. It never silently assigns academic rules. Autonomous or transitioning colleges may assign their own reviewed packs.</p>
+            {universities.error && <p role="alert">University list could not be loaded: {universities.error.message}</p>}
+          </div>
+          {academic.loading && !academic.error ? <p role="status">Loading scheme assignments…</p> : academic.error ? <p role="alert">{academic.error} <button type="button" className="underline" onClick={academic.reload}>Reload schemes</button></p> : <CollegeSchemeSelector choices={academic.choices} value={academic.selection} onChange={academic.setSelection} disabled={submitting} />}
+          <details className="mt-6 border-t border-slate-200 pt-4 dark:border-slate-700">
+            <summary className="cursor-pointer font-semibold">University scheme evidence & research drafts</summary>
+            <div className="mt-4"><SchemeResearchCatalogue universityCode={universities.data?.items.find(u => u.id === formData.universityId)?.code || ''} /></div>
+          </details>
+          {academic.needsReconfirmation && <p className="text-sm text-amber-700">Legacy single-pack assignment loaded. Saving pins the reviewed selection in the new multi-pack configuration.</p>}
+        </section>
+
         {/* Submit Buttons */}
         <div className="flex items-center justify-end gap-4 pt-4">
           <button
             type="button"
             onClick={() => {
               setFormData(initialFormData)
+              academic.reset()
               setErrors({})
             }}
             className="px-6 py-2.5 text-sm font-medium text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
@@ -444,7 +479,7 @@ const CreateCollege: React.FC<CreateCollegeProps> = ({ collegeId }) => {
           </button>
           <button
             type="submit"
-            disabled={submitting || systemConfig.isLoading || (!isEdit && systemConfig.data?.allowCollegeOnboarding === false)}
+            disabled={submitting || academic.loading || !!academic.error || !!academic.validationError || systemConfig.isLoading || (!isEdit && systemConfig.data?.allowCollegeOnboarding === false)}
             className="flex items-center gap-2 px-6 py-2.5 text-sm font-medium text-slate-900 dark:text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             {submitting ? (

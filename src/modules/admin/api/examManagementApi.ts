@@ -1,3 +1,5 @@
+import { selectCollegeScheme } from '../../../../functions/src/academic/collegeSchemes';
+import { studentAcademicContext } from '../../../../functions/src/academic/gradePolicy';
 // src/modules/admin/api/examManagementApi.ts
 // Karnataka University Examination Management API
 
@@ -30,8 +32,8 @@ import type {
   GenerateHallTicketsInput,
   AllotRoomsInput,
 } from '../types/examManagement';
-import { calculateSchemeAttendanceMarks, DEFAULT_SCHEME_PACK } from '@/shared/utils/schemeEngine';
-import { getCollegeSchemePack } from './schemePackApi';
+import { calculateSchemeAttendanceMarks, assertProgrammeApplies } from '@/shared/utils/schemeEngine';
+import { getCollegeSchemeConfiguration } from './schemePackApi';
 
 function getCollegeId(): string {
   const id = localStorage.getItem('vriddhi_college_id');
@@ -157,9 +159,9 @@ export async function listExamSubjects(sessionId: string): Promise<ExamSubject[]
 
 export async function generateHallTickets(input: GenerateHallTicketsInput): Promise<{ generated: number; blocked: number; errors: string[] }> {
   const collegeId = getCollegeId();
-  // G1: attendance blocking + IA attendance marks come from the college's
-  // assigned university scheme pack (BCU default when unassigned).
-  const pack = await getCollegeSchemePack(collegeId).then((r) => r.pack).catch(() => DEFAULT_SCHEME_PACK);
+  // Configuration errors stop generation; do not issue tickets using guessed rules.
+  const configuration = await getCollegeSchemeConfiguration(collegeId);
+  selectCollegeScheme(configuration); // require an explicitly configured primary, even for an empty roster
   const session = await getExamSession(input.examSessionId);
   if (!session) throw new Error('Exam session not found');
 
@@ -170,6 +172,7 @@ export async function generateHallTickets(input: GenerateHallTicketsInput): Prom
   
   const studentQuery = query(collection(db, 'students'), ...studentConstraints, limit(500));
   const studentSnap = await getDocs(studentQuery);
+  if (studentSnap.size >= 500) throw new Error('Student roster exceeds the safe hall-ticket read limit. Narrow the cohort before generating tickets.');
   
   let students = studentSnap.docs.map(d => ({ id: d.id, ...d.data() } as any));
   
@@ -188,10 +191,15 @@ export async function generateHallTickets(input: GenerateHallTicketsInput): Prom
 
   for (const student of students) {
     try {
+      const context = studentAcademicContext(student, session.semester);
+      const policy = selectCollegeScheme(configuration, context);
+      const pack = policy.pack;
+      if (input.minAttendancePercentage !== undefined && (!Number.isFinite(input.minAttendancePercentage) || input.minAttendancePercentage < pack.attendance.minimumPercentage || input.minAttendancePercentage > 100)) throw new Error('Attendance override may only be stricter than the assigned scheme minimum.');
+      assertProgrammeApplies(pack, { programme: student.course || student.programme || student.program || session.course || student.department });
       // Check attendance eligibility if required
       let attendanceEligibility: HallTicket['attendanceEligibility'] | undefined;
       
-      if (input.checkAttendanceEligibility) {
+      if (input.checkAttendanceEligibility || pack.attendance.blocksExamEligibility) {
         // Fetch attendance records for this student
         // Simplified: get overall attendance percentage
         const attendanceQuery = query(
@@ -201,6 +209,7 @@ export async function generateHallTickets(input: GenerateHallTicketsInput): Prom
           limit(200)
         );
         const attendanceSnap = await getDocs(attendanceQuery);
+        if (attendanceSnap.size >= 200) throw new Error('Attendance exceeds the safe eligibility read limit; no partial percentage will be used.');
         
         let present = 0;
         let total = attendanceSnap.docs.length;
@@ -221,9 +230,10 @@ export async function generateHallTickets(input: GenerateHallTicketsInput): Prom
           }
         });
 
-        const percentage = total > 0 ? (present / total) * 100 : 100;
+        if (total === 0) throw new Error('Attendance is missing; eligibility cannot be determined.');
+        const percentage = (present / total) * 100;
         // The admin override wins; otherwise the pack's ordinance floor rules.
-        const minPercentage = input.minAttendancePercentage || pack.attendance.minimumPercentage;
+        const minPercentage = input.minAttendancePercentage ?? pack.attendance.minimumPercentage;
         const isEligible = pack.attendance.blocksExamEligibility
           ? percentage >= minPercentage
           : true;
@@ -259,6 +269,9 @@ export async function generateHallTickets(input: GenerateHallTicketsInput): Prom
       
       const hallTicketData: Omit<HallTicket, 'id'> = {
         examSessionId: input.examSessionId,
+        schemePackId: policy.schemePackId,
+        schemePackRevision: policy.revision,
+        schemeConfigurationRevision: configuration.revision,
         collegeId,
         studentId: student.id,
         studentName: student.name || 'Unknown',
@@ -266,7 +279,7 @@ export async function generateHallTickets(input: GenerateHallTicketsInput): Prom
         uucmsCandidateId: student.uucmsCandidateId || student.candidateId,
         uucmsUSN: student.uucmsUSN || student.usn,
         course: student.course || session.course,
-        semester: student.semester || session.semester,
+        semester: session.semester, // exam context, not the student’s current-semester policy
         branch: student.branch,
         batch: student.batch || session.batch || '',
         photoUrl: student.photoUrl || student.avatar,

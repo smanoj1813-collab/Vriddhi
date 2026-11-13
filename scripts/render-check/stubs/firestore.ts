@@ -1,6 +1,6 @@
 // Records the calls components make, and returns empty docs so no network I/O.
 export const calls: string[] = [];
-export function collection(_db: any, ...p: string[]) { calls.push('collection:' + p.join('/')); return {}; }
+export function collection(_db: any, ...p: string[]) { calls.push('collection:' + p.join('/')); return { __collection: p.join('/') }; }
 export function doc(_db: any, ...p: string[]) {
   calls.push('doc:' + p.join('/'));
   // collectionPath/id mirror the real DocumentReference so a check can tell which
@@ -18,27 +18,33 @@ export function doc(_db: any, ...p: string[]) {
   };
 }
 let autoIdSeq = 0;
-export function query(..._a: any[]) { return {}; }
-export function where(f: string, op: string, v: any) { calls.push(`where:${f}${op}${v}`); return {}; }
+export function query(...args: any[]) { return { ...args[0], __constraints: args.slice(1) }; }
+export function where(f: string, op: string, v: any) { calls.push(`where:${f}${op}${v}`); return { __field: f, __operator: op, __value: v }; }
 export function orderBy(..._a: any[]) { return {}; }
-export function limit(_n: number) { return {}; }
+export function limit(n: number) { return { __limit: n }; }
 export async function getDoc(ref: any) {
   calls.push('getDoc:' + (ref?.__path ?? '?'));
   // A check that needs a document to exist (a challan being declared paid, for
   // instance) sets globalThis.__RC_FIRESTORE_DOC = { data: {...} }; unset, a
   // read misses, exactly as an empty collection does.
-  const seeded = (globalThis as any).__RC_FIRESTORE_DOC;
+  const byPath = (globalThis as any).__RC_FIRESTORE_BY_PATH;
+  const seeded = byPath ? { data: byPath[ref?.__path] } : (globalThis as any).__RC_FIRESTORE_DOC;
   if (seeded && seeded.data) {
     const path = String(ref?.__path ?? '');
     return { exists: () => true, data: () => seeded.data, id: path.split('/').pop() ?? '' };
   }
   return { exists: () => false, data: () => undefined, id: '' };
 }
-export async function getDocs(_q: any) {
+export async function getDocs(q: any) {
   // A render check can stand in for real rows by setting
   // globalThis.__RC_FIRESTORE_DOCS to [{ id, data: () => ({...}) }]. Unset,
   // the stub behaves exactly as before: an empty collection.
-  const seeded = (globalThis as any).__RC_FIRESTORE_DOCS;
+  const collections = (globalThis as any).__RC_FIRESTORE_COLLECTIONS;
+  let seeded = collections ? collections[q?.__collection] || [] : (globalThis as any).__RC_FIRESTORE_DOCS;
+  if (collections) for (const c of q?.__constraints || []) {
+    if (c?.__field && c.__operator === '==') seeded = seeded.filter((d: any) => d.data()[c.__field] === c.__value);
+    if (c?.__limit) seeded = seeded.slice(0, c.__limit);
+  }
   if (Array.isArray(seeded) && seeded.length > 0) {
     return { empty: false, size: seeded.length, docs: seeded, forEach: (cb: any) => seeded.forEach(cb) };
   }

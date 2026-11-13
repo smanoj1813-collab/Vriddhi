@@ -1,14 +1,7 @@
-// src/shared/utils/bcuCompliance.ts
-// BCU / Karnataka University Compliance Utilities
-// Based on BCU SEP 2024 Syllabus & NEP 2020 Model Regulations
-//
-// ─── G1 refactor ────────────────────────────────────────────────────────────
-// All evaluation logic moved to the scheme-pack engine
-// (src/shared/utils/schemeEngine.ts + types/schemePack.ts). Every export here
-// is a thin wrapper that binds the BCU_SEP_2024 pack, and every function
-// returns the same values (and the same prose) it did before G1 — this module
-// stays the BCU-specific facade while SchemePacks.tsx / schemePackApi.ts /
-// the result importer work with the college's actual university pack.
+// TEST ONLY: legacy G1 BCU compatibility fixture, retained for regression parity.
+// These historical template values are not newly verified university rules.
+// Keep this outside app/runtime source: production consumers must resolve an
+// explicitly assigned pack rather than importing a university-bound facade.
 
 import {
   calculateSchemeAttendanceMarks,
@@ -16,8 +9,8 @@ import {
   checkSchemePassCriteria,
   getSchemeGradeFromMarks,
   calculateSchemeSGPA,
-} from './schemeEngine';
-import { BCU_SEP_2024, type UniversitySchemePack } from '../types/schemePack';
+} from '../../src/academic/schemeEngine';
+import { BCU_SEP_2024, type UniversitySchemePack } from '../../src/academic/schemePack';
 
 const PACK = BCU_SEP_2024;
 
@@ -175,8 +168,8 @@ export interface PassCriteriaResult {
 }
 
 export function checkBCUPassCriteria(input: PassCriteriaInput): PassCriteriaResult {
-  const maxUni = input.maxUniversityMarks || 80;
-  const maxInt = input.maxInternalMarks || 20;
+  const maxUni = input.maxUniversityMarks ?? 80;
+  const maxInt = input.maxInternalMarks ?? 20;
   const r = checkSchemePassCriteria(
     {
       semesterEndMarks: input.universityMarks,

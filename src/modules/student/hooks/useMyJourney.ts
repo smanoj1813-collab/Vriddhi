@@ -12,6 +12,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { httpsCallable } from 'firebase/functions';
 import { functions } from '@/Firebase/data';
+import type { auditAssignedProgrammeCredits } from '@/shared/utils/creditEngine';
 
 export interface JourneyProfile {
   name: string;
@@ -51,8 +52,8 @@ export interface JourneyAssessments {
 export interface JourneySubject {
   code: string;
   subject: string;
-  credits: number;
-  gradePoint: number;
+  credits?: number;
+  gradePoint?: number;
   grade: string;
   total: number | null;
   semester: number;
@@ -70,6 +71,10 @@ export interface JourneyGrades {
   semesters: JourneySemester[];
   cgpa: number | null;
   creditsEarned: number;
+  attemptedCredits?: number;
+  gpaCredits?: number;
+  incompleteRows?: number;
+  creditAudit?: ReturnType<typeof auditAssignedProgrammeCredits>;
 }
 
 export interface JourneyStanding {
@@ -234,7 +239,7 @@ export function buildJourneyStages(journey: AcademicJourney): JourneyStage[] {
     description: 'Official transcript grades and CGPA',
     state: grades.published ? 'done' : 'upcoming',
     detail: grades.published
-      ? `CGPA ${grades.cgpa ?? '—'} across ${grades.creditsEarned} credits` +
+      ? `CGPA ${grades.cgpa ?? '—'} · ${grades.creditsEarned} credits earned` +
         (standing.rank !== null ? ` · rank ${standing.rank} of ${standing.cohortSize}` : '')
       : 'Your college has not published grades for you yet.',
   };

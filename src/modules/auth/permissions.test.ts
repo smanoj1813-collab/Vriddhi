@@ -52,6 +52,15 @@ test('academic workflow access is role-scoped to each step', () => {
   assert.equal(canAccessAdminPath('operations', '/admin/attendance'), false)
 })
 
+test('college scheme authoring routes match academic author roles, not scheduling or employee access', () => {
+  for (const role of ['superadmin', 'admin', 'principal', 'hod'] as const) {
+    assert.equal(canAccessAdminPath(role, '/admin/scheme-packs'), true, role)
+  }
+  for (const role of ['operations', 'accounts', 'employee', 'faculty', 'student', 'parent'] as const) {
+    assert.equal(canAccessAdminPath(role, '/admin/scheme-packs'), false, role)
+  }
+})
+
 test('payroll: accounts manages it and principal retains approval access', () => {
   assert.equal(canAccessAdminPath('principal', '/admin/payroll'), true)
   assert.equal(canAccessAdminPath('accounts', '/admin/payroll'), true)

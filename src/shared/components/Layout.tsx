@@ -405,7 +405,7 @@ const principalNav: SidebarEntry[] = [
     children: [
       { label: "Exam Management", path: "/admin/exam-management", icon: <Description fontSize="small" /> },
       { label: "UUCMS Integration", path: "/admin/uucms-integration", icon: <Business fontSize="small" /> },
-      { label: "BCU Compliance", path: "/admin/bcu-compliance", icon: <CheckCircle fontSize="small" /> },
+      { label: "Academic Compliance", path: "/admin/bcu-compliance", icon: <CheckCircle fontSize="small" /> },
       { label: "Scheme Packs", path: "/admin/scheme-packs", icon: <AccountBalance fontSize="small" /> },
       { label: "Result Importer", path: "/admin/result-importer", icon: <Assessment fontSize="small" /> },
     ],

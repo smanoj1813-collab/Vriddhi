@@ -196,7 +196,7 @@ export default function StudentJourneyPage() {
           suffix={grades.cgpa !== null ? '/10' : undefined}
           hint={
             grades.published
-              ? `${grades.creditsEarned} credits published`
+              ? `${grades.creditsEarned} credits earned`
               : 'Not published yet'
           }
           icon={<GraduationCap className="w-4 h-4" />}
@@ -350,6 +350,19 @@ export default function StudentJourneyPage() {
         )}
       </div>
 
+      {grades.published && <div role="note" className="rounded-xl border border-blue-200 bg-blue-50 p-4 text-sm text-blue-900">
+        Attempted: {grades.attemptedCredits ?? '—'} · GPA credits: {grades.gpaCredits ?? '—'} · Earned: {grades.creditsEarned}.
+        Failed courses stay in the GPA denominator but earn no credits.
+        {!!grades.incompleteRows && ' Some credit/grade data is incomplete; ask the college to review the published records.'}
+      </div>}
+      {grades.creditAudit && <div className="rounded-xl border border-slate-200 bg-white p-4 text-sm text-slate-700 dark:bg-slate-900 dark:text-slate-200">
+        <h2 className="font-bold">Programme credit audit (advisory)</h2>
+        {grades.creditAudit.configured ? <>
+          <p>{grades.creditAudit.creditRequirementsMet ? 'Configured credit requirements met. Institutional award approval is still required.' : `${grades.creditAudit.remainingCredits} credits remaining against the configured minimum.`}</p>
+          {grades.creditAudit.missingCourses.length > 0 && <p>Required courses to clear: {grades.creditAudit.missingCourses.join(', ')}</p>}
+          {grades.creditAudit.categories.map(c => <p key={c.category}>{c.category}: {c.earned} / {c.minimum} credits</p>)}
+        </> : <p>{grades.creditAudit.reason}</p>}
+      </div>}
       {/* PWA Install Card - Uniclare parity */}
       <PWAInstallCard variant="banner" />
 
@@ -376,7 +389,7 @@ export default function StudentJourneyPage() {
                         Semester {entry.semester}
                       </span>
                       <span className="text-slate-500">
-                        {entry.sgpa !== null ? `${entry.sgpa} SGPA` : '—'} · {entry.credits} credits
+                        {entry.sgpa !== null ? `${entry.sgpa} SGPA` : '—'} · {entry.credits} attempted credits
                       </span>
                     </div>
                     <div className="h-2 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
