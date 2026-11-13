@@ -96,9 +96,11 @@ describe('validateSchemePackDoc', () => {
     assert.deepEqual(PRESET_SCHEME_CODES, ['BCU_SEP_2024', 'KUD_NEP_CBAE', 'GENERIC_NEP_2020'])
   })
 
-  it('defaults status to active and trims notes', () => {
+  it('rejects unknown status and trims valid source notes', () => {
     const raw = validPack()
     raw.status = 'nonsense'
+    assert.throws(() => validateSchemePackDoc(raw), /status/)
+    raw.status = 'active'
     raw.sourceNote = '  verified 2026  '
     const pack = validateSchemePackDoc(raw)
     assert.equal(pack.status, 'active')

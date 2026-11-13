@@ -2612,3 +2612,60 @@ describe('legacy reads stay inside the caller\'s college', () => {
     await assertFails(getDoc(doc(db, 'attendanceSummaries', OTHER_STUDENT_ID)))
   })
 })
+
+// Academic policies must remain in the tenant and can only be activated by the
+// validated callable (including snapshot/revision changes made by a superadmin).
+describe('college scheme configuration trust boundary', () => {
+  async function seedPolicies() {
+    await testEnv.withSecurityRulesDisabled(async context => {
+      const db = context.firestore()
+      await Promise.all([
+        setDoc(doc(db, 'schemePacks', 'pack-a'), { collegeId: COLLEGE_A, code: 'TEST_A' }),
+        setDoc(doc(db, 'schemePacks', 'pack-b'), { collegeId: COLLEGE_B, code: 'TEST_B' }),
+        setDoc(doc(db, 'schemePacks', 'pack-a', 'revisions', '1'), { collegeId: COLLEGE_A, code: 'TEST_A', revision: 1 }),
+        setDoc(doc(db, 'schemePacks', 'pack-b', 'revisions', '1'), { collegeId: COLLEGE_B, code: 'TEST_B', revision: 1 }),
+        setDoc(doc(db, 'colleges', COLLEGE_A), { name: 'College A', schemePackId: 'BCU_SEP_2024' }),
+        setDoc(doc(db, 'schemePackAudit', 'audit-a'), { collegeId: COLLEGE_A, action: 'activated' }),
+        setDoc(doc(db, 'schemePackAudit', 'audit-b'), { collegeId: COLLEGE_B, action: 'activated' }),
+      ])
+    })
+  }
+  it('allows same-college pack reads, never other-college staff reads', async () => {
+    await seedPolicies()
+    for (const db of [adminContext().firestore(), facultyContext().firestore(), studentContext().firestore()]) {
+      await assertSucceeds(getDoc(doc(db, 'schemePacks', 'pack-a')))
+      await assertFails(getDoc(doc(db, 'schemePacks', 'pack-b')))
+    }
+    await assertSucceeds(getDoc(doc(superadminContext().firestore(), 'schemePacks', 'pack-b')))
+  })
+  it('forbids direct pack, audit and active binding writes for every client', async () => {
+    await seedPolicies()
+    for (const db of [adminContext().firestore(), superadminContext().firestore()]) {
+      await assertFails(updateDoc(doc(db, 'schemePacks', 'pack-a'), { code: 'FORGED' }))
+      await assertFails(updateDoc(doc(db, 'schemePacks', 'pack-a', 'revisions', '1'), { code: 'FORGED' }))
+      await assertFails(setDoc(doc(db, 'schemePackAudit', 'forged'), { collegeId: COLLEGE_A }))
+      await assertFails(updateDoc(doc(db, 'colleges', COLLEGE_A), { schemePackId: 'KUD_NEP_CBAE' }))
+      await assertFails(updateDoc(doc(db, 'colleges', COLLEGE_A), { schemePackSnapshot: {}, schemePackRevision: 100 }))
+      for (const protectedField of ['schemePackAssignments', 'primarySchemePackId', 'schemePackRoutes', 'schemeConfigurationRevision']) {
+        await assertFails(updateDoc(doc(db, 'colleges', COLLEGE_A), { [protectedField]: null }))
+        await assertFails(setDoc(doc(db, 'colleges', `forged-${protectedField}`), { name: 'Forged', [protectedField]: null }))
+      }
+    }
+    await assertSucceeds(updateDoc(doc(superadminContext().firestore(), 'colleges', COLLEGE_A), { name: 'Renamed college' }))
+    await assertFails(setDoc(doc(superadminContext().firestore(), 'colleges', 'forged-policy-college'), { name: 'New college', schemePackId: 'BCU_SEP_2024' }))
+  })
+  it('scopes saved revision reads to college academic reviewers', async () => {
+    await seedPolicies()
+    await assertSucceeds(getDoc(doc(adminContext().firestore(), 'schemePacks', 'pack-a', 'revisions', '1')))
+    await assertFails(getDoc(doc(adminContext().firestore(), 'schemePacks', 'pack-b', 'revisions', '1')))
+    await assertFails(getDoc(doc(studentContext().firestore(), 'schemePacks', 'pack-a', 'revisions', '1')))
+    await assertFails(getDoc(doc(facultyContext().firestore(), 'schemePacks', 'pack-a', 'revisions', '1')))
+    await assertSucceeds(getDoc(doc(superadminContext().firestore(), 'schemePacks', 'pack-b', 'revisions', '1')))
+  })
+  it('scopes policy audit reads to academic reviewers of the same college', async () => {
+    await seedPolicies()
+    await assertSucceeds(getDoc(doc(adminContext().firestore(), 'schemePackAudit', 'audit-a')))
+    await assertFails(getDoc(doc(adminContext().firestore(), 'schemePackAudit', 'audit-b')))
+    await assertFails(getDoc(doc(studentContext().firestore(), 'schemePackAudit', 'audit-a')))
+  })
+})

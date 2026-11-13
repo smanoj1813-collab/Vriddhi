@@ -1,0 +1,2286 @@
+[
+  {
+    "format": "vriddhi-karnataka-research-pack/v1",
+    "code": "KA_BU_RESEARCH",
+    "universityCode": "BU",
+    "status": "draft",
+    "assignable": false,
+    "verification": "partial",
+    "reviewedOn": "2026-11-13",
+    "scope": {
+      "programme": "B.Com (Regular)",
+      "framework": "SEP 2024",
+      "admissions": "2024-25 onward in mirrored document; amendments not verified",
+      "reviewedSemesters": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ]
+    },
+    "sources": [
+      {
+        "id": "S1",
+        "url": "https://www.dscasc.edu.in/images/BCom/syllabus/BcSEP.pdf",
+        "title": "Bangalore University B.Com SEP 2024 regulations and course matrix",
+        "authority": "college-mirror",
+        "access": "read-partial",
+        "readScope": "Beginning through Annexure I, semesters I–V; selected extract of VI; PDF text chunks 0–2"
+      }
+    ],
+    "observations": [
+      {
+        "topic": "attendance",
+        "detail": "75% attendance required; IA includes attendance5 + skill/lab5 + tests10. Attendance boundaries in the extracted slab table overlap and some values were not legible.",
+        "locator": "VII / IX",
+        "sourceIds": [
+          "S1"
+        ]
+      },
+      {
+        "topic": "assessment",
+        "detail": "Standard paper 20 IA + 80 SEE; tests average of two20-mark tests scaled to10. Compulsory EVS and other mapped50-mark courses use10/40.",
+        "locator": "IX / Annexure I",
+        "sourceIds": [
+          "S1"
+        ],
+        "value": {
+          "internalMaxMarks": 20,
+          "externalMaxMarks": 80,
+          "testCount": 2,
+          "testMaxMarksEach": 20,
+          "testWeight": 10
+        }
+      },
+      {
+        "topic": "pass",
+        "detail": "35% in university examination and40% aggregate per subject.",
+        "locator": "XI",
+        "sourceIds": [
+          "S1"
+        ],
+        "value": {
+          "externalPassPercentage": 35,
+          "aggregatePassPercentage": 40
+        }
+      },
+      {
+        "topic": "grade-points",
+        "detail": "Course GP is actual percentage divided by10: the example77% becomes7.7. Semester alpha grades are a separate classification, not the course GP ladder. The examples contain arithmetic/credit inconsistencies.",
+        "locator": "XII, computation of GPA",
+        "sourceIds": [
+          "S1"
+        ],
+        "value": {
+          "method": "percentage-divided-by-ten",
+          "example": {
+            "percentage": 77,
+            "gradePoint": 7.7
+          }
+        }
+      },
+      {
+        "topic": "credits",
+        "detail": "Semester-I matrix24credits. Example totals must not substitute for the programme award rule.",
+        "locator": "Annexure I",
+        "sourceIds": [
+          "S1"
+        ]
+      }
+    ],
+    "courseRows": [
+      {
+        "code": "Com-1.1",
+        "name": "Financial Accounting",
+        "credits": 4,
+        "semester": 1,
+        "internalMaxMarks": 20,
+        "externalMaxMarks": 80,
+        "sourceId": "S1"
+      },
+      {
+        "code": "Com-1.2",
+        "name": "Corporate Law",
+        "credits": 4,
+        "semester": 1,
+        "internalMaxMarks": 20,
+        "externalMaxMarks": 80,
+        "sourceId": "S1"
+      },
+      {
+        "code": "Com-1.3",
+        "name": "Modern Marketing",
+        "credits": 4,
+        "semester": 1,
+        "internalMaxMarks": 20,
+        "externalMaxMarks": 80,
+        "sourceId": "S1"
+      },
+      {
+        "code": "Com-1.4",
+        "name": "Business Quantitative Analysis",
+        "credits": 4,
+        "semester": 1,
+        "internalMaxMarks": 20,
+        "externalMaxMarks": 80,
+        "sourceId": "S1"
+      },
+      {
+        "code": "EVS-1",
+        "name": "Environmental Studies",
+        "credits": 2,
+        "semester": 1,
+        "internalMaxMarks": 10,
+        "externalMaxMarks": 40,
+        "sourceId": "S1"
+      }
+    ],
+    "blockers": [
+      "Obtain/cross-check the notified university-hosted regulations and amendments, not only this college mirror.",
+      "Clarify attendance slab endpoints and full marks for every compulsory/language/internship profile.",
+      "Verify official course alpha labels, failure treatment/rounding and the full programme award plan; correct inconsistent worked examples before use."
+    ],
+    "identityNotes": [],
+    "universityName": "Bangalore University"
+  },
+  {
+    "format": "vriddhi-karnataka-research-pack/v1",
+    "code": "KA_UOM_RESEARCH",
+    "universityCode": "UOM",
+    "status": "draft",
+    "assignable": false,
+    "verification": "partial",
+    "reviewedOn": "2026-11-13",
+    "scope": {
+      "programme": "BBA (not B.Com or specialised B.Com)",
+      "framework": "SEP 2024",
+      "admissions": "BBA first/second semesters, academic year2024-25",
+      "reviewedSemesters": [
+        1,
+        2
+      ]
+    },
+    "sources": [
+      {
+        "id": "S1",
+        "url": "https://sdmmmkmysore.in/docs/syllabus_sep_y1/B.B.A.%20UG%202024-25%20I%20YEAR.pdf",
+        "title": "University of Mysore BBA2024-25 notification, regulations and first-year syllabus",
+        "authority": "college-mirror",
+        "access": "read-partial",
+        "readScope": "Notification, I/II matrix, clauses I–IX start; PDF chunk0"
+      },
+      {
+        "id": "S2",
+        "url": "https://uni-mysore.ac.in/english-version/pdf/B.B.A.%20UG.pdf",
+        "title": "University-hosted BBA document",
+        "authority": "university",
+        "access": "unavailable",
+        "readScope": "Fetch returned HTTP500; no numeric evidence taken from failed fetch"
+      }
+    ],
+    "observations": [
+      {
+        "topic": "scope",
+        "detail": "Mirrored notification cites BOS10Jun2024, Faculty15Jun2024 and Academic Council28Jun2024 approval. This is BBA, not evidence for all UOM programmes.",
+        "locator": "Notification",
+        "sourceIds": [
+          "S1"
+        ]
+      },
+      {
+        "topic": "assessment",
+        "detail": "C1=10,C2=10,C3=80 for courses≥3credits;5+5+40 below3credits.",
+        "locator": "VIII",
+        "sourceIds": [
+          "S1"
+        ],
+        "value": {
+          "standard": [
+            10,
+            10,
+            80
+          ],
+          "belowThreeCredits": [
+            5,
+            5,
+            40
+          ]
+        }
+      },
+      {
+        "topic": "attendance",
+        "detail": "75% in each subject as stated in attendance clause.",
+        "locator": "V",
+        "sourceIds": [
+          "S1"
+        ],
+        "value": 75
+      },
+      {
+        "topic": "credits",
+        "detail": "I/II semesters are23credits each; Business Communication is3credits, unlike several other4credit majors.",
+        "locator": "First-year programme matrix",
+        "sourceIds": [
+          "S1"
+        ],
+        "value": {
+          "semester1": 23,
+          "semester2": 23
+        }
+      }
+    ],
+    "courseRows": [
+      {
+        "code": "Major 1.1",
+        "name": "Principles & Practices of Management",
+        "credits": 4,
+        "semester": 1,
+        "internalMaxMarks": 20,
+        "externalMaxMarks": 80,
+        "sourceId": "S1"
+      },
+      {
+        "code": "Major 1.2",
+        "name": "Fundamentals of Business Accounting",
+        "credits": 4,
+        "semester": 1,
+        "internalMaxMarks": 20,
+        "externalMaxMarks": 80,
+        "sourceId": "S1"
+      },
+      {
+        "code": "Major 1.3",
+        "name": "Business Economics",
+        "credits": 4,
+        "semester": 1,
+        "internalMaxMarks": 20,
+        "externalMaxMarks": 80,
+        "sourceId": "S1"
+      },
+      {
+        "code": "Major 1.4",
+        "name": "Business Communication",
+        "credits": 3,
+        "semester": 1,
+        "internalMaxMarks": 20,
+        "externalMaxMarks": 80,
+        "sourceId": "S1"
+      },
+      {
+        "code": "Compulsory 1.1",
+        "name": "Constitutional Values",
+        "credits": 2,
+        "semester": 1,
+        "internalMaxMarks": 10,
+        "externalMaxMarks": 40,
+        "sourceId": "S1"
+      }
+    ],
+    "blockers": [
+      "Cross-check the university-hosted original and all subsequent amendments.",
+      "Read/verify pass floors, course GP table and rounding, IA component definitions and the full six-semester award plan.",
+      "Do not substitute a2025-26 specialised B.Com, online, AEDP or parent-university syllabus for regular BBA."
+    ],
+    "identityNotes": [],
+    "universityName": "University of Mysore"
+  },
+  {
+    "format": "vriddhi-karnataka-research-pack/v1",
+    "code": "KA_KU_RESEARCH",
+    "universityCode": "KU",
+    "status": "draft",
+    "assignable": false,
+    "verification": "conflict",
+    "reviewedOn": "2026-11-13",
+    "scope": {
+      "programme": "B.Com; BCA has separate course-specific evidence",
+      "framework": "NEP (Revised) 2024, not the existing KUD NEP40/60 preset",
+      "admissions": "2024-25 onward per documents; final regulation approval unresolved",
+      "reviewedSemesters": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ]
+    },
+    "sources": [
+      {
+        "id": "S1",
+        "url": "https://www.kud.ac.in/file_upload/neprev24/draft/Draft-Regulations-for-UG%20Programmes%202024-25.pdf",
+        "title": "Draft Regulations for UG Programmes2024-25",
+        "authority": "university",
+        "access": "read-partial",
+        "readScope": "Cover and clauses through7.7; explicitly draft pending Chancellor approval"
+      },
+      {
+        "id": "S2",
+        "url": "https://www.kud.ac.in/file_upload/neprev24/Bcom/UpdatedBcomRevisedNEPI-to-VI-sem-wef-2024-25.pdf",
+        "title": "Karnatak University revised B.Com curriculum2024 onward",
+        "authority": "university",
+        "access": "read-partial",
+        "readScope": "27Jul2024 covering notification and first six semester matrix; chunk0"
+      },
+      {
+        "id": "S3",
+        "url": "https://www.kud.ac.in/file_upload/neprev24/BCA/BCA%201%20to%206th%20Sem%20Syllabus%202024-25.pdf",
+        "title": "Karnatak University BCA revised2024 syllabus",
+        "authority": "university",
+        "access": "read-partial",
+        "readScope": "Cover/notification, course matrix I–VI; chunk0; cover has inconsistent draft/2021/Chemistry template text"
+      }
+    ],
+    "observations": [
+      {
+        "topic": "assessment",
+        "detail": "DRAFT regulation:≥3credits100marks20/80; below3credits50marks10/40. Theory IA test1=5%,test2=5%,assignment10%; not BCU best2of3.",
+        "locator": "7.1–7.4",
+        "sourceIds": [
+          "S1"
+        ],
+        "value": {
+          "standard": [
+            20,
+            80
+          ],
+          "belowThreeCredits": [
+            10,
+            40
+          ],
+          "theoryIAWeights": [
+            5,
+            5,
+            10
+          ]
+        }
+      },
+      {
+        "topic": "pass",
+        "detail": "DRAFT:40% SEE and40% aggregate; no IA minimum; theory/practical pass independently.",
+        "locator": "7.6",
+        "sourceIds": [
+          "S1"
+        ],
+        "value": {
+          "externalPassPercentage": 40,
+          "aggregatePassPercentage": 40,
+          "internalPassPercentage": 0
+        }
+      },
+      {
+        "topic": "attendance",
+        "detail": "DRAFT:75% attendance for IA submission/SEE eligibility.",
+        "locator": "7.3(vi)",
+        "sourceIds": [
+          "S1"
+        ],
+        "value": 75
+      },
+      {
+        "topic": "grade-points",
+        "detail": "DRAFT rounds percentage to nearest integer.40→4,41–45→4.5,46–50→5, continuing in five-point bands to96–100→10. Fail/absent→0. This is not the BCU98/93/... table.",
+        "locator": "7.7",
+        "sourceIds": [
+          "S1"
+        ],
+        "value": {
+          "percentageRounding": "nearest-integer",
+          "thresholdsDescending": [
+            [
+              96,
+              10
+            ],
+            [
+              91,
+              9.5
+            ],
+            [
+              86,
+              9
+            ],
+            [
+              81,
+              8.5
+            ],
+            [
+              76,
+              8
+            ],
+            [
+              71,
+              7.5
+            ],
+            [
+              66,
+              7
+            ],
+            [
+              61,
+              6.5
+            ],
+            [
+              56,
+              6
+            ],
+            [
+              51,
+              5.5
+            ],
+            [
+              46,
+              5
+            ],
+            [
+              41,
+              4.5
+            ],
+            [
+              40,
+              4
+            ],
+            [
+              0,
+              0
+            ]
+          ]
+        }
+      },
+      {
+        "topic": "credits",
+        "detail": "B.Com Financial Accounting code B1COM1T1:4credits20/80. BCA C1BCA1T1 theory4credits20/80 and C1BCA1P1 lab2credits10/40 are separate papers.",
+        "locator": "Programme matrices",
+        "sourceIds": [
+          "S2",
+          "S3"
+        ]
+      }
+    ],
+    "courseRows": [
+      {
+        "code": "B 1 COM 1 T 1",
+        "name": "Financial Accounting",
+        "credits": 4,
+        "semester": 1,
+        "internalMaxMarks": 20,
+        "externalMaxMarks": 80,
+        "sourceId": "S2"
+      }
+    ],
+    "blockers": [
+      "Obtain the final notified/Chancellor-approved regulations and any corrigenda; draft regulations cannot authorize official grading.",
+      "Resolve inconsistent BCA cover/template text and verify final programme/course codes and components.",
+      "Verify full programme credit minima, optional course choices and exact admission-cohort applicability."
+    ],
+    "identityNotes": [
+      "Seed code KU maps to Karnatak University Dharwad; legacy preset branding uses KUD. Preserve IDs; do not create a second university automatically."
+    ],
+    "universityName": "Karnatak University"
+  },
+  {
+    "format": "vriddhi-karnataka-research-pack/v1",
+    "code": "KA_MANG_RESEARCH",
+    "universityCode": "MANG",
+    "status": "draft",
+    "assignable": false,
+    "verification": "conflict",
+    "reviewedOn": "2026-11-13",
+    "scope": {
+      "programme": "UG Arts/Science/Commerce; individual programme mappings still required",
+      "framework": "NEP2021 CBCS with multiple entry/exit",
+      "admissions": "Effective2021-22; not a2024 SEP pack",
+      "reviewedSemesters": []
+    },
+    "sources": [
+      {
+        "id": "S1",
+        "url": "https://www.mangaloreuniversity.ac.in/sites/default/files/2022/NEP_Regulations_2021.pdf",
+        "title": "Mangalore University NEP2021 regulations",
+        "authority": "university",
+        "access": "read-partial",
+        "readScope": "Commencement and clauses9,13–22; text chunks0,5–11; parser only first30pages"
+      }
+    ],
+    "observations": [
+      {
+        "topic": "scope",
+        "detail": "Regulations effective2021-22. Co-curricular activities are separately internally assessed.",
+        "locator": "1 /8.6",
+        "sourceIds": [
+          "S1"
+        ]
+      },
+      {
+        "topic": "assessment",
+        "detail": "Theory40IA/60SEE; practical50/50. C1/C2 each20%; session tests20%,seminar10%,assignment/field/project10% across the two IA phases. No IA minimum.",
+        "locator": "13.1",
+        "sourceIds": [
+          "S1"
+        ],
+        "value": {
+          "theory": [
+            40,
+            60
+          ],
+          "practical": [
+            50,
+            50
+          ]
+        }
+      },
+      {
+        "topic": "attendance",
+        "detail": "75% in each subject; no minimum attendance requirement for co-curricular/extension activities.",
+        "locator": "9.1",
+        "sourceIds": [
+          "S1"
+        ],
+        "value": 75
+      },
+      {
+        "topic": "pass",
+        "detail": "15(a) says35% written/practical+40% aggregate;15(b) requires40% SEE in each unit. These must be clarified before implementing a pass floor.",
+        "locator": "15(a)/(b)",
+        "sourceIds": [
+          "S1"
+        ]
+      },
+      {
+        "topic": "grade-points",
+        "detail": "Semester/programme alpha-sign classification is printed, but it is not sufficient evidence of the course GP conversion formula.",
+        "locator": "17",
+        "sourceIds": [
+          "S1"
+        ]
+      }
+    ],
+    "courseRows": [],
+    "blockers": [
+      "Obtain clarification/corrigendum for35% versus40% external pass clauses.",
+      "Verify the course GP conversion/rounding, programme-specific course codes/credits and award requirements.",
+      "Research SEP2024 separately; do not apply NEP2021 regulations to later admissions by default."
+    ],
+    "identityNotes": [],
+    "universityName": "Mangalore University"
+  },
+  {
+    "format": "vriddhi-karnataka-research-pack/v1",
+    "code": "KA_GU_RESEARCH",
+    "universityCode": "GU",
+    "status": "draft",
+    "assignable": false,
+    "verification": "source-required",
+    "reviewedOn": "2026-11-13",
+    "scope": {
+      "programme": "UG programme scope not yet verified",
+      "framework": "SEP2024 / NEP2021 / CBCS2019 exist as distinct listings",
+      "admissions": "Choose exact cohort only after obtaining the document",
+      "reviewedSemesters": []
+    },
+    "sources": [
+      {
+        "id": "S1",
+        "url": "https://gug.ac.in/page/regulations",
+        "title": "Gulbarga University regulations index",
+        "authority": "university",
+        "access": "index-only",
+        "readScope": "2024-25 SEP item uploaded17Feb2026; NEP05Oct2021 and CBCS29Jan2019 titles; download URLs absent from extracted table"
+      }
+    ],
+    "observations": [
+      {
+        "topic": "scope",
+        "detail": "Official regulations index separately lists2024-25 SEP,2021 NEP and2019 CBCS instruments. No numeric regulation body was retrieved.",
+        "locator": "Regulations table rows1,2,5,7",
+        "sourceIds": [
+          "S1"
+        ]
+      }
+    ],
+    "courseRows": [],
+    "blockers": [
+      "Retrieve the actual notified regulations/PDFs behind the index and all programme appendices.",
+      "Verify assessment profiles, pass floors, grade points/rounding, attendance and course/award credits; none is inferred from neighbouring universities."
+    ],
+    "identityNotes": [],
+    "universityName": "Gulbarga University"
+  },
+  {
+    "format": "vriddhi-karnataka-research-pack/v1",
+    "code": "KA_KUV_RESEARCH",
+    "universityCode": "KUV",
+    "status": "draft",
+    "assignable": false,
+    "verification": "partial",
+    "reviewedOn": "2026-11-13",
+    "scope": {
+      "programme": "B.Com",
+      "framework": "SEP2024",
+      "admissions": "Academic year2024-25 as printed",
+      "reviewedSemesters": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ]
+    },
+    "sources": [
+      {
+        "id": "S1",
+        "url": "http://www.kuvempu.ac.in/eng/SEP/Syllabus/B.Com.pdf",
+        "title": "Kuvempu University B.Com SEP2024 scheme",
+        "authority": "university",
+        "access": "read-partial",
+        "readScope": "Cover, semestersI–VI matrix and IA scheme; chunk0"
+      }
+    ],
+    "observations": [
+      {
+        "topic": "assessment",
+        "detail": "Standard20IA/80SEE; IA attendance5,assignment/seminar5,tests10; small matrix papers10/40. Attendance table prints75–80,80–85,... with shared endpoints.",
+        "locator": "IA and SEE scheme",
+        "sourceIds": [
+          "S1"
+        ],
+        "value": {
+          "standard": [
+            20,
+            80
+          ],
+          "smallPapers": [
+            10,
+            40
+          ],
+          "IAWeights": [
+            5,
+            5,
+            10
+          ]
+        }
+      },
+      {
+        "topic": "credits",
+        "detail": "All six printed semester totals24credits, total144. Languages3,majors4 and listed skills/compulsory papers2.",
+        "locator": "SemestersI–VI matrix",
+        "sourceIds": [
+          "S1"
+        ],
+        "value": {
+          "semesterTotals": [
+            24,
+            24,
+            24,
+            24,
+            24,
+            24
+          ],
+          "allocatedCredits": 144
+        }
+      }
+    ],
+    "courseRows": [
+      {
+        "code": "Com 1.1",
+        "name": "Financial Accounting-I",
+        "credits": 4,
+        "semester": 1,
+        "internalMaxMarks": 20,
+        "externalMaxMarks": 80,
+        "sourceId": "S1"
+      },
+      {
+        "code": "Com 1.2",
+        "name": "Principles and Practice of Management",
+        "credits": 4,
+        "semester": 1,
+        "internalMaxMarks": 20,
+        "externalMaxMarks": 80,
+        "sourceId": "S1"
+      },
+      {
+        "code": "Com 1.3",
+        "name": "Principles of Marketing",
+        "credits": 4,
+        "semester": 1,
+        "internalMaxMarks": 20,
+        "externalMaxMarks": 80,
+        "sourceId": "S1"
+      },
+      {
+        "code": "Com 1.4",
+        "name": "Law and Practice of Banking",
+        "credits": 4,
+        "semester": 1,
+        "internalMaxMarks": 20,
+        "externalMaxMarks": 80,
+        "sourceId": "S1"
+      },
+      {
+        "code": "CV 1.5",
+        "name": "Indian Constitution",
+        "credits": 2,
+        "semester": 1,
+        "internalMaxMarks": 10,
+        "externalMaxMarks": 40,
+        "sourceId": "S1"
+      }
+    ],
+    "blockers": [
+      "Verify notified pass rules, course GP formula/rounding and amendments; the syllabus matrix alone is insufficient.",
+      "Resolve attendance interval boundaries and verify IA test aggregation/count.",
+      "Verify internship assessment and exact required/elective award plan;144 allocated credits is not independently certified as the graduation minimum."
+    ],
+    "identityNotes": [],
+    "universityName": "Kuvempu University"
+  },
+  {
+    "format": "vriddhi-karnataka-research-pack/v1",
+    "code": "KA_TUM_RESEARCH",
+    "universityCode": "TUM",
+    "status": "draft",
+    "assignable": false,
+    "verification": "conflict",
+    "reviewedOn": "2026-11-13",
+    "scope": {
+      "programme": "B.Com (Regular)",
+      "framework": "SEP-CBCS2024",
+      "admissions": "2024-25 onward in programme regulations",
+      "reviewedSemesters": [
+        1,
+        2
+      ]
+    },
+    "sources": [
+      {
+        "id": "S1",
+        "url": "http://14.139.159.41/SEPS/BCOM.PDF",
+        "title": "Tumkur University B.Com SEP2024 regulations and first-year syllabus",
+        "authority": "university-linked",
+        "access": "read-partial",
+        "readScope": "Clauses1–19 and AnnexureI semestersI/II; chunks0–1"
+      },
+      {
+        "id": "S2",
+        "url": "https://tumkuruniversity.ac.in/ug-syllabus-sep/",
+        "title": "Tumkur University official SEP first-year syllabus index",
+        "authority": "university",
+        "access": "index-only",
+        "readScope": "Links the S1 university-hosted IP-address PDF"
+      }
+    ],
+    "observations": [
+      {
+        "topic": "assessment",
+        "detail": "20IA/80SEE; mean of two20-mark tests contributes10,attendance5,assignment/skills5.",
+        "locator": "10",
+        "sourceIds": [
+          "S1"
+        ],
+        "value": {
+          "internalMaxMarks": 20,
+          "externalMaxMarks": 80,
+          "testCount": 2,
+          "testWeight": 10
+        }
+      },
+      {
+        "topic": "attendance",
+        "detail": "75% per-course attendance. Detailed attendance-to-IA slab rule is not in the reviewed extract.",
+        "locator": "7",
+        "sourceIds": [
+          "S1"
+        ],
+        "value": 75
+      },
+      {
+        "topic": "pass",
+        "detail": "13(a) says35% written/practical and40% aggregate;13(b) requires40% SEE in each course for programme pass.",
+        "locator": "13(a)/(b)",
+        "sourceIds": [
+          "S1"
+        ]
+      },
+      {
+        "topic": "credits",
+        "detail": "13(g) says144credits(24×6). First-year matrix has24credits/semester; course codes1.3–1.6 are reused in semesterII, so semester scope is essential.",
+        "locator": "13(g),AnnexureI",
+        "sourceIds": [
+          "S1"
+        ],
+        "value": {
+          "printedMinimumCredits": 144,
+          "firstYearSemesterCredits": [
+            24,
+            24
+          ]
+        }
+      },
+      {
+        "topic": "grade-points",
+        "detail": "Nearest-integer percentage with98→10,93→9.5,...43→4.5,40→4 andbelow40→0. Programme alpha classification is separate.",
+        "locator": "16",
+        "sourceIds": [
+          "S1"
+        ],
+        "value": {
+          "percentageRounding": "nearest-integer",
+          "thresholdsDescending": [
+            [
+              98,
+              10
+            ],
+            [
+              93,
+              9.5
+            ],
+            [
+              88,
+              9
+            ],
+            [
+              83,
+              8.5
+            ],
+            [
+              78,
+              8
+            ],
+            [
+              73,
+              7.5
+            ],
+            [
+              68,
+              7
+            ],
+            [
+              63,
+              6.5
+            ],
+            [
+              58,
+              6
+            ],
+            [
+              53,
+              5.5
+            ],
+            [
+              48,
+              5
+            ],
+            [
+              43,
+              4.5
+            ],
+            [
+              40,
+              4
+            ],
+            [
+              0,
+              0
+            ]
+          ]
+        }
+      }
+    ],
+    "courseRows": [
+      {
+        "code": "1.3",
+        "name": "Financial Accounting",
+        "credits": 4,
+        "semester": 1,
+        "internalMaxMarks": 20,
+        "externalMaxMarks": 80,
+        "sourceId": "S1"
+      },
+      {
+        "code": "1.4",
+        "name": "Management Principles and Applications",
+        "credits": 4,
+        "semester": 1,
+        "internalMaxMarks": 20,
+        "externalMaxMarks": 80,
+        "sourceId": "S1"
+      },
+      {
+        "code": "1.5",
+        "name": "Principles of Marketing",
+        "credits": 4,
+        "semester": 1,
+        "internalMaxMarks": 20,
+        "externalMaxMarks": 80,
+        "sourceId": "S1"
+      },
+      {
+        "code": "1.6",
+        "name": "Business Mathematics / Corporate Administration",
+        "credits": 4,
+        "semester": 1,
+        "internalMaxMarks": 20,
+        "externalMaxMarks": 80,
+        "sourceId": "S1"
+      },
+      {
+        "code": "1.3",
+        "name": "Advanced Financial Accounting",
+        "credits": 4,
+        "semester": 2,
+        "internalMaxMarks": 20,
+        "externalMaxMarks": 80,
+        "sourceId": "S1"
+      }
+    ],
+    "blockers": [
+      "Obtain clarification of35% versus40% SEE requirements before course grading.",
+      "Verify exact attendance IA slabs,50mark component rules and all semesters/corrigenda.",
+      "Validate reused course codes with semester scopes against the exam catalogue and college cohort."
+    ],
+    "identityNotes": [],
+    "universityName": "Tumkur University"
+  },
+  {
+    "format": "vriddhi-karnataka-research-pack/v1",
+    "code": "KA_DAV_RESEARCH",
+    "universityCode": "DAV",
+    "status": "draft",
+    "assignable": false,
+    "verification": "partial",
+    "reviewedOn": "2026-11-13",
+    "scope": {
+      "programme": "B.Com",
+      "framework": "SEP2024",
+      "admissions": "2024-25 source; later2025/2026 syllabus updates require comparison",
+      "reviewedSemesters": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ]
+    },
+    "sources": [
+      {
+        "id": "S1",
+        "url": "https://davangereuniversity.ac.in/wp-content/uploads/2024/07/UG-SEP-Commerce.pdf",
+        "title": "Davanagere University B.Com2024-25 scheme of teaching/evaluation",
+        "authority": "university",
+        "access": "read-partial",
+        "readScope": "Cover, six-semester matrix and selected first-year courses; chunks0–1"
+      },
+      {
+        "id": "S2",
+        "url": "https://davangereuniversity.ac.in/sep-ug-syllabus/",
+        "title": "Davanagere University SEP syllabus index",
+        "authority": "university",
+        "access": "index-only",
+        "readScope": "2024 first-year,2025 second-year,2026 final-year and later assessment framework links; chunks1–2"
+      }
+    ],
+    "observations": [
+      {
+        "topic": "credits",
+        "detail": "University B.Com matrix totals144,24eachsemester; the separate state-level128–150 range is not this programme minimum.",
+        "locator": "Credit distribution/semester matrices",
+        "sourceIds": [
+          "S1"
+        ],
+        "value": {
+          "allocatedCredits": 144,
+          "semesterTotals": [
+            24,
+            24,
+            24,
+            24,
+            24,
+            24
+          ]
+        }
+      },
+      {
+        "topic": "assessment",
+        "detail": "Standard20/80; compulsory and skills10/40. Internship/project rows print40report+10viva while table also labels IA10/SEE40: assessment interpretation needs review.",
+        "locator": "SemestersI–VI matrices",
+        "sourceIds": [
+          "S1"
+        ],
+        "value": {
+          "standard": [
+            20,
+            80
+          ],
+          "smallPapers": [
+            10,
+            40
+          ]
+        }
+      },
+      {
+        "topic": "amendments",
+        "detail": "Official index now carries later second/final-year syllabi and programme-specific BFSI assessment framework; versions are not interchangeable.",
+        "locator": "SEP syllabus index",
+        "sourceIds": [
+          "S2"
+        ]
+      }
+    ],
+    "courseRows": [
+      {
+        "code": "B.Com.1.1",
+        "name": "Financial Accounting",
+        "credits": 4,
+        "semester": 1,
+        "internalMaxMarks": 20,
+        "externalMaxMarks": 80,
+        "sourceId": "S1"
+      },
+      {
+        "code": "B.Com.1.2",
+        "name": "Management Principles and Applications",
+        "credits": 4,
+        "semester": 1,
+        "internalMaxMarks": 20,
+        "externalMaxMarks": 80,
+        "sourceId": "S1"
+      },
+      {
+        "code": "B.Com.1.3",
+        "name": "Principles of Marketing",
+        "credits": 4,
+        "semester": 1,
+        "internalMaxMarks": 20,
+        "externalMaxMarks": 80,
+        "sourceId": "S1"
+      },
+      {
+        "code": "B.Com.1.4",
+        "name": "Business Analysis and Market Dynamics",
+        "credits": 4,
+        "semester": 1,
+        "internalMaxMarks": 20,
+        "externalMaxMarks": 80,
+        "sourceId": "S1"
+      },
+      {
+        "code": "B.Com.1.5",
+        "name": "Indian Constitution",
+        "credits": 2,
+        "semester": 1,
+        "internalMaxMarks": 10,
+        "externalMaxMarks": 40,
+        "sourceId": "S1"
+      }
+    ],
+    "blockers": [
+      "Obtain the governing attendance, pass, IA and course-GP/rounding regulations.",
+      "Verify current amendments and required/elective codes for the exact regular B.Com cohort; compare2025/2026 updates.",
+      "Clarify internship/project component assessment and the programme award minimum."
+    ],
+    "identityNotes": [],
+    "universityName": "Davangere University"
+  },
+  {
+    "format": "vriddhi-karnataka-research-pack/v1",
+    "code": "KA_RCU_RESEARCH",
+    "universityCode": "RCU",
+    "status": "draft",
+    "assignable": false,
+    "verification": "conflict",
+    "reviewedOn": "2026-11-13",
+    "scope": {
+      "programme": "B.Com",
+      "framework": "UG SEP2024 cover; body retains earlier regulation text",
+      "admissions": "2024-25 on cover, scope conflict unresolved",
+      "reviewedSemesters": [
+        1,
+        2
+      ]
+    },
+    "sources": [
+      {
+        "id": "S1",
+        "url": "https://rcub.ac.in/uploads/pdf/Syllabus/UG_SEP_Syllabus_1_to_6/BCOM.pdf",
+        "title": "Rani Channamma University B.Com SEP syllabus",
+        "authority": "university",
+        "access": "read-partial",
+        "readScope": "Cover/regulations, first-year course matrices and selected second-semester papers; chunks0–3"
+      }
+    ],
+    "observations": [
+      {
+        "topic": "scope",
+        "detail": "2024-25 cover is accompanied by a2012-13 regulation reference in the body; do not assume every body clause was newly notified.",
+        "locator": "Cover / regulation heading",
+        "sourceIds": [
+          "S1"
+        ]
+      },
+      {
+        "topic": "assessment",
+        "detail": "Standard20IA/80SEE. IAattendance3,assignment3,firsttest4,secondtest10; not the BCU5+5+10 rule.",
+        "locator": "Scheme of examination",
+        "sourceIds": [
+          "S1"
+        ],
+        "value": {
+          "internalMaxMarks": 20,
+          "externalMaxMarks": 80,
+          "IAWeights": [
+            3,
+            3,
+            4,
+            10
+          ]
+        }
+      },
+      {
+        "topic": "attendance",
+        "detail": "75% attendance stated.",
+        "locator": "Attendance",
+        "sourceIds": [
+          "S1"
+        ],
+        "value": 75
+      },
+      {
+        "topic": "pass",
+        "detail": "Reviewed text says40% written examination; full applicable aggregate/IA rule and GP conversion not certified.",
+        "locator": "Pass clause",
+        "sourceIds": [
+          "S1"
+        ]
+      },
+      {
+        "topic": "credits",
+        "detail": "First two semesters show23credits; majors5credits,languages3 and compulsory2/50marks.",
+        "locator": "I/II matrices",
+        "sourceIds": [
+          "S1"
+        ],
+        "value": {
+          "majorCredits": 5,
+          "languageCredits": 3,
+          "semesterCredits": [
+            23,
+            23
+          ]
+        }
+      }
+    ],
+    "courseRows": [],
+    "blockers": [
+      "Resolve legacy2012-13 body versus2024-25 cover with the notified regulations/corrigendum.",
+      "Verify aggregate/IA pass thresholds, course GP formula, rounding, attendance slabs and current IA components.",
+      "Validate full course codes, all semester matrices, certificate/elective requirements and award credits."
+    ],
+    "identityNotes": [],
+    "universityName": "Rani Channamma University"
+  },
+  {
+    "format": "vriddhi-karnataka-research-pack/v1",
+    "code": "KA_VSKU_RESEARCH",
+    "universityCode": "VSKU",
+    "status": "draft",
+    "assignable": false,
+    "verification": "partial",
+    "reviewedOn": "2026-11-13",
+    "scope": {
+      "programme": "BCA",
+      "framework": "SEP2024",
+      "admissions": "2024-25 first/second semester document",
+      "reviewedSemesters": [
+        1
+      ]
+    },
+    "sources": [
+      {
+        "id": "S1",
+        "url": "https://vskub.ac.in/wp-content/uploads/2024/08/BCA-I-II-Sem-Syllabus.pdf",
+        "title": "Vijayanagara Sri Krishnadevaraya University BCA I/II syllabus",
+        "authority": "university",
+        "access": "read-partial",
+        "readScope": "Cover, first-semester C and digital logic course/lab blocks; chunks0–1"
+      }
+    ],
+    "observations": [
+      {
+        "topic": "assessment",
+        "detail": "Theory4credits20IA/80SEE; labs2credits10IA/40SEE. C lab SEE rubric programmes30,record5,viva5.",
+        "locator": "24MJBCA1L1,24MJBCA1P1,24MJBCA1L2,24MJBCA1P2",
+        "sourceIds": [
+          "S1"
+        ],
+        "value": {
+          "theory": [
+            4,
+            20,
+            80
+          ],
+          "lab": [
+            2,
+            10,
+            40
+          ]
+        }
+      }
+    ],
+    "courseRows": [
+      {
+        "code": "24MJBCA1L1",
+        "name": "Programming in C",
+        "credits": 4,
+        "semester": 1,
+        "internalMaxMarks": 20,
+        "externalMaxMarks": 80,
+        "sourceId": "S1"
+      },
+      {
+        "code": "24MJBCA1P1",
+        "name": "C Programming Lab",
+        "credits": 2,
+        "semester": 1,
+        "internalMaxMarks": 10,
+        "externalMaxMarks": 40,
+        "sourceId": "S1"
+      },
+      {
+        "code": "24MJBCA1L2",
+        "name": "Digital Logic",
+        "credits": 4,
+        "semester": 1,
+        "internalMaxMarks": 20,
+        "externalMaxMarks": 80,
+        "sourceId": "S1"
+      },
+      {
+        "code": "24MJBCA1P2",
+        "name": "Digital Logic Lab",
+        "credits": 2,
+        "semester": 1,
+        "internalMaxMarks": 10,
+        "externalMaxMarks": 40,
+        "sourceId": "S1"
+      }
+    ],
+    "blockers": [
+      "Obtain governing programme/cohort regulations for attendance, pass, IA, grade points and rounding.",
+      "Complete and verify all semester course/award mappings; do not extrapolate a lab profile to other papers.",
+      "Resolve the separate VIJ seed identity without automatically merging university records."
+    ],
+    "identityNotes": [],
+    "universityName": "Vijayanagara Sri Krishnadevaraya University"
+  },
+  {
+    "format": "vriddhi-karnataka-research-pack/v1",
+    "code": "KA_KAN_RESEARCH",
+    "universityCode": "KAN",
+    "status": "draft",
+    "assignable": false,
+    "verification": "source-required",
+    "reviewedOn": "2026-11-13",
+    "scope": {
+      "programme": "Specialised Kannada/fine-arts UG programmes; exact programme not verified",
+      "framework": "Not verified",
+      "admissions": "Not verified",
+      "reviewedSemesters": []
+    },
+    "sources": [
+      {
+        "id": "S1",
+        "url": "https://kannadauniversity.org/english/",
+        "title": "Kannada University official portal",
+        "authority": "university",
+        "access": "index-only",
+        "readScope": "Programme links, SEP2024 page link and research focus"
+      },
+      {
+        "id": "S2",
+        "url": "https://kannadauniversity.org/english/state-education-policy-2024-25/",
+        "title": "Kannada University SEP2024 page",
+        "authority": "university",
+        "access": "index-only",
+        "readScope": "Page heading present, no extractable regulatory document/body"
+      }
+    ],
+    "observations": [
+      {
+        "topic": "scope",
+        "detail": "University describes a specialised research mission, not a generic district-affiliating college model; programme-specific UG regulations are required.",
+        "locator": "Vice-Chancellor desk / Programmes",
+        "sourceIds": [
+          "S1"
+        ]
+      }
+    ],
+    "courseRows": [],
+    "blockers": [
+      "Identify the actual supported UG programme and obtain its notified syllabus, regulations and cohort applicability.",
+      "Verify credits, assessment/pass/GP/rounding and attendance for that programme; the seed course list is not regulatory evidence."
+    ],
+    "identityNotes": [
+      "Do not copy conventional BA/B.Com degree rules based solely on the broad seed course list."
+    ],
+    "universityName": "Kannada University"
+  },
+  {
+    "format": "vriddhi-karnataka-research-pack/v1",
+    "code": "KA_KSOU_RESEARCH",
+    "universityCode": "KSOU",
+    "status": "draft",
+    "assignable": false,
+    "verification": "conflict",
+    "reviewedOn": "2026-11-13",
+    "scope": {
+      "programme": "BSW, ODL mode only",
+      "framework": "CBCS; semester/annual conflict in prospectus",
+      "admissions": "2025-26 January cycle on cover",
+      "reviewedSemesters": []
+    },
+    "sources": [
+      {
+        "id": "S1",
+        "url": "https://app.ksoumysuru.ac.in/Website_Documents/PROSPECTUS/2025-26%20JAN/BSW%202025-26%20January.pdf",
+        "title": "KSOU BSW2025-26 January ODL prospectus",
+        "authority": "university",
+        "access": "read-partial",
+        "readScope": "Programme description and evaluation/examination clauses8–11; chunks0,5,8,9; parser limit30pages"
+      }
+    ],
+    "observations": [
+      {
+        "topic": "scope",
+        "detail": "BSW described as3years/6semesters. BA/B.Com annual programmes are separately listed; ordinary affiliated-UG attendance rules must not be imported.",
+        "locator": "8 / programme list",
+        "sourceIds": [
+          "S1"
+        ]
+      },
+      {
+        "topic": "credits",
+        "detail": "Programme description prints185credits; exact complete matrix/award conditions were not verified.",
+        "locator": "8",
+        "sourceIds": [
+          "S1"
+        ],
+        "value": 185
+      },
+      {
+        "topic": "assessment",
+        "detail": "Clause10 says20IA(assignments)/80term-end; clause11 BSW table says30IA/70term-end with minimum32 on70 and40total. This is a material unresolved contradiction.",
+        "locator": "10 versus11",
+        "sourceIds": [
+          "S1"
+        ],
+        "value": {
+          "clause10": [
+            20,
+            80
+          ],
+          "clause11": [
+            30,
+            70
+          ],
+          "printedExternalMinimumMarks": 32
+        }
+      },
+      {
+        "topic": "scope",
+        "detail": "A term-end paragraph says examinations annually despite the6semester description; no supplementary provision in that paragraph.",
+        "locator": "10 term-end",
+        "sourceIds": [
+          "S1"
+        ]
+      }
+    ],
+    "courseRows": [],
+    "blockers": [
+      "Obtain a corrected/current BSW cycle-specific prospectus and confirm ODL examination pattern.",
+      "Resolve20/80 versus30/70, annual versus semester, pass and course GP/rounding rules.",
+      "Verify the full185credit matrix, practical/fieldwork profiles and separate completion/attendance obligations."
+    ],
+    "identityNotes": [
+      "Verified document host is app.ksoumysuru.ac.in; the seed website ksoumysore.edu.in requires review."
+    ],
+    "universityName": "Karnataka State Open University"
+  },
+  {
+    "format": "vriddhi-karnataka-research-pack/v1",
+    "code": "KA_KSWU_RESEARCH",
+    "universityCode": "KSWU",
+    "status": "draft",
+    "assignable": false,
+    "verification": "partial",
+    "reviewedOn": "2026-11-13",
+    "scope": {
+      "programme": "B.Com",
+      "framework": "2024-25 revised UG; NEP/SEP adoption order to verify",
+      "admissions": "2024-25 first/second semesters on official-linked document",
+      "reviewedSemesters": [
+        1,
+        2
+      ]
+    },
+    "sources": [
+      {
+        "id": "S1",
+        "url": "https://drive.google.com/file/d/1toYgJxKegQVPLrbSnoBOS2lu6s4ztm_L/view",
+        "title": "Akkamahadevi Women’s University B.Com first-year syllabus",
+        "authority": "university-linked",
+        "access": "read-partial",
+        "readScope": "Official-linked Drive document, first-year matrix and selected course blocks; chunks0–1"
+      },
+      {
+        "id": "S2",
+        "url": "http://ka.kswu.ac.in/ug-nep-revised-1st-and-2nd-sem-syllabus",
+        "title": "KSWU official revised UG syllabus index",
+        "authority": "university",
+        "access": "index-only",
+        "readScope": "Official2024-25 syllabus links to Drive programmes"
+      }
+    ],
+    "observations": [
+      {
+        "topic": "credits",
+        "detail": "First two semester matrices print28credits each; majors5credits,languages3. Constitutional-values course is2credits but100marks20/80, not a universal50mark compulsory profile.",
+        "locator": "First-year matrices",
+        "sourceIds": [
+          "S1"
+        ],
+        "value": {
+          "semesterCredits": [
+            28,
+            28
+          ],
+          "majorCredits": 5,
+          "constitutionalValues": {
+            "credits": 2,
+            "internal": 20,
+            "external": 80
+          }
+        }
+      },
+      {
+        "topic": "assessment",
+        "detail": "Business EconomicsI code1.5 and Principles of Marketing code1.6 are5credits20/80.",
+        "locator": "Course blocks",
+        "sourceIds": [
+          "S1"
+        ]
+      }
+    ],
+    "courseRows": [
+      {
+        "code": "1.5",
+        "name": "Business Economics I",
+        "credits": 5,
+        "semester": 1,
+        "internalMaxMarks": 20,
+        "externalMaxMarks": 80,
+        "sourceId": "S1"
+      },
+      {
+        "code": "1.6",
+        "name": "Principles of Marketing",
+        "credits": 5,
+        "semester": 1,
+        "internalMaxMarks": 20,
+        "externalMaxMarks": 80,
+        "sourceId": "S1"
+      }
+    ],
+    "blockers": [
+      "Read/cross-check the final notified attendance, pass, GP conversion, rounding and IA rules.",
+      "Verify all semester mappings and award credit minimums; do not convert2credits automatically into50marks.",
+      "Confirm the applicable university name/domain, NEP/SEP adoption order and official-linked document version for each college cohort."
+    ],
+    "identityNotes": [
+      "Seed name Karnataka State Women’s University corresponds to Akkamahadevi Women’s University branding in the document; do not silently rename Firestore IDs."
+    ],
+    "universityName": "Karnataka State Women's University"
+  },
+  {
+    "format": "vriddhi-karnataka-research-pack/v1",
+    "code": "KA_BCU_RESEARCH",
+    "universityCode": "BCU",
+    "status": "draft",
+    "assignable": false,
+    "verification": "conflict",
+    "reviewedOn": "2026-11-13",
+    "scope": {
+      "programme": "B.Com (Regular)",
+      "framework": "SEP2024",
+      "admissions": "2024-25 onward in document; amendments not verified",
+      "reviewedSemesters": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ]
+    },
+    "sources": [
+      {
+        "id": "S1",
+        "url": "https://bcu.ac.in/uploads/syllabus/ug_sep/I_and_II_Sem_SEP_Syllabus/Commerce%20Syllabus/B.Com%20-%20Regular%20UG%20Syllabus%20SEP.pdf",
+        "title": "Bengaluru City University B.Com Regular SEP2024 regulations",
+        "authority": "university",
+        "access": "read-partial",
+        "readScope": "Regulations and matrices throughVI; chunks0–3, not full syllabus"
+      }
+    ],
+    "observations": [
+      {
+        "topic": "attendance",
+        "detail": "75% eligibility; IA attendance table lists76–80=2,81–85=3,86–90=4,91–100=5. Exactly75% and fractional gaps need clarification.",
+        "locator": "7 /10(c)",
+        "sourceIds": [
+          "S1"
+        ],
+        "value": 75
+      },
+      {
+        "topic": "assessment",
+        "detail": "20IA/80SEE; mean of two20-mark tests contributes10,attendance5,assignment/skills5. Compulsory matrix50marks10/40; value-added25internal-only; project100internal-only60report+20viva+20logbook.",
+        "locator": "10 / Annexure I",
+        "sourceIds": [
+          "S1"
+        ],
+        "value": {
+          "standard": [
+            20,
+            80
+          ],
+          "testCount": 2,
+          "testWeight": 10,
+          "smallPapers": [
+            10,
+            40
+          ]
+        }
+      },
+      {
+        "topic": "pass",
+        "detail": "13(a) requires35% written/practical plus40% aggregate;13(b) requires40% SEE in each course. Do not arbitrarily select the more convenient threshold.",
+        "locator": "13(a)/(b)",
+        "sourceIds": [
+          "S1"
+        ]
+      },
+      {
+        "topic": "credits",
+        "detail": "13(g) says minimum142credits, while matrix allocated totals24,25,24,25,24,24=146. Required/elective/value-added treatment needs confirmation rather than substituting a universal total.",
+        "locator": "13(g) / Annexure I",
+        "sourceIds": [
+          "S1"
+        ],
+        "value": {
+          "printedMinimumCredits": 142,
+          "allocatedSemesterCredits": [
+            24,
+            25,
+            24,
+            25,
+            24,
+            24
+          ]
+        }
+      },
+      {
+        "topic": "grade-points",
+        "detail": "Nearest-integer percentage,98→10,93→9.5,88→9,...43→4.5,40→4,below40→0. This differs from generic integer bands and KU2024 draft.",
+        "locator": "17,Table1",
+        "sourceIds": [
+          "S1"
+        ],
+        "value": {
+          "percentageRounding": "nearest-integer",
+          "thresholdsDescending": [
+            [
+              98,
+              10
+            ],
+            [
+              93,
+              9.5
+            ],
+            [
+              88,
+              9
+            ],
+            [
+              83,
+              8.5
+            ],
+            [
+              78,
+              8
+            ],
+            [
+              73,
+              7.5
+            ],
+            [
+              68,
+              7
+            ],
+            [
+              63,
+              6.5
+            ],
+            [
+              58,
+              6
+            ],
+            [
+              53,
+              5.5
+            ],
+            [
+              48,
+              5
+            ],
+            [
+              43,
+              4.5
+            ],
+            [
+              40,
+              4
+            ],
+            [
+              0,
+              0
+            ]
+          ]
+        }
+      }
+    ],
+    "courseRows": [
+      {
+        "code": "1.1",
+        "name": "Financial Accounting",
+        "credits": 4,
+        "semester": 1,
+        "internalMaxMarks": 20,
+        "externalMaxMarks": 80,
+        "sourceId": "S1"
+      },
+      {
+        "code": "1.2",
+        "name": "Principles of Marketing",
+        "credits": 4,
+        "semester": 1,
+        "internalMaxMarks": 20,
+        "externalMaxMarks": 80,
+        "sourceId": "S1"
+      },
+      {
+        "code": "1.3",
+        "name": "Business Environment",
+        "credits": 4,
+        "semester": 1,
+        "internalMaxMarks": 20,
+        "externalMaxMarks": 80,
+        "sourceId": "S1"
+      },
+      {
+        "code": "1.4",
+        "name": "Indian Financial System",
+        "credits": 4,
+        "semester": 1,
+        "internalMaxMarks": 20,
+        "externalMaxMarks": 80,
+        "sourceId": "S1"
+      }
+    ],
+    "blockers": [
+      "Obtain the corrigendum/authoritative clarification for35% versus40% SEE pass thresholds.",
+      "Clarify attendance marks for75% and fractional intervals; no invented1mark or rounding.",
+      "Confirm how142minimum relates to146allocated credits, value-added/optional courses and GPA inclusion.",
+      "Validate complete course/profile codes, admission scope and all later amendments before a college approves a runnable revision."
+    ],
+    "identityNotes": [
+      "Seed website bcub.ac.in differs from the verified bcu.ac.in source; retain existing IDs and review metadata separately."
+    ],
+    "universityName": "Bengaluru City University"
+  },
+  {
+    "format": "vriddhi-karnataka-research-pack/v1",
+    "code": "KA_BNU_RESEARCH",
+    "universityCode": "BNU",
+    "status": "draft",
+    "assignable": false,
+    "verification": "partial",
+    "reviewedOn": "2026-11-13",
+    "scope": {
+      "programme": "B.Com (Regular)",
+      "framework": "SEP2024",
+      "admissions": "2024-25 onward in mirrored document",
+      "reviewedSemesters": [
+        1,
+        2,
+        3,
+        4
+      ]
+    },
+    "sources": [
+      {
+        "id": "S1",
+        "url": "https://newhorizoncollege.co.in/wp-content/uploads/2024/08/BNU-B.com-SEP-Syllabus-2-25-onwards.pdf",
+        "title": "Bengaluru North University B.Com SEP2024 syllabus",
+        "authority": "college-mirror",
+        "access": "read-partial",
+        "readScope": "Regulations and course matricesI–IV; chunks0–1"
+      }
+    ],
+    "observations": [
+      {
+        "topic": "attendance",
+        "detail": "75% attendance per course; examination blocked below the stated minimum.",
+        "locator": "VII",
+        "sourceIds": [
+          "S1"
+        ],
+        "value": 75
+      },
+      {
+        "topic": "assessment",
+        "detail": "20CIE/80SEE. CCE10 plus IAT10; two20-mark tests scaled to10. Described selection of four CCE activities with5marks each needs aggregation clarification.",
+        "locator": "X",
+        "sourceIds": [
+          "S1"
+        ],
+        "value": {
+          "internalMaxMarks": 20,
+          "externalMaxMarks": 80,
+          "CCE": 10,
+          "IAT": 10
+        }
+      },
+      {
+        "topic": "credits",
+        "detail": "Languages3,majors4,constitutional values2. MatrixI24,II24,III25,IV27. Separate language/compulsory marks left to respective BoS in some rows.",
+        "locator": "Course matrix",
+        "sourceIds": [
+          "S1"
+        ],
+        "value": {
+          "reviewedSemesterCredits": [
+            24,
+            24,
+            25,
+            27
+          ]
+        }
+      }
+    ],
+    "courseRows": [
+      {
+        "code": "B.Com.1.1",
+        "name": "Financial Accounting",
+        "credits": 4,
+        "semester": 1,
+        "internalMaxMarks": 20,
+        "externalMaxMarks": 80,
+        "sourceId": "S1"
+      },
+      {
+        "code": "B.Com.1.2",
+        "name": "Management Dynamics and Applications",
+        "credits": 4,
+        "semester": 1,
+        "internalMaxMarks": 20,
+        "externalMaxMarks": 80,
+        "sourceId": "S1"
+      },
+      {
+        "code": "B.Com.1.3",
+        "name": "Corporate Administration",
+        "credits": 4,
+        "semester": 1,
+        "internalMaxMarks": 20,
+        "externalMaxMarks": 80,
+        "sourceId": "S1"
+      },
+      {
+        "code": "B.Com.1.4",
+        "name": "Business Decisions & Market Structures",
+        "credits": 4,
+        "semester": 1,
+        "internalMaxMarks": 20,
+        "externalMaxMarks": 80,
+        "sourceId": "S1"
+      }
+    ],
+    "blockers": [
+      "Verify official-hosted/notified source and amendments rather than relying only on this college mirror.",
+      "Obtain pass criteria, course GP table/rounding and all language/compulsory assessment profiles.",
+      "Clarify CCE aggregation and full programme award/optional course requirements."
+    ],
+    "identityNotes": [],
+    "universityName": "Bengaluru North University"
+  },
+  {
+    "format": "vriddhi-karnataka-research-pack/v1",
+    "code": "KA_MAN_RESEARCH",
+    "universityCode": "MAN",
+    "status": "draft",
+    "assignable": false,
+    "verification": "source-required",
+    "reviewedOn": "2026-11-13",
+    "scope": {
+      "programme": "UG programme/cohort not verified",
+      "framework": "Not verified",
+      "admissions": "Not verified",
+      "reviewedSemesters": []
+    },
+    "sources": [
+      {
+        "id": "S1",
+        "url": "https://mandyauniversity.karnataka.gov.in/en",
+        "title": "Mandya University public portal candidate",
+        "authority": "candidate",
+        "access": "unavailable",
+        "readScope": "Fetch failed; search-discovered portal, not a retrieved regulation"
+      },
+      {
+        "id": "S2",
+        "url": "https://mandyauniversity.ac.in",
+        "title": "Seed website candidate",
+        "authority": "seed",
+        "access": "unavailable",
+        "readScope": "No governing scheme document retrieved in this review"
+      }
+    ],
+    "observations": [],
+    "courseRows": [],
+    "blockers": [
+      "Obtain the university’s notified programme-specific scheme, examination regulations and cohort/adoption order.",
+      "Verify marks splits/components, all pass minima, course GP/rounding, attendance, course credits and award requirements.",
+      "Do not use unrelated PES College of Engineering Mandya syllabi returned by broad searches or assume UOM parent rules."
+    ],
+    "identityNotes": [],
+    "universityName": "Mandya University"
+  },
+  {
+    "format": "vriddhi-karnataka-research-pack/v1",
+    "code": "KA_HAS_RESEARCH",
+    "universityCode": "HAS",
+    "status": "draft",
+    "assignable": false,
+    "verification": "source-required",
+    "reviewedOn": "2026-11-13",
+    "scope": {
+      "programme": "UG programme/cohort not verified",
+      "framework": "Not verified",
+      "admissions": "Not verified",
+      "reviewedSemesters": []
+    },
+    "sources": [
+      {
+        "id": "S1",
+        "url": "https://hassanuniversity.ac.in/Syllabus.aspx",
+        "title": "Hassan University syllabus index",
+        "authority": "university",
+        "access": "index-only",
+        "readScope": "UG/PG tabs; extracted page exposes PG M.Com/MBA links but no usable UG assessment regulations"
+      },
+      {
+        "id": "S2",
+        "url": "https://hassanuniversity.ac.in/Home.aspx",
+        "title": "Hassan University portal",
+        "authority": "university",
+        "access": "index-only",
+        "readScope": "Identity/home page only"
+      }
+    ],
+    "observations": [
+      {
+        "topic": "scope",
+        "detail": "Extracted syllabus index is not a numerical UG regulation. PG M.Com/MBA links do not authorize regular B.Com/BA rules.",
+        "locator": "UG/PG tabs",
+        "sourceIds": [
+          "S1"
+        ]
+      }
+    ],
+    "courseRows": [],
+    "blockers": [
+      "Retrieve UG programme regulations/curriculum and cohort-specific notified adoption/corrigenda.",
+      "Verify all assessment/pass/GP/rounding/attendance/credit rules; do not silently inherit UOM."
+    ],
+    "identityNotes": [],
+    "universityName": "Hassan University"
+  },
+  {
+    "format": "vriddhi-karnataka-research-pack/v1",
+    "code": "KA_KOD_RESEARCH",
+    "universityCode": "KOD",
+    "status": "draft",
+    "assignable": false,
+    "verification": "source-required",
+    "reviewedOn": "2026-11-13",
+    "scope": {
+      "programme": "UG programme/cohort not verified",
+      "framework": "SEP mentioned by college pages; governing scheme not retrieved",
+      "admissions": "Not verified",
+      "reviewedSemesters": []
+    },
+    "sources": [
+      {
+        "id": "S1",
+        "url": "https://kodaguuniversity.ac.in/",
+        "title": "Seed university portal",
+        "authority": "seed",
+        "access": "unavailable",
+        "readScope": "Fetch failed; no regulation body read"
+      },
+      {
+        "id": "S2",
+        "url": "https://fmkmcc.edu.in/",
+        "title": "FMKMC college programme/syllabus index",
+        "authority": "college-mirror",
+        "access": "search-only",
+        "readScope": "Search discovery only: SEP2024 admission/syllabus labels; no numeric rules taken"
+      }
+    ],
+    "observations": [],
+    "courseRows": [],
+    "blockers": [
+      "Retrieve Kodagu University’s notified scheme and any transitional adoption order for each programme/cohort.",
+      "Verify course/award credits, assessment/pass/GP/rounding and attendance.",
+      "Do not substitute Mangalore University NEP/SEP based only on historic affiliation or college notices."
+    ],
+    "identityNotes": [],
+    "universityName": "Kodagu University"
+  },
+  {
+    "format": "vriddhi-karnataka-research-pack/v1",
+    "code": "KA_CHAM_RESEARCH",
+    "universityCode": "CHAM",
+    "status": "draft",
+    "assignable": false,
+    "verification": "source-required",
+    "reviewedOn": "2026-11-13",
+    "scope": {
+      "programme": "UG programme/cohort not verified",
+      "framework": "Not verified",
+      "admissions": "Not verified",
+      "reviewedSemesters": []
+    },
+    "sources": [
+      {
+        "id": "S1",
+        "url": "https://cuc.karnataka.gov.in/",
+        "title": "Chamarajanagara University public-portal candidate",
+        "authority": "candidate",
+        "access": "unavailable",
+        "readScope": "Fetch failed; candidate found in external listings"
+      },
+      {
+        "id": "S2",
+        "url": "https://chamarajanagarauniversity.ac.in",
+        "title": "Seed portal candidate",
+        "authority": "seed",
+        "access": "unavailable",
+        "readScope": "No governing regulation retrieved"
+      }
+    ],
+    "observations": [],
+    "courseRows": [],
+    "blockers": [
+      "Confirm the current official portal and obtain notified programme/cohort examination regulations and curriculum.",
+      "Verify assessment, pass, GP/rounding, attendance and course/award credits.",
+      "Do not substitute UAS agriculture or UOM rules returned by similarly named searches."
+    ],
+    "identityNotes": [
+      "Seed2021establishment metadata and portal need separate verification; no automatic metadata correction was performed."
+    ],
+    "universityName": "Chamarajanagara University"
+  },
+  {
+    "format": "vriddhi-karnataka-research-pack/v1",
+    "code": "KA_RAI_RESEARCH",
+    "universityCode": "RAI",
+    "status": "draft",
+    "assignable": false,
+    "verification": "source-required",
+    "reviewedOn": "2026-11-13",
+    "scope": {
+      "programme": "UG programme/cohort not verified",
+      "framework": "SEP/NEP are separately mentioned in current notices",
+      "admissions": "Not verified",
+      "reviewedSemesters": []
+    },
+    "sources": [
+      {
+        "id": "S1",
+        "url": "https://raichuruniversity.ac.in/",
+        "title": "Raichur University / Adikavi Sri Maharshi Valmiki University portal",
+        "authority": "university",
+        "access": "index-only",
+        "readScope": "Home page explicitly announces migration to asmvur.karnataka.gov.in; current exam notices mention SEP/NEP"
+      },
+      {
+        "id": "S2",
+        "url": "https://asmvur.karnataka.gov.in/",
+        "title": "Migrated portal linked by university",
+        "authority": "university-linked",
+        "access": "linked-not-read",
+        "readScope": "Destination linked in S1; regulatory body not read"
+      }
+    ],
+    "observations": [
+      {
+        "topic": "identity",
+        "detail": "Source announces migration to asmvur.karnataka.gov.in and uses Adikavi Sri Maharshi Valmiki University branding; existing RAI seed ID is preserved.",
+        "locator": "Official migration banner",
+        "sourceIds": [
+          "S1"
+        ]
+      },
+      {
+        "topic": "scope",
+        "detail": "Current notices mention concurrent SEP/NEP UG examinations, not a common numeric grading policy.",
+        "locator": "Noticeboard",
+        "sourceIds": [
+          "S1"
+        ]
+      }
+    ],
+    "courseRows": [],
+    "blockers": [
+      "Retrieve the current notified programme/cohort scheme, transition/adoption orders and amendments from the migrated portal.",
+      "Verify attendance, IA, SEE, pass, GP/rounding and course/award credits; do not use GU/RCU as fallback."
+    ],
+    "identityNotes": [
+      "Review display-name/domain migration with a superadmin; do not rename or remap university/college IDs automatically."
+    ],
+    "universityName": "Raichur University"
+  },
+  {
+    "format": "vriddhi-karnataka-research-pack/v1",
+    "code": "KA_BID_RESEARCH",
+    "universityCode": "BID",
+    "status": "draft",
+    "assignable": false,
+    "verification": "source-required",
+    "reviewedOn": "2026-11-13",
+    "scope": {
+      "programme": "UG programme/cohort not verified",
+      "framework": "Not verified",
+      "admissions": "Not verified",
+      "reviewedSemesters": []
+    },
+    "sources": [
+      {
+        "id": "S1",
+        "url": "https://bidaruniversity.karnataka.gov.in/en",
+        "title": "Bidar University public portal",
+        "authority": "university",
+        "access": "unavailable",
+        "readScope": "Search indexing shows UG/PG syllabus menus; direct fetch returnedHTTP500; no regulation body read"
+      }
+    ],
+    "observations": [],
+    "courseRows": [],
+    "blockers": [
+      "Retrieve the actual official programme syllabus and notified examination regulations behind UG syllabus menu.",
+      "Verify marks/component and pass/GP/rounding/attendance/credit rules for each cohort.",
+      "Search snippets/user-uploaded B.Sc documents are discovery only; no guessed adoption of GU or KU rules."
+    ],
+    "identityNotes": [
+      "Seed bidaruniversity.ac.in differs from the public karnataka.gov.in portal discovered; verify metadata separately."
+    ],
+    "universityName": "Bidar University"
+  },
+  {
+    "format": "vriddhi-karnataka-research-pack/v1",
+    "code": "KA_KOP_RESEARCH",
+    "universityCode": "KOP",
+    "status": "draft",
+    "assignable": false,
+    "verification": "partial",
+    "reviewedOn": "2026-11-13",
+    "scope": {
+      "programme": "BCA",
+      "framework": "SEP2024 / CBCS,2026-27 syllabus",
+      "admissions": "2026-27 onward on cover",
+      "reviewedSemesters": [
+        1,
+        2
+      ]
+    },
+    "sources": [
+      {
+        "id": "S1",
+        "url": "https://koppaluniversity.ac.in/api/media/file/KUK%20BCA%20SYLLABUS%20AND%20STRUCTURE%202026-27%20(1).pdf",
+        "title": "Koppal University BCA2026-27 I/II syllabus and proposed structure",
+        "authority": "university",
+        "access": "read-partial",
+        "readScope": "Cover/BOS, bridge course, six-semester proposed/tentative matrix and first-semester theory courses; chunks0–1"
+      },
+      {
+        "id": "S2",
+        "url": "https://koppaluniversity.ac.in/downloads",
+        "title": "Koppal University downloads",
+        "authority": "university",
+        "access": "index-only",
+        "readScope": "Links BCA2026-27 syllabus PDF"
+      }
+    ],
+    "observations": [
+      {
+        "topic": "scope",
+        "detail": "Cover states BOS31Jul2026 approval for I/II syllabus; full six-semester structure is explicitly proposed/tentative.",
+        "locator": "Cover / proposed structure",
+        "sourceIds": [
+          "S1"
+        ]
+      },
+      {
+        "topic": "credits",
+        "detail": "Proposed total146credits with semester totals24,24,24,24,24,26; do not treat later semester proposals as a final award plan.",
+        "locator": "Proposed programme matrix",
+        "sourceIds": [
+          "S1"
+        ],
+        "value": {
+          "proposedSemesterCredits": [
+            24,
+            24,
+            24,
+            24,
+            24,
+            26
+          ],
+          "proposedTotal": 146
+        }
+      },
+      {
+        "topic": "assessment",
+        "detail": "KUBCA11T and KUBCA12T theory4credits20IA/80SEE,3hours. Integrated6credit heading includes distinct4credit theory+2credit lab, not one6credit theory paper.",
+        "locator": "SemesterI course blocks",
+        "sourceIds": [
+          "S1"
+        ],
+        "value": {
+          "theory": [
+            4,
+            20,
+            80
+          ]
+        }
+      },
+      {
+        "topic": "completion-only",
+        "detail": "Non-mathematics bridge course:zero marks/grades/credits,no university exam,not in GPA,completion75%attendance plus participation. This is not a zero-mark graded paper.",
+        "locator": "Bridge course details",
+        "sourceIds": [
+          "S1"
+        ],
+        "value": {
+          "credits": 0,
+          "minimumAttendance": 75,
+          "includeInGpa": false
+        }
+      }
+    ],
+    "courseRows": [
+      {
+        "code": "KUBCA11T",
+        "name": "Problem Solving and Programming in C",
+        "credits": 4,
+        "semester": 1,
+        "internalMaxMarks": 20,
+        "externalMaxMarks": 80,
+        "sourceId": "S1"
+      },
+      {
+        "code": "KUBCA12T",
+        "name": "Digital Logic and Computer Architecture",
+        "credits": 4,
+        "semester": 1,
+        "internalMaxMarks": 20,
+        "externalMaxMarks": 80,
+        "sourceId": "S1"
+      },
+      {
+        "code": "KUBCA13T",
+        "name": "Discrete Mathematical Structures",
+        "credits": 4,
+        "semester": 1,
+        "internalMaxMarks": 20,
+        "externalMaxMarks": 80,
+        "sourceId": "S1"
+      }
+    ],
+    "blockers": [
+      "Obtain governing attendance, pass, IA and GP/rounding regulations, current amendments and final notified programme structure.",
+      "Verify separate theory/lab course mappings and later-semester approval; do not activate the tentative full matrix.",
+      "Use a dedicated attendance/participation completion record for the no-marks bridge course; do not invent a marked pass/fail assessment to fit the grade engine."
+    ],
+    "identityNotes": [],
+    "universityName": "Koppal University"
+  },
+  {
+    "format": "vriddhi-karnataka-research-pack/v1",
+    "code": "KA_VIJ_RESEARCH",
+    "universityCode": "VIJ",
+    "status": "draft",
+    "assignable": false,
+    "verification": "identity-review",
+    "reviewedOn": "2026-11-13",
+    "scope": {
+      "programme": "Unverified university identity; no programme assumed",
+      "framework": "Not established",
+      "admissions": "Not established",
+      "reviewedSemesters": []
+    },
+    "sources": [
+      {
+        "id": "S1",
+        "url": "https://vijayanagarauniversity.ac.in/",
+        "title": "Proposed Vijayanagara University seed portal",
+        "authority": "seed",
+        "access": "unavailable",
+        "readScope": "Fetch failed; no independent notified institution/scheme established in this review"
+      },
+      {
+        "id": "S2",
+        "url": "https://vskub.ac.in/wp-content/uploads/2024/08/BCA-I-II-Sem-Syllabus.pdf",
+        "title": "Different existing VSKU official BCA document",
+        "authority": "university",
+        "access": "read-partial",
+        "readScope": "Confirms VSKU-branded programme, not an independent VIJ institution"
+      }
+    ],
+    "observations": [
+      {
+        "topic": "identity",
+        "detail": "Repository seed describes a proposed Hosapete university. No independent verified scheme for this VIJ identity was established. VSKU is separately seeded.",
+        "locator": "Repository seed / independent-source review",
+        "sourceIds": [
+          "S1",
+          "S2"
+        ]
+      }
+    ],
+    "courseRows": [],
+    "blockers": [
+      "Confirm legal/notified institutional identity, current official portal and distinction from VSKU.",
+      "After identity resolution, obtain programme/cohort-specific governing regulations and curriculum.",
+      "Do not duplicate/merge IDs, infer affiliated colleges or assign a VSKU scheme to VIJ automatically."
+    ],
+    "identityNotes": [
+      "Proposed seed entry is not regulatory evidence of an operational university."
+    ],
+    "universityName": "Vijayanagara University"
+  }
+]

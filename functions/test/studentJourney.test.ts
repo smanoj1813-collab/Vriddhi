@@ -22,14 +22,18 @@ describe('credit-weighted CGPA', () => {
     assert.equal(weightedCgpa([]), null)
   })
 
-  it('returns null when no row carries usable credits or grade points', () => {
+  it('reports 0 for an all-failed credit-bearing transcript, not null', () => {
     assert.equal(
       weightedCgpa([
         { credits: 0, gradePoint: 9 },
         { credits: 3, gradePoint: 0 },
       ]),
-      null
+      0
     )
+  })
+
+  it('does not inflate CGPA by excluding failed courses', () => {
+    assert.equal(weightedCgpa([{ credits: 4, gradePoint: 9 }, { credits: 2, gradePoint: 6 }, { credits: 4, gradePoint: 0 }]), 4.8)
   })
 
   it('ignores rows with zero credits instead of letting them dilute the mean', () => {

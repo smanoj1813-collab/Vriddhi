@@ -4,9 +4,10 @@ import { db } from '@/Firebase/data';
 import {
   calculateSchemeInternalMarks,
   checkSchemePassCriteria,
-  DEFAULT_SCHEME_PACK,
 } from '@/shared/utils/schemeEngine';
-import { getCollegeSchemePack } from '../api/schemePackApi';
+import { getCollegeSchemePack, getCollegeSchemeConfiguration } from '../api/schemePackApi';
+import { selectCollegeScheme, type CollegeSchemeConfiguration } from '../../../../functions/src/academic/collegeSchemes';
+import { studentAcademicContext } from '../../../../functions/src/academic/gradePolicy';
 import type { UniversitySchemePack } from '@/shared/types/schemePack';
 import {
   AlertTriangle, CheckCircle, BookOpen, Award, TrendingUp,
@@ -20,35 +21,47 @@ function getCollegeId(): string {
 }
 
 export default function BCUComplianceDashboard() {
-  // G1: everything on this page evaluates against the college's assigned
-  // university scheme pack (BCU default when unassigned).
-  const { data: packInfo } = useQuery({
-    queryKey: ['bcuCompliancePack'],
-    queryFn: () => getCollegeSchemePack(),
+  const collegeId = localStorage.getItem('vriddhi_college_id') || '';
+  const packQuery = useQuery({
+    queryKey: ['bcuCompliancePack', collegeId],
+    queryFn: async () => { const configuration = await getCollegeSchemeConfiguration(collegeId); return { configuration, primary: selectCollegeScheme(configuration) }; },
+    enabled: !!collegeId,
+    retry: false,
   });
-  const pack: UniversitySchemePack = packInfo?.pack ?? DEFAULT_SCHEME_PACK;
+  if (!collegeId || packQuery.isError) return <div role="alert" className="rounded-2xl border border-amber-300 bg-amber-50 p-6 text-amber-900">
+    <h1 className="font-bold">Academic configuration required</h1>
+    <p className="mt-2">{packQuery.error?.message || 'Select a college to view its rules.'}</p>
+    <a className="underline" href="/admin/scheme-packs">Review college Scheme Packs</a>
+  </div>;
+  if (!packQuery.data) return <p role="status">Loading the college’s explicitly assigned scheme…</p>;
+  return <CollegeCompliance packInfo={packQuery.data.primary} configuration={packQuery.data.configuration} collegeId={collegeId} />;
+}
+
+function CollegeCompliance({ packInfo, configuration, collegeId }: { packInfo: Awaited<ReturnType<typeof getCollegeSchemePack>>; configuration: CollegeSchemeConfiguration; collegeId: string }) {
+  const pack: UniversitySchemePack = packInfo.pack;
   const minAtt = pack.attendance.minimumPercentage;
-  const atRiskUpper = pack.attendance.marksSlabs[0]?.max ?? 80;
+  const atRiskUpper = pack.attendance.marksSlabs[0]?.max ?? minAtt;
   const topSlab = pack.attendance.marksSlabs[pack.attendance.marksSlabs.length - 1];
   const seeMax = pack.semesterEndExam.defaultMaxMarks;
   const iaMax = pack.internalAssessment.totalMarks;
   const maxTotal = seeMax + iaMax;
 
-  const { data: stats } = useQuery({
-    queryKey: ['bcuComplianceStats'],
+  const { data: stats, isPending: statsLoading, error: statsError } = useQuery({
+    queryKey: ['bcuComplianceStats', collegeId, pack.id, packInfo.revision, configuration.revision],
     // pack identity in the closure key so switching packs recomputes bands
 
     queryFn: async () => {
-      const collegeId = getCollegeId();
       
       // Students
       const studentQuery = query(collection(db, 'students'), where('collegeId', '==', collegeId), limit(500));
       const studentSnap = await getDocs(studentQuery);
+      if (studentSnap.size >= 500) throw new Error('Student roster exceeds this dashboard’s read limit; narrow the cohort before using compliance totals.');
       const students = studentSnap.docs.map(d => ({ id: d.id, ...d.data() } as any));
 
       // Attendance records
       const attendanceQuery = query(collection(db, 'attendanceRecords'), where('collegeId', '==', collegeId), limit(500));
       const attendanceSnap = await getDocs(attendanceQuery);
+      if (attendanceSnap.size >= 500) throw new Error('Attendance exceeds this dashboard’s read limit; compliance totals are unavailable rather than incomplete.');
       const attendanceRecords = attendanceSnap.docs.map(d => d.data() as any);
 
       // Calculate per-student attendance
@@ -66,8 +79,8 @@ export default function BCUComplianceDashboard() {
       const eligibilityStats = {
         eligible: 0,
         notEligible: 0,
-        atRisk: 0, // 75-80%
-        excellent: 0, // 91%+
+        atRisk: 0, // lowest configured band
+        excellent: 0, // highest configured band
       };
 
       const iaStats = {
@@ -75,21 +88,28 @@ export default function BCUComplianceDashboard() {
         totalStudents: students.length,
       };
 
-      attendanceByStudent.forEach(({ present, total }) => {
-        const perc = total > 0 ? (present / total) * 100 : 100;
-        if (perc >= (topSlab?.min ?? 91)) eligibilityStats.excellent++;
-        if (perc >= minAtt) eligibilityStats.eligible++;
-        else eligibilityStats.notEligible++;
-        if (perc >= minAtt && perc <= atRiskUpper) eligibilityStats.atRisk++;
+      let unresolvedSchemes = 0;
+      attendanceByStudent.forEach(({ present, total }, studentId) => {
+        const student = students.find(s => s.id === studentId);
+        if (!student || !total) return;
+        try {
+          const assigned = selectCollegeScheme(configuration, studentAcademicContext(student, Number(student.semester) || 0)).pack;
+          const floor = assigned.attendance.minimumPercentage;
+          const top = assigned.attendance.marksSlabs[assigned.attendance.marksSlabs.length - 1];
+          const low = assigned.attendance.marksSlabs[0]?.max ?? floor;
+          const perc = (present / total) * 100;
+          if (top && perc >= top.min) eligibilityStats.excellent++;
+          if (!assigned.attendance.blocksExamEligibility || perc >= floor) eligibilityStats.eligible++;
+          else eligibilityStats.notEligible++;
+          if (perc >= floor && perc <= low) eligibilityStats.atRisk++;
+        } catch { unresolvedSchemes++; }
       });
 
-      // If no attendance data, assume all eligible
-      if (attendanceByStudent.size === 0) {
-        eligibilityStats.eligible = students.length;
-      }
+      // Missing attendance is unknown, never evidence of eligibility.
 
       return {
         totalStudents: students.length,
+        unresolvedSchemes,
         ...eligibilityStats,
         attendanceCoverage: attendanceByStudent.size,
         iaStats,
@@ -118,6 +138,8 @@ export default function BCUComplianceDashboard() {
 
   return (
     <div className="space-y-6">
+      <div className="rounded-xl border border-blue-200 p-4 text-sm">{configuration.assignments.length} assigned scheme pack(s). Attendance statistics resolve each linked student’s programme/cohort policy; the rule examples below describe only the primary pack ({pack.name}).</div>
+      {!!stats?.unresolvedSchemes && <div role="alert" className="rounded-xl border border-amber-300 p-4">{stats.unresolvedSchemes} student(s) have unresolved academic routes and are excluded from eligibility counts. Review their programme, batch and semester.</div>}
       {/* Header */}
       <div>
         <h1 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
@@ -126,10 +148,14 @@ export default function BCUComplianceDashboard() {
         </h1>
         <p className="text-sm text-slate-500 mt-1">
           {pack.universityName} — {pack.schemeName} · {seeMax}+{iaMax} marks split · Attendance, IA Marks, Pass Criteria
-          {packInfo?.schemePackId ? '' : ' (default pack — assign one under Scheme Packs)'}
+          {` · Active revision ${packInfo.revision}`}
         </p>
       </div>
 
+      <div role="note" className="rounded-xl border border-blue-200 bg-blue-50 p-4 text-sm text-blue-900">College-standard rules and an illustrative assessment calculation, not a completed regulatory audit. Course-specific profiles may differ. Attendance view is limited to 500 students/records; missing attendance is not treated as eligible.</div>
+      {statsLoading && <p role="status">Loading attendance records…</p>}
+      {statsError && <p role="alert">Attendance could not be loaded: {statsError.message}</p>}
+      {stats && stats.attendanceCoverage < stats.totalStudents && <p role="status">{stats.totalStudents - stats.attendanceCoverage} student(s) have no attendance in this view; eligibility is unknown.</p>}
       {/* Eligibility Overview */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="bg-white dark:bg-[#131b2e] border border-slate-200 dark:border-slate-800 rounded-2xl p-5">
@@ -179,7 +205,7 @@ export default function BCUComplianceDashboard() {
             <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Excellent</span>
           </div>
           <p className="text-2xl font-black text-teal-600">{stats?.excellent || 0}</p>
-          <p className="text-xs text-slate-500 mt-1">{topSlab?.min ?? 91}%+ - {topSlab?.marks ?? 5} marks in IA</p>
+          <p className="text-xs text-slate-500 mt-1">{topSlab ? `${topSlab.min}%+ - ${topSlab.marks} marks in IA` : 'No attendance mark bands'}</p>
         </div>
       </div>
 
@@ -200,7 +226,7 @@ export default function BCUComplianceDashboard() {
                 label: `${s.label} - ${s.marks} marks`,
                 eligible: true,
               }))),
-              { range: `Below ${minAtt}%`, marks: 0, color: 'rose', label: pack.attendance.blocksExamEligibility ? 'Not Eligible - Blocked' : 'Below floor - EB discretion', eligible: false },
+              { range: `Below ${minAtt}%`, marks: 0, color: 'rose', label: pack.attendance.blocksExamEligibility ? 'Not Eligible - Blocked' : 'Below reference - not exam-blocked', eligible: false },
             ].map(row => (
               <div key={row.range} className={`flex items-center justify-between p-3 rounded-xl border ${
                 row.eligible ? 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800' : 'bg-rose-50 dark:bg-rose-950/20 border-rose-200 dark:border-rose-800'

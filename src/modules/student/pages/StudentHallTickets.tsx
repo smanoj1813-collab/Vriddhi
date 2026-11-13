@@ -9,7 +9,7 @@ import {
   Bell, Loader2
 } from 'lucide-react';
 import { getCollegeSchemePack } from '@/modules/admin/api/schemePackApi';
-import { DEFAULT_SCHEME_PACK } from '@/shared/types/schemePack';
+import type { UniversitySchemePack } from '@/shared/types/schemePack';
 import PWAInstallCard from '@/shared/components/PWAInstallCard';
 
 interface HallTicketDoc {
@@ -42,21 +42,28 @@ export default function StudentHallTickets() {
   const { user } = useAuth();
   const { profile, loading: profileLoading } = useStudentProfile(user?.uid);
   const [hallTickets, setHallTickets] = useState<HallTicketDoc[]>([]);
-  // G1: eligibility copy follows the college's assigned university pack.
-  const [schemePack, setSchemePack] = useState(DEFAULT_SCHEME_PACK);
+  const [schemePack, setSchemePack] = useState<UniversitySchemePack | null>(null);
+  const [schemeError, setSchemeError] = useState('');
+  const collegeId = profile?.collegeId || user?.collegeId || '';
   useEffect(() => {
-    getCollegeSchemePack().then((r) => setSchemePack(r.pack)).catch(() => undefined);
-  }, []);
-  const attMin = schemePack.attendance.minimumPercentage;
-  const slabText = [...schemePack.attendance.marksSlabs]
+    let cancelled = false;
+    setSchemePack(null); setSchemeError('');
+    if (!collegeId) return;
+    getCollegeSchemePack(collegeId, { programme: String(profile?.course || profile?.programme || profile?.program || profile?.department || profile?.branch || ''), batch: String(profile?.batch || profile?.academicYear || ''), semester: profile?.semester ? Number(profile.semester) : undefined }).then(r => { if (!cancelled) setSchemePack(r.pack); })
+      .catch(err => { if (!cancelled) setSchemeError(err instanceof Error ? err.message : 'College scheme unavailable'); });
+    return () => { cancelled = true; };
+  }, [collegeId, profile?.course, profile?.programme, profile?.program, profile?.department, profile?.branch, profile?.batch, profile?.academicYear, profile?.semester]);
+  const attMin = schemePack?.attendance.minimumPercentage;
+  const slabText = [...(schemePack?.attendance.marksSlabs ?? [])]
     .sort((a, b) => a.min - b.min)
-    .map((sl) => `${sl.min}-${sl.max}% = ${sl.marks}`)
+    .map(sl => `${sl.min}-${sl.max}% = ${sl.marks}`)
     .join(', ');
   const [loading, setLoading] = useState(true);
   const [selectedTicket, setSelectedTicket] = useState<HallTicketDoc | null>(null);
 
   useEffect(() => {
-    if (profileLoading || !profile) return;
+    if (profileLoading) return;
+    if (!profile) { setLoading(false); return; }
     
     const fetchHallTickets = async () => {
       try {
@@ -137,6 +144,7 @@ export default function StudentHallTickets() {
 
       <PWAInstallCard variant="banner" />
 
+      {!schemePack && <div role="alert" className="rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900">{schemeError || 'College academic rules are being checked.'} No default university rules are applied. Previously issued tickets remain visible below.</div>}
       {/* Info Banner - Uniclare feature parity */}
       <div className="bg-gradient-to-br from-teal-600 to-teal-700 rounded-2xl p-5 text-white">
         <div className="flex items-start gap-3">
@@ -166,17 +174,19 @@ export default function StudentHallTickets() {
           <p className="text-sm text-slate-500 mt-1 max-w-md mx-auto">
             Your college will generate hall tickets for upcoming university exams. 
             You'll get a notification when your hall ticket is ready for download.
-            Make sure your attendance is ≥{attMin}% to be eligible per your university's ordinance.
+            {schemePack ? (schemePack.attendance.blocksExamEligibility ? `Your college scheme requires at least ${attMin}% attendance.` : 'Your college scheme does not automatically block exams for low attendance.') : 'Ask your college to confirm the applicable attendance rules.'}
           </p>
           <div className="mt-6 p-4 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 rounded-xl max-w-md mx-auto text-left">
             <h4 className="font-bold text-amber-900 dark:text-amber-100 text-sm flex items-center gap-2">
               <AlertTriangle size={14} />
-              {schemePack.universityName.includes('Any') ? 'University' : schemePack.code} Eligibility Check
+              {schemePack?.code || 'College scheme pending'} Eligibility Check
             </h4>
             <p className="text-xs text-amber-800 dark:text-amber-200 mt-1">
-              • Minimum {attMin}% attendance required to be eligible<br />
-              • {slabText} marks in IA<br />
-              • Hall ticket will be blocked if attendance below {attMin}%
+              {schemePack ? <>
+                • Attendance reference: {attMin}%<br />
+                • {slabText || 'No attendance-mark slabs configured'}<br />
+                • {schemePack.attendance.blocksExamEligibility ? `New hall tickets are blocked below ${attMin}%` : 'Attendance does not automatically block exam eligibility'}
+              </> : 'Eligibility cannot be evaluated without an explicitly assigned college scheme.'}
             </p>
           </div>
         </div>

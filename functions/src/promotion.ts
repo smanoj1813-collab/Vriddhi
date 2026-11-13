@@ -71,9 +71,12 @@ async function loadPublishedRecords(collegeId: string, studentIds: Set<string>):
       if (!studentIds.has(sid)) continue
       const list = byStudent.get(sid) || []
       list.push({
-        subjectCode: String(r.subjectCode || ''), subjectName: String(r.subjectName || ''),
+        subjectCode: String(r.subjectCode || r.code || ''), subjectName: String(r.subjectName || r.subject || ''),
         semester: Number(r.semester) || 0, grade: String(r.grade || ''),
-        gradePoint: Number(r.gradePoint) || 0, result: String(r.result || ''),
+        gradePoint: typeof r.gradePoint === 'number' ? r.gradePoint : undefined, result: String(r.result || ''),
+        credits: typeof r.credits === 'number' ? r.credits : undefined,
+        includeInGpa: typeof r.includeInGpa === 'boolean' ? r.includeInGpa : undefined,
+        isPass: typeof r.isPass === 'boolean' ? r.isPass : undefined,
         createdAt: String(r.createdAt || ''), updatedAt: String(r.updatedAt || ''),
       })
       byStudent.set(sid, list)

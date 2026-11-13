@@ -115,7 +115,8 @@ import { getAcademicInsights } from './academicInsights'
 // ─── Bulk schedule import: validate → clash-check → (optional) write ───
 import { bulkImportWeeklySchedules } from './scheduleImport'
 // ─── University scheme packs: custom packs + college assignment (G1) ───
-import { saveSchemePack, assignCollegeSchemePack } from './schemePacks'
+import { saveSchemePack, assignCollegeSchemePack, configureCollegeSchemePacks } from './schemePacks'
+import { saveCollegeWithSchemes } from './collegeOnboarding'
 // ─── Auto slot scheduler: day×period grid placement + coverage (G4) ───
 import { autoGenerateWeeklySchedule } from './autoSchedule'
 // ─── Academic calendar: holidays, fests, exam windows (Auto-Scheduler v2) ────
@@ -357,6 +358,8 @@ export {
   bulkImportWeeklySchedules,
   saveSchemePack,
   assignCollegeSchemePack,
+  configureCollegeSchemePacks,
+  saveCollegeWithSchemes,
   autoGenerateWeeklySchedule,
   saveCalendarEvent,
   deleteCalendarEvent,

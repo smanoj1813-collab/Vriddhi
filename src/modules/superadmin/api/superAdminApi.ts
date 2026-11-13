@@ -162,6 +162,10 @@ function docToCollege(docSnap: QueryDocumentSnapshot<DocumentData>): College {
     courses: data.courses,
     subscriptionEnd: data.subscriptionEnd,
     logo: data.logo,
+    universityId: data.universityId, universityName: data.universityName, universityCode: data.universityCode,
+    managementType: data.managementType, autonomyStatus: data.autonomyStatus, district: data.district,
+    offeredCourses: data.offeredCourses, vriddhiStatus: data.vriddhiStatus, vriddhiOnboardingDate: data.vriddhiOnboardingDate,
+    schemeConfigurationRevision: data.schemeConfigurationRevision ?? 0, primarySchemePackId: data.primarySchemePackId ?? data.schemePackId ?? null,
     ...(data.pincode ? { pincode: data.pincode } : {}),
   } as College;
 }
@@ -309,43 +313,12 @@ function generateTempPassword(): string {
 // ═══════════════════════════════════════════════════════════════════════
 
 export async function createCollege(input: CreateCollegeInput): Promise<College> {
-  const now = Timestamp.now();
-
-  // Two colleges with the same code is how faculty get imported into one
-  // "Vriddhi Demo College" while the operator opens the other one. Codes are
-  // the human key on every CSV, so they must be unique.
-  const code = String(input.code || "").trim();
-  if (code) {
-    const dup = await getDocs(query(collection(db, "colleges"), where("code", "==", code), limit(1)));
-    if (!dup.empty) {
-      const existing = dup.docs[0].data();
-      throw new SuperAdminApiError(
-        `College code "${code}" is already used by "${existing.name || dup.docs[0].id}". ` +
-        `Open that college instead of creating a duplicate, or choose a different code.`
-      );
-    }
-  }
-
-  const collegeData = {
-    ...stripUndefined(input),
-    plan: input.plan || "standard",
-    billingCycle: input.billingCycle || "monthly",
-    status: "active",
-    createdAt: now,
-    updatedAt: now,
-    studentCount: 0,
-    facultyCount: 0,
-    adminCount: 0,
-  };
-
-  const docRef = await addDoc(collection(db, "colleges"), collegeData);
-
-  return {
-    id: docRef.id,
-    ...collegeData,
-    createdAt: now.toDate().toISOString(),
-    updatedAt: now.toDate().toISOString(),
-  } as College;
+  const { schemeSelection, expectedConfigurationRevision: _revision, ...details } = input;
+  const fn = httpsCallable<Record<string, unknown>, { collegeId: string }>(functions, 'saveCollegeWithSchemes');
+  const result = await fn({ details: stripUndefined(details), ...(schemeSelection ? { selection: schemeSelection } : {}) });
+  const snap = await getDoc(doc(db, 'colleges', result.data.collegeId));
+  if (!snap.exists()) throw new SuperAdminApiError('College was saved but could not be reloaded. Refresh the college list before retrying.');
+  return docToCollege(snap as QueryDocumentSnapshot<DocumentData>);
 }
 
 export async function listColleges(options: ListCollegesOptions = {}): Promise<PaginatedResult<College>> {
@@ -427,9 +400,17 @@ export async function getCollegeDetailWithCounts(collegeId: string): Promise<Col
 
 export async function updateCollege(collegeId: string, updates: Partial<College>): Promise<College> {
   try {
+    const { schemeSelection, expectedConfigurationRevision, schemeConfigurationRevision: _configRevision, primarySchemePackId: _primaryId, ...details } = updates;
+    if (schemeSelection !== undefined) {
+      const fn = httpsCallable<Record<string, unknown>, { collegeId: string }>(functions, 'saveCollegeWithSchemes');
+      await fn({ collegeId, details: stripUndefined(details), selection: schemeSelection, expectedConfigurationRevision });
+      const snap = await getDoc(doc(db, 'colleges', collegeId));
+      if (!snap.exists()) throw new SuperAdminApiError('College not found after update');
+      return docToCollege(snap as QueryDocumentSnapshot<DocumentData>);
+    }
     const docRef = doc(db, "colleges", collegeId);
     const updateData = {
-      ...stripUndefined(updates),
+      ...stripUndefined(details),
       updatedAt: Timestamp.now(),
     };
     await updateDoc(docRef, updateData);

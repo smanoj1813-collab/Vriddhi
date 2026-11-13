@@ -8,6 +8,8 @@
 // graduation needs every subject cleared. Staff can override per
 // student in the preview before anything is written.
 
+import { creditOutcome } from './academic/creditEngine'
+
 export interface PromotionPolicy {
   /** A student with MORE backlogs than this is detained (repeats the semester). */
   maxBacklogsToPromote: number
@@ -30,19 +32,19 @@ export interface GradeLite {
   grade?: string
   gradePoint?: number
   result?: string
+  credits?: number
+  includeInGpa?: boolean
+  isPass?: boolean
   createdAt?: string
   updatedAt?: string
 }
 
 export interface BacklogSubject { subjectCode: string; subjectName: string; semester: number }
 
-const FAIL_GRADES = new Set(['F', 'FAIL', 'FAILED', 'ABSENT', 'AB', 'NE', 'W'])
-
 export function isFail(r: GradeLite): boolean {
-  const result = String(r.result || '').trim().toUpperCase()
-  if (result) return result === 'FAIL' || result === 'F' || result === 'FAILED'
-  if ((Number(r.gradePoint) || 0) <= 0) return true
-  return FAIL_GRADES.has(String(r.grade || '').trim().toUpperCase())
+  // Unresolved/withheld records remain uncleared; legitimate non-GPA passes
+  // use the same outcome semantics as the transcript and credit audit.
+  return creditOutcome(r) !== 'pass'
 }
 
 /**

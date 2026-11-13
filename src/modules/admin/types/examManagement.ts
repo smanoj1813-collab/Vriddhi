@@ -63,6 +63,9 @@ export interface ExamSubject {
 }
 
 export interface HallTicket {
+  schemePackId?: string;
+  schemePackRevision?: number;
+  schemeConfigurationRevision?: number;
   id: string;
   examSessionId: string;
   collegeId: string;

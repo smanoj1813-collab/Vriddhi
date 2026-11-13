@@ -1,4 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { getCollegeSchemePack } from '../api/schemePackApi';
+import { resolveSchemeCourse } from '@/shared/utils/schemeEngine';
+import { deriveOfficialGrade } from '../../../../functions/src/academic/gradePolicy';
 import {
   Alert,
   Autocomplete,
@@ -35,6 +39,7 @@ interface StudentOption {
   regNo: string;
   /** Cohort fields — the drill keys (department = programme). */
   department: string;
+  programme: string;
   batch: string;
 }
 
@@ -53,6 +58,9 @@ interface GradeRecord {
   total?: number;
   grade: string;
   gradePoint?: number;
+  schemePackId?: string;
+  schemePackRevision?: number;
+  result?: string;
   status: 'draft' | 'published';
   updatedAt: string;
   publishedAt?: string;
@@ -68,6 +76,7 @@ interface GradeForm {
   total: string;
   grade: string;
   gradePoint: string;
+  result: string;
 }
 
 const EMPTY_FORM: GradeForm = {
@@ -80,6 +89,7 @@ const EMPTY_FORM: GradeForm = {
   total: '',
   grade: '',
   gradePoint: '',
+  result: '',
 };
 
 function optionalNumber(value: string): number | undefined {
@@ -101,6 +111,9 @@ export default function GradeRecords() {
   const [form, setForm] = useState<GradeForm>(EMPTY_FORM);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [useComponents, setUseComponents] = useState(false);
+  const [componentMarks, setComponentMarks] = useState<Record<string, string>>({});
+  const [attendance, setAttendance] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
 
@@ -123,6 +136,7 @@ export default function GradeRecords() {
           name: String(data.name || 'Unnamed student'),
           regNo: String(data.regNo || data.registrationNumber || ''),
           department: String(data.department || data.branch || ''),
+          programme: String(data.course || data.programme || data.program || data.department || data.branch || ''),
           batch: String(data.batch || data.academicYear || ''),
         };
       }).sort((left, right) => left.name.localeCompare(right.name)));
@@ -231,14 +245,28 @@ export default function GradeRecords() {
     });
   };
 
+  useEffect(() => { setComponentMarks({}); setAttendance(''); }, [form.code, form.semester, selectedStudent?.id]);
+  const context = { programme: selectedStudent?.programme, batch: selectedStudent?.batch, semester: Number(form.semester) || undefined };
+  const schemeQuery = useQuery({ queryKey: ['schemePack', collegeId, 'for-student', selectedStudent?.programme, selectedStudent?.batch, context.semester], queryFn: () => getCollegeSchemePack(collegeId, selectedStudent ? context : undefined), enabled: !!collegeId, retry: false });
+  const mapping = (() => {
+    try { return schemeQuery.data && form.code ? resolveSchemeCourse(schemeQuery.data.pack, form.code, context) : null; }
+    catch { return null; }
+  })();
+  const componentEvidence = useComponents && mapping ? Object.fromEntries(mapping.profile.internalComponents.filter(c => c.method !== 'attendance').map(c => [c.id, Array.from({ length: c.count }, (_, i) => componentMarks[`${c.id}:${i}`]?.trim() ? Number(componentMarks[`${c.id}:${i}`]) : NaN)])) : undefined;
+  let previewError = '';
+  const preview = (() => {
+    try { return schemeQuery.data && form.code ? deriveOfficialGrade({ code: form.code, semester: Number(form.semester), internal: useComponents ? undefined : optionalNumber(form.internal), external: optionalNumber(form.external), result: form.result, internalComponents: componentEvidence, attendancePercentage: optionalNumber(attendance) }, schemeQuery.data.pack, context) : null; }
+    catch (err) { previewError = err instanceof Error ? err.message : 'Incomplete assessment marks'; return null; }
+  })();
+
   const saveDraft = async () => {
     if (!selectedStudent) {
       setError('Choose a student.');
       return;
     }
     const semester = Number(form.semester);
-    if (!Number.isInteger(semester) || semester < 1 || !form.subject.trim() || !form.code.trim() || !form.grade.trim()) {
-      setError('Student, semester, subject, course code, and grade are required.');
+    if (!Number.isInteger(semester) || semester < 1 || !form.code.trim() || !schemeQuery.data) {
+      setError('Student, semester, approved course code and an active college scheme are required.');
       return;
     }
     try {
@@ -246,25 +274,25 @@ export default function GradeRecords() {
       setError(null);
       setNotice(null);
       const save = httpsCallable<
-        { collegeId: string; records: Array<Record<string, unknown>> },
+        { collegeId: string; schemePackId: string; schemePackRevision: number; schemeConfigurationRevision?: number; records: Array<Record<string, unknown>> },
         { saved: number; ids: string[] }
       >(functions, 'saveDraftGradeRecords');
       await save({
         collegeId,
+        schemePackId: schemeQuery.data.schemePackId,
+        schemePackRevision: schemeQuery.data.revision,
+        schemeConfigurationRevision: schemeQuery.data.configurationRevision,
         records: [{
           studentId: selectedStudent.id,
           semester,
-          subject: form.subject.trim(),
+          subject: mapping?.course.name || form.subject.trim() || form.code.trim(),
           code: form.code.trim(),
-          credits: optionalNumber(form.credits),
-          internal: optionalNumber(form.internal),
+          ...(useComponents ? { internalComponents: componentEvidence, attendancePercentage: optionalNumber(attendance) } : { internal: optionalNumber(form.internal) }),
           external: optionalNumber(form.external),
-          total: optionalNumber(form.total),
-          grade: form.grade.trim(),
-          gradePoint: optionalNumber(form.gradePoint),
+          result: form.result || undefined,
         }],
       });
-      setForm(EMPTY_FORM);
+      setForm(EMPTY_FORM); setUseComponents(false); setComponentMarks({}); setAttendance('');
       setNotice('Draft grade record saved. Review it before publishing.');
       await load();
     } catch (err) {
@@ -306,6 +334,8 @@ export default function GradeRecords() {
         Create registrar drafts and explicitly publish verified transcript rows to students.
       </Typography>
       {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+      {schemeQuery.isError && <Alert severity="warning" sx={{ mb: 2 }}>{schemeQuery.error.message} <RouterLink to="/admin/scheme-packs">Configure Scheme Packs</RouterLink>. Existing published records remain unchanged.</Alert>}
+      {schemeQuery.data && <Alert severity="info" sx={{ mb: 2 }}>Active policy: {schemeQuery.data.pack.code}, revision {schemeQuery.data.revision}. Credits, maxima, pass result and grade are derived and revalidated by the server. No test score is converted into college credits.</Alert>}
       {notice && <Alert severity="success" sx={{ mb: 2 }}>{notice}</Alert>}
 
       <Card variant="outlined" sx={{ mb: 3 }}>
@@ -322,15 +352,28 @@ export default function GradeRecords() {
             />
             <TextField label="Semester" required type="number" value={form.semester} onChange={(event) => updateField('semester', event.target.value)} slotProps={{ htmlInput: { min: 1, max: 20 } }} />
             <TextField label="Course code" required value={form.code} onChange={(event) => updateField('code', event.target.value)} />
-            <TextField label="Subject" required value={form.subject} onChange={(event) => updateField('subject', event.target.value)} sx={{ gridColumn: { md: 'span 2' } }} />
-            <TextField label="Credits" type="number" value={form.credits} onChange={(event) => updateField('credits', event.target.value)} slotProps={{ htmlInput: { min: 0, max: 30, step: 0.5 } }} />
-            <TextField label="Grade" required value={form.grade} onChange={(event) => updateField('grade', event.target.value.toUpperCase())} />
-            <TextField label="Internal marks" type="number" value={form.internal} onChange={(event) => updateField('internal', event.target.value)} />
-            <TextField label="External marks" type="number" value={form.external} onChange={(event) => updateField('external', event.target.value)} />
-            <TextField label="Total" type="number" value={form.total} onChange={(event) => updateField('total', event.target.value)} />
-            <TextField label="Grade point" type="number" value={form.gradePoint} onChange={(event) => updateField('gradePoint', event.target.value)} slotProps={{ htmlInput: { min: 0, max: 10, step: 0.1 } }} />
+            <TextField label="Approved subject" value={mapping?.course.name ?? ''} slotProps={{ input: { readOnly: true } }} sx={{ gridColumn: { md: 'span 2' } }} />
+            <TextField label="Approved credits" value={mapping?.course.credits ?? ''} slotProps={{ input: { readOnly: true } }} />
+            <TextField label="Calculated grade" value={preview?.grade ?? ''} slotProps={{ input: { readOnly: true } }} />
+            <TextField disabled={useComponents} label={`Internal marks${mapping ? ` (0–${mapping.profile.internalMaxMarks})` : ''}`} type="number" value={useComponents ? preview?.internal ?? '' : form.internal} onChange={(event) => updateField('internal', event.target.value)} />
+            <TextField label={`External marks${mapping ? ` (0–${mapping.profile.externalMaxMarks})` : ''}`} type="number" value={form.external} onChange={(event) => updateField('external', event.target.value)} />
+            <TextField label="Calculated total" value={preview?.total ?? ''} slotProps={{ input: { readOnly: true } }} />
+            <TextField label="Calculated grade point" value={preview?.gradePoint ?? ''} slotProps={{ input: { readOnly: true } }} />
+            <TextField select label="Result status" value={form.result} onChange={e => updateField('result', e.target.value)}>
+              <MenuItem value="">Calculate from marks</MenuItem><MenuItem value="F">Recorded failure</MenuItem><MenuItem value="A">Absent</MenuItem>
+            </TextField>
           </Box>
-          <Button variant="contained" onClick={() => void saveDraft()} disabled={saving} sx={{ mt: 2 }}>
+          {mapping && mapping.profile.internalMaxMarks > 0 && <Box sx={{ mt: 2 }}>
+            <label><Checkbox checked={useComponents} onChange={e => setUseComponents(e.target.checked)} />Calculate IA from assessment components</label>
+            {useComponents && <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, mt: 1 }}>
+              {mapping.profile.internalComponents.map(component => component.method === 'attendance' ? <TextField key={component.id} label="Recorded attendance %" type="number" value={attendance} onChange={e => setAttendance(e.target.value)} /> :
+                Array.from({ length: component.count }, (_, i) => <TextField key={`${component.id}:${i}`} type="number" label={`${component.label} ${component.count > 1 ? i + 1 : ''} / ${component.maxMarksEach}`} value={componentMarks[`${component.id}:${i}`] ?? ''} onChange={e => setComponentMarks({ ...componentMarks, [`${component.id}:${i}`]: e.target.value })} helperText={`${component.method}${component.bestOf ? ` ${component.bestOf}` : ''} → ${component.weight} IA marks`} />))}
+              <Typography variant="caption">Provide every conducted component (0 for a recorded absence). The server recalculates and retains this evidence. College-approved aggregate IA entry remains available when the component breakdown is not imported.</Typography>
+            </Box>}
+          </Box>}
+          {form.code && !mapping && <Alert severity="warning" sx={{ mt: 2 }}>No unambiguous course mapping for this student’s programme, batch and semester. Configure approved credits and an assessment profile in Scheme Packs.</Alert>}
+          {mapping && previewError && <Alert severity="info" sx={{ mt: 2 }}>{previewError}</Alert>}
+          <Button variant="contained" onClick={() => void saveDraft()} disabled={saving || !schemeQuery.data || !mapping || !preview} sx={{ mt: 2 }}>
             Save draft
           </Button>
         </CardContent>
@@ -355,7 +398,7 @@ export default function GradeRecords() {
         <Button
           variant="contained"
           color="success"
-          disabled={saving || selectedDrafts.size === 0 || !canPublish}
+          disabled={saving || selectedDrafts.size === 0 || !canPublish || !schemeQuery.data}
           title={canPublish ? undefined : 'Publishing is the college HOD’s approval step'}
           onClick={() => void mutateDrafts('publishGradeRecords')}
         >
@@ -401,6 +444,7 @@ export default function GradeRecords() {
                 <Box sx={{ flex: '0 1 140px' }}>
                   <Typography variant="body2">{record.total ?? '—'} total{record.credits !== undefined ? ` · ${record.credits} cr` : ''}</Typography>
                   <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>{record.internal ?? '—'} + {record.external ?? '—'}</Typography>
+                  {record.schemePackId && <Typography variant="caption" sx={{ display: 'block' }}>Policy r{record.schemePackRevision}: {record.result}</Typography>}
                 </Box>
                 <Typography sx={{ fontWeight: 700, minWidth: 70 }}>
                   {record.grade}{record.gradePoint !== undefined ? ` (${record.gradePoint})` : ''}

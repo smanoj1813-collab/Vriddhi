@@ -1,6 +1,9 @@
 import { createHash } from 'node:crypto'
 import * as admin from 'firebase-admin'
 import { HttpsError, onCall } from 'firebase-functions/v2/https'
+import { resolveCollegeSchemesOnServer } from './schemePacks'
+import { selectCollegeScheme } from './academic/collegeSchemes'
+import { assertDraftPolicyCurrent, deriveOfficialGrade, studentAcademicContext } from './academic/gradePolicy'
 
 interface GradeStaff {
   uid: string
@@ -13,12 +16,15 @@ interface DraftGradeInput {
   semester: number
   subject: string
   code: string
-  grade: string
+  grade?: string
+  result?: string
   credits?: number
   internal?: number
   external?: number
   total?: number
   gradePoint?: number
+  internalComponents?: Record<string, number[]>
+  attendancePercentage?: number
 }
 
 interface ManagedGradeRecord extends FirebaseFirestore.DocumentData {
@@ -46,7 +52,11 @@ export const GRADE_STAGE_ROLES: Record<GradeStage, readonly string[]> = {
 }
 
 export function gradeStageAllows(stage: GradeStage, role: unknown): boolean {
-  return GRADE_STAGE_ROLES[stage].includes(String(role || '').trim().toLowerCase())
+  return GRADE_STAGE_ROLES[stage].includes(
+    String(role || '')
+      .trim()
+      .toLowerCase(),
+  )
 }
 
 async function resolveGradeStaff(
@@ -57,12 +67,10 @@ async function resolveGradeStaff(
   const userDoc = await admin.firestore().collection('users').doc(uid).get()
   const user = userDoc.data()
   const role = String(token.role || user?.role || '')
+    .trim()
+    .toLowerCase()
   const collegeId = String(token.collegeId || user?.collegeId || '')
-  if (
-    !userDoc.exists
-    || !gradeStageAllows(stage, role)
-    || (role !== 'superadmin' && !collegeId)
-  ) {
+  if (!userDoc.exists || !gradeStageAllows(stage, role) || (role !== 'superadmin' && !collegeId)) {
     throw new HttpsError(
       'permission-denied',
       stage === 'draft'
@@ -73,13 +81,11 @@ async function resolveGradeStaff(
   return { uid, role, collegeId }
 }
 
-function optionalNumber(
-  value: unknown,
-  field: string,
-  minimum: number,
-  maximum: number
-): number | undefined {
+function optionalNumber(value: unknown, field: string, minimum: number, maximum: number): number | undefined {
   if (value === undefined || value === null || value === '') return undefined
+  if (typeof value !== 'number' && typeof value !== 'string')
+    throw new HttpsError('invalid-argument', `${field} must be numeric`)
+  if (typeof value === 'string' && !value.trim()) return undefined
   const parsed = Number(value)
   if (!Number.isFinite(parsed) || parsed < minimum || parsed > maximum) {
     throw new HttpsError('invalid-argument', `${field} must be between ${minimum} and ${maximum}`)
@@ -93,22 +99,50 @@ export function validateDraftGradeRecord(value: unknown): DraftGradeInput {
   }
   const input = value as Record<string, unknown>
   const studentId = String(input.studentId || '').trim()
-  const semester = Number(input.semester)
+  const semester =
+    typeof input.semester === 'number' || typeof input.semester === 'string' ? Number(input.semester) : NaN
   const subject = String(input.subject || input.courseName || '').trim()
-  const code = String(input.code || input.courseCode || '').trim().toUpperCase()
-  const grade = String(input.grade || '').trim().toUpperCase()
+  const code = String(input.code || input.courseCode || '')
+    .trim()
+    .toUpperCase()
+  const grade = String(input.grade || '')
+    .trim()
+    .toUpperCase()
   const credits = optionalNumber(input.credits, 'credits', 0, 30)
   const internal = optionalNumber(input.internal, 'internal', 0, 1000)
   const external = optionalNumber(input.external, 'external', 0, 1000)
   const total = optionalNumber(input.total, 'total', 0, 2000)
   const gradePoint = optionalNumber(input.gradePoint, 'gradePoint', 0, 10)
+  const attendancePercentage = optionalNumber(input.attendancePercentage, 'attendancePercentage', 0, 100)
+  let internalComponents: Record<string, number[]> | undefined
+  if (input.internalComponents !== undefined) {
+    if (
+      !input.internalComponents ||
+      typeof input.internalComponents !== 'object' ||
+      Array.isArray(input.internalComponents) ||
+      Object.keys(input.internalComponents).length > 20
+    )
+      throw new HttpsError('invalid-argument', 'IA component evidence is invalid')
+    internalComponents = {}
+    for (const [id, marks] of Object.entries(input.internalComponents)) {
+      if (
+        !/^[a-zA-Z0-9_-]{1,50}$/.test(id) ||
+        ['__proto__', 'constructor', 'prototype'].includes(id) ||
+        !Array.isArray(marks) ||
+        marks.length > 20 ||
+        !marks.every((n) => typeof n === 'number' && Number.isFinite(n) && n >= 0 && n <= 1000)
+      )
+        throw new HttpsError('invalid-argument', 'IA component marks must be finite numeric arrays')
+      internalComponents[id] = marks
+    }
+  }
   if (!studentId || studentId.includes('/') || !Number.isInteger(semester) || semester < 1 || semester > 20) {
     throw new HttpsError('invalid-argument', 'Student and semester are required')
   }
   if (subject.length < 2 || subject.length > 200 || code.length < 1 || code.length > 50) {
     throw new HttpsError('invalid-argument', 'Subject and course code are required')
   }
-  if (!/^[A-Z][A-Z0-9+-]{0,4}$/.test(grade)) {
+  if (grade && !/^[A-Z][A-Z0-9+-]{0,5}$/.test(grade)) {
     throw new HttpsError('invalid-argument', 'Grade must be a valid letter grade')
   }
   if (internal !== undefined && external !== undefined && total !== undefined) {
@@ -122,16 +156,24 @@ export function validateDraftGradeRecord(value: unknown): DraftGradeInput {
     semester,
     subject,
     code,
-    grade,
+    ...(grade ? { grade } : {}),
+    ...(input.result ? { result: String(input.result).trim().toUpperCase() } : {}),
     ...(credits === undefined ? {} : { credits }),
     ...(internal === undefined ? {} : { internal }),
     ...(external === undefined ? {} : { external }),
     ...(total === undefined ? {} : { total }),
     ...(gradePoint === undefined ? {} : { gradePoint }),
+    ...(internalComponents === undefined ? {} : { internalComponents }),
+    ...(attendancePercentage === undefined ? {} : { attendancePercentage }),
   }
 }
 
-export function deterministicGradeRecordId(collegeId: string, studentId: string, semester: number, code: string): string {
+export function deterministicGradeRecordId(
+  collegeId: string,
+  studentId: string,
+  semester: number,
+  code: string,
+): string {
   return createHash('sha256')
     .update(`${collegeId}\u0000${studentId}\u0000${semester}\u0000${code}`)
     .digest('hex')
@@ -144,8 +186,7 @@ function iso(value: unknown): string {
 
 function recordIds(value: unknown): string[] {
   if (!Array.isArray(value)) return []
-  const ids = value
-    .filter((id): id is string => typeof id === 'string' && id.length > 0 && !id.includes('/'))
+  const ids = value.filter((id): id is string => typeof id === 'string' && id.length > 0 && !id.includes('/'))
   return [...new Set(ids)].slice(0, 200)
 }
 
@@ -156,31 +197,37 @@ export const listManagedGradeRecords = onCall(
     if (!uid) throw new HttpsError('unauthenticated', 'Authentication is required')
     const staff = await resolveGradeStaff(uid, request.auth?.token || {}, 'draft')
     const collegeId = staff.role === 'superadmin' ? String(request.data?.collegeId || '') : staff.collegeId
+    if (staff.role !== 'superadmin' && request.data?.collegeId && request.data.collegeId !== staff.collegeId)
+      throw new HttpsError('permission-denied', 'Cannot access another college')
     const status = String(request.data?.status || '')
     if (!collegeId || (status && !['draft', 'published'].includes(status))) {
       throw new HttpsError('invalid-argument', 'College or status is invalid')
     }
-    let query: FirebaseFirestore.Query = admin.firestore().collection('gradeRecords')
+    let query: FirebaseFirestore.Query = admin
+      .firestore()
+      .collection('gradeRecords')
       .where('collegeId', '==', collegeId)
     if (status) query = query.where('status', '==', status)
     const snapshot = await query.limit(500).get()
-    const records: ManagedGradeRecord[] = snapshot.docs.map((record) => {
-      const data = record.data()
-      return {
-        ...data,
-        id: record.id,
-        semester: Number(data.semester),
-        code: String(data.code || ''),
-        createdAt: iso(data.createdAt),
-        updatedAt: iso(data.updatedAt),
-        publishedAt: iso(data.publishedAt) || undefined,
-      }
-    }).sort((left, right) => {
-      const semesterDifference = Number(right.semester) - Number(left.semester)
-      return semesterDifference || String(left.code).localeCompare(String(right.code))
-    })
+    const records: ManagedGradeRecord[] = snapshot.docs
+      .map((record) => {
+        const data = record.data()
+        return {
+          ...data,
+          id: record.id,
+          semester: Number(data.semester),
+          code: String(data.code || ''),
+          createdAt: iso(data.createdAt),
+          updatedAt: iso(data.updatedAt),
+          publishedAt: iso(data.publishedAt) || undefined,
+        }
+      })
+      .sort((left, right) => {
+        const semesterDifference = Number(right.semester) - Number(left.semester)
+        return semesterDifference || String(left.code).localeCompare(String(right.code))
+      })
     return { records }
-  }
+  },
 )
 
 export const saveDraftGradeRecords = onCall(
@@ -190,27 +237,50 @@ export const saveDraftGradeRecords = onCall(
     if (!uid) throw new HttpsError('unauthenticated', 'Authentication is required')
     const staff = await resolveGradeStaff(uid, request.auth?.token || {}, 'draft')
     const collegeId = staff.role === 'superadmin' ? String(request.data?.collegeId || '') : staff.collegeId
+    if (staff.role !== 'superadmin' && request.data?.collegeId && request.data.collegeId !== staff.collegeId)
+      throw new HttpsError('permission-denied', 'Cannot access another college')
     const values: unknown[] = Array.isArray(request.data?.records) ? request.data.records : []
-    if (!collegeId || values.length < 1 || values.length > 200) {
+    if (!collegeId || collegeId.includes('/') || values.length < 1 || values.length > 200) {
       throw new HttpsError('invalid-argument', 'Provide between 1 and 200 grade records')
     }
     const records = values.map(validateDraftGradeRecord)
+    const metadata = request.data?.importMetadata as Record<string, unknown> | undefined
+    if (
+      metadata &&
+      (typeof metadata.academicYear !== 'string' ||
+        !/^\d{4}[-/]\d{2,4}$/.test(metadata.academicYear) ||
+        !['regular', 'supplementary', 'revaluation'].includes(String(metadata.examType)))
+    )
+      throw new HttpsError('invalid-argument', 'Import academic year or exam type is invalid')
+    const provenance = metadata
+      ? {
+          academicYear: metadata.academicYear,
+          examType: String(metadata.examType),
+          importSource: 'reviewed_spreadsheet',
+        }
+      : {}
     const duplicateIds = new Set<string>()
     records.forEach((record) => {
       const id = deterministicGradeRecordId(collegeId, record.studentId, record.semester, record.code)
-      if (duplicateIds.has(id)) throw new HttpsError('invalid-argument', 'Duplicate student/course grade in request')
+      if (duplicateIds.has(id))
+        throw new HttpsError('invalid-argument', 'Duplicate student/course grade in request')
       duplicateIds.add(id)
     })
     const db = admin.firestore()
     const studentIds = [...new Set(records.map((record) => record.studentId))]
     const studentRefs = studentIds.map((id) => db.collection('students').doc(id))
-    const refs = records.map((record) => db.collection('gradeRecords').doc(
-      deterministicGradeRecordId(collegeId, record.studentId, record.semester, record.code)
-    ))
+    const refs = records.map((record) =>
+      db
+        .collection('gradeRecords')
+        .doc(deterministicGradeRecordId(collegeId, record.studentId, record.semester, record.code)),
+    )
     const auditRefs = records.map(() => db.collection('gradeRecordAudit').doc())
-    await db.runTransaction(async (transaction) => {
+    const counts = await db.runTransaction(async (transaction) => {
       const students = await transaction.getAll(...studentRefs)
       const existing = await transaction.getAll(...refs)
+      const configuration = await resolveCollegeSchemesOnServer(collegeId, transaction)
+      if (request.data?.schemeConfigurationRevision !== undefined && request.data.schemeConfigurationRevision !== configuration.revision) throw new HttpsError('failed-precondition', 'College scheme assignments changed since preview. Reload and review before saving.')
+      const studentData = new Map(students.map((student) => [student.id, student.data()!]))
       const studentNames = new Map<string, { name: string; regNo: string }>()
       students.forEach((student) => {
         const data = student.data()
@@ -223,12 +293,32 @@ export const saveDraftGradeRecords = onCall(
         })
       })
       if (existing.some((record) => record.exists && record.data()?.status === 'published')) {
-        throw new HttpsError('failed-precondition', 'Published records cannot be overwritten; create an authorized correction')
+        throw new HttpsError(
+          'failed-precondition',
+          'Published records cannot be overwritten; create an authorized correction',
+        )
       }
+      // Derive every row before queuing ANY write; one bad row aborts the batch.
+      const derived = records.map((record) => {
+        try {
+          const context = studentAcademicContext(studentData.get(record.studentId)!, record.semester)
+          const policy = selectCollegeScheme(configuration, context)
+          if ((request.data?.schemePackId && request.data.schemePackId !== policy.schemePackId) ||
+              (request.data?.schemePackRevision !== undefined && request.data.schemePackRevision !== policy.revision)) throw new HttpsError('failed-precondition', 'College scheme changed since preview. Reload and review before saving.')
+          return { ...deriveOfficialGrade(record, policy.pack, context), schemeConfigurationRevision: configuration.revision, schemeSelection: policy.selection }
+        } catch (err) {
+          throw new HttpsError(
+            'invalid-argument',
+            `${record.code}: ${err instanceof Error ? err.message : 'Invalid grade policy'}`,
+          )
+        }
+      })
       records.forEach((record, index) => {
         const student = studentNames.get(record.studentId)!
         transaction.set(refs[index], {
           ...record,
+          ...derived[index],
+          ...provenance,
           collegeId,
           studentName: student.name,
           studentRegNo: student.regNo,
@@ -247,14 +337,18 @@ export const saveDraftGradeRecords = onCall(
           semester: record.semester,
           code: record.code,
           action: existing[index].exists ? 'draft_updated' : 'draft_created',
-          snapshot: record,
+          snapshot: { ...record, ...derived[index], ...provenance },
           performedBy: uid,
           performedAt: admin.firestore.FieldValue.serverTimestamp(),
         })
       })
+      return {
+        created: existing.filter((record) => !record.exists).length,
+        updated: existing.filter((record) => record.exists).length,
+      }
     })
-    return { saved: records.length, ids: refs.map((ref) => ref.id) }
-  }
+    return { saved: records.length, ...counts, ids: refs.map((ref) => ref.id) }
+  },
 )
 
 export const publishGradeRecords = onCall(
@@ -279,9 +373,46 @@ export const publishGradeRecords = onCall(
           throw new HttpsError('permission-denied', 'A selected record belongs to another college')
         }
       })
+      const collegeIds = [...new Set(docs.map((doc) => String(doc.data()!.collegeId || '')))]
+      if (collegeIds.length !== 1) throw new HttpsError('invalid-argument', 'Publish one college at a time')
+      const configuration = await resolveCollegeSchemesOnServer(collegeIds[0], transaction)
+      const studentIds = [...new Set(docs.map((doc) => String(doc.data()!.studentId || '')))]
+      const students = await transaction.getAll(...studentIds.map((id) => db.collection('students').doc(id)))
+      const studentById = new Map(students.map((doc) => [doc.id, doc]))
+      const verified = docs.map((doc) => {
+        const row = doc.data()!
+        const student = studentById.get(String(row.studentId))
+        if (!student?.exists || student.data()?.collegeId !== collegeIds[0])
+          throw new HttpsError('failed-precondition', 'Student linkage changed; review the draft')
+        try {
+          const context = studentAcademicContext(student.data()!, Number(row.semester))
+          const policy = selectCollegeScheme(configuration, context)
+          assertDraftPolicyCurrent(row, policy.pack)
+          const evidence = row.assessmentEvidence as Record<string, unknown> | undefined
+          return { ...deriveOfficialGrade(
+            validateDraftGradeRecord({
+              ...row,
+              ...(evidence
+                ? {
+                    internalComponents: evidence.internalComponents,
+                    attendancePercentage: evidence.attendancePercentage,
+                  }
+                : {}),
+            }),
+            policy.pack,
+            context,
+          ), schemeConfigurationRevision: configuration.revision, schemeSelection: policy.selection }
+        } catch (err) {
+          throw new HttpsError(
+            'failed-precondition',
+            err instanceof Error ? err.message : 'Draft must be revalidated',
+          )
+        }
+      })
       refs.forEach((ref, index) => {
         const data = docs[index].data()!
         transaction.update(ref, {
+          ...verified[index],
           status: 'published',
           publishedAt: admin.firestore.FieldValue.serverTimestamp(),
           publishedBy: uid,
@@ -294,13 +425,14 @@ export const publishGradeRecords = onCall(
           semester: data.semester,
           code: data.code,
           action: 'published',
+          snapshot: verified[index],
           performedBy: uid,
           performedAt: admin.firestore.FieldValue.serverTimestamp(),
         })
       })
     })
     return { published: ids.length }
-  }
+  },
 )
 
 export const deleteDraftGradeRecords = onCall(
@@ -342,5 +474,5 @@ export const deleteDraftGradeRecords = onCall(
       })
     })
     return { deleted: ids.length }
-  }
+  },
 )

@@ -1,8 +1,7 @@
 // src/shared/utils/schemeEngine.test.ts
-// G1 scheme-pack engine tests. The parity block pins the BCU facade
-// (bcuCompliance.ts) to its pre-G1 outputs so the hall-ticket, compliance
-// dashboard and result-import surfaces cannot drift while everything moves
-// onto packs.
+// Explicit scheme-pack engine tests. The parity block retains the historical
+// BCU compatibility fixture outside runtime source; it is a regression test,
+// not permission for application consumers to fall back to university defaults.
 
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
@@ -26,7 +25,7 @@ import {
   calculateSGPA,
   isEligibleForExam,
   getAttendanceEligibilityMessage,
-} from './bcuCompliance';
+} from '../../../functions/test/helpers/legacyBcuCompatibility';
 import {
   BCU_SEP_2024,
   KUD_NEP_CBAE,
@@ -89,12 +88,10 @@ describe('engine — internal assessment', () => {
     assert.equal(r.totalPossible, 40);
   });
 
-  it('assignment marks are capped at the pack maximum', () => {
-    const r = calculateSchemeInternalMarks(
-      { testMarks: [20, 20], assignmentMarks: 99, attendancePercentage: 100 },
-      BCU_SEP_2024,
-    );
-    assert.equal(r.assignmentMarks, 5);
+  it('rejects out-of-range assignment marks instead of silently capping them', () => {
+    assert.throws(() => calculateSchemeInternalMarks(
+      { testMarks: [20, 20], assignmentMarks: 99, attendancePercentage: 100 }, BCU_SEP_2024,
+    ), /Assignment marks/);
   });
 });
 
@@ -159,11 +156,11 @@ describe('engine — grades & sgpa', () => {
 });
 
 describe('engine — pack hygiene', () => {
-  it('normalizeSchemePack fills gaps in a half-authored custom pack', () => {
-    const partial = normalizeSchemePack({ code: 'CUSTOM', name: 'Custom U', gradeTable: [] });
-    assert.equal(partial.semesterEndExam.defaultMaxMarks, 80);
-    assert.equal(partial.gradeTable.length, BCU_SEP_2024.gradeTable.length);
-    assert.ok(partial.attendance.marksSlabs.length > 0);
+  it('rejects missing or incomplete rules instead of inheriting BCU', () => {
+    for (const value of [undefined, null, {}, { code: 'CUSTOM', name: 'Custom U', gradeTable: [] }]) {
+      assert.throws(() => normalizeSchemePack(value));
+    }
+    assert.equal(normalizeSchemePack(KUD_NEP_CBAE).semesterEndExam.defaultMaxMarks, 60);
   });
 
   it('presets resolve by code', () => {
