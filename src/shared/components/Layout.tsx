@@ -1,3 +1,4 @@
+import '../styles/portalExperience.css';
 import React, { useState, useEffect } from "react";
 import { useCollegeBranding } from '@/shared/hooks/useCollegeBranding';
 import { Outlet, useNavigate, useLocation, Link } from "react-router-dom";
@@ -156,6 +157,7 @@ const NAV_LABEL_KEYS: Record<string, TranslationKey> = {
 };
 
 const navItems: NavItem[] = [
+  { label: "Risk Alerts", path: "/admin/risk-alerts", icon: <NotificationsNone fontSize="small" />, roles: ["hod", "admin", "principal"], section: "Academic" },
   // ─── SUPER ADMIN ───
   { label: "Dashboard", path: "/superadmin/dashboard", icon: <Dashboard fontSize="small" />, roles: ["superadmin"], section: "Overview" },
   { label: "Colleges", path: "/superadmin/colleges", icon: <Business fontSize="small" />, roles: ["superadmin"], section: "Institutions" },
@@ -271,6 +273,7 @@ type SidebarEntry =
   | { kind: "group"; label: string; icon: React.ReactNode; children: SidebarLeaf[] };
 
 const facultyNav: SidebarEntry[] = [
+  { kind: "link", label: "Risk Alerts", path: "/faculty/risk-alerts", icon: <NotificationsNone fontSize="small" /> },
   { kind: "link", label: "Dashboard", path: "/faculty/dashboard", icon: <Dashboard fontSize="small" /> },
 
   {
@@ -359,6 +362,7 @@ const facultyNav: SidebarEntry[] = [
  * stays exactly as it was.
  */
 const principalNav: SidebarEntry[] = [
+  { kind: "link", label: "Risk Alerts", path: "/admin/risk-alerts", icon: <NotificationsNone fontSize="small" /> },
   { kind: "link", label: "Dashboard", path: "/admin/dashboard", icon: <Dashboard fontSize="small" /> },
 
   {
@@ -483,6 +487,7 @@ const principalNav: SidebarEntry[] = [
  * /admin/hod-dashboard (see ROLE_DASHBOARD).
  */
 const hodNav: SidebarEntry[] = [
+  { kind: "link", label: "Risk Alerts", path: "/admin/risk-alerts", icon: <NotificationsNone fontSize="small" /> },
   { kind: "link", label: "HOD Dashboard", path: "/admin/hod-dashboard", icon: <Dashboard fontSize="small" /> },
 
   {
@@ -1230,6 +1235,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                   <ListItem key={entry.path} disablePadding sx={{ mb: 0.5 }}>
                     <Tooltip title={collapsed ? navLabel(entry.label) : ""} placement="right" arrow>
                       <ListItemButton
+                        className="portal-motion-target"
                         onClick={() => followNavPath(entry.path)}
                         selected={isActive}
                         sx={{
@@ -1253,6 +1259,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                         }}
                       >
                         <ListItemIcon
+                          className="portal-interactive-icon"
                           sx={{
                             minWidth: collapsed ? "auto" : 36,
                             color: isActive ? "#ffffff" : "text.secondary",
@@ -1293,6 +1300,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                   <ListItem disablePadding sx={{ mb: 0.5 }}>
                     <Tooltip title={collapsed ? navLabel(entry.label) : ""} placement="right" arrow>
                       <ListItemButton
+                        className="portal-motion-target"
                         onClick={() =>
                           collapsed
                             ? followNavPath(entry.children[0].path)
@@ -1324,6 +1332,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                         }}
                       >
                         <ListItemIcon
+                          className="portal-interactive-icon"
                           sx={{
                             minWidth: collapsed ? "auto" : 36,
                             color: isGroupActive ? "primary.main" : "text.secondary",
@@ -1363,6 +1372,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                           return (
                             <ListItem key={child.path} disablePadding sx={{ mb: 0.25 }}>
                               <ListItemButton
+                        className="portal-motion-target"
                                 onClick={() => followNavPath(child.path)}
                                 selected={isActive}
                                 sx={{
@@ -1387,6 +1397,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                                 }}
                               >
                                 <ListItemIcon
+                          className="portal-interactive-icon"
                                   sx={{
                                     minWidth: 30,
                                     color: isActive ? "#ffffff" : "text.secondary",
@@ -1429,6 +1440,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             <ListItem key={item.path} disablePadding sx={{ mb: 0.5 }}>
               <Tooltip title={collapsed ? (NAV_LABEL_KEYS[item.label] ? t(NAV_LABEL_KEYS[item.label]) : item.label) : ""} placement="right" arrow>
                 <ListItemButton
+                        className="portal-motion-target"
                   onClick={() => navigate(item.path)}
                   selected={isActive}
                   sx={{
@@ -1452,6 +1464,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                   }}
                 >
                   <ListItemIcon
+                          className="portal-interactive-icon"
                     sx={{
                       minWidth: collapsed ? "auto" : 36,
                       color: isActive ? "#ffffff" : "text.secondary",
@@ -1496,6 +1509,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       <Box sx={{ p: 1.5, display: "flex", flexDirection: "column", gap: 0.5 }}>
         {showInstallApp && (
           <ListItemButton
+                        className="portal-motion-target"
             onClick={requestPwaInstall}
             sx={{
               borderRadius: 2,
@@ -1518,6 +1532,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         )}
 
         <ListItemButton
+                        className="portal-motion-target"
           onClick={toggleMode}
           sx={{
             borderRadius: 2,
@@ -1543,6 +1558,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         </ListItemButton>
 
         <ListItemButton
+                        className="portal-motion-target"
           onClick={handleLogout}
           sx={{
             borderRadius: 2,

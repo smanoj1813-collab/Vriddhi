@@ -60,6 +60,8 @@ export default defineConfig(({ mode }) => {
         ],
       },
       workbox: {
+        // Share the existing PWA worker; never register a competing FCM worker.
+        importScripts: ['/risk-push-sw.js'],
         // Precache ONLY the critical shell: the entry HTML/manifest, the
         // initial JS graph (exactly the chunks index.html modulepreloads:
         // index, react-core, firebase, mui-core, mui-icons, utils), the CSS,

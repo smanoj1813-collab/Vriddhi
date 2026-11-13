@@ -1,0 +1,112 @@
+/* Authenticated portal surfaces only. Do not import the landing page's
+   layout styles here: these little scenes should work on any portal route. */
+.portal-illustration {
+  --scene-backdrop: #e6f1e8;
+  --scene-grid: #6c9d85;
+  --scene-ground: #ccdfd1;
+  --scene-paper: #fffdf3;
+  --scene-mint: #dbe9d9;
+  --scene-ink: #215747;
+  --scene-accent: #41896e;
+  --scene-line: #aec8b5;
+  --scene-gold: #e7bb70;
+  display: block;
+  width: 100%;
+  height: auto;
+  pointer-events: none;
+}
+
+.dark .portal-illustration {
+  --scene-backdrop: #1c3b36;
+  --scene-grid: #8ab8a4;
+  --scene-ground: #2b5044;
+  --scene-paper: #e1eadc;
+  --scene-mint: #b7d0bc;
+  --scene-accent: #6fa68a;
+  --scene-line: #9cbca6;
+  --scene-gold: #d8af69;
+}
+
+.portal-illustration .portal-scene-person,
+.portal-illustration .portal-scene-head,
+.portal-illustration .portal-scene-wave,
+.portal-illustration .portal-scene-float,
+.portal-illustration .portal-scene-token,
+.portal-illustration .portal-scene-plant,
+.portal-illustration .portal-scene-spark {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+/* Finite greetings, not infinite background movement. No auto animation
+   (including its delay) runs for more than five seconds. */
+.portal-illustration .portal-scene-person {
+  transform-origin: center bottom;
+  animation: portal-scene-bob 3.8s ease-in-out 1 both;
+}
+.portal-illustration .portal-scene-head {
+  transform-origin: center bottom;
+  animation: portal-scene-nod 3.4s ease-in-out .15s 1 both;
+}
+.portal-illustration .portal-scene-wave {
+  transform-origin: left center;
+  animation: portal-scene-wave 3s ease-in-out .2s 1 both;
+}
+.portal-illustration .portal-scene-float {
+  animation: portal-scene-float 4s ease-in-out 1 both;
+}
+.portal-illustration .portal-scene-token {
+  animation: portal-scene-float 3.6s ease-in-out .15s 1 both;
+}
+.portal-illustration .portal-scene-plant {
+  transform-origin: center bottom;
+  animation: portal-scene-sway 4s ease-in-out 1 both;
+}
+.portal-illustration .portal-scene-spark {
+  animation: portal-scene-spark 2s ease-in-out 2 both;
+}
+
+.portal-motion-target:focus-visible {
+  outline: 2px solid rgb(var(--accent-600));
+  outline-offset: 3px;
+}
+.dark .portal-motion-target:focus-visible { outline-color: rgb(var(--accent-300)); }
+.student-welcome-banner .portal-motion-target:focus-visible { outline-color: #fffdf3; }
+
+.portal-interactive-icon { transform-origin: center; }
+.portal-motion-target:focus-visible .portal-interactive-icon {
+  animation: portal-icon-greet .55s ease-in-out 1;
+}
+.portal-link-arrow { transition: transform .18s ease-out; }
+.portal-motion-target:focus-visible .portal-link-arrow { transform: translateX(3px); }
+
+@media (hover: hover) {
+  .portal-motion-target:hover .portal-interactive-icon { animation: portal-icon-greet .55s ease-in-out 1; }
+  .portal-motion-target:hover .portal-link-arrow { transform: translateX(3px); }
+}
+
+.student-nav-panel[hidden] { display: none; }
+.student-nav-panel:not([hidden]) { animation: student-section-open .18s ease-out 1; }
+
+@keyframes student-section-open { from { opacity: .4; transform: translateY(-3px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes portal-icon-greet { 0%, 100% { transform: translateY(0) rotate(0); } 35% { transform: translateY(-2px) rotate(-9deg); } 70% { transform: translateY(-1px) rotate(5deg); } }
+@keyframes portal-scene-bob { 0%, 100% { transform: translateY(0); } 40%, 70% { transform: translateY(-3px); } }
+@keyframes portal-scene-nod { 0%, 100% { transform: rotate(0); } 35%, 65% { transform: rotate(4deg); } 50% { transform: rotate(-2deg); } }
+@keyframes portal-scene-wave { 0%, 100% { transform: rotate(0); } 25%, 60% { transform: rotate(-17deg); } 42%, 78% { transform: rotate(-5deg); } }
+@keyframes portal-scene-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+@keyframes portal-scene-sway { 0%, 100% { transform: rotate(0); } 35% { transform: rotate(-3deg); } 70% { transform: rotate(2deg); } }
+@keyframes portal-scene-spark { 0%, 100% { opacity: 1; } 50% { opacity: .4; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .portal-illustration *,
+  .portal-motion-target,
+  .portal-motion-target *,
+  .student-nav-panel,
+  .student-sidebar,
+  .student-sidebar *,
+  .student-sidebar-spacer {
+    animation: none !important;
+    transition: none !important;
+  }
+  .portal-motion-target .portal-link-arrow { transform: none !important; }
+}

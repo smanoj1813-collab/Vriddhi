@@ -13,6 +13,7 @@ function RouteTracer({ label, children }: { label: string; children: ReactNode }
   return <>{children}</>;
 }
 
+const AcademicRiskAlertsPage = lazy(() => import('@/shared/pages/AcademicRiskAlertsPage'));
 const FacultyDashboard = lazy(() => import('./pages/FacultyDashboard'));
 const FacultyAttendance = lazy(() => import('./pages/FacultyAttendance'));
 const FacultyAttendanceMarking = lazy(() => import('./components/FacultyAttendanceMarking'));
@@ -125,6 +126,7 @@ export const facultyRoutes: RouteObject[] = [
       </RoleRoute>
     ),
     children: [
+      { path: 'risk-alerts', element: <LazyPage label="faculty/risk-alerts"><AcademicRiskAlertsPage /></LazyPage> },
       { index: true, element: <LazyPage label="faculty/index"><FacultyDashboard /></LazyPage> },
       { path: 'dashboard', element: <LazyPage label="faculty/dashboard"><FacultyDashboard /></LazyPage> },
       { path: 'attendance', element: <LazyPage label="faculty/attendance"><FacultyAttendance /></LazyPage> },

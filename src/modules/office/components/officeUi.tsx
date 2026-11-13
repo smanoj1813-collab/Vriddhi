@@ -43,8 +43,8 @@ export function PageHeader({ title, subtitle, icon, actions }: { title: string; 
 
 export function StatCard({ label, value, icon, tone = 'text-vriddhi-accent', hint }: { label: string; value: ReactNode; icon: ReactNode; tone?: string; hint?: string }) {
   return (
-    <div className="glass-card p-4 flex items-center gap-3">
-      <div className={`w-10 h-10 rounded-xl bg-vriddhi-dark/30 flex items-center justify-center shrink-0 ${tone}`}>{icon}</div>
+    <div className="portal-motion-target glass-card p-4 flex items-center gap-3">
+      <div className={`portal-interactive-icon w-10 h-10 rounded-xl bg-vriddhi-dark/30 flex items-center justify-center shrink-0 ${tone}`}>{icon}</div>
       <div className="min-w-0">
         <p className="text-lg font-bold text-slate-900 dark:text-white truncate">{value}</p>
         <p className="text-xs text-vriddhi-muted truncate">{label}</p>

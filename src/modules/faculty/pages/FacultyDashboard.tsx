@@ -1,3 +1,5 @@
+import RiskAlertsSummary from '@/shared/components/RiskAlertsSummary';
+import RoleWelcomeBanner from '@/shared/components/RoleWelcomeBanner';
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/modules/auth/context/AuthContext';
@@ -238,37 +240,31 @@ export default function FacultyDashboard() {
   return (
     <Box sx={{ p: { xs: 0, md: 2 } }}>
       {/* Header */}
-      <Paper sx={{ p: { xs: 2.5, md: 3 }, mb: 3, bgcolor: 'primary.main', color: 'white', borderRadius: 3 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 2 }}>
-          <Box>
-            <Typography variant="h4" sx={{ fontWeight: 700, mb: 0.5, fontSize: { xs: '1.5rem', md: '2.125rem' } }}>
-              Welcome back, {user?.name?.split(' ')[0] || 'Faculty'}
-            </Typography>
-            <Typography variant="body1" sx={{ opacity: 0.9 }}>
-              {user?.department || 'Department'} · {stats.totalClasses} classes today
-            </Typography>
-          </Box>
-          <Avatar sx={{ width: 56, height: 56, bgcolor: 'rgba(255,255,255,0.2)', fontSize: 24, fontWeight: 700, display: { xs: 'none', sm: 'flex' } }}>
-            {user?.name?.charAt(0) || 'F'}
-          </Avatar>
-        </Box>
-      </Paper>
+      <RoleWelcomeBanner headingLevel={1} role={user?.role === 'mentor' ? 'mentor' : 'faculty'} className="mb-6"
+        title={`Welcome back, ${user?.name?.split(' ')[0] || 'Faculty'}`}
+        subtitle={`${user?.department || 'Department'} · ${stats.totalClasses} classes today`} />
+
+      <RiskAlertsSummary />
 
       {/* Quick Actions */}
       <Grid container spacing={2} sx={{ mb: 3 }}>
         {quickActions.map((action) => (
           <Grid size={{ xs: 6, sm: 6, md: 3 }} key={action.label}>
             <Card
+              className="portal-motion-target"
+              component="button"
+              type="button"
               sx={{
+                width: '100%', textAlign: 'left', border: 0,
                 cursor: 'pointer',
                 transition: 'all 0.2s',
-                '&:hover': { transform: 'translateY(-2px)', boxShadow: 4 },
+                '&:hover': { boxShadow: 4 },
               }}
               onClick={() => navigate(action.path)}
             >
               <CardContent sx={{ display: 'flex', alignItems: 'center', gap: { xs: 1.5, md: 2 }, p: { xs: 1.5, md: 2 }, '&:last-child': { pb: { xs: 1.5, md: 2 } }, minHeight: 72 }}>
                 <Avatar sx={{ bgcolor: `${action.color}20`, color: action.color, width: { xs: 36, md: 40 }, height: { xs: 36, md: 40 } }}>
-                  {action.icon}
+                  <span className="portal-interactive-icon" aria-hidden="true">{action.icon}</span>
                 </Avatar>
                 <Box sx={{ minWidth: 0 }}>
                   <Typography variant="h6" sx={{ fontWeight: 700, color: action.color, fontSize: { xs: '0.95rem', md: '1.25rem' }, lineHeight: 1.2 }} noWrap>

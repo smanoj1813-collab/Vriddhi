@@ -1,3 +1,5 @@
+import RiskAlertsSummary from '@/shared/components/RiskAlertsSummary';
+import RoleWelcomeBanner from '@/shared/components/RoleWelcomeBanner';
 import React, { useState, useMemo, useEffect, useCallback } from 'react'
 import { useAuth } from '../../auth/context/AuthContext'
 import AcademicInsightsCard from '../components/AcademicInsightsCard'
@@ -46,7 +48,7 @@ function StatCard({ icon: Icon, label, value, trend, trendUp, color = 'teal' }: 
   }
   const c = colorMap[color]
   return (
-    <div className="glass-card p-5">
+    <div className="portal-motion-target glass-card p-5">
       <div className="flex items-start justify-between">
         <div>
           <p className="text-sm text-slate-500 dark:text-slate-400 mb-1">{label}</p>
@@ -59,7 +61,7 @@ function StatCard({ icon: Icon, label, value, trend, trendUp, color = 'teal' }: 
           )}
         </div>
         <div className={`p-3 rounded-xl ${c.bg} ${c.text}`}>
-          <Icon size={20} />
+          <Icon aria-hidden="true" className="portal-interactive-icon" size={20} />
         </div>
       </div>
     </div>
@@ -91,7 +93,7 @@ function SectionHeader({ title, icon: Icon, action }: {
     <div className="flex items-center justify-between mb-6">
       <div className="flex items-center gap-3">
         <div className="p-2 rounded-lg bg-teal-500/10 text-teal-400">
-          <Icon size={20} />
+          <Icon aria-hidden="true" className="portal-interactive-icon" size={20} />
         </div>
         <h2 className="text-xl font-bold text-slate-900 dark:text-white">{title}</h2>
       </div>
@@ -139,17 +141,11 @@ function DepartmentOverview({ data }: { data: ReturnType<typeof useDashboardData
   return (
     <div className="animate-fade-in space-y-6">
       {/* Welcome Banner */}
-      <div className="glass-card p-6 bg-teal-500/5 border border-teal-500/20">
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-1">Welcome back, {user?.name?.split(' ')[0] || 'HOD'}</h2>
-            <p className="text-slate-500 dark:text-slate-400">Department of {dept} · {totalStudents} Students · {activeAssessments} Active Assessments</p>
-          </div>
-          <div className="p-3 rounded-xl bg-teal-500/10 text-teal-400">
-            <Building2 size={28} />
-          </div>
-        </div>
-      </div>
+      <RoleWelcomeBanner role={user?.role === 'admin' ? 'admin' : 'hod'}
+        title={`Welcome back, ${user?.name?.split(' ')[0] || 'HOD'}`}
+        subtitle={`Department of ${dept} · ${totalStudents} Students · ${activeAssessments} Active Assessments`} />
+
+      <RiskAlertsSummary />
 
       {/* Stats Row */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -825,13 +821,13 @@ export default function HODDashboard() {
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               className={`
-                flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium whitespace-nowrap transition-all duration-200
+                portal-motion-target flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium whitespace-nowrap transition-all duration-200
                 ${active
                   ? 'bg-teal-500/10 text-teal-400 border border-teal-500/30'
                   : 'text-slate-500 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/50 dark:hover:bg-slate-800/50 border border-transparent'}
               `}
             >
-              <Icon size={16} />
+              <Icon aria-hidden="true" className="portal-interactive-icon" size={16} />
               {tab.label}
             </button>
           )

@@ -5,6 +5,7 @@ import type { UserRole } from '@/modules/auth/context/AuthContext';
 import Layout from '@/shared/components/Layout';
 
 import { AdminPathGate } from './components/AdminPathGate';
+const AcademicRiskAlertsPage = lazy(() => import('@/shared/pages/AcademicRiskAlertsPage'));
 const LibraryManagement = lazy(() => import('@/modules/office/pages/LibraryManagement'));
 const LibraryFinesPage = lazy(() => import('@/modules/office/pages/LibraryFinesPage'));
 const InventoryManagement = lazy(() => import('@/modules/office/pages/InventoryManagement'));
@@ -145,6 +146,7 @@ export const adminRoutes: RouteObject[] = [
       </RoleRoute>
     ),
     children: [
+      { path: 'risk-alerts', element: <LazyPage><AcademicRiskAlertsPage /></LazyPage> },
       { index: true, element: <LazyPage><AdminDashboard /></LazyPage> },
       { path: 'dashboard', element: <LazyPage><AdminDashboard /></LazyPage> },
       { path: 'students', element: <LazyPage><AdminDashboard /></LazyPage> },
