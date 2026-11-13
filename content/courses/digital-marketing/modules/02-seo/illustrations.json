@@ -1,0 +1,786 @@
+{
+  "moduleId": "m2",
+  "topics": {
+    "m2-t1": {
+      "introduction": "See how a page becomes eligible to appear in search, then connect customer intent to one useful destination page.",
+      "sections": [
+        {
+          "title": "Discovery is not a ranking guarantee",
+          "explanation": "Search has separate stages. A page can be discoverable but not indexed, or indexed but not competitive for a particular query.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Crawl",
+                "detail": "A search engine discovers and fetches a URL.",
+                "icon": "search"
+              },
+              {
+                "label": "Index",
+                "detail": "It evaluates whether and how to store the page.",
+                "icon": "file"
+              },
+              {
+                "label": "Rank / serve",
+                "detail": "It selects useful results for a specific query and context.",
+                "icon": "filter"
+              }
+            ]
+          },
+          "takeaway": "A sitemap can help discovery. It does not guarantee indexing, ranking or traffic.",
+          "caption": "Concept illustration, not a platform screenshot. Follow the labels and the relationships shown.",
+          "id": "m2-t1-v1",
+          "section": "1. Crawl, index, rank"
+        },
+        {
+          "title": "Read the intention behind the phrase",
+          "explanation": "A high-volume phrase may be less useful than a precise phrase that matches the offer and customer’s next action.",
+          "diagram": {
+            "kind": "compare",
+            "items": [
+              {
+                "label": "Informational",
+                "detail": "“How to choose running shoes” → a helpful guide.",
+                "icon": "file"
+              },
+              {
+                "label": "Commercial",
+                "detail": "“Best running shoes for beginners” → an honest comparison.",
+                "icon": "search"
+              },
+              {
+                "label": "Transactional / local",
+                "detail": "“Buy running shoes Mysuru” → a relevant product or location page.",
+                "icon": "cursor"
+              }
+            ]
+          },
+          "takeaway": "Inspect the actual results page; a keyword’s wording alone can hide mixed intent.",
+          "caption": "Concept illustration, not a platform screenshot. Follow the labels and the relationships shown.",
+          "id": "m2-t1-v2",
+          "section": "2. Intent beats volume"
+        },
+        {
+          "title": "Build a shortlist before opening a spreadsheet",
+          "explanation": "Research starts with the customer’s language, expands it with tools and ends in a prioritised list.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Seed",
+                "detail": "List offers, problems, localities and customer phrases.",
+                "icon": "message"
+              },
+              {
+                "label": "Expand",
+                "detail": "Use suggestions, trends and related queries.",
+                "icon": "search"
+              },
+              {
+                "label": "Inspect",
+                "detail": "Read the results and note intent and competition.",
+                "icon": "globe"
+              },
+              {
+                "label": "Prioritise",
+                "detail": "Balance relevance, realistic effort and business value.",
+                "icon": "target"
+              }
+            ]
+          },
+          "takeaway": "Volume and difficulty estimates are directional tool outputs, not guaranteed visitor counts.",
+          "caption": "Concept illustration, not a platform screenshot. Follow the labels and the relationships shown.",
+          "id": "m2-t1-v3",
+          "section": "3. The free keyword research workflow"
+        },
+        {
+          "title": "One intent, one main destination",
+          "explanation": "A keyword map prevents several near-identical pages from competing for the same task.",
+          "diagram": {
+            "kind": "hub",
+            "items": [
+              {
+                "label": "Phrase group",
+                "detail": "Cluster close variations around a shared need.",
+                "icon": "layers"
+              },
+              {
+                "label": "Intent",
+                "detail": "Write the question or action the searcher wants.",
+                "icon": "search"
+              },
+              {
+                "label": "Target page",
+                "detail": "Choose the page best suited to answer that need.",
+                "icon": "globe"
+              },
+              {
+                "label": "Priority / evidence",
+                "detail": "Record why the page matters and where the estimate came from.",
+                "icon": "chart"
+              }
+            ],
+            "center": "Keyword map"
+          },
+          "takeaway": "A map should include the next action for an existing page or a clearly justified new page.",
+          "caption": "Concept illustration, not a platform screenshot. Follow the labels and the relationships shown.",
+          "checkpoint": {
+            "question": "Should five close keyword variants automatically become five new pages?",
+            "answer": "No. If they express the same intent, one strong destination may serve them better. Check the results and avoid duplicating thin pages."
+          },
+          "id": "m2-t1-v4",
+          "section": "4. The keyword map: the actual deliverable"
+        }
+      ]
+    },
+    "m2-t2": {
+      "introduction": "Think of a search result as a promise and the page as its delivery. Align the title, snippet, headings, answer and links around the same customer need.",
+      "sections": [
+        {
+          "title": "The title makes the first promise",
+          "explanation": "A descriptive title tells the searcher what the page is for. Important meaning should survive truncation.",
+          "diagram": {
+            "kind": "compare",
+            "items": [
+              {
+                "label": "Vague title",
+                "detail": "“Home | Welcome” gives almost no reason to choose the result.",
+                "icon": "file"
+              },
+              {
+                "label": "Specific title",
+                "detail": "“CA Foundation Coaching in Mysuru | Weekend Batches” names the offer and context.",
+                "icon": "search"
+              }
+            ]
+          },
+          "takeaway": "Character counts are a drafting aid, not a fixed ranking rule. Search engines may rewrite displayed titles.",
+          "caption": "Concept illustration, not a platform screenshot. Follow the labels and the relationships shown.",
+          "id": "m2-t2-v1",
+          "section": "1. Title tags: the single highest-leverage 60 characters"
+        },
+        {
+          "title": "The snippet earns the right click",
+          "explanation": "A meta description previews value and the next step. It should describe the page honestly rather than stuff keywords.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Need",
+                "detail": "Name the audience’s immediate question.",
+                "icon": "users"
+              },
+              {
+                "label": "Value / proof",
+                "detail": "Explain the useful answer or supported benefit.",
+                "icon": "check"
+              },
+              {
+                "label": "Next step",
+                "detail": "Invite an appropriate action such as viewing fees or the menu.",
+                "icon": "cursor"
+              }
+            ]
+          },
+          "takeaway": "A meta description does not guarantee the displayed snippet; search engines may select page text instead.",
+          "caption": "Concept illustration, not a platform screenshot. Follow the labels and the relationships shown.",
+          "id": "m2-t2-v2",
+          "section": "2. Meta descriptions: your free ad copy"
+        },
+        {
+          "title": "A page needs an outline, not bigger fonts",
+          "explanation": "Headings form a navigable hierarchy. Use them to organise the answer instead of choosing a heading level only for its visual size.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "H1: page purpose",
+                "detail": "State the main subject in a clear primary heading.",
+                "icon": "file"
+              },
+              {
+                "label": "H2: main questions",
+                "detail": "Group the major parts of the customer’s task.",
+                "icon": "layers"
+              },
+              {
+                "label": "H3: supporting detail",
+                "detail": "Add the subquestions inside each main part.",
+                "icon": "filter"
+              }
+            ]
+          },
+          "takeaway": "A clear hierarchy helps readers and assistive technology understand the page structure.",
+          "caption": "Concept illustration, not a platform screenshot. Follow the labels and the relationships shown.",
+          "id": "m2-t2-v3",
+          "section": "3. Headings: one H1, then a real hierarchy"
+        },
+        {
+          "title": "Answer first, then earn deeper reading",
+          "explanation": "An intent-matched page puts the useful answer before the long introduction.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Direct answer",
+                "detail": "Give the fee, hours, comparison or explanation being sought.",
+                "icon": "target"
+              },
+              {
+                "label": "Supporting evidence",
+                "detail": "Add relevant proof, examples and practical detail.",
+                "icon": "check"
+              },
+              {
+                "label": "Useful action",
+                "detail": "Offer a next step that matches the page’s job.",
+                "icon": "cursor"
+              }
+            ]
+          },
+          "takeaway": "Longer content is not automatically better. Remove anything that does not help complete the task.",
+          "caption": "Concept illustration, not a platform screenshot. Follow the labels and the relationships shown.",
+          "id": "m2-t2-v4",
+          "section": "4. Content that matches intent: answer first, then explain"
+        },
+        {
+          "title": "Internal links are your road network",
+          "explanation": "A link connects the current question to the next useful answer. Descriptive anchor text explains the destination.",
+          "diagram": {
+            "kind": "hub",
+            "items": [
+              {
+                "label": "Fees",
+                "detail": "Link to the cost and inclusions, not an unrelated home page.",
+                "icon": "file"
+              },
+              {
+                "label": "Batch timings",
+                "detail": "Answer the scheduling question near the relevant paragraph.",
+                "icon": "clock"
+              },
+              {
+                "label": "Student support",
+                "detail": "Explain what happens after enrolment.",
+                "icon": "users"
+              },
+              {
+                "label": "Enquiry",
+                "detail": "Make the next action easy to find.",
+                "icon": "cursor"
+              }
+            ],
+            "center": "Course page"
+          },
+          "takeaway": "Link because the destination helps the reader, not to hit a keyword repetition target.",
+          "caption": "Concept illustration, not a platform screenshot. Follow the labels and the relationships shown.",
+          "checkpoint": {
+            "question": "Does a good meta description guarantee that exact text appears in search?",
+            "answer": "No. It is a useful suggestion. Search engines may generate a different snippet from the page, so the visible content must also answer the query clearly."
+          },
+          "id": "m2-t2-v5",
+          "section": "5. Internal links: your own roads"
+        }
+      ]
+    },
+    "m2-t3": {
+      "introduction": "Separate technical discoverability from the local business experience. Use evidence to choose fixes, then verify the change.",
+      "sections": [
+        {
+          "title": "Technical health is a set of checks",
+          "explanation": "A usable page must be reachable, render properly on mobile and avoid accidental barriers to indexing.",
+          "diagram": {
+            "kind": "compare",
+            "items": [
+              {
+                "label": "Reachable",
+                "detail": "Check status codes, broken links and intended redirects.",
+                "icon": "globe"
+              },
+              {
+                "label": "Indexable",
+                "detail": "Review robots, noindex and canonical signals in context.",
+                "icon": "search"
+              },
+              {
+                "label": "Usable",
+                "detail": "Test mobile layout, image size and interaction speed.",
+                "icon": "cursor"
+              },
+              {
+                "label": "Consistent",
+                "detail": "Avoid competing URL versions and misleading structure.",
+                "icon": "layers"
+              }
+            ]
+          },
+          "takeaway": "Do not remove a deliberate noindex or access restriction without understanding its purpose.",
+          "caption": "Concept illustration, not a platform screenshot. Follow the labels and the relationships shown.",
+          "id": "m2-t3-v1",
+          "section": "1. What \"technically healthy\" means"
+        },
+        {
+          "title": "Search Console closes the diagnosis loop",
+          "explanation": "A report is a starting point for a question, not a command to change every flagged URL.",
+          "diagram": {
+            "kind": "cycle",
+            "items": [
+              {
+                "label": "Inspect",
+                "detail": "Choose a specific URL or search-performance question.",
+                "icon": "search"
+              },
+              {
+                "label": "Diagnose",
+                "detail": "Compare the report with the actual page and intended behaviour.",
+                "icon": "filter"
+              },
+              {
+                "label": "Fix",
+                "detail": "Apply the smallest justified change.",
+                "icon": "check"
+              },
+              {
+                "label": "Recheck",
+                "detail": "Allow for processing delay, then check the same evidence.",
+                "icon": "chart"
+              }
+            ],
+            "center": "Verify the fix"
+          },
+          "takeaway": "Ownership is required for private property data. Public checks cannot substitute for it.",
+          "caption": "Concept illustration, not a platform screenshot. Follow the labels and the relationships shown.",
+          "id": "m2-t3-v2",
+          "section": "2. Google Search Console: the free window into Google's brain"
+        },
+        {
+          "title": "Local discovery must match real-world reality",
+          "explanation": "A local profile works when the customer can trust the business details and complete the visit or enquiry.",
+          "diagram": {
+            "kind": "hub",
+            "items": [
+              {
+                "label": "Identity",
+                "detail": "Use the real business name, address and phone consistently.",
+                "icon": "globe"
+              },
+              {
+                "label": "Relevance",
+                "detail": "Choose accurate categories and explain actual services.",
+                "icon": "target"
+              },
+              {
+                "label": "Proof",
+                "detail": "Use genuine photos and honest customer feedback.",
+                "icon": "check"
+              },
+              {
+                "label": "Action",
+                "detail": "Keep hours, directions and contact routes current.",
+                "icon": "cursor"
+              }
+            ],
+            "center": "Local trust"
+          },
+          "takeaway": "Never create fake reviews or a false location to try to win local visibility.",
+          "caption": "Concept illustration, not a platform screenshot. Follow the labels and the relationships shown.",
+          "id": "m2-t3-v3",
+          "section": "3. Local SEO and the Google Business Profile"
+        },
+        {
+          "title": "Impact and effort are different axes",
+          "explanation": "Use two dimensions to avoid confusing a valuable repair with an easy one. This matrix is a decision aid, not a guaranteed ranking formula.",
+          "diagram": {
+            "kind": "matrix",
+            "xLabel": "Effort to implement",
+            "yLabel": "Expected impact",
+            "columns": [
+              "Lower effort",
+              "Higher effort"
+            ],
+            "rows": [
+              "Higher impact",
+              "Lower impact"
+            ],
+            "items": [
+              {
+                "label": "Do first",
+                "detail": "Fix a broken enquiry link or an accidental block on a key page.",
+                "icon": "check"
+              },
+              {
+                "label": "Plan carefully",
+                "detail": "A major mobile redesign may matter but needs time and ownership.",
+                "icon": "clock"
+              },
+              {
+                "label": "Batch later",
+                "detail": "Tidy small metadata issues after critical barriers are removed.",
+                "icon": "layers"
+              },
+              {
+                "label": "Question the work",
+                "detail": "Avoid expensive cosmetic changes without a clear customer benefit.",
+                "icon": "filter"
+              }
+            ]
+          },
+          "takeaway": "State the scoring convention. Multiplying high impact by high effort alone does not identify a quick win.",
+          "caption": "Concept illustration, not a platform screenshot. Follow the labels and the relationships shown.",
+          "checkpoint": {
+            "question": "Why is a high-effort, high-impact repair not automatically the first task?",
+            "answer": "It may require planning, access and dependencies. Fix urgent low-effort barriers first where justified, then schedule larger work with an owner and evidence."
+          },
+          "id": "m2-t3-v4",
+          "section": "4. Prioritising fixes: impact × effort"
+        }
+      ]
+    },
+    "m2-t4": {
+      "introduction": "See links as recommendations with context, not as points to buy. Build something worth referencing and evaluate the source behind every opportunity.",
+      "sections": [
+        {
+          "title": "A recommendation is more than a link count",
+          "explanation": "The context and usefulness of a referring page matter more than a pile of unrelated links.",
+          "diagram": {
+            "kind": "compare",
+            "items": [
+              {
+                "label": "Relevant reference",
+                "detail": "A local newspaper cites your useful neighbourhood guide.",
+                "icon": "link"
+              },
+              {
+                "label": "Low-value placement",
+                "detail": "An unrelated directory sells identical links to anyone.",
+                "icon": "filter"
+              }
+            ]
+          },
+          "takeaway": "Third-party authority scores are estimates, not search-engine grades or a reason to buy links.",
+          "caption": "Concept illustration, not a platform screenshot. Follow the labels and the relationships shown.",
+          "id": "m2-t4-v1",
+          "section": "1. Links are votes — but votes have different weights"
+        },
+        {
+          "title": "Earn attention with something useful",
+          "explanation": "Responsible outreach begins with a resource someone would genuinely want to share.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Make a resource",
+                "detail": "Publish original local information, a helpful checklist or a researched guide.",
+                "icon": "file"
+              },
+              {
+                "label": "Find a fit",
+                "detail": "Choose relevant organisations, communities or publications.",
+                "icon": "search"
+              },
+              {
+                "label": "Pitch the value",
+                "detail": "Explain why the resource helps their readers.",
+                "icon": "message"
+              },
+              {
+                "label": "Accept the outcome",
+                "detail": "Editorial choice belongs to the publisher.",
+                "icon": "check"
+              }
+            ]
+          },
+          "takeaway": "Do not buy ranking links or disguise a commercial placement as an independent recommendation.",
+          "caption": "Concept illustration, not a platform screenshot. Follow the labels and the relationships shown.",
+          "id": "m2-t4-v2",
+          "section": "2. Earn, build — never buy"
+        },
+        {
+          "title": "Small-business authority has local routes",
+          "explanation": "Useful collaborations can connect the business to existing communities without a large PR budget.",
+          "diagram": {
+            "kind": "hub",
+            "items": [
+              {
+                "label": "Local media",
+                "detail": "Offer a genuinely newsworthy local story or data point.",
+                "icon": "megaphone"
+              },
+              {
+                "label": "Community partners",
+                "detail": "Share resources with organisations that serve the same audience.",
+                "icon": "users"
+              },
+              {
+                "label": "Suppliers / associations",
+                "detail": "Keep accurate legitimate business profiles.",
+                "icon": "briefcase"
+              },
+              {
+                "label": "Events / expertise",
+                "detail": "Contribute practical expertise worth referencing.",
+                "icon": "message"
+              }
+            ],
+            "center": "Useful resource"
+          },
+          "takeaway": "Choose plays that make sense even if the link sends no ranking benefit.",
+          "caption": "Concept illustration, not a platform screenshot. Follow the labels and the relationships shown.",
+          "id": "m2-t4-v3",
+          "section": "3. The small-business link plays that actually work"
+        },
+        {
+          "title": "Filter the opportunity before you pitch",
+          "explanation": "Ask about relevance, real readers, editorial quality, legitimacy and the purpose of the link.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Audience fit",
+                "detail": "Would the site’s readers actually need your resource?",
+                "icon": "users"
+              },
+              {
+                "label": "Editorial fit",
+                "detail": "Is the content useful, original and maintained?",
+                "icon": "file"
+              },
+              {
+                "label": "Legitimacy",
+                "detail": "Is the organisation real and the placement transparent?",
+                "icon": "shield"
+              },
+              {
+                "label": "Value beyond SEO",
+                "detail": "Could this send useful readers or build genuine trust?",
+                "icon": "target"
+              }
+            ]
+          },
+          "takeaway": "A suspicious “guaranteed ranking” offer is not a shortcut to a credible authority plan.",
+          "caption": "Concept illustration, not a platform screenshot. Follow the labels and the relationships shown.",
+          "id": "m2-t4-v4",
+          "section": "4. The five-question quality filter"
+        },
+        {
+          "title": "Off-page reputation surrounds the website",
+          "explanation": "People discover and judge a business through mentions, reviews and public conversations, not only clickable backlinks.",
+          "diagram": {
+            "kind": "hub",
+            "items": [
+              {
+                "label": "Reviews",
+                "detail": "Seek genuine feedback and reply constructively.",
+                "icon": "message"
+              },
+              {
+                "label": "Mentions",
+                "detail": "Keep business identity and facts consistent.",
+                "icon": "globe"
+              },
+              {
+                "label": "Community",
+                "detail": "Participate helpfully rather than dropping promotional links.",
+                "icon": "users"
+              },
+              {
+                "label": "Public proof",
+                "detail": "Make claims supportable with real evidence.",
+                "icon": "check"
+              }
+            ],
+            "center": "Reputation"
+          },
+          "takeaway": "Treat off-page work as reputation building, not an exercise in manipulating link totals.",
+          "caption": "Concept illustration, not a platform screenshot. Follow the labels and the relationships shown.",
+          "checkpoint": {
+            "question": "Would a relevant local article still be valuable if its link did not pass ranking credit?",
+            "answer": "Yes. It can reach real customers and provide independent context. That is a healthier reason for outreach than chasing a tool’s authority score."
+          },
+          "id": "m2-t4-v5",
+          "section": "5. What else lives off-page"
+        }
+      ]
+    },
+    "m2-pb1": {
+      "introduction": "Use the audit as a chain from evidence to an owner-ready fix. The diagrams organise the brief; the original submission requirements and rubric remain authoritative.",
+      "sections": [
+        {
+          "title": "The audit is an evidence-to-action system",
+          "explanation": "An audit should help the owner decide what to fix, not overwhelm them with tool output.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Business context",
+                "detail": "Start with the goal and the page’s job.",
+                "icon": "target"
+              },
+              {
+                "label": "Observed finding",
+                "detail": "Show a dated screenshot, URL or reproducible check.",
+                "icon": "search"
+              },
+              {
+                "label": "Customer impact",
+                "detail": "Explain what the finding prevents or weakens.",
+                "icon": "users"
+              },
+              {
+                "label": "Action",
+                "detail": "Write a specific fix with priority and limitations.",
+                "icon": "check"
+              }
+            ]
+          },
+          "takeaway": "Do not invent private analytics or Search Console evidence when you do not have access.",
+          "caption": "Concept illustration, not a platform screenshot. Follow the labels and the relationships shown.",
+          "id": "m2-pb1-v1",
+          "section": "The brief"
+        },
+        {
+          "title": "Assemble the audit pack in connected parts",
+          "explanation": "Keep the research, page changes, technical checks and roadmap traceable to the same business.",
+          "diagram": {
+            "kind": "hub",
+            "items": [
+              {
+                "label": "Context + keyword map",
+                "detail": "State the goal and map at least 15 phrases to intent and pages.",
+                "icon": "search"
+              },
+              {
+                "label": "Page craft",
+                "detail": "Show before/after work for the home page and one money page.",
+                "icon": "file"
+              },
+              {
+                "label": "Technical + local",
+                "detail": "Include specific speed, indexing and profile evidence where available.",
+                "icon": "globe"
+              },
+              {
+                "label": "Authority + roadmap",
+                "detail": "Name realistic outlets and prioritised owner-ready actions.",
+                "icon": "link"
+              },
+              {
+                "label": "Integrity",
+                "detail": "Include access limits, reflection and the AI-use statement.",
+                "icon": "shield"
+              }
+            ],
+            "center": "Audit pack"
+          },
+          "takeaway": "Use the original “What to submit” list as the final completeness checklist.",
+          "caption": "Concept illustration, not a platform screenshot. Follow the labels and the relationships shown.",
+          "id": "m2-pb1-v2",
+          "section": "What to submit"
+        },
+        {
+          "title": "Check coverage across five evidence families",
+          "explanation": "A strong-looking page rewrite is not a complete audit if it skips technical or local evidence.",
+          "diagram": {
+            "kind": "compare",
+            "items": [
+              {
+                "label": "Indexability",
+                "detail": "At least one finding about intended crawl or indexing behaviour.",
+                "icon": "search"
+              },
+              {
+                "label": "On-page",
+                "detail": "At least two findings with rewritten titles or descriptions.",
+                "icon": "file"
+              },
+              {
+                "label": "Speed",
+                "detail": "At least one specific opportunity, naming the relevant resource.",
+                "icon": "clock"
+              },
+              {
+                "label": "Local",
+                "detail": "At least one real profile gap.",
+                "icon": "globe"
+              },
+              {
+                "label": "Authority",
+                "detail": "At least one realistic recommendation with a named outlet.",
+                "icon": "link"
+              }
+            ]
+          },
+          "takeaway": "Evidence can confirm that something is healthy; do not manufacture a defect just to fill a box.",
+          "caption": "Concept illustration, not a platform screenshot. Follow the labels and the relationships shown.",
+          "id": "m2-pb1-v3",
+          "section": "Coverage requirements"
+        },
+        {
+          "title": "Work in passes, then test the instructions",
+          "explanation": "A peer should be able to understand the proposed fixes without needing the author to interpret them.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Collect",
+                "detail": "Choose the site and save dated evidence.",
+                "icon": "search"
+              },
+              {
+                "label": "Analyse",
+                "detail": "Build the keyword map and before/after changes.",
+                "icon": "file"
+              },
+              {
+                "label": "Peer-test",
+                "detail": "Ask a partner to follow the top-three instructions.",
+                "icon": "users"
+              },
+              {
+                "label": "Prioritise / submit",
+                "detail": "Finish the roadmap, limits and reflection.",
+                "icon": "check"
+              }
+            ]
+          },
+          "takeaway": "Keep impact and effort definitions explicit; do not let a high-effort score accidentally masquerade as an easy win.",
+          "caption": "Concept illustration, not a platform screenshot. Follow the labels and the relationships shown.",
+          "id": "m2-pb1-v4",
+          "section": "Process (suggested)"
+        },
+        {
+          "title": "Professional quality is visible in the evidence",
+          "explanation": "The rubric values judgement and usability, not a large count of findings.",
+          "diagram": {
+            "kind": "compare",
+            "items": [
+              {
+                "label": "Evidence and craft",
+                "detail": "Findings are demonstrated and rewrites match intent.",
+                "icon": "check"
+              },
+              {
+                "label": "Coverage and judgement",
+                "detail": "Technical, local and authority work are specific and prioritised.",
+                "icon": "layers"
+              },
+              {
+                "label": "Honesty and usability",
+                "detail": "Limits are visible and an owner can act on the roadmap.",
+                "icon": "shield"
+              }
+            ]
+          },
+          "takeaway": "This is a rubric-reading aid, not a new marks scheme. Apply the published rubric and facilitator guidance.",
+          "caption": "Concept illustration, not a platform screenshot. Follow the labels and the relationships shown.",
+          "checkpoint": {
+            "question": "You cannot access the site’s Search Console. What belongs in the audit?",
+            "answer": "State the limitation, use appropriate public evidence, and say what access would close the gap. Never fabricate a private-property screenshot or an indexing conclusion you cannot support."
+          },
+          "id": "m2-pb1-v5",
+          "section": "Rubric (7 marks)"
+        }
+      ]
+    }
+  }
+}

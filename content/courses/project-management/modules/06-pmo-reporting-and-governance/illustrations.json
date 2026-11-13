@@ -1,0 +1,629 @@
+{
+  "moduleId": "m6",
+  "topics": {
+    "m6-t1": {
+      "introduction": "Read RAG as a defined policy, not a mood. Compare baseline and forecast, weight accepted work honestly and make the decision request impossible to miss.",
+      "sections": [
+        {
+          "id": "pm-m6-t1-1",
+          "section": "1. Define status before reporting it",
+          "title": "Separate the status dimensions",
+          "explanation": "A colour means something only when its threshold, cut-off and owner are clear. A schedule dimension can be amber while a mandatory quality issue is red. Do not average away the defect to produce a more comfortable single colour.",
+          "diagram": {
+            "kind": "compare",
+            "items": [
+              {
+                "label": "Schedule: amber under this policy",
+                "detail": "A two-working-day forecast delay fits the example’s pre-agreed one-to-three-day amber band.",
+                "icon": "clock"
+              },
+              {
+                "label": "Quality: red if mandatory failure",
+                "detail": "A critical unresolved security or allocation failure needs its own explicit status.",
+                "icon": "shield"
+              },
+              {
+                "label": "Context: defined and versioned",
+                "detail": "Cut-off, baseline version, owner and thresholds accompany the summary.",
+                "icon": "file"
+              }
+            ]
+          },
+          "caption": "Illustrative RAG policy from the lesson. Colours are shown as words and are not universal institutional thresholds.",
+          "takeaway": "A green schedule is not proof of acceptable quality or risk."
+        },
+        {
+          "id": "pm-m6-t1-2",
+          "section": "2. Use evidence and forecasts",
+          "title": "Eight of ten tasks is not necessarily 80% delivered",
+          "explanation": "Equal card counts can hide unequal work. Here the eight closed minor tasks represent only 40% of planned effort, while two testing tasks represent 60%. Even effort weighting is only a defined progress method; do not imply that a count or effort share proves accepted value.",
+          "diagram": {
+            "kind": "bars",
+            "unit": "% of planned effort",
+            "items": [
+              {
+                "label": "Eight minor tasks",
+                "detail": "Together account for 40% of planned effort in the example.",
+                "value": 40,
+                "icon": "chart"
+              },
+              {
+                "label": "Two testing tasks",
+                "detail": "Together account for the remaining 60%, with material acceptance risk.",
+                "value": 60,
+                "icon": "chart"
+              }
+            ]
+          },
+          "caption": "Synthetic lesson weighting. The bars are planned-effort shares, not measured completion or earned-value claims.",
+          "takeaway": "State the progress method and verify accepted work before reporting a percentage."
+        },
+        {
+          "id": "pm-m6-t1-3",
+          "section": "3. Make the decision request visible",
+          "title": "Put the decision above the attachments",
+          "explanation": "The sponsor should not have to reconstruct a decision from a board, budget and risk register. State what is needed, by when, which options are feasible and what happens if no decision is made. Link the evidence so the summary stays concise and auditable.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "What changed?",
+                "detail": "Baseline versus current forecast, cause and consequence.",
+                "icon": "chart"
+              },
+              {
+                "label": "What are the options?",
+                "detail": "Move the pilot or defer optional reminders; protect mandatory checks.",
+                "icon": "layers"
+              },
+              {
+                "label": "Who decides by when?",
+                "detail": "Named authority and an explicit date/trigger.",
+                "icon": "users"
+              },
+              {
+                "label": "Where is the evidence?",
+                "detail": "Versioned cost, schedule and risk references support the request.",
+                "icon": "link"
+              }
+            ]
+          },
+          "caption": "Illustrative sponsor-brief structure. The actual decision date and authority must be supplied in the learner’s own case.",
+          "takeaway": "A useful report asks for action, not reassurance.",
+          "checkpoint": {
+            "question": "If eight minor tasks close but high-risk testing remains, is 80% a defensible completion claim?",
+            "answer": "Not from task count alone. Use an agreed method and accepted evidence. In this example those eight tasks represent only 40% of planned effort, not proven value completion."
+          }
+        }
+      ]
+    },
+    "m6-t2": {
+      "introduction": "Prepare a meeting around a decision, explore the interests behind positions and leave an accurate durable record. A recommendation stays a recommendation until the proper authority decides.",
+      "sections": [
+        {
+          "id": "pm-m6-t2-1",
+          "section": "1. Prepare a decision-centred agenda",
+          "title": "Invite the roles needed for the decision",
+          "explanation": "A decision-centred agenda states the question, options, evidence and necessary authority before the meeting. Include relevant expertise and accessible ways to contribute. If an essential approver is absent, record a recommendation rather than inventing a decision.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Define the question",
+                "detail": "What decision must this meeting enable?",
+                "icon": "target"
+              },
+              {
+                "label": "Prepare the evidence",
+                "detail": "Concise options, impacts and pre-reading with a review window.",
+                "icon": "file"
+              },
+              {
+                "label": "Bring the right roles",
+                "detail": "Authority, expertise and affected voices; not every stakeholder by default.",
+                "icon": "users"
+              },
+              {
+                "label": "Timebox and close",
+                "detail": "Read back decisions, unresolved questions and next actions.",
+                "icon": "clock"
+              }
+            ]
+          },
+          "caption": "Conceptual meeting design, not a required extra ceremony or a record of an actual approval.",
+          "takeaway": "Attendance is not evidence that a decision was authorised."
+        },
+        {
+          "id": "pm-m6-t2-2",
+          "section": "2. Negotiate interests and constraints",
+          "title": "Look behind the position to the need",
+          "explanation": "“An extra week” and “the date cannot move” are positions. The underlying needs may be qualified testing and a safe event workflow. Explore scope and staffing alternatives while keeping mandatory privacy and safety outside the bargaining zone.",
+          "diagram": {
+            "kind": "compare",
+            "items": [
+              {
+                "label": "Vendor position → interest",
+                "detail": "Extra week → access to a qualified tester and feasible support.",
+                "icon": "users"
+              },
+              {
+                "label": "College position → interest",
+                "detail": "Fixed event → safe core booking available at the right time.",
+                "icon": "target"
+              },
+              {
+                "label": "Options → authority",
+                "detail": "Defer reminders, move work or add qualified capacity only with proper approval.",
+                "icon": "layers"
+              }
+            ]
+          },
+          "caption": "Illustrative interest-based negotiation. It does not authorise contract, budget or safety concessions.",
+          "takeaway": "Preserve mandatory controls while comparing flexible options."
+        },
+        {
+          "id": "pm-m6-t2-3",
+          "section": "3. Minutes are a durable record",
+          "title": "Separate the decision from the remaining action",
+          "explanation": "A durable minute records what was approved, why, by whom and which version changes. An unresolved support concern still needs an owner and a date. A correction window improves accuracy; silence is not approval where explicit authorisation is required.",
+          "diagram": {
+            "kind": "compare",
+            "items": [
+              {
+                "label": "Decision record",
+                "detail": "Illustrative sponsor choice: defer reminders and retain core safety testing.",
+                "icon": "check"
+              },
+              {
+                "label": "Rationale and version",
+                "detail": "Show the evidence, authority and the baseline revision reference.",
+                "icon": "file"
+              },
+              {
+                "label": "Open action",
+                "detail": "Vendor support concern remains visible with an owner and due date.",
+                "icon": "clock"
+              }
+            ]
+          },
+          "caption": "Synthetic meeting example from the lesson. The decision must be labelled simulated in a classroom portfolio.",
+          "takeaway": "Minutes are a decision/action record, not a verbatim transcript.",
+          "checkpoint": {
+            "question": "Does “no one replied to the minutes” prove a required sponsor approval?",
+            "answer": "No. If policy needs explicit approval, silence cannot replace it. Keep the approval status pending and follow the agreed route."
+          }
+        }
+      ]
+    },
+    "m6-t3": {
+      "introduction": "Separate coordination from authorisation, test how scoring changes with weights and carry benefit ownership beyond handover. A ranking is not an investment decision.",
+      "sections": [
+        {
+          "id": "pm-m6-t3-1",
+          "section": "1. Projects, programmes and portfolios differ",
+          "title": "Different groupings answer different control questions",
+          "explanation": "A project delivers a bounded change; a programme coordinates related work for combined benefits; a portfolio supports strategic investment and shared-capacity choices. The PMO can supply standards and visibility without necessarily holding approval authority.",
+          "diagram": {
+            "kind": "compare",
+            "items": [
+              {
+                "label": "Project",
+                "detail": "Bounded pilot with scope, acceptance and handover.",
+                "icon": "briefcase"
+              },
+              {
+                "label": "Programme",
+                "detail": "Related changes coordinated to realise benefits together.",
+                "icon": "link"
+              },
+              {
+                "label": "Portfolio",
+                "detail": "Investments compared for strategy, constraints and capacity.",
+                "icon": "layers"
+              },
+              {
+                "label": "PMO support",
+                "detail": "Definitions, reconciled reporting and governance according to its mandate.",
+                "icon": "file"
+              }
+            ]
+          },
+          "caption": "Conceptual governance comparison. A job title or spreadsheet ownership does not establish budget authority.",
+          "takeaway": "Confirm the actual decision mandate rather than assuming it."
+        },
+        {
+          "id": "pm-m6-t3-2",
+          "section": "2. Scoring is decision support",
+          "title": "A ranking can reverse when weights change",
+          "explanation": "The weighted total depends on the agreed preferences. At equal weights B leads, but increasing strategic-fit weight reverses the result. Show that sensitivity with capacity, evidence quality and mandatory conditions so that a score does not masquerade as an objective verdict.",
+          "diagram": {
+            "kind": "bars",
+            "unit": "weighted score / 5",
+            "items": [
+              {
+                "label": "A at 50% fit / 50% feasibility",
+                "detail": "0.5 × 4 + 0.5 × 2 = 3.0.",
+                "value": 3,
+                "icon": "chart"
+              },
+              {
+                "label": "B at 50% fit / 50% feasibility",
+                "detail": "0.5 × 3 + 0.5 × 4 = 3.5.",
+                "value": 3.5,
+                "icon": "chart"
+              },
+              {
+                "label": "A at 80% fit / 20% feasibility",
+                "detail": "0.8 × 4 + 0.2 × 2 = 3.6.",
+                "value": 3.6,
+                "icon": "chart"
+              },
+              {
+                "label": "B at 80% fit / 20% feasibility",
+                "detail": "0.8 × 3 + 0.2 × 4 = 3.2.",
+                "value": 3.2,
+                "icon": "chart"
+              }
+            ]
+          },
+          "caption": "Synthetic two-proposal sensitivity example from the lesson. Each bar is an alternative weighting result, not a quantity to add.",
+          "takeaway": "A high score cannot create missing capacity or waive a mandatory obligation."
+        },
+        {
+          "id": "pm-m6-t3-3",
+          "section": "3. Benefits require operational ownership",
+          "title": "Keep the benefit review alive after project closure",
+          "explanation": "The receiving operation is often best placed to measure adoption and service outcomes. Give the benefit a baseline, target, definition, owner and review date; then identify influences that could affect the result. Do not count the same staff-hour saving in two initiatives.",
+          "diagram": {
+            "kind": "cycle",
+            "items": [
+              {
+                "label": "Define the benefit",
+                "detail": "Baseline, target and a measurable operational change.",
+                "icon": "target"
+              },
+              {
+                "label": "Assign operational ownership",
+                "detail": "Name who can observe adoption and service effects.",
+                "icon": "users"
+              },
+              {
+                "label": "Measure after handover",
+                "detail": "Collect comparable evidence at a planned review.",
+                "icon": "chart"
+              },
+              {
+                "label": "Review and adjust",
+                "detail": "Separate measured results, forecasts and external influences.",
+                "icon": "repeat"
+              }
+            ],
+            "center": "Benefit review"
+          },
+          "caption": "Conceptual benefits-management loop. A delivered system or forecast is not evidence of realised savings.",
+          "takeaway": "A benefit needs an operational owner after the temporary team leaves.",
+          "checkpoint": {
+            "question": "Why does Project B’s 3.5 not automatically authorise it?",
+            "answer": "It is a synthetic score under one weighting. Check sensitivity, mandatory conditions, funding and shared capacity; the authorised decision-maker still decides."
+          }
+        }
+      ]
+    },
+    "m6-pb4": {
+      "introduction": "Assemble a decision pack whose forecasts, versions and definitions reconcile. The visuals show the ₹40,000 EAC without replacing the ₹35,000 baseline or inventing a universal RAG policy.",
+      "sections": [
+        {
+          "id": "pm-m6-pb4-1",
+          "section": "The brief",
+          "title": "Show the gap before recommending the response",
+          "explanation": "The approved reference stays visible alongside the current forecast. A sponsor also needs the two-working-day schedule exception and the pending support decision. The cost snapshot and schedule delay are separate evidence, not values to combine into one arbitrary score.",
+          "diagram": {
+            "kind": "bars",
+            "unit": "₹",
+            "items": [
+              {
+                "label": "Approved baseline",
+                "detail": "Retained as the control reference.",
+                "value": 35000,
+                "icon": "chart"
+              },
+              {
+                "label": "Current EAC",
+                "detail": "Actual ₹18,000 + current ETC ₹22,000 = ₹40,000.",
+                "value": 40000,
+                "icon": "chart"
+              }
+            ]
+          },
+          "caption": "Synthetic PB4 cost comparison: forecast overrun ₹5,000. The separate two-working-day delay needs a dated schedule explanation.",
+          "takeaway": "Make the variance visible instead of changing the reference to hide it."
+        },
+        {
+          "id": "pm-m6-pb4-2",
+          "section": "Inputs and working boundaries",
+          "title": "Freeze the reporting cut-off and source versions",
+          "explanation": "A weekly pack is credible when its figures use the same cut-off and documented versions. Keep the original cost snapshot and schedule reference, label any scenario changes and carry known gaps as owned actions. Do not imply the PMO has authorised its own proposal.",
+          "diagram": {
+            "kind": "compare",
+            "items": [
+              {
+                "label": "Cost source",
+                "detail": "Baseline ₹35,000; AC ₹18,000; current ETC ₹22,000.",
+                "icon": "chart"
+              },
+              {
+                "label": "Schedule source",
+                "detail": "Baseline versus forecast; explain the two-working-day exception.",
+                "icon": "clock"
+              },
+              {
+                "label": "Decision source",
+                "detail": "Support request, options, named authority and pending/approved status.",
+                "icon": "message"
+              },
+              {
+                "label": "Evidence index",
+                "detail": "File, version, purpose and claim supported; safe public copy.",
+                "icon": "file"
+              }
+            ]
+          },
+          "caption": "Synthetic PB4 inputs, separate from any task-duration-derived cost estimate. No live supplier decision is implied.",
+          "takeaway": "Reconcile provenance and definitions before polishing a summary."
+        },
+        {
+          "id": "pm-m6-pb4-3",
+          "section": "Work plan",
+          "title": "PB4: reserve time to verify and revise",
+          "explanation": "The classroom block is not all build time. Use the reproduction checkpoint to trace the headline result to source values, then retain the peer comment and correction. The final recommendation should follow the revised evidence, not the first attractive draft.",
+          "diagram": {
+            "kind": "bars",
+            "unit": "classroom minutes",
+            "items": [
+              {
+                "label": "Frame and inspect",
+                "detail": "Read the brief, boundaries and source fixtures.",
+                "value": 20,
+                "icon": "chart"
+              },
+              {
+                "label": "Build required artefacts",
+                "detail": "Create the linked outputs for this block.",
+                "value": 80,
+                "icon": "chart"
+              },
+              {
+                "label": "Reproduce and review",
+                "detail": "Check calculations, definitions and decisions.",
+                "value": 35,
+                "icon": "chart"
+              },
+              {
+                "label": "Peer review and revise",
+                "detail": "Keep the comment and the response.",
+                "value": 30,
+                "icon": "chart"
+              },
+              {
+                "label": "Recommendation and AI statement",
+                "detail": "Explain the decision and assistance transparently.",
+                "value": 15,
+                "icon": "chart"
+              }
+            ]
+          },
+          "caption": "Published synthetic classroom allocation for PB4: 20 + 80 + 35 + 30 + 15 = 180 minutes. This is learner work time, not the delivery schedule’s working days.",
+          "takeaway": "A checked second version is more valuable than an unchecked first draft."
+        },
+        {
+          "id": "pm-m6-pb4-4",
+          "section": "What to submit",
+          "title": "One page should lead to the right evidence",
+          "explanation": "The headline report is the front door, not the whole analysis. Link each variance and decision to a checked working source. Portfolio recommendations also need sensitivity, capacity and a benefit owner so that ranking does not masquerade as approval.",
+          "diagram": {
+            "kind": "hub",
+            "items": [
+              {
+                "label": "Status summary",
+                "detail": "Baseline, forecast, variance and defined RAG thresholds.",
+                "icon": "chart"
+              },
+              {
+                "label": "Reconciliation",
+                "detail": "Cost formula plus schedule exception and evidence links.",
+                "icon": "link"
+              },
+              {
+                "label": "Decision request",
+                "detail": "Top risks/issues, options, recommendation, owner and deadline.",
+                "icon": "message"
+              },
+              {
+                "label": "Governance record",
+                "detail": "Agenda and minutes separate recommendations from decisions.",
+                "icon": "file"
+              },
+              {
+                "label": "Portfolio and benefits",
+                "detail": "Three proposals, sensitivity check and pilot benefit owner.",
+                "icon": "layers"
+              }
+            ],
+            "center": "Decision-ready pack"
+          },
+          "caption": "Conceptual map of PB4’s unchanged submission list. External marking and institutional authority remain separate from the platform.",
+          "takeaway": "A sponsor should find the required decision without opening every task record."
+        },
+        {
+          "id": "pm-m6-pb4-5",
+          "section": "Acceptance and self-check",
+          "title": "Same cost formula, separate status dimensions",
+          "explanation": "EAC is actual cost plus the fresh remaining estimate, not the baseline remainder or EV added to AC. Whether a two-day delay is amber depends on the pre-agreed rule. A critical quality issue may have a different status and must remain visible.",
+          "diagram": {
+            "kind": "compare",
+            "items": [
+              {
+                "label": "Forecast arithmetic",
+                "detail": "₹18,000 + ₹22,000 = ₹40,000 EAC.",
+                "icon": "chart"
+              },
+              {
+                "label": "Baseline variance",
+                "detail": "₹40,000 − ₹35,000 = ₹5,000 forecast overrun.",
+                "icon": "file"
+              },
+              {
+                "label": "Schedule status",
+                "detail": "Two-day delay is amber only under the relevant agreed thresholds.",
+                "icon": "clock"
+              },
+              {
+                "label": "Quality and risk status",
+                "detail": "Keep mandatory defects and material risk explicit; do not average away red.",
+                "icon": "shield"
+              }
+            ]
+          },
+          "caption": "Synthetic PB4 checks. The illustration does not establish institutional RAG thresholds or assert that a decision is approved.",
+          "takeaway": "A reconciled pack can be uncomfortable and still be professionally correct.",
+          "checkpoint": {
+            "question": "Does a two-day forecast delay always mean amber?",
+            "answer": "No. Amber applies only if the pre-agreed schedule policy says so. Quality and risk can carry different statuses; the baseline must remain unchanged."
+          }
+        },
+        {
+          "id": "pm-m6-pb4-6",
+          "section": "Rubric",
+          "title": "Seven marks reward evidence and judgement",
+          "explanation": "Use the published rubric to inspect the work, not to invent new requirements. Correct arithmetic needs traceable inputs, professional judgement includes safeguards and authority, and clarity includes an evidence trail and reflection. The diagram does not award or upload marks.",
+          "diagram": {
+            "kind": "bars",
+            "unit": "rubric marks",
+            "items": [
+              {
+                "label": "Correctness and reproducibility",
+                "detail": "Show the method, source values and a manual check.",
+                "value": 3,
+                "icon": "chart"
+              },
+              {
+                "label": "Judgement and safeguards",
+                "detail": "Make limits, provenance, authority and safe sharing explicit.",
+                "value": 2,
+                "icon": "chart"
+              },
+              {
+                "label": "Clarity, evidence and reflection",
+                "detail": "Keep the files navigable and explain the correction.",
+                "value": 2,
+                "icon": "chart"
+              }
+            ]
+          },
+          "caption": "Illustrative display of the unchanged PB4 rubric: 3 + 2 + 2 = 7. Four blocks contribute 28 overall; external facilitator marking remains required.",
+          "takeaway": "Appearance alone cannot earn credit for an unsupported claim."
+        },
+        {
+          "id": "pm-m6-pb4-7",
+          "section": "Review questions",
+          "title": "Test the recommendation’s sensitivity and provenance",
+          "explanation": "Ask a peer to reproduce the forecast and locate its source date. Then change one portfolio weight to see whether the recommendation reverses. A high-ranked proposal still needs funding, capacity and authority; the benefit owner must be able to measure after handover.",
+          "diagram": {
+            "kind": "hub",
+            "items": [
+              {
+                "label": "Reconcile",
+                "detail": "Do the summary and working file both use the current ETC?",
+                "icon": "chart"
+              },
+              {
+                "label": "Challenge status",
+                "detail": "Were thresholds agreed before seeing this week’s result?",
+                "icon": "search"
+              },
+              {
+                "label": "Test sensitivity",
+                "detail": "Could weights or shared capacity reverse the portfolio choice?",
+                "icon": "layers"
+              },
+              {
+                "label": "Check the decision",
+                "detail": "Are authority, deadline and no-decision consequence visible?",
+                "icon": "briefcase"
+              }
+            ],
+            "center": "Sponsor review"
+          },
+          "caption": "Conceptual PB4 peer-review aid. No real investment or benefit approval is implied.",
+          "takeaway": "A transparent uncertainty can be more useful than a precise-looking ranking."
+        },
+        {
+          "id": "pm-m6-pb4-8",
+          "section": "AI-use statement",
+          "title": "Disclose assistance and keep responsibility",
+          "explanation": "For the PMO decision pack, assistance can support drafting or checking, but it cannot create evidence that never existed. Complete the statement even if the answer is “none”. Keep only synthetic inputs in public tools and make your own verification visible.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Disclose use",
+                "detail": "Tool or none, task assisted, and synthetic inputs shared.",
+                "icon": "file"
+              },
+              {
+                "label": "Record your choices",
+                "detail": "Suggestions accepted, changed or rejected, with your own contribution.",
+                "icon": "users"
+              },
+              {
+                "label": "Verify independently",
+                "detail": "Reconcile AC + current ETC, verify the delay basis and thresholds, and check portfolio weights and simulated approval labels.",
+                "icon": "check"
+              },
+              {
+                "label": "Respect assessment boundaries",
+                "detail": "Do not infer final-exam permission from project-tool permission.",
+                "icon": "shield"
+              }
+            ]
+          },
+          "caption": "Conceptual project AI-use workflow. It does not fabricate approvals, interviews, sources, business results or personal experience.",
+          "takeaway": "The learner remains responsible for the final numbers, claims and safeguards."
+        },
+        {
+          "id": "pm-m6-pb4-9",
+          "section": "Optional extension",
+          "title": "Can the sponsor find the decision in thirty seconds?",
+          "explanation": "Use the optional peer test to improve information hierarchy. Ask the reviewer to identify the decision, deadline and consequence without coaching. If they cannot, simplify the summary while retaining links to the underlying facts and limitations.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Show the summary",
+                "detail": "Let the peer act as sponsor without extra explanation.",
+                "icon": "file"
+              },
+              {
+                "label": "Ask three questions",
+                "detail": "What decision, by when, and what happens without it?",
+                "icon": "message"
+              },
+              {
+                "label": "Revise the hierarchy",
+                "detail": "Promote the decision and reduce detail that hides it.",
+                "icon": "layers"
+              },
+              {
+                "label": "Preserve the trail",
+                "detail": "Keep versions and source links intact after editing.",
+                "icon": "link"
+              }
+            ]
+          },
+          "caption": "Illustrative optional thirty-second usability check from PB4. It is not a new grading condition.",
+          "takeaway": "Clarity means faster access to the decision, not fewer safeguards."
+        }
+      ]
+    }
+  }
+}

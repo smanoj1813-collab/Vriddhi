@@ -1,0 +1,783 @@
+{
+  "moduleId": "m6",
+  "topics": {
+    "m6-t1": {
+      "introduction": "Start with a decision, then choose the measurement. Keep the goal, diagnostic numbers and review ritual connected.",
+      "sections": [
+        {
+          "title": "A metric should change a decision",
+          "explanation": "Before adding a number to a report, explain what you would do differently if it rose or fell.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Decision",
+                "detail": "Should the campaign continue, change or pause?",
+                "icon": "target"
+              },
+              {
+                "label": "Evidence",
+                "detail": "Choose a number that informs that choice.",
+                "icon": "chart"
+              },
+              {
+                "label": "Guardrail",
+                "detail": "Define the acceptable range or review trigger.",
+                "icon": "shield"
+              },
+              {
+                "label": "Action",
+                "detail": "Assign a person and a date to the next step.",
+                "icon": "check"
+              }
+            ]
+          },
+          "takeaway": "If no decision could change, the metric may be background context rather than a headline KPI.",
+          "caption": "Concept illustration, not a platform screenshot. Follow the labels and the relationships shown.",
+          "id": "m6-t1-v1",
+          "section": "1. The test: \"what decision would change?\""
+        },
+        {
+          "title": "Connect outcome, channel and diagnosis",
+          "explanation": "A useful KPI tree links business progress to the levers you can investigate.",
+          "diagram": {
+            "kind": "hub",
+            "items": [
+              {
+                "label": "Search branch",
+                "detail": "Relevant queries → visits → qualified enquiries.",
+                "icon": "search"
+              },
+              {
+                "label": "Social branch",
+                "detail": "Relevant reach → useful clicks → qualified enquiries.",
+                "icon": "users"
+              },
+              {
+                "label": "Lifecycle branch",
+                "detail": "Permission-based follow-up → repeat actions.",
+                "icon": "mail"
+              },
+              {
+                "label": "Guardrails",
+                "detail": "Media CPA, lead quality and operational capacity.",
+                "icon": "shield"
+              }
+            ],
+            "center": "Qualified sales"
+          },
+          "takeaway": "Record each source and definition. Different platforms may count a “conversion” differently.",
+          "caption": "Concept illustration, not a platform screenshot. Follow the labels and the relationships shown.",
+          "id": "m6-t1-v2",
+          "section": "2. The KPI tree, revisited and complete"
+        },
+        {
+          "title": "A baseline gives a number context",
+          "explanation": "The same budget can produce different CPA when customer counts change. Compare like-for-like periods and definitions.",
+          "diagram": {
+            "kind": "bars",
+            "unit": "₹ media CPA",
+            "items": [
+              {
+                "label": "Previous period",
+                "value": 1000,
+                "detail": "Synthetic spend ₹3,000 ÷ 3 acquired customers."
+              },
+              {
+                "label": "Current period",
+                "value": 750,
+                "detail": "Synthetic spend ₹3,000 ÷ 4 acquired customers."
+              }
+            ]
+          },
+          "takeaway": "This shows a 25% CPA reduction. It does not establish why the change happened or whether it will persist.",
+          "caption": "Synthetic worked example, not live campaign data or an industry benchmark.",
+          "id": "m6-t1-v3",
+          "section": "3. Baselines and benchmarks: numbers need company"
+        },
+        {
+          "title": "The weekly insight ritual",
+          "explanation": "A weekly report becomes useful when it records a diagnosis and a concrete next action.",
+          "diagram": {
+            "kind": "cycle",
+            "items": [
+              {
+                "label": "What moved?",
+                "detail": "Compare the defined metric with its baseline.",
+                "icon": "chart"
+              },
+              {
+                "label": "Why might it move?",
+                "detail": "List a plausible explanation and competing explanations.",
+                "icon": "search"
+              },
+              {
+                "label": "What next?",
+                "detail": "Choose one test or action with an owner.",
+                "icon": "target"
+              },
+              {
+                "label": "What happened?",
+                "detail": "Review the result at the next agreed checkpoint.",
+                "icon": "check"
+              }
+            ],
+            "center": "One decision"
+          },
+          "takeaway": "Keep the difference between an observed change and a causal explanation explicit.",
+          "caption": "Concept illustration, not a platform screenshot. Follow the labels and the relationships shown.",
+          "checkpoint": {
+            "question": "A report says “reach increased”. What question makes it decision-ready?",
+            "answer": "Ask whether relevant people progressed toward the business goal, compared with the right baseline, and what action the evidence supports next. Reach alone is not a verdict."
+          },
+          "id": "m6-t1-v4",
+          "section": "4. The weekly insight ritual"
+        }
+      ]
+    },
+    "m6-t2": {
+      "introduction": "See analytics as a chain of events with definitions and verification. Distinguish a meaningful business event from an easy-to-count interaction.",
+      "sections": [
+        {
+          "title": "Events describe actions, not just pages",
+          "explanation": "An event records something that happened. Its parameters provide context for interpretation.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "User action",
+                "detail": "A person submits an enquiry successfully.",
+                "icon": "cursor"
+              },
+              {
+                "label": "Event",
+                "detail": "Record the defined successful-enquiry event once.",
+                "icon": "check"
+              },
+              {
+                "label": "Parameters",
+                "detail": "Attach permitted context such as form type or campaign source.",
+                "icon": "layers"
+              },
+              {
+                "label": "Report",
+                "detail": "Aggregate the event using a documented definition.",
+                "icon": "chart"
+              }
+            ]
+          },
+          "takeaway": "Do not send names, phone numbers, email addresses or other prohibited personal identifiers into analytics.",
+          "caption": "Concept illustration, not a platform screenshot. Follow the labels and the relationships shown.",
+          "id": "m6-t2-v1",
+          "section": "1. The event model: everything is an event"
+        },
+        {
+          "title": "Installation needs an observed test",
+          "explanation": "A pasted tag is not proof that the intended business action is counted accurately.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Plan",
+                "detail": "Specify events, parameters, consent and ownership.",
+                "icon": "file"
+              },
+              {
+                "label": "Install",
+                "detail": "Use the approved implementation route.",
+                "icon": "globe"
+              },
+              {
+                "label": "Exercise",
+                "detail": "Complete a test action on the actual site.",
+                "icon": "cursor"
+              },
+              {
+                "label": "Verify",
+                "detail": "Check the event, parameters and duplicate firing in appropriate debug / realtime views.",
+                "icon": "check"
+              }
+            ]
+          },
+          "takeaway": "Keep test traffic identifiable where supported and recheck after site changes.",
+          "caption": "Concept illustration, not a platform screenshot. Follow the labels and the relationships shown.",
+          "id": "m6-t2-v2",
+          "section": "2. Installation and verification"
+        },
+        {
+          "title": "Five questions, five reporting views",
+          "explanation": "Start with what you want to know instead of browsing every available chart.",
+          "diagram": {
+            "kind": "hub",
+            "items": [
+              {
+                "label": "Who arrived?",
+                "detail": "Read aggregate audience and device context responsibly.",
+                "icon": "users"
+              },
+              {
+                "label": "Where from?",
+                "detail": "Inspect acquisition with consistent campaign tagging.",
+                "icon": "link"
+              },
+              {
+                "label": "What did they use?",
+                "detail": "Review relevant pages and engagement events.",
+                "icon": "file"
+              },
+              {
+                "label": "Where did they leave?",
+                "detail": "Look for journey friction with the available data.",
+                "icon": "filter"
+              },
+              {
+                "label": "What action followed?",
+                "detail": "Connect meaningful key events to the business record.",
+                "icon": "target"
+              }
+            ],
+            "center": "Useful questions"
+          },
+          "takeaway": "An analytics report sees only what the implementation and consent conditions allow it to observe.",
+          "caption": "Concept illustration, not a platform screenshot. Follow the labels and the relationships shown.",
+          "id": "m6-t2-v3",
+          "section": "3. The five questions GA4 answers well"
+        },
+        {
+          "title": "Key event choice shapes the story",
+          "explanation": "Counting a click as a lead can inflate success. Choose a reliable proxy for the actual business action.",
+          "diagram": {
+            "kind": "compare",
+            "items": [
+              {
+                "label": "Weak proxy",
+                "detail": "A click on “Send” can happen even when the form fails.",
+                "icon": "cursor"
+              },
+              {
+                "label": "Stronger event",
+                "detail": "A confirmed successful form submission is closer to an enquiry.",
+                "icon": "check"
+              },
+              {
+                "label": "Business reconciliation",
+                "detail": "A CRM or enquiry log confirms quality and real follow-up.",
+                "icon": "briefcase"
+              }
+            ]
+          },
+          "takeaway": "Mark meaningful events deliberately and check whether different systems duplicate or omit the same action.",
+          "caption": "Concept illustration, not a platform screenshot. Follow the labels and the relationships shown.",
+          "id": "m6-t2-v4",
+          "section": "4. Conversions: the configuration that matters"
+        },
+        {
+          "title": "Observed data is not the whole market",
+          "explanation": "Consent, blocking, configuration and modelling affect the count. Attribution adds another layer of interpretation.",
+          "diagram": {
+            "kind": "compare",
+            "items": [
+              {
+                "label": "Missing observation",
+                "detail": "Some activity is not tracked or cannot be linked.",
+                "icon": "shield"
+              },
+              {
+                "label": "Modelled estimates",
+                "detail": "Some reports may include estimates under eligible settings.",
+                "icon": "chart"
+              },
+              {
+                "label": "Different definitions",
+                "detail": "Users, sessions, events and customers are not interchangeable.",
+                "icon": "layers"
+              },
+              {
+                "label": "Honest reporting",
+                "detail": "State source, window, limitations and reconciliation method.",
+                "icon": "file"
+              }
+            ]
+          },
+          "takeaway": "Do not “fix” a mismatch by secretly changing definitions until the totals agree.",
+          "caption": "Concept illustration, not a platform screenshot. Follow the labels and the relationships shown.",
+          "checkpoint": {
+            "question": "A form button fires an event even when validation fails. Is it a reliable lead count?",
+            "answer": "No. Track a confirmed successful submission and reconcile with the business enquiry record. Test failed, successful and repeated submissions to detect duplicates."
+          },
+          "id": "m6-t2-v5",
+          "section": "5. Reading honestly: consent, sampling, attribution noise"
+        }
+      ]
+    },
+    "m6-t3": {
+      "introduction": "Design a dashboard around five questions, not a wall of charts. Show comparisons, source quality and the next decision.",
+      "sections": [
+        {
+          "title": "Choose a reporting tool for the job",
+          "explanation": "The best tool is the one that connects the required sources and can be maintained by the team.",
+          "diagram": {
+            "kind": "compare",
+            "items": [
+              {
+                "label": "Connected dashboard",
+                "detail": "Useful for repeatable views over supported data connectors.",
+                "icon": "chart"
+              },
+              {
+                "label": "Living spreadsheet",
+                "detail": "Useful for small datasets, manual business records and transparent calculations.",
+                "icon": "file"
+              },
+              {
+                "label": "Hybrid",
+                "detail": "Use a dashboard for trends and a sheet for qualified leads or offline outcomes.",
+                "icon": "layers"
+              }
+            ]
+          },
+          "takeaway": "A free connector today may change. Document the fallback and ownership.",
+          "caption": "Concept illustration, not a platform screenshot. Follow the labels and the relationships shown.",
+          "id": "m6-t3-v1",
+          "section": "1. The tool choice: connected dashboards vs living spreadsheets"
+        },
+        {
+          "title": "The five-panel decision page",
+          "explanation": "Each panel answers a different business question and should use clear titles and units.",
+          "diagram": {
+            "kind": "hub",
+            "items": [
+              {
+                "label": "Headline KPIs",
+                "detail": "Are we ahead or behind the comparable previous period?",
+                "icon": "target"
+              },
+              {
+                "label": "Trend + target",
+                "detail": "Are we moving toward the planned outcome?",
+                "icon": "chart"
+              },
+              {
+                "label": "Channel breakdown",
+                "detail": "Which sources contribute useful outcomes at what cost?",
+                "icon": "layers"
+              },
+              {
+                "label": "Funnel",
+                "detail": "Where are people failing to progress?",
+                "icon": "filter"
+              },
+              {
+                "label": "Insight notes",
+                "detail": "What will change, who owns it and by when?",
+                "icon": "file"
+              }
+            ],
+            "center": "Weekly decision"
+          },
+          "takeaway": "A dashboard without a next action is a display, not a management process.",
+          "caption": "Concept illustration, not a platform screenshot. Follow the labels and the relationships shown.",
+          "id": "m6-t3-v2",
+          "section": "2. The five-panel dashboard"
+        },
+        {
+          "title": "Clean joins before clever charts",
+          "explanation": "Data sources need compatible dates, definitions and identifiers before totals can be combined responsibly.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Define",
+                "detail": "Agree event, lead, customer, timezone and currency definitions.",
+                "icon": "file"
+              },
+              {
+                "label": "Connect",
+                "detail": "Record the source and extraction window.",
+                "icon": "link"
+              },
+              {
+                "label": "Reconcile",
+                "detail": "Check duplicates, missing rows and spend totals.",
+                "icon": "check"
+              },
+              {
+                "label": "Label",
+                "detail": "Distinguish observed, estimated and simulated values.",
+                "icon": "shield"
+              }
+            ]
+          },
+          "takeaway": "Adding conversions from different platforms can double-count the same customer.",
+          "caption": "Concept illustration, not a platform screenshot. Follow the labels and the relationships shown.",
+          "id": "m6-t3-v3",
+          "section": "3. Connecting the data"
+        },
+        {
+          "title": "Make delivery boring, not blind",
+          "explanation": "Automated delivery should reduce manual work while preserving an owner for quality and exceptions.",
+          "diagram": {
+            "kind": "cycle",
+            "items": [
+              {
+                "label": "Refresh",
+                "detail": "Update the agreed sources on schedule.",
+                "icon": "clock"
+              },
+              {
+                "label": "Validate",
+                "detail": "Check freshness, missing fields and unexpected totals.",
+                "icon": "check"
+              },
+              {
+                "label": "Deliver",
+                "detail": "Send the appropriate link or summary to named recipients.",
+                "icon": "mail"
+              },
+              {
+                "label": "Act / alert",
+                "detail": "Route a genuine exception to the responsible owner.",
+                "icon": "shield"
+              }
+            ],
+            "center": "Reliable report"
+          },
+          "takeaway": "An automatically emailed stale report is still a stale report.",
+          "caption": "Concept illustration, not a platform screenshot. Follow the labels and the relationships shown.",
+          "id": "m6-t3-v4",
+          "section": "4. Automation: make delivery boring"
+        },
+        {
+          "title": "The audience determines the detail",
+          "explanation": "A client, a channel operator and a leadership team need different levels of detail from the same evidence.",
+          "diagram": {
+            "kind": "compare",
+            "items": [
+              {
+                "label": "Owner / client",
+                "detail": "Outcome, cost, one recommendation and one ask.",
+                "icon": "briefcase"
+              },
+              {
+                "label": "Operator",
+                "detail": "Channel diagnostics, tests, data checks and next tasks.",
+                "icon": "layers"
+              },
+              {
+                "label": "Leadership",
+                "detail": "Progress against goal, risks and required decisions.",
+                "icon": "target"
+              }
+            ]
+          },
+          "takeaway": "Keep definitions consistent even when you simplify the presentation.",
+          "caption": "Concept illustration, not a platform screenshot. Follow the labels and the relationships shown.",
+          "checkpoint": {
+            "question": "Which of the five panels stops a dashboard becoming decorative?",
+            "answer": "The insight notes connect the evidence to a decision, owner and date. They rely on the other panels for a trustworthy diagnosis."
+          },
+          "id": "m6-t3-v5",
+          "section": "5. Reporting cadence and the audience principle"
+        }
+      ]
+    },
+    "m6-t4": {
+      "introduction": "Separate credit assignment from causal impact. Use experiments and explicit decision rules to learn before reallocating a budget.",
+      "sections": [
+        {
+          "title": "One journey, several credit stories",
+          "explanation": "The same observed sale can be attributed differently without changing the underlying customer journey.",
+          "diagram": {
+            "kind": "compare",
+            "items": [
+              {
+                "label": "First-touch view",
+                "detail": "Emphasises the observed discovery touch.",
+                "icon": "megaphone"
+              },
+              {
+                "label": "Last-touch view",
+                "detail": "Emphasises the observed final interaction.",
+                "icon": "cursor"
+              },
+              {
+                "label": "Multi-touch / data-driven",
+                "detail": "Distributes credit using rules or platform modelling.",
+                "icon": "layers"
+              }
+            ]
+          },
+          "takeaway": "Attribution is a reporting model, not proof of incrementality. Compare only compatible models and windows.",
+          "caption": "Concept illustration, not a platform screenshot. Follow the labels and the relationships shown.",
+          "id": "m6-t4-v1",
+          "section": "1. Models: from last-click to data-driven"
+        },
+        {
+          "title": "The counterfactual is the hard question",
+          "explanation": "Incrementality asks what would have happened without the marketing activity.",
+          "diagram": {
+            "kind": "compare",
+            "items": [
+              {
+                "label": "Observed activity",
+                "detail": "Customers bought during the campaign.",
+                "icon": "chart"
+              },
+              {
+                "label": "Counterfactual",
+                "detail": "Some might have bought even if the campaign had not run.",
+                "icon": "search"
+              },
+              {
+                "label": "Designed comparison",
+                "detail": "Use an appropriate holdout or carefully planned test where feasible.",
+                "icon": "filter"
+              }
+            ]
+          },
+          "takeaway": "A simple before/after pause test is vulnerable to seasonality and other changes; state those limitations.",
+          "caption": "Concept illustration, not a platform screenshot. Follow the labels and the relationships shown.",
+          "id": "m6-t4-v2",
+          "section": "2. The honest question: \"would it have happened anyway?\""
+        },
+        {
+          "title": "A difference is not automatically a winner",
+          "explanation": "In this synthetic equal-sized comparison, A has 50 signups from 1,000 eligible visitors and B has 60 from 1,000.",
+          "diagram": {
+            "kind": "bars",
+            "unit": "% signup rate",
+            "items": [
+              {
+                "label": "A: current page",
+                "value": 5,
+                "detail": "50 ÷ 1,000. Same event definition and observation window."
+              },
+              {
+                "label": "B: changed headline",
+                "value": 6,
+                "detail": "60 ÷ 1,000. One intended variable changed."
+              }
+            ]
+          },
+          "takeaway": "The observed lift is 1 percentage point, or 20% relative. That alone does not establish significance or practical value; use the planned sample and decision rule.",
+          "caption": "Synthetic worked example, not live campaign data or an industry benchmark.",
+          "id": "m6-t4-v3",
+          "section": "3. A/B testing: the experiment that settles arguments"
+        },
+        {
+          "title": "Turn a finding into the next controlled step",
+          "explanation": "Learning compounds when the experiment’s result becomes an explicit operational decision.",
+          "diagram": {
+            "kind": "cycle",
+            "items": [
+              {
+                "label": "Hypothesise",
+                "detail": "Name one change, its mechanism and expected useful outcome.",
+                "icon": "target"
+              },
+              {
+                "label": "Design",
+                "detail": "Set assignment, sample, duration and guardrails in advance.",
+                "icon": "filter"
+              },
+              {
+                "label": "Evaluate",
+                "detail": "Check data quality and the planned decision rule.",
+                "icon": "chart"
+              },
+              {
+                "label": "Decide",
+                "detail": "Ship, revise or stop, and record what was learned.",
+                "icon": "check"
+              }
+            ],
+            "center": "Optimise"
+          },
+          "takeaway": "Do not repeatedly peek and stop as soon as a preferred result appears.",
+          "caption": "Concept illustration, not a platform screenshot. Follow the labels and the relationships shown.",
+          "checkpoint": {
+            "question": "Does a data-driven attribution report prove a channel caused its credited sales?",
+            "answer": "No. It assigns credit within the available data and model. Causal impact needs an appropriate experimental design or a clearly qualified incrementality analysis."
+          },
+          "id": "m6-t4-v4",
+          "section": "4. The optimisation loop: from findings to actions"
+        }
+      ]
+    },
+    "m6-pb4": {
+      "introduction": "Build the dashboard around a decision and an insight log. Keep sources, simulated data and experimental assumptions visible throughout the pack.",
+      "sections": [
+        {
+          "title": "A dashboard is the middle, not the end",
+          "explanation": "The project begins with a business question and ends with a justified action.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Question",
+                "detail": "Name the decision and the KPI tree.",
+                "icon": "target"
+              },
+              {
+                "label": "Evidence",
+                "detail": "Verify sources, definitions and event quality.",
+                "icon": "check"
+              },
+              {
+                "label": "View",
+                "detail": "Build five panels that answer clear questions.",
+                "icon": "chart"
+              },
+              {
+                "label": "Decision",
+                "detail": "Write the diagnosis, action, owner and review date.",
+                "icon": "file"
+              }
+            ]
+          },
+          "takeaway": "A chart without an insight log does not fulfil the project’s central purpose.",
+          "caption": "Concept illustration, not a platform screenshot. Follow the labels and the relationships shown.",
+          "id": "m6-pb4-v1",
+          "section": "The brief"
+        },
+        {
+          "title": "The submission joins data and judgement",
+          "explanation": "Keep the dashboard, experiment designs and client communication connected to the same evidence.",
+          "diagram": {
+            "kind": "hub",
+            "items": [
+              {
+                "label": "Measurement design",
+                "detail": "KPI tree, source names, event plan and verification step.",
+                "icon": "target"
+              },
+              {
+                "label": "Dashboard",
+                "detail": "Five panels with comparisons and a visible manual layer.",
+                "icon": "chart"
+              },
+              {
+                "label": "Insight log",
+                "detail": "Four dated entries with diagnosis, actions and owners.",
+                "icon": "file"
+              },
+              {
+                "label": "Experiments",
+                "detail": "Incrementality design and an A/B plan with a pre-written rule.",
+                "icon": "filter"
+              },
+              {
+                "label": "Delivery + integrity",
+                "detail": "Automation choices, client email and specific AI disclosure.",
+                "icon": "shield"
+              }
+            ],
+            "center": "Decision pack"
+          },
+          "takeaway": "Label demo-property and simulated data at the point where it is shown, not only in a footnote.",
+          "caption": "Concept illustration, not a platform screenshot. Follow the labels and the relationships shown.",
+          "id": "m6-pb4-v2",
+          "section": "What to submit"
+        },
+        {
+          "title": "Four learning strands must meet",
+          "explanation": "A visually attractive report is incomplete if it omits measurement definitions or the reasoning behind a decision.",
+          "diagram": {
+            "kind": "compare",
+            "items": [
+              {
+                "label": "6.1: decision metric",
+                "detail": "Explain which decision each headline number informs.",
+                "icon": "target"
+              },
+              {
+                "label": "6.2: events",
+                "detail": "Choose and verify a meaningful key event.",
+                "icon": "check"
+              },
+              {
+                "label": "6.3: reporting",
+                "detail": "Use the five-panel structure and an appropriate delivery process.",
+                "icon": "chart"
+              },
+              {
+                "label": "6.4: honest inference",
+                "detail": "Show attribution limits or an appropriate experiment design.",
+                "icon": "filter"
+              }
+            ]
+          },
+          "takeaway": "Do not treat the platform’s attributed conversions as a causal estimate of campaign impact.",
+          "caption": "Concept illustration, not a platform screenshot. Follow the labels and the relationships shown.",
+          "id": "m6-pb4-v3",
+          "section": "Coverage requirements"
+        },
+        {
+          "title": "Build in an order that protects data quality",
+          "explanation": "A small reconciliation check early in the project prevents a large misleading dashboard later.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Tree + sources",
+                "detail": "Define measures and verify the available data.",
+                "icon": "file"
+              },
+              {
+                "label": "Connect + check",
+                "detail": "Reconcile dates, spend, events and duplicates.",
+                "icon": "check"
+              },
+              {
+                "label": "Build + interpret",
+                "detail": "Create the panels and four insight entries.",
+                "icon": "chart"
+              },
+              {
+                "label": "Design + communicate",
+                "detail": "Finish experiments and the client-ready recommendation.",
+                "icon": "message"
+              }
+            ]
+          },
+          "takeaway": "Check the assessor can open the final dashboard or evidence screenshots.",
+          "caption": "Concept illustration, not a platform screenshot. Follow the labels and the relationships shown.",
+          "id": "m6-pb4-v4",
+          "section": "Process"
+        },
+        {
+          "title": "Make the professional standard observable",
+          "explanation": "The rubric values the quality of the decision process as much as the chart layout.",
+          "diagram": {
+            "kind": "compare",
+            "items": [
+              {
+                "label": "Reliable measurement",
+                "detail": "Definitions, sources, comparisons and guardrails are explicit.",
+                "icon": "check"
+              },
+              {
+                "label": "Reasoned action",
+                "detail": "Insight and experiment plans have owners and pre-written rules.",
+                "icon": "target"
+              },
+              {
+                "label": "Honest communication",
+                "detail": "The client understands the recommendation and all simulation is labelled.",
+                "icon": "shield"
+              }
+            ]
+          },
+          "takeaway": "Use the original rubric and its stated pass rule. This visual groups the ideas but does not alter criteria or marks.",
+          "caption": "Concept illustration, not a platform screenshot. Follow the labels and the relationships shown.",
+          "checkpoint": {
+            "question": "Can a simulated insight log be submitted as if it came from a live campaign?",
+            "answer": "No. Label simulation and the data source clearly in every relevant view. Keep the distinction between an observed result, a forecast and a proposed experiment visible."
+          },
+          "id": "m6-pb4-v5",
+          "section": "Rubric"
+        }
+      ]
+    }
+  }
+}

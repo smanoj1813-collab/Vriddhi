@@ -6,7 +6,7 @@
 // Firestore; the public preview remains device-local.
 
 import { Link } from 'react-router-dom'
-import { Award, BookOpen, Clock, GraduationCap, Layers, PlayCircle } from 'lucide-react'
+import { Award, BookOpen, Clock, GraduationCap, Layers, PlayCircle, Sparkles } from 'lucide-react'
 import { listCourses, type CourseCatalogEntry } from '@/shared/courses/courseCatalog'
 import { coursePercent, formatMinutes, minutesSummary, resumeTopic } from '@/shared/courses/courseModel'
 import { useCourseProgress } from '@/shared/courses/courseProgress'
@@ -62,6 +62,7 @@ function CourseCatalogCard({ entry, basePath, uid, collegeId, assignedCourseIds,
           <div className="flex flex-wrap items-center gap-2">
             <Chip tone="teal">{manifest.code}</Chip>
             <Chip>{manifest.level}</Chip>
+            {manifest.illustrations ? <Chip tone="violet"><Sparkles className="mr-1 h-3 w-3" aria-hidden="true" /> Illustrated edition</Chip> : null}
           </div>
           <h2 className="mt-1.5 text-lg font-extrabold leading-tight text-slate-900 dark:text-white">{manifest.title}</h2>
           <p className="mt-1 line-clamp-2 text-sm text-slate-600 dark:text-slate-300">{manifest.tagline}</p>

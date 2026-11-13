@@ -1,0 +1,556 @@
+{
+  "moduleId": "m1",
+  "topics": {
+    "m1-t1": {
+      "introduction": "Picture a local café as a connected system: people discover it, decide to try it and find a reason to come back. Each channel earns its place by doing a different job.",
+      "sections": [
+        {
+          "title": "The attract → convert → keep loop",
+          "explanation": "A post is an activity. Marketing connects that activity to a customer action, then uses the result to improve the next round.",
+          "diagram": {
+            "kind": "cycle",
+            "items": [
+              {
+                "label": "Attract",
+                "detail": "A nearby search or useful reel introduces the café.",
+                "icon": "megaphone"
+              },
+              {
+                "label": "Convert",
+                "detail": "A clear menu and ordering path turn interest into an order.",
+                "icon": "cursor"
+              },
+              {
+                "label": "Keep",
+                "detail": "An opted-in breakfast update gives regulars a reason to return.",
+                "icon": "heart"
+              },
+              {
+                "label": "Measure",
+                "detail": "Count enquiries, orders and repeat visits, then adjust.",
+                "icon": "chart"
+              }
+            ],
+            "center": "Customer value"
+          },
+          "takeaway": "Judge the system by useful customer actions, not how much content it produces.",
+          "caption": "Concept illustration, not a platform screenshot. Follow the labels and the relationships shown.",
+          "id": "m1-t1-v1",
+          "section": "1. The definition that matters: attract, convert, keep — measurably"
+        },
+        {
+          "title": "Three media engines, one business",
+          "explanation": "Owned, earned and paid media differ in control, trust and cost. They are complements, not three competing strategies.",
+          "diagram": {
+            "kind": "compare",
+            "items": [
+              {
+                "label": "Owned",
+                "detail": "Website and permission-based list: build a reusable relationship.",
+                "icon": "globe"
+              },
+              {
+                "label": "Earned",
+                "detail": "Independent reviews and mentions: other people supply proof.",
+                "icon": "message"
+              },
+              {
+                "label": "Paid",
+                "detail": "Ads and sponsored placements: buy distribution, then stop paying when it stops helping.",
+                "icon": "megaphone"
+              }
+            ]
+          },
+          "takeaway": "A platform-hosted profile is not fully under your control; a permission-based contact list is still subject to privacy and provider rules.",
+          "caption": "Concept illustration, not a platform screenshot. Follow the labels and the relationships shown.",
+          "id": "m1-t1-v2",
+          "section": "2. Owned, earned and paid — the three kinds of media"
+        },
+        {
+          "title": "Give every channel a job",
+          "explanation": "Instead of picking channels because they are popular, start with the job needed in the customer relationship.",
+          "diagram": {
+            "kind": "hub",
+            "items": [
+              {
+                "label": "Search",
+                "detail": "Capture an existing question or nearby need.",
+                "icon": "search"
+              },
+              {
+                "label": "Content",
+                "detail": "Explain the offer and remove uncertainty.",
+                "icon": "file"
+              },
+              {
+                "label": "Social",
+                "detail": "Make the business familiar and support conversation.",
+                "icon": "users"
+              },
+              {
+                "label": "Email / messaging",
+                "detail": "Follow up with people who have chosen to hear from you.",
+                "icon": "mail"
+              },
+              {
+                "label": "Paid media",
+                "detail": "Amplify a relevant message to an appropriate audience.",
+                "icon": "megaphone"
+              }
+            ],
+            "center": "Useful action"
+          },
+          "takeaway": "The same customer can move between several channels before ordering.",
+          "caption": "Concept illustration, not a platform screenshot. Follow the labels and the relationships shown.",
+          "id": "m1-t1-v3",
+          "section": "3. The channels and their actual jobs"
+        },
+        {
+          "title": "Build the shop before announcing the sale",
+          "explanation": "Always-on assets make the business findable every day. A time-bound campaign adds urgency to an already usable customer experience.",
+          "diagram": {
+            "kind": "compare",
+            "items": [
+              {
+                "label": "Always-on foundation",
+                "detail": "Accurate listing, helpful pages, working order link and regular replies.",
+                "icon": "layers"
+              },
+              {
+                "label": "Campaign burst",
+                "detail": "A two-week festival offer with a goal, dates and a measurement plan.",
+                "icon": "clock"
+              }
+            ]
+          },
+          "takeaway": "Do not pay to send people to a broken page or an unanswered inbox.",
+          "caption": "Concept illustration, not a platform screenshot. Follow the labels and the relationships shown.",
+          "checkpoint": {
+            "question": "Is an Instagram posting schedule a complete marketing strategy?",
+            "answer": "No. Name the audience and business goal, the action each channel supports, and the way you will measure orders or another useful outcome."
+          },
+          "id": "m1-t1-v4",
+          "section": "4. Always-on vs campaign"
+        }
+      ]
+    },
+    "m1-t2": {
+      "introduction": "Follow one customer from discovery to a repeat purchase, then put numbers on the journey. Use the interactive funnel to see why fixing a leak can beat buying more traffic.",
+      "sections": [
+        {
+          "title": "Five stages, five customer questions",
+          "explanation": "People need different answers at different moments. Match the next piece of information to the question they are actually asking.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Awareness",
+                "detail": "What is this, and why should I care?",
+                "icon": "megaphone"
+              },
+              {
+                "label": "Consideration",
+                "detail": "Is this right for me? Show comparisons and proof.",
+                "icon": "search"
+              },
+              {
+                "label": "Conversion",
+                "detail": "Can I act safely and easily?",
+                "icon": "cursor"
+              },
+              {
+                "label": "Retention",
+                "detail": "Did the experience deliver on the promise?",
+                "icon": "heart"
+              },
+              {
+                "label": "Advocacy",
+                "detail": "Is this worth recommending to someone else?",
+                "icon": "users"
+              }
+            ]
+          },
+          "takeaway": "Real journeys loop and pause. This sequence is a planning model, not a rule about human behaviour.",
+          "caption": "Concept illustration, not a platform screenshot. Follow the labels and the relationships shown.",
+          "id": "m1-t2-v1",
+          "section": "1. The journey is a series of customer questions"
+        },
+        {
+          "title": "A thousand visits is not a thousand customers",
+          "explanation": "The lesson’s example becomes 30 enquiries, 12 qualified prospects and 3 customers. Each rate applies to the previous stage, not to all visitors.",
+          "diagram": {
+            "kind": "funnel",
+            "unit": "people",
+            "items": [
+              {
+                "label": "Visitors",
+                "value": 1000,
+                "detail": "People entering the example funnel."
+              },
+              {
+                "label": "Enquiries",
+                "value": 30,
+                "detail": "3% of visitors make an enquiry."
+              },
+              {
+                "label": "Qualified prospects",
+                "value": 12,
+                "detail": "40% of enquiries meet the qualification rule."
+              },
+              {
+                "label": "Customers",
+                "value": 3,
+                "detail": "25% of qualified prospects buy."
+              }
+            ],
+            "interactive": true
+          },
+          "takeaway": "Overall conversion is 3 ÷ 1,000 = 0.3%. Compare acquisition cost with contribution margin and realistic customer value, not revenue alone.",
+          "caption": "Synthetic worked example matching the reading: 1,000 × 3% × 40% × 25% = 3. Funnel widths are schematic, not proportional. The adjustable ₹3,000 budget is an added practice assumption.",
+          "id": "m1-t2-v2",
+          "section": "2. The funnel and its arithmetic"
+        },
+        {
+          "title": "Diagnose the leak before adding traffic",
+          "explanation": "Choose the fix that matches the stage losing people. More visitors do not solve a form that nobody can finish.",
+          "diagram": {
+            "kind": "compare",
+            "items": [
+              {
+                "label": "Attention leak",
+                "detail": "Wrong audience or weak hook → revisit research and the promise.",
+                "icon": "target"
+              },
+              {
+                "label": "Trust leak",
+                "detail": "Unanswered questions → add proof, comparisons and useful content.",
+                "icon": "message"
+              },
+              {
+                "label": "Action leak",
+                "detail": "Slow page or long form → remove friction and show the full offer.",
+                "icon": "cursor"
+              },
+              {
+                "label": "Relationship leak",
+                "detail": "Silence after purchase → onboard, support and follow up with permission.",
+                "icon": "heart"
+              }
+            ]
+          },
+          "takeaway": "Measure a stage rate before and after a change so you can tell whether the fix helped.",
+          "caption": "Concept illustration, not a platform screenshot. Follow the labels and the relationships shown.",
+          "id": "m1-t2-v3",
+          "section": "3. Why funnels leak — and the patch for each hole"
+        },
+        {
+          "title": "Match the channel to the moment",
+          "explanation": "A channel’s role depends on the customer question. Do not ask a discovery campaign to behave like a high-intent search.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Discover",
+                "detail": "Social, video and relevant creator content introduce the problem.",
+                "icon": "megaphone"
+              },
+              {
+                "label": "Evaluate",
+                "detail": "Search guides, reviews and comparison content build confidence.",
+                "icon": "search"
+              },
+              {
+                "label": "Act",
+                "detail": "A relevant landing page and clear follow-up support the decision.",
+                "icon": "cursor"
+              },
+              {
+                "label": "Return / recommend",
+                "detail": "Permission-based email and community support the relationship.",
+                "icon": "mail"
+              }
+            ]
+          },
+          "takeaway": "Channel hand-offs matter: the promise on the ad should survive the click onto the page.",
+          "caption": "Concept illustration, not a platform screenshot. Follow the labels and the relationships shown.",
+          "checkpoint": {
+            "question": "If the enquiry rate doubles and all other rates stay fixed, what happens to expected customers?",
+            "answer": "They double from 3 to 6. With the same media spend, CPA halves. That is a forecast under fixed assumptions, not proof that a real campaign will behave that way."
+          },
+          "id": "m1-t2-v4",
+          "section": "4. Channels map to stages"
+        }
+      ]
+    },
+    "m1-t3": {
+      "introduction": "Turn scattered reviews, searches and conversations into an evidence-backed audience picture. Keep the difference between an observation and a guess visible.",
+      "sections": [
+        {
+          "title": "Climb the evidence ladder",
+          "explanation": "Research gets stronger when you record what people actually say and do, rather than inventing a perfect customer.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Observe",
+                "detail": "Collect repeated phrases from reviews, searches and interviews.",
+                "icon": "search"
+              },
+              {
+                "label": "Tag",
+                "detail": "Mark needs, barriers, situations and buying triggers.",
+                "icon": "filter"
+              },
+              {
+                "label": "Check",
+                "detail": "Compare signals across more than one source.",
+                "icon": "check"
+              },
+              {
+                "label": "Decide",
+                "detail": "Choose a message or channel and name the evidence behind it.",
+                "icon": "target"
+              }
+            ]
+          },
+          "takeaway": "A single interview suggests a hypothesis; it does not represent the entire market.",
+          "caption": "Concept illustration, not a platform screenshot. Follow the labels and the relationships shown.",
+          "id": "m1-t3-v1",
+          "section": "1. Evidence beats imagination"
+        },
+        {
+          "title": "A persona is a decision tool",
+          "explanation": "Useful personas explain the situation in which someone buys. Decorative demographics cannot tell you what to say next.",
+          "diagram": {
+            "kind": "hub",
+            "items": [
+              {
+                "label": "Need",
+                "detail": "What job is the customer trying to get done?",
+                "icon": "target"
+              },
+              {
+                "label": "Trigger",
+                "detail": "Why look for a solution now?",
+                "icon": "clock"
+              },
+              {
+                "label": "Barrier",
+                "detail": "What could stop a purchase or enquiry?",
+                "icon": "shield"
+              },
+              {
+                "label": "Proof",
+                "detail": "What would make the promise believable?",
+                "icon": "check"
+              }
+            ],
+            "center": "Buying context"
+          },
+          "takeaway": "Link each persona claim to a source or label it as an assumption to test.",
+          "caption": "Concept illustration, not a platform screenshot. Follow the labels and the relationships shown.",
+          "id": "m1-t3-v2",
+          "section": "2. The persona skeleton"
+        },
+        {
+          "title": "Find a gap, not a brand to copy",
+          "explanation": "A competitor teardown asks where customer needs remain unanswered. The useful output is an opportunity, not a list of features.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Compare",
+                "detail": "Review offers, search visibility, content and customer feedback.",
+                "icon": "search"
+              },
+              {
+                "label": "Spot the gap",
+                "detail": "Notice repeated questions, complaints or missing information.",
+                "icon": "message"
+              },
+              {
+                "label": "Choose a response",
+                "detail": "Offer clearer proof, a simpler next step or a relevant explanation.",
+                "icon": "file"
+              }
+            ]
+          },
+          "takeaway": "Copying a rival’s post does not copy the research, distribution or brand trust behind it.",
+          "caption": "Concept illustration, not a platform screenshot. Follow the labels and the relationships shown.",
+          "id": "m1-t3-v3",
+          "section": "3. Competitor teardown: hunt for gaps, not features"
+        },
+        {
+          "title": "A small research desk",
+          "explanation": "Free tools contribute different types of evidence. Use them together and keep dates and source links.",
+          "diagram": {
+            "kind": "compare",
+            "items": [
+              {
+                "label": "Search evidence",
+                "detail": "Autocomplete and trends suggest language and changing interest.",
+                "icon": "search"
+              },
+              {
+                "label": "Review evidence",
+                "detail": "Reviews reveal recurring praise, frustration and missing answers.",
+                "icon": "message"
+              },
+              {
+                "label": "Human evidence",
+                "detail": "Short interviews explain context that dashboards cannot.",
+                "icon": "users"
+              },
+              {
+                "label": "Competitor evidence",
+                "detail": "Public pages show positioning, offers and content gaps.",
+                "icon": "globe"
+              }
+            ]
+          },
+          "takeaway": "Search interest is not sales volume. Tool estimates and convenience samples have limits.",
+          "caption": "Concept illustration, not a platform screenshot. Follow the labels and the relationships shown.",
+          "checkpoint": {
+            "question": "A review says “I could not find the fee.” What is the research-to-action chain?",
+            "answer": "Record the quote and source, look for the same barrier elsewhere, then test a clear fee section or enquiry answer. Do not assume one review proves every prospect has that barrier."
+          },
+          "id": "m1-t3-v4",
+          "section": "4. Where the evidence lives — a free toolkit"
+        }
+      ]
+    },
+    "m1-t4": {
+      "introduction": "Connect the business goal to the numbers you can act on. Finish with a one-page brief that a teammate could use without guessing.",
+      "sections": [
+        {
+          "title": "Write a target people can check",
+          "explanation": "A useful goal specifies an outcome, a baseline, a target and a time window. The target below is a practice goal, not a forecast.",
+          "diagram": {
+            "kind": "bars",
+            "unit": "qualified enquiries / month",
+            "items": [
+              {
+                "label": "Baseline",
+                "value": 20,
+                "detail": "Current monthly count, using a fixed qualification definition."
+              },
+              {
+                "label": "Target",
+                "value": 30,
+                "detail": "Practice target for the end of the next eight weeks."
+              }
+            ]
+          },
+          "takeaway": "Moving from 20 to 30 is a 50% increase. Whether it is achievable needs evidence about demand, capacity and budget.",
+          "caption": "Synthetic worked example, not live campaign data or an industry benchmark.",
+          "id": "m1-t4-v1",
+          "section": "1. SMART goals: the sentence that ends arguments"
+        },
+        {
+          "title": "From the goal to the diagnostic levers",
+          "explanation": "The KPI tree separates the business outcome from the numbers that explain why it moved.",
+          "diagram": {
+            "kind": "hub",
+            "items": [
+              {
+                "label": "Demand",
+                "detail": "Relevant visits and enquiries indicate available interest.",
+                "icon": "users"
+              },
+              {
+                "label": "Lead quality",
+                "detail": "Qualified enquiries show whether the right people arrived.",
+                "icon": "filter"
+              },
+              {
+                "label": "Conversion",
+                "detail": "Counselling-to-admission rate reveals decision-stage performance.",
+                "icon": "cursor"
+              },
+              {
+                "label": "Cost guardrail",
+                "detail": "CPA shows whether the acquisition plan is affordable.",
+                "icon": "chart"
+              }
+            ],
+            "center": "Admissions"
+          },
+          "takeaway": "Keep metric definitions and time windows consistent from the top of the tree to its branches.",
+          "caption": "Concept illustration, not a platform screenshot. Follow the labels and the relationships shown.",
+          "id": "m1-t4-v2",
+          "section": "2. The KPI tree: how a goal becomes daily numbers"
+        },
+        {
+          "title": "Budget logic you can defend",
+          "explanation": "Work backwards from the goal before choosing activity. An assumed rate belongs in the plan as an assumption.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Business goal",
+                "detail": "Name the number of new customers or admissions needed.",
+                "icon": "target"
+              },
+              {
+                "label": "Required leads",
+                "detail": "Divide the target by an evidence-backed close-rate assumption.",
+                "icon": "filter"
+              },
+              {
+                "label": "Required traffic",
+                "detail": "Divide leads by the assumed visit-to-lead rate.",
+                "icon": "users"
+              },
+              {
+                "label": "Budget verdict",
+                "detail": "Estimate spend and compare CPA with a margin-aware ceiling.",
+                "icon": "chart"
+              }
+            ]
+          },
+          "takeaway": "Distinguish a KPI that judges success from a diagnostic metric that helps explain it.",
+          "caption": "Concept illustration, not a platform screenshot. Follow the labels and the relationships shown.",
+          "id": "m1-t4-v3",
+          "section": "3. Goal → KPI → metric: the budget logic"
+        },
+        {
+          "title": "The one-page operating contract",
+          "explanation": "A brief joins the why, who, what and how. It also records what the campaign will not attempt.",
+          "diagram": {
+            "kind": "compare",
+            "items": [
+              {
+                "label": "Direction",
+                "detail": "Business goal, audience need and single message.",
+                "icon": "target"
+              },
+              {
+                "label": "Execution",
+                "detail": "Channel roles, assets, owner and dates.",
+                "icon": "layers"
+              },
+              {
+                "label": "Control",
+                "detail": "Budget, KPI definitions, risk and pause rules.",
+                "icon": "shield"
+              },
+              {
+                "label": "Boundaries",
+                "detail": "Out-of-scope work and untested assumptions.",
+                "icon": "file"
+              }
+            ]
+          },
+          "takeaway": "The brief is the reference when a new idea competes for limited time or money.",
+          "caption": "Concept illustration, not a platform screenshot. Follow the labels and the relationships shown.",
+          "checkpoint": {
+            "question": "Is “get more followers” a complete SMART campaign goal?",
+            "answer": "No. State the business purpose, the defined baseline and numeric target, a realistic time window, and the outcome that follower growth is meant to support."
+          },
+          "id": "m1-t4-v4",
+          "section": "4. The one-page brief"
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,758 @@
+{
+  "moduleId": "m3",
+  "topics": {
+    "m3-t1": {
+      "introduction": "Build a content system around customer questions, not an empty posting calendar. Trace every piece back to a pillar, a stage and an owner.",
+      "sections": [
+        {
+          "title": "Strategy connects the topic, format and rhythm",
+          "explanation": "Three choices have to work together: what you explain, how the audience will use it and how often the team can deliver.",
+          "diagram": {
+            "kind": "hub",
+            "items": [
+              {
+                "label": "Topics",
+                "detail": "Choose recurring questions tied to the offer.",
+                "icon": "message"
+              },
+              {
+                "label": "Formats",
+                "detail": "Use a guide, short video or comparison for a reason.",
+                "icon": "file"
+              },
+              {
+                "label": "Cadence",
+                "detail": "Choose a pace the team can sustain.",
+                "icon": "clock"
+              },
+              {
+                "label": "Outcome",
+                "detail": "Define the useful action the content should support.",
+                "icon": "target"
+              }
+            ],
+            "center": "Customer need"
+          },
+          "takeaway": "A calendar is the execution of a strategy; it is not the strategy itself.",
+          "caption": "Concept illustration, not a platform screenshot. Follow the labels and the relationships shown.",
+          "id": "m3-t1-v1",
+          "section": "1. Content strategy = topics × formats × cadence"
+        },
+        {
+          "title": "Pillars make a connected library",
+          "explanation": "A pillar gives a broad subject a home. Cluster pieces answer narrower questions and link back into the same useful resource.",
+          "diagram": {
+            "kind": "hub",
+            "items": [
+              {
+                "label": "Choosing shoes",
+                "detail": "Answer fit and use-case questions.",
+                "icon": "search"
+              },
+              {
+                "label": "Starting a routine",
+                "detail": "Explain a realistic first-week plan.",
+                "icon": "clock"
+              },
+              {
+                "label": "Avoiding mistakes",
+                "detail": "Address common barriers without unsupported health claims.",
+                "icon": "shield"
+              },
+              {
+                "label": "Comparing options",
+                "detail": "Help the customer evaluate suitable choices.",
+                "icon": "layers"
+              }
+            ],
+            "center": "Running basics"
+          },
+          "takeaway": "Choose clusters from research, not just from words an AI suggests.",
+          "caption": "Concept illustration, not a platform screenshot. Follow the labels and the relationships shown.",
+          "id": "m3-t1-v2",
+          "section": "2. Pillars and clusters: the structure of authority"
+        },
+        {
+          "title": "Match the format to the task",
+          "explanation": "A familiar format is not automatically the right format. Consider the information load and the reader’s next action.",
+          "diagram": {
+            "kind": "compare",
+            "items": [
+              {
+                "label": "Guide / article",
+                "detail": "Useful when the customer needs a detailed searchable answer.",
+                "icon": "file"
+              },
+              {
+                "label": "Short video",
+                "detail": "Useful for one demonstration, hook or visual proof.",
+                "icon": "megaphone"
+              },
+              {
+                "label": "Carousel / checklist",
+                "detail": "Useful for a sequence people can save and revisit.",
+                "icon": "layers"
+              },
+              {
+                "label": "Email",
+                "detail": "Useful for a timely next step within an opted-in relationship.",
+                "icon": "mail"
+              }
+            ]
+          },
+          "takeaway": "The same topic can take different formats when each version does a distinct job.",
+          "caption": "Concept illustration, not a platform screenshot. Follow the labels and the relationships shown.",
+          "id": "m3-t1-v3",
+          "section": "3. Choosing formats honestly"
+        },
+        {
+          "title": "Plan the mix, then leave capacity",
+          "explanation": "For a hypothetical 20-piece plan, a 60/30/10 mix gives 12 discovery, 6 consideration and 2 action pieces. It is a starting hypothesis, not a universal rule.",
+          "diagram": {
+            "kind": "bars",
+            "unit": "planned pieces",
+            "items": [
+              {
+                "label": "Discovery",
+                "value": 12,
+                "detail": "Answer broad questions and make the business familiar."
+              },
+              {
+                "label": "Consideration",
+                "value": 6,
+                "detail": "Offer comparisons, proof and deeper explanations."
+              },
+              {
+                "label": "Action",
+                "value": 2,
+                "detail": "Make a specific, appropriate next step clear."
+              }
+            ]
+          },
+          "takeaway": "In this example the team can produce 40 pieces but commits to 20. Keep owners, dates, distribution and a cut order visible.",
+          "caption": "Synthetic worked example, not live campaign data or an industry benchmark.",
+          "checkpoint": {
+            "question": "What should be cut first when a calendar becomes unmanageable?",
+            "answer": "Use the pre-agreed cut order: remove low-value work that is least connected to audience needs and the goal. Protect quality, verification and distribution rather than simply publishing more."
+          },
+          "id": "m3-t1-v4",
+          "section": "4. The 30-day calendar that survives"
+        }
+      ]
+    },
+    "m3-t2": {
+      "introduction": "AI speeds up parts of production, but the human owns the claim. Follow an editorial workflow with visible verification and a clear disclosure.",
+      "sections": [
+        {
+          "title": "Fluent text is not verified evidence",
+          "explanation": "A language model can generate a plausible sentence without knowing that its factual claim is correct.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Generate",
+                "detail": "The model predicts a plausible continuation from its inputs.",
+                "icon": "sparkles"
+              },
+              {
+                "label": "Inspect",
+                "detail": "A human identifies factual, numeric and sensitive claims.",
+                "icon": "search"
+              },
+              {
+                "label": "Verify",
+                "detail": "Check authoritative sources or remove unsupported claims.",
+                "icon": "check"
+              },
+              {
+                "label": "Own the result",
+                "detail": "The publisher remains responsible for what goes live.",
+                "icon": "shield"
+              }
+            ]
+          },
+          "takeaway": "A more confident prompt is not a substitute for independent evidence.",
+          "caption": "Concept illustration, not a platform screenshot. Follow the labels and the relationships shown.",
+          "id": "m3-t2-v1",
+          "section": "1. Why AI drafts hallucinate — and why prompting cannot fix it"
+        },
+        {
+          "title": "Five gates from brief to published piece",
+          "explanation": "A safe workflow separates drafting from verification. Save the trail, including what was corrected or removed.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Brief",
+                "detail": "Specify audience, goal, facts, constraints and source material.",
+                "icon": "target"
+              },
+              {
+                "label": "Draft",
+                "detail": "Use AI for structure, variants or a first pass.",
+                "icon": "sparkles"
+              },
+              {
+                "label": "Verify",
+                "detail": "Mark claims supported, false or unresolved.",
+                "icon": "check"
+              },
+              {
+                "label": "Edit",
+                "detail": "Improve accuracy, voice, usefulness and the next action.",
+                "icon": "file"
+              },
+              {
+                "label": "Disclose",
+                "detail": "State material AI use and human verification.",
+                "icon": "shield"
+              }
+            ]
+          },
+          "takeaway": "Unresolved claims do not become publishable because the prose looks finished.",
+          "caption": "Concept illustration, not a platform screenshot. Follow the labels and the relationships shown.",
+          "id": "m3-t2-v2",
+          "section": "2. The five-step workflow"
+        },
+        {
+          "title": "A voice sheet turns taste into guidance",
+          "explanation": "A small style sheet gives both people and tools a repeatable brand voice.",
+          "diagram": {
+            "kind": "compare",
+            "items": [
+              {
+                "label": "Voice anchors",
+                "detail": "Name tone, audience language and approved examples.",
+                "icon": "message"
+              },
+              {
+                "label": "Guardrails",
+                "detail": "List banned claims, exaggerated promises and words to avoid.",
+                "icon": "shield"
+              },
+              {
+                "label": "Editing test",
+                "detail": "Compare the draft with actual business language and evidence.",
+                "icon": "check"
+              }
+            ]
+          },
+          "takeaway": "Ask for variants inside the voice constraints rather than asking AI to “make it viral”.",
+          "caption": "Concept illustration, not a platform screenshot. Follow the labels and the relationships shown.",
+          "id": "m3-t2-v3",
+          "section": "3. Brand voice: the style sheet trick"
+        },
+        {
+          "title": "Automate the low-risk friction",
+          "explanation": "Use AI where variation or organisation helps, and keep judgement where consequences are real.",
+          "diagram": {
+            "kind": "matrix",
+            "xLabel": "Risk if wrong",
+            "yLabel": "Human judgement needed",
+            "columns": [
+              "Lower risk",
+              "Higher risk"
+            ],
+            "rows": [
+              "More judgement",
+              "Less judgement"
+            ],
+            "items": [
+              {
+                "label": "Shape the message",
+                "detail": "A human chooses the strongest accurate hook from draft variants.",
+                "icon": "message"
+              },
+              {
+                "label": "Verify personally",
+                "detail": "Claims about law, health, prices or results need evidence and approval.",
+                "icon": "shield"
+              },
+              {
+                "label": "Speed up formatting",
+                "detail": "Reformat approved facts into a checklist or outline.",
+                "icon": "layers"
+              },
+              {
+                "label": "Do not auto-publish",
+                "detail": "A fast workflow does not justify releasing unchecked sensitive claims.",
+                "icon": "check"
+              }
+            ]
+          },
+          "takeaway": "Never upload confidential customer data merely to make the prompt more convenient.",
+          "caption": "Concept illustration, not a platform screenshot. Follow the labels and the relationships shown.",
+          "checkpoint": {
+            "question": "An AI draft invents a customer testimonial. Can you keep it if it sounds realistic?",
+            "answer": "No. Remove it. A testimonial must come from a real, authorised source, and any customer-identifying material needs appropriate permission."
+          },
+          "id": "m3-t2-v4",
+          "section": "4. Where AI genuinely accelerates marketing content"
+        }
+      ]
+    },
+    "m3-t3": {
+      "introduction": "See copy as a sequence of small decisions: earn attention, make the benefit concrete, support it and name one clear next step.",
+      "sections": [
+        {
+          "title": "A hook earns the next line",
+          "explanation": "A good hook is specific to a real audience problem. It makes an honest promise the rest of the copy can fulfil.",
+          "diagram": {
+            "kind": "compare",
+            "items": [
+              {
+                "label": "Generic hook",
+                "detail": "“Best quality coaching for everyone” gives little useful information.",
+                "icon": "megaphone"
+              },
+              {
+                "label": "Specific hook",
+                "detail": "“Working weekdays? Compare our weekend CA Foundation batches.”",
+                "icon": "target"
+              }
+            ]
+          },
+          "takeaway": "Specificity attracts the right reader; exaggeration attracts the wrong expectation.",
+          "caption": "Concept illustration, not a platform screenshot. Follow the labels and the relationships shown.",
+          "id": "m3-t3-v1",
+          "section": "1. The hook: earn the next second"
+        },
+        {
+          "title": "Climb the “so what?” ladder",
+          "explanation": "Move from a feature to its practical consequence, then to a benefit that matters in the customer’s situation.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Feature",
+                "detail": "The class recording is available after the session.",
+                "icon": "file"
+              },
+              {
+                "label": "Practical effect",
+                "detail": "A learner can review a topic after work.",
+                "icon": "clock"
+              },
+              {
+                "label": "Customer benefit",
+                "detail": "The course fits a busy schedule more comfortably.",
+                "icon": "heart"
+              },
+              {
+                "label": "Proof / limits",
+                "detail": "State actual access duration and any restrictions.",
+                "icon": "check"
+              }
+            ]
+          },
+          "takeaway": "A benefit is stronger when it is believable and supported, not merely emotional.",
+          "caption": "Concept illustration, not a platform screenshot. Follow the labels and the relationships shown.",
+          "id": "m3-t3-v2",
+          "section": "2. Features tell, benefits sell — the \"so what?\" ladder"
+        },
+        {
+          "title": "Design for the scan",
+          "explanation": "Readers should understand the offer without reading every word. Put meaning into the hierarchy.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Headline",
+                "detail": "State the useful promise.",
+                "icon": "target"
+              },
+              {
+                "label": "Subhead / bullets",
+                "detail": "Answer the main questions with evidence.",
+                "icon": "layers"
+              },
+              {
+                "label": "Proof",
+                "detail": "Show a relevant example, source or genuine testimonial.",
+                "icon": "check"
+              },
+              {
+                "label": "Action",
+                "detail": "Give one appropriate next step.",
+                "icon": "cursor"
+              }
+            ]
+          },
+          "takeaway": "The order should reduce uncertainty instead of hiding important information until the end.",
+          "caption": "Concept illustration, not a platform screenshot. Follow the labels and the relationships shown.",
+          "id": "m3-t3-v3",
+          "section": "3. Structure: make skimming the intended experience"
+        },
+        {
+          "title": "One page, one primary next step",
+          "explanation": "A CTA tells the reader what will happen after the click. Its wording should match the level of commitment.",
+          "diagram": {
+            "kind": "compare",
+            "items": [
+              {
+                "label": "Unclear action",
+                "detail": "“Submit” does not explain what the person receives.",
+                "icon": "cursor"
+              },
+              {
+                "label": "Clear action",
+                "detail": "“View weekend batch timings” names the result.",
+                "icon": "check"
+              },
+              {
+                "label": "Honest expectation",
+                "detail": "Explain whether the action opens a page or requests a callback.",
+                "icon": "message"
+              }
+            ]
+          },
+          "takeaway": "A misleading button may create clicks while reducing trust and lead quality.",
+          "caption": "Concept illustration, not a platform screenshot. Follow the labels and the relationships shown.",
+          "id": "m3-t3-v4",
+          "section": "4. The call to action: name the next step"
+        },
+        {
+          "title": "Clarity beats inflated language",
+          "explanation": "Replace vague praise with useful facts that a customer can check.",
+          "diagram": {
+            "kind": "compare",
+            "items": [
+              {
+                "label": "Inflated",
+                "detail": "“Revolutionary, world-class solutions” hides the actual offer.",
+                "icon": "megaphone"
+              },
+              {
+                "label": "Clear",
+                "detail": "“A 30-minute consultation to compare two course options” names scope and time.",
+                "icon": "clock"
+              }
+            ]
+          },
+          "takeaway": "Plain language is not a lack of personality. It makes the promise easier to understand and evaluate.",
+          "caption": "Concept illustration, not a platform screenshot. Follow the labels and the relationships shown.",
+          "checkpoint": {
+            "question": "Why can “View fees and batch timings” outperform “Click here” as a useful CTA?",
+            "answer": "It names the result and reduces uncertainty. Whether it improves conversion needs testing with the right audience; clear wording is a starting principle, not a guaranteed uplift."
+          },
+          "id": "m3-t3-v5",
+          "section": "5. Clarity is the style"
+        }
+      ]
+    },
+    "m3-t4": {
+      "introduction": "Give a useful original piece a second life without copying it blindly. Build distribution, feedback and a stop rule into the workflow.",
+      "sections": [
+        {
+          "title": "One source, several native versions",
+          "explanation": "Repurposing keeps the core idea but changes the shape to fit each channel and audience.",
+          "diagram": {
+            "kind": "hub",
+            "items": [
+              {
+                "label": "Short video",
+                "detail": "Demonstrate one practical point with a clear hook.",
+                "icon": "megaphone"
+              },
+              {
+                "label": "Carousel",
+                "detail": "Turn the sequence into a saveable checklist.",
+                "icon": "layers"
+              },
+              {
+                "label": "Email",
+                "detail": "Explain why this matters now and link to the full guide.",
+                "icon": "mail"
+              },
+              {
+                "label": "Community answer",
+                "detail": "Use the relevant insight to answer a real question.",
+                "icon": "message"
+              }
+            ],
+            "center": "Source guide"
+          },
+          "takeaway": "Each asset must make sense on its own and preserve the source’s factual limits.",
+          "caption": "Concept illustration, not a platform screenshot. Follow the labels and the relationships shown.",
+          "id": "m3-t4-v1",
+          "section": "1. Create once, distribute everywhere — the waterfall"
+        },
+        {
+          "title": "Publishing starts the distribution job",
+          "explanation": "A live URL is not a distribution plan. Put the asset where the intended audience can appropriately discover it.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Publish",
+                "detail": "Check the page, link and CTA work.",
+                "icon": "globe"
+              },
+              {
+                "label": "Distribute",
+                "detail": "Use relevant owned channels and appropriate communities.",
+                "icon": "megaphone"
+              },
+              {
+                "label": "Respond",
+                "detail": "Answer genuine questions and record objections.",
+                "icon": "message"
+              },
+              {
+                "label": "Record",
+                "detail": "Log the date, source tags and useful outcomes.",
+                "icon": "chart"
+              }
+            ]
+          },
+          "takeaway": "Do not spam groups or message people who have not agreed to that use of their contact details.",
+          "caption": "Concept illustration, not a platform screenshot. Follow the labels and the relationships shown.",
+          "id": "m3-t4-v2",
+          "section": "2. Distribution: publishing is the start"
+        },
+        {
+          "title": "Make the feedback loop visible",
+          "explanation": "A good result suggests a question for the next piece, not an excuse to duplicate content forever.",
+          "diagram": {
+            "kind": "cycle",
+            "items": [
+              {
+                "label": "Observe",
+                "detail": "Check saves, qualified clicks and enquiries in context.",
+                "icon": "chart"
+              },
+              {
+                "label": "Explain",
+                "detail": "Ask what the topic, hook or format helped people do.",
+                "icon": "search"
+              },
+              {
+                "label": "Adapt",
+                "detail": "Create a new version that tests the explanation.",
+                "icon": "file"
+              },
+              {
+                "label": "Compare",
+                "detail": "Use the same definitions and a comparable window.",
+                "icon": "check"
+              }
+            ],
+            "center": "Useful learning"
+          },
+          "takeaway": "More posts are not the same as more learning. Keep the reason for each iteration visible.",
+          "caption": "Concept illustration, not a platform screenshot. Follow the labels and the relationships shown.",
+          "id": "m3-t4-v3",
+          "section": "3. Iteration beats volume: make more of what worked"
+        },
+        {
+          "title": "Choose continue, revise or stop in advance",
+          "explanation": "A kill rule protects limited time. It needs a fair observation window and a metric tied to the asset’s purpose.",
+          "diagram": {
+            "kind": "compare",
+            "items": [
+              {
+                "label": "Continue",
+                "detail": "Evidence supports the job the asset was meant to do.",
+                "icon": "check"
+              },
+              {
+                "label": "Revise",
+                "detail": "The audience is relevant but a hook, answer or CTA is weak.",
+                "icon": "file"
+              },
+              {
+                "label": "Stop / replace",
+                "detail": "After a fair test, the asset repeatedly misses the agreed useful outcome.",
+                "icon": "filter"
+              }
+            ]
+          },
+          "takeaway": "Do not kill educational content because it lacks immediate sales if its agreed role is consideration.",
+          "caption": "Concept illustration, not a platform screenshot. Follow the labels and the relationships shown.",
+          "checkpoint": {
+            "question": "Is copying the same caption to five platforms meaningful repurposing?",
+            "answer": "Not usually. Adapt the hook, format, context and CTA for each channel while keeping the core evidence accurate. Also plan how the asset will actually reach people."
+          },
+          "id": "m3-t4-v4",
+          "section": "4. The kill criteria"
+        }
+      ]
+    },
+    "m3-pb2": {
+      "introduction": "See the content engine as a complete production and learning loop. Keep the verification trail beside the published work, not hidden in a draft folder.",
+      "sections": [
+        {
+          "title": "The engine needs publication and feedback",
+          "explanation": "Planning, production and distribution become a system when a real audience can respond.",
+          "diagram": {
+            "kind": "cycle",
+            "items": [
+              {
+                "label": "Research / plan",
+                "detail": "Link topics to the audience, pillars and business goal.",
+                "icon": "target"
+              },
+              {
+                "label": "Draft / verify",
+                "detail": "Preserve the brief, draft, claim checks and edit.",
+                "icon": "check"
+              },
+              {
+                "label": "Publish / distribute",
+                "detail": "Release the approved piece and channel-native versions.",
+                "icon": "megaphone"
+              },
+              {
+                "label": "Read / decide",
+                "detail": "Use available evidence to choose the next iteration.",
+                "icon": "chart"
+              }
+            ],
+            "center": "Content engine"
+          },
+          "takeaway": "A hypothetical unpublished piece does not fulfil the published-piece requirement.",
+          "caption": "Concept illustration, not a platform screenshot. Follow the labels and the relationships shown.",
+          "id": "m3-pb2-v1",
+          "section": "The brief"
+        },
+        {
+          "title": "Keep the submission as an inspectable trail",
+          "explanation": "The assessor should be able to trace a published claim back to its source and the editorial decision.",
+          "diagram": {
+            "kind": "hub",
+            "items": [
+              {
+                "label": "Strategy",
+                "detail": "One-line strategy, pillar map and 30-day calendar.",
+                "icon": "target"
+              },
+              {
+                "label": "Production",
+                "detail": "Brief, AI draft, claim-by-claim checks and final version.",
+                "icon": "file"
+              },
+              {
+                "label": "Copy + publication",
+                "detail": "Hooks, benefit ladder, CTA and a real publication record.",
+                "icon": "cursor"
+              },
+              {
+                "label": "Distribution",
+                "detail": "At least three repurposed assets and a dated checklist.",
+                "icon": "megaphone"
+              },
+              {
+                "label": "Learning",
+                "detail": "Two-week readout, reflection and specific AI-use statement.",
+                "icon": "chart"
+              }
+            ],
+            "center": "Submission trail"
+          },
+          "takeaway": "Save links and screenshots in a clear order so an assessor does not have to reconstruct the workflow.",
+          "caption": "Concept illustration, not a platform screenshot. Follow the labels and the relationships shown.",
+          "id": "m3-pb2-v2",
+          "section": "What to submit"
+        },
+        {
+          "title": "Use a pre-flight gate for the content engine",
+          "explanation": "Coverage requirements test the system, not only the polish of the final post.",
+          "diagram": {
+            "kind": "compare",
+            "items": [
+              {
+                "label": "Calendar gate",
+                "detail": "Mix stages, name formats and show spare capacity.",
+                "icon": "clock"
+              },
+              {
+                "label": "Safety gate",
+                "detail": "Show a claim corrected or removed and disclose AI use.",
+                "icon": "shield"
+              },
+              {
+                "label": "Action gate",
+                "detail": "The published piece has one clear CTA.",
+                "icon": "cursor"
+              },
+              {
+                "label": "Distribution gate",
+                "detail": "The waterfall includes a channel new to your practice.",
+                "icon": "megaphone"
+              }
+            ]
+          },
+          "takeaway": "Never add a false claim to a live post just to demonstrate verification. Check and remove the risky draft claim before publication.",
+          "caption": "Concept illustration, not a platform screenshot. Follow the labels and the relationships shown.",
+          "id": "m3-pb2-v3",
+          "section": "Coverage requirements"
+        },
+        {
+          "title": "Sequence the work so feedback has time to arrive",
+          "explanation": "Choose and publish the first piece early enough to collect the readout requested in the brief.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Plan",
+                "detail": "Choose pillars, calendar and the first useful piece.",
+                "icon": "target"
+              },
+              {
+                "label": "Publish safely",
+                "detail": "Complete the verification and disclosure workflow.",
+                "icon": "check"
+              },
+              {
+                "label": "Peer review",
+                "detail": "Ask a partner to challenge the claim trail.",
+                "icon": "users"
+              },
+              {
+                "label": "Distribute / read",
+                "detail": "Finish the waterfall and report the actual observation window.",
+                "icon": "chart"
+              }
+            ]
+          },
+          "takeaway": "If the full readout window is not available, label the dates and consult the facilitator rather than inventing results.",
+          "caption": "Concept illustration, not a platform screenshot. Follow the labels and the relationships shown.",
+          "id": "m3-pb2-v4",
+          "section": "Process (suggested)"
+        },
+        {
+          "title": "Show the system as well as the artefact",
+          "explanation": "The rubric rewards the reasoning and evidence behind the final content.",
+          "diagram": {
+            "kind": "compare",
+            "items": [
+              {
+                "label": "Coherence",
+                "detail": "Research, copy and formats support a clear strategy.",
+                "icon": "target"
+              },
+              {
+                "label": "Reality and safety",
+                "detail": "The piece is published with a visible verification trail.",
+                "icon": "shield"
+              },
+              {
+                "label": "Sustainability",
+                "detail": "Distribution, capacity, stop rules and learning are documented.",
+                "icon": "repeat"
+              }
+            ]
+          },
+          "takeaway": "The original rubric controls assessment. These groups do not change its criteria or weights.",
+          "caption": "Concept illustration, not a platform screenshot. Follow the labels and the relationships shown.",
+          "checkpoint": {
+            "question": "What proves responsible AI-assisted production beyond a polished final article?",
+            "answer": "The brief, draft, claim-by-claim evidence checks, corrections, final human edit and a specific AI-use statement. Include the real publication and distribution record too."
+          },
+          "id": "m3-pb2-v5",
+          "section": "Rubric (7 marks)"
+        }
+      ]
+    }
+  }
+}

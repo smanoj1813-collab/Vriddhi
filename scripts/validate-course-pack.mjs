@@ -44,6 +44,11 @@ const { validateManifest, flattenTopics } = await tsImport(
   import.meta.url,
 )
 
+const { validateIllustrationBank } = await tsImport(
+  pathToFileURL(join(ROOT, 'src', 'shared', 'courses', 'courseIllustrations.ts')).href,
+  import.meta.url,
+)
+
 const problems = []
 const notes = []
 const fail = (pack, msg) => problems.push(`[${pack}] ${msg}`)
@@ -279,6 +284,40 @@ function checkSlides(packId, packDir, mod) {
   return count
 }
 
+function checkIllustrations(packId, packDir, mod, required) {
+  const bankPath = join(packDir, 'modules', mod.slug, 'illustrations.json')
+  if (!existsSync(bankPath)) {
+    if (required) fail(packId, `module ${mod.id}: illustrations.json missing for the illustrated edition`)
+    return 0
+  }
+  if (!required) fail(packId, 'illustrations.json needs an illustrations declaration in course.json')
+  let bank
+  try {
+    bank = readJson(bankPath)
+  } catch (err) {
+    fail(packId, `module ${mod.id}: illustrations.json is not valid JSON (${err.message})`)
+    return 0
+  }
+  for (const problem of validateIllustrationBank(bank, mod)) fail(packId, `module ${mod.id}: ${problem}`)
+  let count = 0
+  for (const topic of mod.topics) {
+    const sections = bank?.topics?.[topic.id]?.sections
+    const lessonPath = join(packDir, topic.lesson)
+    if (!Array.isArray(sections) || !existsSync(lessonPath)) continue
+    const source = readFileSync(lessonPath, 'utf8')
+    const core = source.split(/^## Core ideas.*$/m)[1]?.split(/^## /m)[0] ?? ''
+    const expected = [...(topic.type === 'lesson' ? core.matchAll(/^### (.+)$/gm) : source.matchAll(/^## (.+)$/gm))].map((match) => match[1].trim())
+    const actual = sections.map((section) => section?.section)
+    if (expected.length === 0) fail(packId, `${topic.id}: no source sections found for visual coverage`)
+    if (JSON.stringify(actual) !== JSON.stringify(expected)) {
+      fail(packId, `${topic.id}: illustrations must cover every ${topic.type === 'lesson' ? 'Core ideas subheading' : 'project section'} in source order; missing or mismatched headings`)
+    }
+    if (!sections.some((section) => section?.checkpoint)) fail(packId, `${topic.id}: visual companion needs at least one understanding checkpoint`)
+    count += sections.length
+  }
+  return count
+}
+
 function checkPack(packId) {
   const packDir = join(COURSES_DIR, packId)
   const manifestPath = join(packDir, 'course.json')
@@ -308,9 +347,11 @@ function checkPack(packId) {
     : DEFAULT_QUIZ_PER_LESSON
   let quizCount = 0
   let slideCount = 0
+  let illustrationCount = 0
   for (const mod of manifest.modules) {
     quizCount += checkQuizBank(packId, packDir, mod, expectedLessonCount)
     slideCount += checkSlides(packId, packDir, mod)
+    illustrationCount += checkIllustrations(packId, packDir, mod, !!manifest.illustrations)
   }
 
   const docPaths = [
@@ -333,7 +374,7 @@ function checkPack(packId) {
   const minutes = topics.reduce((n, t) => n + t.minutes, 0)
   notes.push(
     `${packId}: ${manifest.modules.length} modules · ${lessonCount} lessons · ${projectCount} projects · ` +
-      `${quizCount} quiz items · ${slideCount} slides · ${(minutes / 60).toFixed(1)} h of topics vs ${manifest.totalHours} h declared`,
+      `${quizCount} quiz items · ${slideCount} slides · ${illustrationCount} illustrations · ${(minutes / 60).toFixed(1)} h of topics vs ${manifest.totalHours} h declared`,
   )
 }
 

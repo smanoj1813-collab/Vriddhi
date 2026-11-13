@@ -1,0 +1,607 @@
+{
+  "moduleId": "m3",
+  "topics": {
+    "m3-t1": {
+      "introduction": "Choose a delivery approach for the uncertainty you face, not for its label. The visuals separate fixed controls from adaptable design and make each feedback loop produce evidence.",
+      "sections": [
+        {
+          "id": "pm-m3-t1-1",
+          "section": "1. Agile values are trade-offs, not bans",
+          "title": "“More valuable” is not “the other side is worthless”",
+          "explanation": "Agile values guide a trade-off when priorities compete. A useful plan, agreement or document can still support collaboration and continuity. Ask what helps the team learn and deliver here rather than eliminating documentation to appear Agile.",
+          "diagram": {
+            "kind": "compare",
+            "items": [
+              {
+                "label": "People and working outcomes",
+                "detail": "Interactions, collaboration and inspectable work help reveal needs.",
+                "icon": "users"
+              },
+              {
+                "label": "Plans and supporting records",
+                "detail": "Enough documentation, tools and agreements to make decisions durable.",
+                "icon": "file"
+              },
+              {
+                "label": "Respond with evidence",
+                "detail": "Change an approach when feedback warrants it, while respecting constraints.",
+                "icon": "repeat"
+              }
+            ]
+          },
+          "caption": "Conceptual reading aid for the Agile values, not a replacement for the complete Manifesto or a ban on plans and contracts.",
+          "takeaway": "Avoid turning a relative preference into an absolute prohibition."
+        },
+        {
+          "id": "pm-m3-t1-2",
+          "section": "2. Match planning to uncertainty",
+          "title": "Match the approach to what can still change",
+          "explanation": "Stable requirements can justify a predictive plan; uncertain workflows benefit from early trials. The same pilot can keep privacy and procurement controls fixed while iterating on booking design. This is a reasoned hybrid, not a claim that all activities are Scrum.",
+          "diagram": {
+            "kind": "compare",
+            "items": [
+              {
+                "label": "Predictive where stable",
+                "detail": "Plan well-understood work with agreed acceptance and dependencies.",
+                "icon": "file"
+              },
+              {
+                "label": "Adaptive where uncertain",
+                "detail": "Test a small usable workflow and let feedback change the next slice.",
+                "icon": "repeat"
+              },
+              {
+                "label": "Hybrid across boundaries",
+                "detail": "Retain necessary approvals while adapting the solution design.",
+                "icon": "link"
+              }
+            ]
+          },
+          "caption": "Illustrative approach choices for the fictional pilot. A fixed date does not remove uncertainty or authorise bypassing controls.",
+          "takeaway": "Explain which uncertainty the chosen method helps manage."
+        },
+        {
+          "id": "pm-m3-t1-3",
+          "section": "3. Inspect evidence and adapt deliberately",
+          "title": "A useful iteration changes a decision",
+          "explanation": "Set a learning question, expose something real enough to inspect and record what the observation can and cannot support. A tiny trial can reveal usability problems without proving a universal winner. Keep the event date and privacy boundary visible while adapting the next work.",
+          "diagram": {
+            "kind": "cycle",
+            "items": [
+              {
+                "label": "Frame the question",
+                "detail": "Which booking flow can volunteers complete unaided?",
+                "icon": "target"
+              },
+              {
+                "label": "Test a small slice",
+                "detail": "Observe the same defined journeys, not only a slide deck.",
+                "icon": "cursor"
+              },
+              {
+                "label": "Inspect the evidence",
+                "detail": "Flow A: 6/8; Flow B: 7/8, with limitations.",
+                "icon": "chart"
+              },
+              {
+                "label": "Adapt the next work",
+                "detail": "Investigate failures and update the ordered backlog.",
+                "icon": "repeat"
+              }
+            ],
+            "center": "Learn deliberately"
+          },
+          "caption": "Synthetic lesson trial with eight volunteers. The small difference is a learning prompt, not statistically proven superiority.",
+          "takeaway": "Feedback without a recorded decision is not a complete learning loop.",
+          "checkpoint": {
+            "question": "Does seven out of eight prove Flow B is the best design for everyone?",
+            "answer": "No. It is a small synthetic volunteer trial. Use the observations to plan further checks while preserving the fixed privacy and event constraints."
+          }
+        }
+      ]
+    },
+    "m3-t2": {
+      "introduction": "Connect Scrum accountabilities, events and commitments without turning them into a command hierarchy. An honest Increment must meet Done even when an optional item is removed.",
+      "sections": [
+        {
+          "id": "pm-m3-t2-1",
+          "section": "1. Three accountabilities, not a command chain",
+          "title": "Three accountabilities share a product focus",
+          "explanation": "Each accountability serves a different purpose. The Product Owner orders value, Developers manage how to create the usable Increment, and the Scrum Master helps establish Scrum and improve effectiveness. A sponsor assigning every daily task would undermine that self-management.",
+          "diagram": {
+            "kind": "hub",
+            "items": [
+              {
+                "label": "Product Owner",
+                "detail": "Accountable for product value and effective Product Backlog management.",
+                "icon": "target"
+              },
+              {
+                "label": "Developers",
+                "detail": "Create the usable Increment and adapt their own plan.",
+                "icon": "layers"
+              },
+              {
+                "label": "Scrum Master",
+                "detail": "Establish Scrum and support team effectiveness; not a task dispatcher.",
+                "icon": "users"
+              }
+            ],
+            "center": "Product value"
+          },
+          "caption": "Conceptual accountability map. It is not an organisational reporting line or a claim of external Scrum certification.",
+          "takeaway": "Accountability does not make one role the boss of every decision."
+        },
+        {
+          "id": "pm-m3-t2-2",
+          "section": "2. Events create opportunities to inspect and adapt",
+          "title": "Inspect the product and improve the way of working",
+          "explanation": "The Sprint contains the other events. Planning creates focus, the Daily Scrum helps Developers adapt their plan, the Review inspects outcomes with stakeholders, and the Retrospective improves quality and effectiveness. Refinement continues as needed; it is not an extra official event.",
+          "diagram": {
+            "kind": "cycle",
+            "items": [
+              {
+                "label": "Sprint Planning",
+                "detail": "Establish a Sprint Goal and a plan for valuable work.",
+                "icon": "target"
+              },
+              {
+                "label": "Daily Scrum",
+                "detail": "Developers inspect progress and adapt in 15 minutes.",
+                "icon": "clock"
+              },
+              {
+                "label": "Sprint Review",
+                "detail": "Inspect the outcome with stakeholders and adapt future work.",
+                "icon": "users"
+              },
+              {
+                "label": "Sprint Retrospective",
+                "detail": "Choose improvements to quality and effectiveness.",
+                "icon": "repeat"
+              }
+            ],
+            "center": "One Sprint"
+          },
+          "caption": "Conceptual event map inside a Sprint of one month or less. The Review is not a mandatory release gate; the loop is not drawn to time scale.",
+          "takeaway": "Name an event by its purpose, not merely by how often a meeting happens."
+        },
+        {
+          "id": "pm-m3-t2-3",
+          "section": "3. Artefacts have commitments",
+          "title": "Pair each artefact with its commitment",
+          "explanation": "Commitments make the artefacts interpretable. A long backlog needs a Product Goal, a Sprint plan needs a Sprint Goal, and an Increment needs a shared Definition of Done. Moving an unsafe item into the Done column cannot replace the quality commitment.",
+          "diagram": {
+            "kind": "compare",
+            "items": [
+              {
+                "label": "Product Backlog ↔ Product Goal",
+                "detail": "The longer-term objective gives ordered work direction.",
+                "icon": "target"
+              },
+              {
+                "label": "Sprint Backlog ↔ Sprint Goal",
+                "detail": "The objective focuses the Developers’ adaptable plan.",
+                "icon": "layers"
+              },
+              {
+                "label": "Increment ↔ Definition of Done",
+                "detail": "The usable result meets shared quality expectations.",
+                "icon": "shield"
+              }
+            ]
+          },
+          "caption": "Conceptual Scrum artefact/commitment pairings. Item acceptance criteria and release decisions remain related but distinct.",
+          "takeaway": "Scope can be renegotiated without declaring an unsafe item Done.",
+          "checkpoint": {
+            "question": "Can a team remove an optional reminder while keeping unsafe booking work out of the Increment?",
+            "answer": "Yes. It can renegotiate scope with the Product Owner while protecting the Sprint Goal. Work failing the Definition of Done is not part of the Increment."
+          }
+        }
+      ]
+    },
+    "m3-t3": {
+      "introduction": "Move from a large feature label to small usable slices, then forecast within actual focused capacity. Story points are not silently converted into hours.",
+      "sections": [
+        {
+          "id": "pm-m3-t3-1",
+          "section": "1. A story is a conversation starter",
+          "title": "A story needs examples, not only a sentence",
+          "explanation": "The story format opens a conversation about a user, a need and a reason. Item-specific examples then describe how success and failure should behave. Shared Done adds the quality expectations that apply to all items; it is not a substitute for the item’s examples.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "User, need and reason",
+                "detail": "A learner wants to cancel so the slot becomes available.",
+                "icon": "users"
+              },
+              {
+                "label": "Item acceptance examples",
+                "detail": "Valid cancellation, invalid reference and repeated cancellation.",
+                "icon": "file"
+              },
+              {
+                "label": "Shared Definition of Done",
+                "detail": "Required tests, reviews and usable quality apply across items.",
+                "icon": "shield"
+              }
+            ]
+          },
+          "caption": "Illustrative cancellation story. Technical tasks need not be forced into invented user personas.",
+          "takeaway": "A correct story template does not prove the work is understood."
+        },
+        {
+          "id": "pm-m3-t3-2",
+          "section": "2. Slice by value rather than only layers",
+          "title": "Slice a journey, not just a technology layer",
+          "explanation": "A thin usable journey crosses the layers needed for one meaningful outcome. Database-only, interface-only and report-only items can be useful tasks, but they may leave nothing a user can inspect until all are finished. Reduce breadth without dropping the quality needed for safe use.",
+          "diagram": {
+            "kind": "compare",
+            "items": [
+              {
+                "label": "Thin booking slice",
+                "detail": "A small end-to-end path lets a learner reserve safely.",
+                "icon": "cursor"
+              },
+              {
+                "label": "Next value slice",
+                "detail": "Cancellation can be inspected as its own usable outcome.",
+                "icon": "check"
+              },
+              {
+                "label": "Supporting technical tasks",
+                "detail": "Data, interface and integration tasks support the slice; they are not each user value.",
+                "icon": "layers"
+              }
+            ]
+          },
+          "caption": "Conceptual slicing comparison for the pilot. Ordering still considers risk, dependencies and learning as well as value.",
+          "takeaway": "The Product Owner orders work; the slice still has to meet Done."
+        },
+        {
+          "id": "pm-m3-t3-3",
+          "section": "3. Forecast with capacity and past evidence",
+          "title": "Forecast from available people-days, not nominal seats",
+          "explanation": "Three members for ten days would be thirty person-days, but two absent days reduce this to twenty-eight. Five focused hours per available day produces 140 hours before other commitments. This is the lesson fixture; the project block separately deducts ten support hours.",
+          "diagram": {
+            "kind": "bars",
+            "unit": "focused hours",
+            "items": [
+              {
+                "label": "Nominal before absence",
+                "detail": "3 × 10 person-days × 5 hours = 150.",
+                "value": 150,
+                "icon": "chart"
+              },
+              {
+                "label": "Lesson capacity after absence",
+                "detail": "(30 − 2) × 5 = 140 before support deductions.",
+                "value": 140,
+                "icon": "chart"
+              }
+            ]
+          },
+          "caption": "Synthetic lesson capacity, not the PB2 net forecast of 130 hours. These are alternative capacity states, not amounts to add; no story-point conversion is implied.",
+          "takeaway": "Make leave, support work and uncertainty visible before selecting work.",
+          "checkpoint": {
+            "question": "Should this lesson’s 140 hours be copied unchanged into PB2?",
+            "answer": "No. PB2 adds a separate ten-hour support reservation: 140 − 10 = 130 focused hours. Neither value defines a universal hours-per-point rule."
+          }
+        }
+      ]
+    },
+    "m3-pb2": {
+      "introduction": "Make the Sprint simulation goal-driven, capacity-aware and honest about unfinished work. The net 130-hour capacity is specific to this project block, not a conversion from story points.",
+      "sections": [
+        {
+          "id": "pm-m3-pb2-1",
+          "section": "The brief",
+          "title": "Simulate a goal, not a board full of activity",
+          "explanation": "Booking and cancellation are needed; reminders are optional. Connect the Product Goal to a Sprint Goal and a small usable slice, then make the defect/change response preserve quality. Represent the work as a classroom simulation, not live software delivery.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Product direction",
+                "detail": "Describe the valuable booking/cancellation outcome.",
+                "icon": "target"
+              },
+              {
+                "label": "Ordered backlog",
+                "detail": "Use value, risk, dependencies and learning to explain order.",
+                "icon": "layers"
+              },
+              {
+                "label": "Sprint forecast",
+                "detail": "Select a coherent slice within actual focused capacity.",
+                "icon": "clock"
+              },
+              {
+                "label": "Inspectable result",
+                "detail": "Meet Done or keep the item unfinished; record the adaptation.",
+                "icon": "check"
+              }
+            ]
+          },
+          "caption": "Conceptual PB2 delivery simulation. No real Scrum team, release or customer outcome is implied.",
+          "takeaway": "An optional item can leave the forecast; mandatory Done cannot."
+        },
+        {
+          "id": "pm-m3-pb2-2",
+          "section": "Inputs and working boundaries",
+          "title": "Use the project’s net capacity, not a copied lesson total",
+          "explanation": "The three-person team loses two person-days to absence. The project then reserves ten focused hours for support. Keep those deductions visible so the Sprint selection is not based on nominal availability. A sandbox, spreadsheet or paper board can all hold the evidence.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Available person-days",
+                "detail": "3 × 10 − 2 = 28 before other commitments.",
+                "icon": "users"
+              },
+              {
+                "label": "Focused capacity",
+                "detail": "28 × 5 = 140 hours before the support reservation.",
+                "icon": "clock"
+              },
+              {
+                "label": "PB2 net capacity",
+                "detail": "140 − 10 support hours = 130 focused hours.",
+                "icon": "chart"
+              }
+            ]
+          },
+          "caption": "Synthetic PB2 inputs. The lesson’s 140-hour example has not yet deducted these support hours; no fixed story-points-to-hours rule is created.",
+          "takeaway": "Label the scope and period of every capacity number."
+        },
+        {
+          "id": "pm-m3-pb2-3",
+          "section": "Work plan",
+          "title": "PB2: reserve time to verify and revise",
+          "explanation": "The classroom block is not all build time. Use the reproduction checkpoint to trace the headline result to source values, then retain the peer comment and correction. The final recommendation should follow the revised evidence, not the first attractive draft.",
+          "diagram": {
+            "kind": "bars",
+            "unit": "classroom minutes",
+            "items": [
+              {
+                "label": "Frame and inspect",
+                "detail": "Read the brief, boundaries and source fixtures.",
+                "value": 20,
+                "icon": "chart"
+              },
+              {
+                "label": "Build required artefacts",
+                "detail": "Create the linked outputs for this block.",
+                "value": 80,
+                "icon": "chart"
+              },
+              {
+                "label": "Reproduce and review",
+                "detail": "Check calculations, definitions and decisions.",
+                "value": 35,
+                "icon": "chart"
+              },
+              {
+                "label": "Peer review and revise",
+                "detail": "Keep the comment and the response.",
+                "value": 30,
+                "icon": "chart"
+              },
+              {
+                "label": "Recommendation and AI statement",
+                "detail": "Explain the decision and assistance transparently.",
+                "value": 15,
+                "icon": "chart"
+              }
+            ]
+          },
+          "caption": "Published synthetic classroom allocation for PB2: 20 + 80 + 35 + 30 + 15 = 180 minutes. This is learner work time, not the delivery schedule’s working days.",
+          "takeaway": "A checked second version is more valuable than an unchecked first draft."
+        },
+        {
+          "id": "pm-m3-pb2-4",
+          "section": "What to submit",
+          "title": "Connect commitments, slice and feedback evidence",
+          "explanation": "A marker should be able to follow why the selected items support the goal, how they will be accepted and what changed when a defect appeared. Use the event map to explain purpose rather than inventing a required ceremony for every activity.",
+          "diagram": {
+            "kind": "hub",
+            "items": [
+              {
+                "label": "Goals and backlog",
+                "detail": "Product Goal, Sprint Goal, six ordered items and reasons.",
+                "icon": "target"
+              },
+              {
+                "label": "Examples and Done",
+                "detail": "Item examples for three items plus shared quality expectations.",
+                "icon": "shield"
+              },
+              {
+                "label": "Capacity and slice",
+                "detail": "Worksheet, forecast selection and a small end-to-end outcome.",
+                "icon": "clock"
+              },
+              {
+                "label": "Event purposes",
+                "detail": "Planning, Daily Scrum, Review and Retrospective distinguished.",
+                "icon": "users"
+              },
+              {
+                "label": "Adaptation and learning",
+                "detail": "Simulated defect/change, updated scope and improvement action.",
+                "icon": "repeat"
+              }
+            ],
+            "center": "Sprint evidence"
+          },
+          "caption": "Conceptual map of PB2’s published submissions. External files and facilitator marking remain separate from platform reading and quizzes.",
+          "takeaway": "A board screenshot alone cannot explain the forecast or Done."
+        },
+        {
+          "id": "pm-m3-pb2-5",
+          "section": "Acceptance and self-check",
+          "title": "130 hours is a forecast input, not a guarantee",
+          "explanation": "The capacity states below are alternatives in a deduction sequence, not quantities to sum. Select a useful goal and preserve uncertainty even after the arithmetic is right. If an item fails Done, the honest result is unfinished work rather than a convenient column change.",
+          "diagram": {
+            "kind": "bars",
+            "unit": "focused hours",
+            "items": [
+              {
+                "label": "Nominal before absence",
+                "detail": "30 person-days × 5 hours = 150.",
+                "value": 150,
+                "icon": "chart"
+              },
+              {
+                "label": "After absence",
+                "detail": "28 person-days × 5 hours = 140.",
+                "value": 140,
+                "icon": "chart"
+              },
+              {
+                "label": "After support reservation",
+                "detail": "140 − 10 = 130 available for the PB2 forecast.",
+                "value": 130,
+                "icon": "chart"
+              }
+            ]
+          },
+          "caption": "Synthetic PB2 capacity waterfall shown as zero-based comparison bars. These are successive states, not additive work or story-point conversions.",
+          "takeaway": "Capacity constrains a forecast; it does not justify cutting quality.",
+          "checkpoint": {
+            "question": "What remains after absence and the PB2 support reservation?",
+            "answer": "(3 × 10 − 2) × 5 − 10 = 130 focused hours. A selected item still must meet Done to become part of the usable Increment."
+          }
+        },
+        {
+          "id": "pm-m3-pb2-6",
+          "section": "Rubric",
+          "title": "Seven marks reward evidence and judgement",
+          "explanation": "Use the published rubric to inspect the work, not to invent new requirements. Correct arithmetic needs traceable inputs, professional judgement includes safeguards and authority, and clarity includes an evidence trail and reflection. The diagram does not award or upload marks.",
+          "diagram": {
+            "kind": "bars",
+            "unit": "rubric marks",
+            "items": [
+              {
+                "label": "Correctness and reproducibility",
+                "detail": "Show the method, source values and a manual check.",
+                "value": 3,
+                "icon": "chart"
+              },
+              {
+                "label": "Judgement and safeguards",
+                "detail": "Make limits, provenance, authority and safe sharing explicit.",
+                "value": 2,
+                "icon": "chart"
+              },
+              {
+                "label": "Clarity, evidence and reflection",
+                "detail": "Keep the files navigable and explain the correction.",
+                "value": 2,
+                "icon": "chart"
+              }
+            ]
+          },
+          "caption": "Illustrative display of the unchanged PB2 rubric: 3 + 2 + 2 = 7. Four blocks contribute 28 overall; external facilitator marking remains required.",
+          "takeaway": "Appearance alone cannot earn credit for an unsupported claim."
+        },
+        {
+          "id": "pm-m3-pb2-7",
+          "section": "Review questions",
+          "title": "Review the coherence of the Sprint story",
+          "explanation": "Ask a peer to find the goal, recalculate capacity and trace one changed item. If the story claims a usable result, its criteria and Done evidence must support that claim. Keep the limitation or correction instead of editing history into a flawless Sprint.",
+          "diagram": {
+            "kind": "hub",
+            "items": [
+              {
+                "label": "Goal alignment",
+                "detail": "Do the selected items support the stated Sprint Goal?",
+                "icon": "target"
+              },
+              {
+                "label": "Capacity check",
+                "detail": "Can the reviewer reproduce 130 without mixing units?",
+                "icon": "chart"
+              },
+              {
+                "label": "Quality check",
+                "detail": "Which item is unfinished and why?",
+                "icon": "shield"
+              },
+              {
+                "label": "Adaptation check",
+                "detail": "What evidence changed scope or the improvement action?",
+                "icon": "repeat"
+              }
+            ],
+            "center": "Sprint review aid"
+          },
+          "caption": "Conceptual project peer-review aid; this is not a substitute for, or a renaming of, the Scrum Sprint Review event.",
+          "takeaway": "Correct framework terms should explain the evidence, not decorate it."
+        },
+        {
+          "id": "pm-m3-pb2-8",
+          "section": "AI-use statement",
+          "title": "Disclose assistance and keep responsibility",
+          "explanation": "For the Sprint simulation, assistance can support drafting or checking, but it cannot create evidence that never existed. Complete the statement even if the answer is “none”. Keep only synthetic inputs in public tools and make your own verification visible.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Disclose use",
+                "detail": "Tool or none, task assisted, and synthetic inputs shared.",
+                "icon": "file"
+              },
+              {
+                "label": "Record your choices",
+                "detail": "Suggestions accepted, changed or rejected, with your own contribution.",
+                "icon": "users"
+              },
+              {
+                "label": "Verify independently",
+                "detail": "Recompute net capacity, verify Scrum commitments and distinguish proposed acceptance from evidence that actually meets Done.",
+                "icon": "check"
+              },
+              {
+                "label": "Respect assessment boundaries",
+                "detail": "Do not infer final-exam permission from project-tool permission.",
+                "icon": "shield"
+              }
+            ]
+          },
+          "caption": "Conceptual project AI-use workflow. It does not fabricate approvals, interviews, sources, business results or personal experience.",
+          "takeaway": "The learner remains responsible for the final numbers, claims and safeguards."
+        },
+        {
+          "id": "pm-m3-pb2-9",
+          "section": "Optional extension",
+          "title": "Fixed approvals and adaptive design can coexist",
+          "explanation": "The optional extension is about choosing controls deliberately. Procurement and privacy approvals can remain predictive while the workflow design uses short feedback cycles. Explain the boundary rather than calling every meeting or activity Scrum.",
+          "diagram": {
+            "kind": "compare",
+            "items": [
+              {
+                "label": "Predictive control lane",
+                "detail": "Required authorisations, event constraints and procurement milestones.",
+                "icon": "file"
+              },
+              {
+                "label": "Adaptive learning lane",
+                "detail": "Small usable workflow slices, inspected feedback and updated ordering.",
+                "icon": "repeat"
+              },
+              {
+                "label": "Shared boundary",
+                "detail": "No adaptive label permits bypassing safety, privacy or real authority.",
+                "icon": "shield"
+              }
+            ]
+          },
+          "caption": "Conceptual optional hybrid explanation. It is not required for full marks or a claim that any hybrid automatically follows Scrum.",
+          "takeaway": "Describe what stays fixed and what the evidence is allowed to change."
+        }
+      ]
+    }
+  }
+}

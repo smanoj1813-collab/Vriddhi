@@ -1,6 +1,6 @@
 # Facilitator Guide — VDM-101 Digital Marketing
 
-Version 1.0.0 · Last reviewed September 2026 · For facilitators, placement-cell staff and faculty coordinators running the programme in affiliated colleges.
+Version 1.1.0 · Visual companion reviewed 13 November 2026; original lesson/tool-landscape review remains September 2026 · For facilitators, placement-cell staff and faculty coordinators running the programme in affiliated colleges.
 
 ## 1. What this programme is
 
@@ -9,6 +9,17 @@ A 52-hour, 10-week certificate that takes non-technical undergraduates (B.Com, B
 Eight modules, 31 lessons, 4 project blocks, a capstone with a Demo Day pitch, and a final assessment. Every lesson has a 5-question bank; every module ends with a 10-question advanced mini-assessment, with 60% required to unlock the next module. In the app, learners must reach the end of each lesson/brief and submit its quiz before advancing. Everything a learner needs is in the course pack (`content/courses/digital-marketing/`) and rendered in the Vriddhi app under **Courses**.
 
 **What makes it work:** every lesson ends in a lab that produces an artefact; artefacts accumulate into the four project blocks and the capstone; the capstone becomes the portfolio; the portfolio becomes the interview. Protect the labs above everything else.
+
+### Illustrated companion — v1.1.0 delivery notes
+
+- All **31 lessons and 5 project briefs** now include an optional inline visual layer: **162 explanations**, one for each Core ideas subtopic or project section. It adds diagrams, worked charts, takeaways and one revealable understanding check per topic. The original lesson prose, labs, slides, quiz banks, rubrics and completion requirements have not been rewritten.
+- Use the **Illustrations on/off** switch to compare the picture with the original reading. The “Jump to a visual explanation” menu is useful for a classroom recap. Checkpoint answers are formative aids, not graded quiz submissions.
+- In Lesson **1.2**, ask learners to predict the outcome before changing the enquiry-rate slider. The starting chain is 1,000 → 30 → 12 → 3; the added practice budget is ₹3,000. Doubling the enquiry rate doubles expected customers and halves media CPA under the same assumptions. Zero expected customers means CPA is undefined. Reset restores the initial scenario.
+- All numeric charts are **synthetic worked examples**, not benchmarks, live campaign results or guaranteed outcomes. Funnel widths are schematic; counts and rates carry the numbers. Bar charts start at zero and include a readable data table.
+- The visuals add important interpretation guardrails: an auction diagram is not a literal Ad Rank calculator; target CPA is not a universal pay-per-conversion billing rule; delivery is not inbox placement; attribution is not causal proof; and revenue alone is not profit. Use these to prompt critical thinking alongside the original explanations.
+- Plan the capstone backwards from its **minimum two-week run**. Resolve calendar conflicts before launch; setup, evidence preparation and rehearsal do not substitute for the required campaign duration. Project diagrams organise the published requirements but do not change marks or pass conditions.
+- This release reviews the **new visual layer only**. It does not revalidate current legal commencement dates, platform interfaces, pricing or provider policy. Continue the pre-cohort checks in §6, especially for privacy and bulk sending.
+- The companion is served from the bundled course pack; no paid image tool, external embed or extra student account is required. A failed visual download leaves the original reading available and offers retry. Assignment visibility and student progress rules are unchanged.
 
 ## 2. Weekly rhythm (≈ 5 hours per learner)
 

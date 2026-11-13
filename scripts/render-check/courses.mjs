@@ -119,7 +119,7 @@ const { manifest } = packs.find((pack) => pack.manifest.id === 'genai-certificat
 const firstTopic = manifest.modules[0].topics[0];
 const secondTopic = manifest.modules[0].topics[1];
 const topicCount = manifest.modules.reduce((n, m) => n + m.topics.length, 0);
-const { getCourse } = await server.ssrLoadModule('/src/shared/courses/courseCatalog.ts');
+const { getCourse, loadTopicIllustrations } = await server.ssrLoadModule('/src/shared/courses/courseCatalog.ts');
 const firstTopicSlides = getCourse(manifest.id)?.slides[firstTopic.id] ?? [];
 check('catalog: optional slide deck is loaded from the module bank', firstTopicSlides.length === 5, `slides=${firstTopicSlides.length}`);
 
@@ -361,6 +361,102 @@ for (const { manifest: pack } of packs.filter(({ manifest: item }) => item.id !=
       && packs.every(({ manifest: other }) => other.id === pack.id || !v.text().includes(other.title)), v.text());
     check(`${pack.id}: assigned course uses the protected route`, v.hrefs().includes(`/student/courses/${pack.id}`), v.hrefs().join(' '));
   });
+}
+
+// ── Every illustrated edition: exhaustive, unchanged original reading ──────
+const illustratedPacks = packs.filter(({ manifest: pack }) => pack.illustrations);
+const { default: IllustratedLesson } = await server.ssrLoadModule('/src/shared/components/courses/CourseIllustratedLesson.tsx');
+for (const illustratedPack of illustratedPacks) {
+  const courseId = illustratedPack.manifest.id;
+  let illustrationTotal = 0;
+  let preservedTopics = 0;
+  let sourceSectionTotal = 0;
+  const topics = illustratedPack.manifest.modules.flatMap((module) => module.topics);
+  for (const module of illustratedPack.manifest.modules) {
+    for (const topic of module.topics) {
+      const label = `${courseId}/${topic.id}`;
+      const source = fs.readFileSync(path.join(illustratedPack.packDir, topic.lesson), 'utf8');
+      const core = source.split(/^## Core ideas.*$/m)[1]?.split(/^## /m)[0] ?? '';
+      const sourceSections = [...(topic.type === 'lesson' ? core.matchAll(/^### (.+)$/gm) : source.matchAll(/^## (.+)$/gm))];
+      sourceSectionTotal += sourceSections.length;
+      const companion = await loadTopicIllustrations(courseId, module.id, topic.id);
+      const original = await mount('/src/shared/components/courses/CourseMarkdown.tsx', { source, skipTitle: true });
+      const originalHtml = original.el('.course-markdown').innerHTML;
+      await original.unmount();
+      await sectionComponent(`${label}: illustrations`, IllustratedLesson, { source, companion, topicId: topic.id }, async (v) => {
+        const figures = v.all('.course-illustration');
+        check(`${label}: every source section has an inline visual`, figures.length === sourceSections.length, `figures=${figures.length}`);
+        const reading = v.el('.course-markdown').cloneNode(true);
+        reading.querySelectorAll('.course-illustration').forEach((figure) => figure.remove());
+        const preserved = reading.innerHTML === originalHtml;
+        if (preserved) preservedTopics++;
+        check(`${label}: original lesson DOM is byte-for-byte unchanged`, preserved, reading.textContent);
+        check(`${label}: diagrams have unique working jump targets`,
+          new Set(figures.map((figure) => figure.id)).size === figures.length
+            && v.hrefs().filter((href) => href.startsWith('#visual-')).every((href) => !!v.el(`[id="${href.slice(1)}"]`)), v.text());
+        illustrationTotal += figures.length;
+        if (topic.id === 'm1-t1') {
+          await v.click(v.el('[role="switch"]'));
+          check(`${courseId}: text-only mode hides every figure, preserving the original reading`,
+            v.all('.course-illustration').length === 0 && v.el('.course-markdown').innerHTML === originalHtml
+              && v.el('[role="switch"]').getAttribute('aria-checked') === 'false', v.text());
+          await v.click(v.el('[role="switch"]'));
+          check(`${courseId}: visual layer can be restored without navigating`, v.all('.course-illustration').length === companion.sections.length, v.text());
+        }
+        if (courseId === 'digital-marketing' && topic.id === 'm1-t2') {
+          check('funnel lab: initial forecast uses chained rates and media CPA', /3 expected customers.*1,000/.test(v.el('output')?.textContent ?? ''), v.text());
+          await v.change(v.el('input[type="range"]'), '6');
+          check('funnel lab: changing enquiry rate doubles customers and halves CPA', /6 expected customers.*500/.test(v.el('output')?.textContent ?? ''), v.text());
+          await v.change(v.el('input[type="range"]'), '0');
+          check('funnel lab: zero customers has an honest undefined CPA', /0 expected customers.*not defined/.test(v.el('output')?.textContent ?? ''), v.text());
+          await v.click(v.byText('Reset scenario'));
+          check('funnel lab: reset restores original rates and budget', /3 expected customers.*1,000/.test(v.el('output')?.textContent ?? ''), v.text());
+          check('funnel lab: data table exposes values with row and column headers', !!v.el('table th[scope="row"]') && !!v.el('table th[scope="col"]'), v.text());
+        }
+        if (courseId === 'project-management' && topic.id === 'm2-t2') {
+          const sandbox = v.all('.course-schedule').find((element) => element.querySelector('input[type="range"]'));
+          const output = () => sandbox.querySelector('output').textContent;
+          const c = sandbox.querySelectorAll('input[type="range"]')[2];
+          check('schedule lab: eight-task fixture starts at day fourteen, not the four-task day eight', /day 14/.test(output()), output());
+          await v.change(c, '2');
+          check('schedule lab: shortening C alone does not shorten the finish', /day 14/.test(output()), output());
+          await v.change(c, '5');
+          check('schedule lab: lengthening C changes the critical set and finish', /day 15/.test(output()) && !/Critical tasks:.* B,/.test(output()), output());
+          await v.click(v.byText('Reset schedule'));
+          await v.click(sandbox.querySelector('input[type="checkbox"]'));
+          check('schedule lab: shared specialist constraint moves finish to day seventeen', /day 17/.test(output()), output());
+          await v.click(v.byText('Dependencies'));
+          check('schedule lab: alternative network exposes dependency description', !!sandbox.querySelector('svg desc') && sandbox.textContent.includes('after B'), sandbox.textContent);
+          await v.click(v.byText('Reset schedule'));
+          check('schedule lab: reset restores durations, resource assumption and timeline', /day 14/.test(output()) && !sandbox.querySelector('input[type="checkbox"]').checked && !!sandbox.querySelector('[aria-label^="Working-day timeline"]'), output());
+          check('schedule lab: calculations expose predecessor, time and float headers', sandbox.querySelectorAll('table th[scope="col"]').length === 8 && sandbox.querySelectorAll('table th[scope="row"]').length === 8, sandbox.textContent);
+        }
+        if (courseId === 'project-management' && topic.id === 'm1-t3') {
+          check('RACI: role columns and separately accountable approval rows render', v.all('.course-raci table th[scope="col"]').length === 6 && v.all('.course-raci table th[scope="row"]').length === 2, v.text());
+        }
+        if (courseId === 'project-management' && topic.id === 'm4-t3') {
+          check('board: over-limit review and blocked WIP remain visible', /WIP limit exceeded/.test(v.text()) && /Blocked · still counts in WIP/.test(v.text()) && /Active WIP here: 5/.test(v.text()), v.text());
+        }
+      });
+    }
+  }
+  check(`${courseId}: all ${sourceSectionTotal} visuals render and all ${topics.length} original topics are preserved`, illustrationTotal === sourceSectionTotal && preservedTopics === topics.length, `${illustrationTotal} visuals / ${preservedTopics} preserved topics`);
+  for (const basePath of ['/courses', '/student/courses']) {
+    const firstModule = illustratedPack.manifest.modules[0];
+    const first = firstModule.topics[0];
+    const companion = await loadTopicIllustrations(courseId, firstModule.id, first.id);
+    globalThis.__RC_PARAMS = { courseId, topicId: first.id };
+    await section(`${courseId}: ${basePath} player`, '/src/modules/courses/CourseLessonPage.tsx', { basePath, uid: `illustrated-${courseId}-${basePath}` }, async (v) => {
+      for (let i = 0; i < 25 && !v.el('.course-illustration'); i++) await v.settle(40);
+      check(`${courseId}: ${basePath} player loads original reading and lazy companion together`,
+        /Learning objectives/.test(v.text()) && v.all('.course-illustration').length === companion.sections.length, v.text());
+      check(`${courseId}: ${basePath} outline stays on its route family`, v.hrefs().includes(`${basePath}/${courseId}`), v.hrefs().join(' '));
+    });
+  }
+}
+for (const { manifest: pack } of packs.filter(({ manifest: item }) => !item.illustrations)) {
+  const module = pack.modules[0];
+  check(`${pack.id}: non-illustrated courses load no companion`, await loadTopicIllustrations(pack.id, module.id, module.topics[0].id) === null);
 }
 
 // ── Unknown ids degrade gracefully ──────────────────────────────────────────

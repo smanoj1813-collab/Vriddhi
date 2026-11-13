@@ -1,0 +1,679 @@
+{
+  "moduleId": "m5",
+  "topics": {
+    "m5-t1": {
+      "introduction": "Distinguish a future uncertainty from a current issue, then connect priority, ownership and response. The risk grid is qualitative; an ordinal score is not a probability.",
+      "sections": [
+        {
+          "id": "pm-m5-t1-1",
+          "section": "1. Write cause, event and impact",
+          "title": "Cause → uncertain event → objective impact",
+          "explanation": "A useful risk statement explains why an event might occur and which objective it would affect. Keep an already-failing test account in the issue log with a next action; describing it as a future possibility would delay the response it needs now.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Cause: one vendor specialist",
+                "detail": "A single-person dependency makes availability fragile.",
+                "icon": "users"
+              },
+              {
+                "label": "Uncertain event: absence",
+                "detail": "The demonstrator may be unavailable on the planned day.",
+                "icon": "clock"
+              },
+              {
+                "label": "Impact: testing delay",
+                "detail": "The launch milestone could be threatened; define a trigger and owner.",
+                "icon": "target"
+              }
+            ]
+          },
+          "caption": "Illustrative risk statement from the fictional case. The test account that already fails is a separate current issue.",
+          "takeaway": "A vague category such as “vendor risk” does not explain what action is needed."
+        },
+        {
+          "id": "pm-m5-t1-2",
+          "section": "2. Prioritise consistently, not mechanically",
+          "title": "Use a matrix to start triage, not to stop thinking",
+          "explanation": "Define likelihood and consequence bands before positioning risks. A severe low-likelihood event can still warrant urgent control. The grid is a discussion aid; the actual record also needs a cause, owner, trigger, response, due date and residual exposure.",
+          "diagram": {
+            "kind": "matrix",
+            "xLabel": "Likelihood band →",
+            "yLabel": "Consequence band",
+            "columns": [
+              "Lower likelihood",
+              "Higher likelihood"
+            ],
+            "rows": [
+              "Higher consequence",
+              "Lower consequence"
+            ],
+            "items": [
+              {
+                "label": "Do not dismiss",
+                "detail": "Review serious access or safety exposure even if unlikely.",
+                "icon": "shield"
+              },
+              {
+                "label": "Prioritise response",
+                "detail": "Plan preventive action and a contingency trigger.",
+                "icon": "target"
+              },
+              {
+                "label": "Monitor proportionately",
+                "detail": "Record an owner and a reasoned review trigger.",
+                "icon": "clock"
+              },
+              {
+                "label": "Reduce repeated disruption",
+                "detail": "A frequent small failure can still consume useful capacity.",
+                "icon": "repeat"
+              }
+            ]
+          },
+          "caption": "Illustrative qualitative risk matrix, not a calibrated probability or an automatic policy. The lesson’s ordinal 3 × 4 = 12 is a priority score, not 12%.",
+          "takeaway": "A risk score supports judgement but cannot replace consequence analysis."
+        },
+        {
+          "id": "pm-m5-t1-3",
+          "section": "3. Responses change exposure",
+          "title": "Prevent before the event; act on a trigger after it",
+          "explanation": "Different responses change different parts of exposure. A backup specialist can reduce disruption; a contract can shift some financial consequences without guaranteeing delivery. Even accepting a risk can involve a prepared contingency and a clear escalation trigger.",
+          "diagram": {
+            "kind": "compare",
+            "items": [
+              {
+                "label": "Avoid or mitigate",
+                "detail": "Change the risky approach or reduce likelihood/consequence before the event.",
+                "icon": "shield"
+              },
+              {
+                "label": "Transfer some exposure",
+                "detail": "Use an appropriate agreement; delivery obligations and residual risks remain.",
+                "icon": "file"
+              },
+              {
+                "label": "Accept with a trigger",
+                "detail": "Name who monitors, when to act and the prepared contingency.",
+                "icon": "clock"
+              },
+              {
+                "label": "Escalate beyond authority",
+                "detail": "Send evidence, options and a decision deadline to the right role.",
+                "icon": "briefcase"
+              }
+            ]
+          },
+          "caption": "Conceptual threat-response comparison. Separate synthetic EMV example: 0.25 × ₹20,000 = ₹5,000 expected exposure, not a certain loss.",
+          "takeaway": "Review residual exposure after choosing the response.",
+          "checkpoint": {
+            "question": "Why can the priority score 12 not be used as a 12% probability in an EMV calculation?",
+            "answer": "The 1–5 values are ordinal triage scores, not measured probabilities. EMV needs a separate explicit probability assumption and a monetary impact."
+          }
+        }
+      ]
+    },
+    "m5-t2": {
+      "introduction": "Quality begins before the final test count. These visuals connect prevention, risk-based test coverage and an honest acceptance decision for the duplicate-booking defect.",
+      "sections": [
+        {
+          "id": "pm-m5-t2-1",
+          "section": "1. Build quality into the work",
+          "title": "Prevent errors and check the output",
+          "explanation": "Quality assurance asks whether the working process helps produce good results; quality control checks the results themselves. Both need defined criteria, roles and evidence. An early review of concurrent booking rules can prevent a failure that a polished demonstration misses.",
+          "diagram": {
+            "kind": "compare",
+            "items": [
+              {
+                "label": "Plan quality",
+                "detail": "Agree access, allocation, accessibility and evidence requirements.",
+                "icon": "target"
+              },
+              {
+                "label": "Assure the process",
+                "detail": "Peer reviews, repeatable methods and clear responsibilities support good work.",
+                "icon": "repeat"
+              },
+              {
+                "label": "Control the output",
+                "detail": "Execute tests and compare actual results with expected behaviour.",
+                "icon": "check"
+              }
+            ]
+          },
+          "caption": "Conceptual quality activities. They complement one another rather than describing three interchangeable names for final testing.",
+          "takeaway": "Make quality expectations visible before development and review begin."
+        },
+        {
+          "id": "pm-m5-t2-2",
+          "section": "2. Risk-based tests beat a raw count",
+          "title": "One mandatory failure can outweigh many green checks",
+          "explanation": "Coverage must include ordinary, boundary and failure paths. The last-slot concurrency defect affects a mandatory condition; a high overall pass proportion cannot make it safe. Log severity and priority with a reason and owner instead of letting a single percentage decide.",
+          "diagram": {
+            "kind": "compare",
+            "items": [
+              {
+                "label": "Ordinary path",
+                "detail": "A learner books an available slot and receives the expected confirmation.",
+                "icon": "cursor"
+              },
+              {
+                "label": "Boundary path",
+                "detail": "Two learners compete for the final slot: only one allocation is allowed.",
+                "icon": "shield"
+              },
+              {
+                "label": "Failure path",
+                "detail": "Invalid access or repeated cancellation must fail safely.",
+                "icon": "filter"
+              },
+              {
+                "label": "Triage record",
+                "detail": "Actual result, severity, priority, owner and retest plan stay visible.",
+                "icon": "file"
+              }
+            ]
+          },
+          "caption": "Illustrative risk-based coverage. The lesson’s synthetic 20/21 ≈ 95.2% pass proportion still includes a mandatory final-slot failure.",
+          "takeaway": "Pass rate is a summary, not permission to bypass a mandatory condition."
+        },
+        {
+          "id": "pm-m5-t2-3",
+          "section": "3. Acceptance and handover need honest exceptions",
+          "title": "Repair → retest → decide with the right authority",
+          "explanation": "Stop unsafe live use of the failing path, then repair and repeat the failing and related regression tests. A release decision, a project acceptance and Scrum Done answer different questions. Record any permitted exception and its owner without bypassing mandatory controls.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Contain the defect",
+                "detail": "Prevent unsafe use and record the failed evidence.",
+                "icon": "shield"
+              },
+              {
+                "label": "Repair and retest",
+                "detail": "Check final-slot allocation, cancellation and rebooking.",
+                "icon": "repeat"
+              },
+              {
+                "label": "Review the conditions",
+                "detail": "Named acceptor checks criteria, defects and limitations.",
+                "icon": "users"
+              },
+              {
+                "label": "Record the decision",
+                "detail": "Release/acceptance status, authority and residual actions remain explicit.",
+                "icon": "file"
+              }
+            ]
+          },
+          "caption": "Conceptual response to the fictional duplicate-allocation defect, not a claim that a repair or release has occurred.",
+          "takeaway": "A repaired claim is not a closed defect until evidence supports closure.",
+          "checkpoint": {
+            "question": "Would 20 of 21 tests passing justify release if the failed test permits duplicate final-slot allocation?",
+            "answer": "No. It violates a mandatory acceptance condition. Contain the unsafe path, repair it and repeat the failed and related regression tests before the appropriate decision."
+          }
+        }
+      ]
+    },
+    "m5-t3": {
+      "introduction": "A request, an impact estimate and an approval are different records. Compare options across constraints and escalate a decision rather than silently accepting more work.",
+      "sections": [
+        {
+          "id": "pm-m5-t3-1",
+          "section": "1. A request is not an approval",
+          "title": "Classify against the agreed baseline",
+          "explanation": "A defect corrects behaviour already required by the baseline; an enhancement adds or changes that requirement. A reminder request may be valuable without being approved. Preserve who requested it, the reason, affected work, urgency and decision status.",
+          "diagram": {
+            "kind": "compare",
+            "items": [
+              {
+                "label": "Defect against agreed scope",
+                "detail": "Duplicate allocation violates mandatory booking acceptance: log and repair it.",
+                "icon": "shield"
+              },
+              {
+                "label": "Enhancement to scope",
+                "detail": "Optional reminders add consent, integration, test and support work.",
+                "icon": "sparkles"
+              },
+              {
+                "label": "Decision still pending",
+                "detail": "A logged or verbal request is not authority to commit time or budget.",
+                "icon": "file"
+              }
+            ]
+          },
+          "caption": "Illustrative classification for the course case; always inspect the actual agreed baseline before applying the label.",
+          "takeaway": "Small-looking work can still need an authorised change decision."
+        },
+        {
+          "id": "pm-m5-t3-2",
+          "section": "2. Evaluate options across constraints",
+          "title": "Price the complete option, not only the screen",
+          "explanation": "Accept-now, defer and smaller-scope alternatives have different consequences. Count development and testing, then check consent, provider charges and ongoing support. Eighteen sequential hours at three available hours per day require six working days; those are different units from the effort estimate.",
+          "diagram": {
+            "kind": "compare",
+            "items": [
+              {
+                "label": "Accept now",
+                "detail": "18 effort-hours × ₹500 = ₹9,000 before provider charges; six sequential working days at 3 hours/day.",
+                "icon": "chart"
+              },
+              {
+                "label": "Defer reminders",
+                "detail": "Protect the core pilot date; log later value and support ownership.",
+                "icon": "clock"
+              },
+              {
+                "label": "Smaller alternative",
+                "detail": "Define a bounded option, then assess its actual privacy, test and support implications.",
+                "icon": "layers"
+              }
+            ]
+          },
+          "caption": "Synthetic reminder estimate from the lesson. Add ₹9,000 to an existing EAC only when that work is excluded from its ETC; avoid double counting.",
+          "takeaway": "State what is included before comparing cost and date impacts."
+        },
+        {
+          "id": "pm-m5-t3-3",
+          "section": "3. Escalation is a decision service",
+          "title": "Escalate a decision the recipient can actually make",
+          "explanation": "A useful escalation summarises the known issue, forecast impact, options, recommendation and last responsible decision point. It should make the consequence of no decision visible. Do not blame a colleague or imply a recommendation is already approved.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "State the trigger",
+                "detail": "The request exceeds date, cost or delegated-authority tolerance.",
+                "icon": "target"
+              },
+              {
+                "label": "Show evidence and options",
+                "detail": "Separate known facts, estimates, assumptions and trade-offs.",
+                "icon": "file"
+              },
+              {
+                "label": "Ask a named authority",
+                "detail": "Give a recommendation, deadline and no-decision consequence.",
+                "icon": "users"
+              },
+              {
+                "label": "Control the revision",
+                "detail": "After approval, update affected plans, criteria and communications with a reference.",
+                "icon": "link"
+              }
+            ]
+          },
+          "caption": "Conceptual escalation/change route. No real budget commitment or sponsor approval is implied.",
+          "takeaway": "Preserve the old baseline and the actual decision reference.",
+          "checkpoint": {
+            "question": "Can you add the ₹9,000 reminder estimate to every ₹40,000 EAC automatically?",
+            "answer": "No. First check whether reminder work is already included in the current ETC. Adding it again would double count; also state provider charges and scope assumptions."
+          }
+        }
+      ]
+    },
+    "m5-pb3": {
+      "introduction": "Operate a traceable work-and-control desk without confusing risk, issue, defect and enhancement. The visuals make the mandatory defect and the optional reminder decision visible together.",
+      "sections": [
+        {
+          "id": "pm-m5-pb3-1",
+          "section": "The brief",
+          "title": "Four different records need four clear responses",
+          "explanation": "Keep the time state and baseline relationship explicit. A vendor may miss a demo, an access issue may already exist, duplicate allocation is a defect against mandatory acceptance, and reminders enhance scope. Putting them all in a generic risk category hides the action needed now.",
+          "diagram": {
+            "kind": "compare",
+            "items": [
+              {
+                "label": "Future risk",
+                "detail": "Vendor demonstration may be missed: owner, trigger and contingency.",
+                "icon": "clock"
+              },
+              {
+                "label": "Current issue",
+                "detail": "Access already fails: record the action and decision needed now.",
+                "icon": "message"
+              },
+              {
+                "label": "Mandatory defect",
+                "detail": "Duplicate booking violates acceptance: contain, repair and retest.",
+                "icon": "shield"
+              },
+              {
+                "label": "Enhancement request",
+                "detail": "Reminders add scope: assess options and route approval.",
+                "icon": "sparkles"
+              }
+            ]
+          },
+          "caption": "Illustrative classification for PB3’s fictional disruption. No real approvals or completed repairs are implied.",
+          "takeaway": "A label should help route action, not hide a problem."
+        },
+        {
+          "id": "pm-m5-pb3-2",
+          "section": "Inputs and working boundaries",
+          "title": "Validate the seed, then build the required submission",
+          "explanation": "The six-record practice board is a known filter fixture, not the finished eight-record PB3 submission. First reproduce its overdue, unassigned and undated result sets at the cut-off. Add clearly labelled synthetic records for the project while preserving the raw seed.",
+          "diagram": {
+            "kind": "board",
+            "items": [
+              {
+                "label": "To do",
+                "detail": "Waiting work remains visible; missing dates need their own check.",
+                "cards": [
+                  {
+                    "id": "PILOT-4",
+                    "label": "Resolve access question",
+                    "detail": "IT reviewer · no due date · needs a next action",
+                    "blocked": true
+                  },
+                  {
+                    "id": "PILOT-6",
+                    "label": "Plan support rota",
+                    "detail": "Operations lead · due 2026-10-02"
+                  }
+                ]
+              },
+              {
+                "label": "In progress",
+                "detail": "Started work needs explicit ownership.",
+                "cards": [
+                  {
+                    "id": "PILOT-3",
+                    "label": "Prepare staff guide",
+                    "detail": "Unassigned · due 2026-09-26"
+                  }
+                ]
+              },
+              {
+                "label": "Review",
+                "detail": "A reviewer checks evidence; a blocked review is not Done.",
+                "cards": [
+                  {
+                    "id": "PILOT-2",
+                    "label": "Test last-slot booking",
+                    "detail": "Reviewer · due 2026-09-25",
+                    "blocked": true
+                  },
+                  {
+                    "id": "PILOT-5",
+                    "label": "Review cancellation flow",
+                    "detail": "Reviewer · due 2026-09-30"
+                  }
+                ]
+              },
+              {
+                "label": "Done",
+                "detail": "Completed under the example policy; excluded from active WIP.",
+                "complete": true,
+                "cards": [
+                  {
+                    "id": "PILOT-1",
+                    "label": "Confirm acceptance criteria",
+                    "detail": "Coordinator · due 2026-09-20"
+                  }
+                ]
+              }
+            ]
+          },
+          "caption": "Synthetic six-record PILOT fixture at 2026-09-28: overdue IDs PILOT-2 and PILOT-3; unassigned ID PILOT-3; undated ID PILOT-4; blocked IDs PILOT-2 and PILOT-4. PB3 separately requires at least eight synthetic records.",
+          "takeaway": "Do not alter or silently relabel the raw fixture to make a filter pass."
+        },
+        {
+          "id": "pm-m5-pb3-3",
+          "section": "Work plan",
+          "title": "PB3: reserve time to verify and revise",
+          "explanation": "The classroom block is not all build time. Use the reproduction checkpoint to trace the headline result to source values, then retain the peer comment and correction. The final recommendation should follow the revised evidence, not the first attractive draft.",
+          "diagram": {
+            "kind": "bars",
+            "unit": "classroom minutes",
+            "items": [
+              {
+                "label": "Frame and inspect",
+                "detail": "Read the brief, boundaries and source fixtures.",
+                "value": 20,
+                "icon": "chart"
+              },
+              {
+                "label": "Build required artefacts",
+                "detail": "Create the linked outputs for this block.",
+                "value": 80,
+                "icon": "chart"
+              },
+              {
+                "label": "Reproduce and review",
+                "detail": "Check calculations, definitions and decisions.",
+                "value": 35,
+                "icon": "chart"
+              },
+              {
+                "label": "Peer review and revise",
+                "detail": "Keep the comment and the response.",
+                "value": 30,
+                "icon": "chart"
+              },
+              {
+                "label": "Recommendation and AI statement",
+                "detail": "Explain the decision and assistance transparently.",
+                "value": 15,
+                "icon": "chart"
+              }
+            ]
+          },
+          "caption": "Published synthetic classroom allocation for PB3: 20 + 80 + 35 + 30 + 15 = 180 minutes. This is learner work time, not the delivery schedule’s working days.",
+          "takeaway": "A checked second version is more valuable than an unchecked first draft."
+        },
+        {
+          "id": "pm-m5-pb3-4",
+          "section": "What to submit",
+          "title": "Make the board point to the control evidence",
+          "explanation": "The board, register, test and change brief should agree on IDs, ownership and current state. Link the mandatory defect to its retest evidence and the enhancement to its decision status. Three tested filters should support distinct questions rather than merely produce impressive dashboard counts.",
+          "diagram": {
+            "kind": "hub",
+            "items": [
+              {
+                "label": "Work system",
+                "detail": "At least eight synthetic records with owners, states, criteria and links.",
+                "icon": "layers"
+              },
+              {
+                "label": "Workflow and filters",
+                "detail": "Transition policies plus overdue, unassigned and undated active-work checks.",
+                "icon": "filter"
+              },
+              {
+                "label": "Risk and issue register",
+                "detail": "Cause, impact, owner, trigger and response.",
+                "icon": "file"
+              },
+              {
+                "label": "Defect evidence",
+                "detail": "Duplicate-booking test and repair/regression retest plan.",
+                "icon": "shield"
+              },
+              {
+                "label": "Change-impact brief",
+                "detail": "Accept, defer and smaller alternative with decision deadline.",
+                "icon": "message"
+              }
+            ],
+            "center": "Control desk"
+          },
+          "caption": "Conceptual map of the unchanged PB3 submission list. The app does not collect, verify or mark external project files.",
+          "takeaway": "A control record is useful when someone can trace the next decision from it."
+        },
+        {
+          "id": "pm-m5-pb3-5",
+          "section": "Acceptance and self-check",
+          "title": "Do not average away the critical defect",
+          "explanation": "The reminder estimate has both effort and elapsed-time implications, while the duplicate-booking defect imposes a mandatory quality boundary. Compare options without adding the reminder cost twice or letting a high test-pass rate erase a severe failure.",
+          "diagram": {
+            "kind": "compare",
+            "items": [
+              {
+                "label": "Direct effort cost",
+                "detail": "(12 development + 6 testing) × ₹500 = ₹9,000 before provider charges.",
+                "icon": "chart"
+              },
+              {
+                "label": "Sequential duration",
+                "detail": "18 hours ÷ 3 focused hours/day = 6 working days.",
+                "icon": "clock"
+              },
+              {
+                "label": "Mandatory quality",
+                "detail": "Contain duplicate allocation and require repair plus retesting.",
+                "icon": "shield"
+              },
+              {
+                "label": "Forecast basis",
+                "detail": "Add the estimate only if the work is not already in the current ETC.",
+                "icon": "file"
+              }
+            ]
+          },
+          "caption": "Synthetic PB3 checkpoints. Effort-hours, rupees and working days are deliberately separate; provider, consent and operational effects still need review.",
+          "takeaway": "The authorised option must address cost, time and mandatory acceptance together.",
+          "checkpoint": {
+            "question": "Can an attractive reminder feature justify leaving duplicate final-slot allocation unresolved?",
+            "answer": "No. The defect violates mandatory acceptance. Keep its containment, repair and retest separate from the enhancement’s cost, schedule and approval decision."
+          }
+        },
+        {
+          "id": "pm-m5-pb3-6",
+          "section": "Rubric",
+          "title": "Seven marks reward evidence and judgement",
+          "explanation": "Use the published rubric to inspect the work, not to invent new requirements. Correct arithmetic needs traceable inputs, professional judgement includes safeguards and authority, and clarity includes an evidence trail and reflection. The diagram does not award or upload marks.",
+          "diagram": {
+            "kind": "bars",
+            "unit": "rubric marks",
+            "items": [
+              {
+                "label": "Correctness and reproducibility",
+                "detail": "Show the method, source values and a manual check.",
+                "value": 3,
+                "icon": "chart"
+              },
+              {
+                "label": "Judgement and safeguards",
+                "detail": "Make limits, provenance, authority and safe sharing explicit.",
+                "value": 2,
+                "icon": "chart"
+              },
+              {
+                "label": "Clarity, evidence and reflection",
+                "detail": "Keep the files navigable and explain the correction.",
+                "value": 2,
+                "icon": "chart"
+              }
+            ]
+          },
+          "caption": "Illustrative display of the unchanged PB3 rubric: 3 + 2 + 2 = 7. Four blocks contribute 28 overall; external facilitator marking remains required.",
+          "takeaway": "Appearance alone cannot earn credit for an unsupported claim."
+        },
+        {
+          "id": "pm-m5-pb3-7",
+          "section": "Review questions",
+          "title": "Challenge the filter, classification and decision route",
+          "explanation": "Use known records to challenge selection logic and a specific requirement to challenge the defect classification. Then ask what approval is still missing. Record a review correction that makes the actual decision safer rather than merely making the board look green.",
+          "diagram": {
+            "kind": "hub",
+            "items": [
+              {
+                "label": "Selection",
+                "detail": "Do blank dates and owners receive separate checks?",
+                "icon": "filter"
+              },
+              {
+                "label": "Classification",
+                "detail": "What baseline criterion distinguishes defect from enhancement?",
+                "icon": "search"
+              },
+              {
+                "label": "Evidence",
+                "detail": "Where can the failing test and retest plan be found?",
+                "icon": "file"
+              },
+              {
+                "label": "Authority",
+                "detail": "Who can choose the change and by what deadline?",
+                "icon": "briefcase"
+              }
+            ],
+            "center": "Desk audit"
+          },
+          "caption": "Conceptual PB3 review prompts. Public screenshots must remain synthetic or redacted.",
+          "takeaway": "A zero-result filter deserves a test, not automatic trust."
+        },
+        {
+          "id": "pm-m5-pb3-8",
+          "section": "AI-use statement",
+          "title": "Disclose assistance and keep responsibility",
+          "explanation": "For the control desk, assistance can support drafting or checking, but it cannot create evidence that never existed. Complete the statement even if the answer is “none”. Keep only synthetic inputs in public tools and make your own verification visible.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Disclose use",
+                "detail": "Tool or none, task assisted, and synthetic inputs shared.",
+                "icon": "file"
+              },
+              {
+                "label": "Record your choices",
+                "detail": "Suggestions accepted, changed or rejected, with your own contribution.",
+                "icon": "users"
+              },
+              {
+                "label": "Verify independently",
+                "detail": "Check known filter IDs, rebuild the 18-hour/₹9,000/six-day calculations and verify that mandatory defect evidence is not invented.",
+                "icon": "check"
+              },
+              {
+                "label": "Respect assessment boundaries",
+                "detail": "Do not infer final-exam permission from project-tool permission.",
+                "icon": "shield"
+              }
+            ]
+          },
+          "caption": "Conceptual project AI-use workflow. It does not fabricate approvals, interviews, sources, business results or personal experience.",
+          "takeaway": "The learner remains responsible for the final numbers, claims and safeguards."
+        },
+        {
+          "id": "pm-m5-pb3-9",
+          "section": "Optional extension",
+          "title": "Use WIP and age to choose help, not rank people",
+          "explanation": "The optional extension should reveal where collaboration is needed. Define the WIP boundary and clock start, keep blocked cards visible, and inspect ageing review work. A useful outcome is a different next action, not an individual leaderboard.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Define the system",
+                "detail": "Column policies, WIP start/end and calendar convention.",
+                "icon": "layers"
+              },
+              {
+                "label": "Inspect open work",
+                "detail": "Age, blockers and review queue with named next actions.",
+                "icon": "clock"
+              },
+              {
+                "label": "Choose a coordination trial",
+                "detail": "Help review, remove an impediment or change intake policy.",
+                "icon": "users"
+              },
+              {
+                "label": "Compare carefully",
+                "detail": "Check ageing and throughput with consistent item definitions.",
+                "icon": "chart"
+              }
+            ]
+          },
+          "caption": "Conceptual optional flow extension. Different work sizes and a short observation period limit comparisons and causal claims.",
+          "takeaway": "A better decision is the goal; a more crowded dashboard is not."
+        }
+      ]
+    }
+  }
+}

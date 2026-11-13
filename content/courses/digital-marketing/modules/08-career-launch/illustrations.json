@@ -1,0 +1,696 @@
+{
+  "moduleId": "m8",
+  "topics": {
+    "m8-t1": {
+      "introduction": "Turn course artefacts into a compact evidence story. Lead with the work that fits the role and make the proof easy to inspect.",
+      "sections": [
+        {
+          "title": "PARE makes the case study inspectable",
+          "explanation": "A case study joins the business problem to your decisions, a measured result and evidence.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Problem",
+                "detail": "State the starting situation and constraint honestly.",
+                "icon": "target"
+              },
+              {
+                "label": "Action",
+                "detail": "Describe your decisions and personal contribution.",
+                "icon": "cursor"
+              },
+              {
+                "label": "Result",
+                "detail": "Report a defined outcome against a baseline.",
+                "icon": "chart"
+              },
+              {
+                "label": "Evidence",
+                "detail": "Show a redacted screenshot, table or working artefact.",
+                "icon": "check"
+              }
+            ]
+          },
+          "takeaway": "Add what you would change next. Never present a practice dataset as a live client result.",
+          "caption": "Concept illustration, not a platform screenshot. Follow the labels and the relationships shown.",
+          "id": "m8-t1-v1",
+          "section": "1. The case-study structure: PARE"
+        },
+        {
+          "title": "The first case should match the job",
+          "explanation": "The same projects can support different applications when the lead story changes.",
+          "diagram": {
+            "kind": "compare",
+            "items": [
+              {
+                "label": "Marketing Executive",
+                "detail": "Lead with the integrated campaign and content execution.",
+                "icon": "megaphone"
+              },
+              {
+                "label": "SEO Executive",
+                "detail": "Lead with the evidence-based audit and keyword-to-page work.",
+                "icon": "search"
+              },
+              {
+                "label": "Marketing Analyst",
+                "detail": "Lead with the dashboard, insight log and experiment design.",
+                "icon": "chart"
+              }
+            ]
+          },
+          "takeaway": "Use the job description to choose the order; do not inflate your contribution to make it fit.",
+          "caption": "Concept illustration, not a platform screenshot. Follow the labels and the relationships shown.",
+          "id": "m8-t1-v2",
+          "section": "2. The three target roles and their evidence"
+        },
+        {
+          "title": "Make a short path from identity to proof",
+          "explanation": "A simple page is enough if it is readable, accessible and easy to open.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Identity",
+                "detail": "Name the target role and a concise line of evidence.",
+                "icon": "briefcase"
+              },
+              {
+                "label": "Selected cases",
+                "detail": "Curate a few complete stories rather than raw exports.",
+                "icon": "file"
+              },
+              {
+                "label": "Proof / credentials",
+                "detail": "Provide inspectable artefacts and accurately stated awards.",
+                "icon": "check"
+              },
+              {
+                "label": "Contact",
+                "detail": "Offer an appropriate professional contact route and résumé.",
+                "icon": "mail"
+              }
+            ]
+          },
+          "takeaway": "Check permissions and remove customer-identifying or confidential material before sharing.",
+          "caption": "Concept illustration, not a platform screenshot. Follow the labels and the relationships shown.",
+          "id": "m8-t1-v3",
+          "section": "3. The portfolio vehicle"
+        },
+        {
+          "title": "Experience can be small and still be real",
+          "explanation": "A local project becomes credible through a real constraint, a stakeholder and documented decisions.",
+          "diagram": {
+            "kind": "compare",
+            "items": [
+              {
+                "label": "Real small project",
+                "detail": "Show the actual scope, budget and stakeholder involvement.",
+                "icon": "users"
+              },
+              {
+                "label": "Course / practice project",
+                "detail": "Label the setting and the simulated parts clearly.",
+                "icon": "file"
+              },
+              {
+                "label": "What you learned",
+                "detail": "Explain the trade-off, failure and next improvement.",
+                "icon": "check"
+              }
+            ]
+          },
+          "takeaway": "Honest self-generated work is stronger than invented employment or fabricated performance.",
+          "caption": "Concept illustration, not a platform screenshot. Follow the labels and the relationships shown.",
+          "id": "m8-t1-v4",
+          "section": "4. Handling the \"no experience\" objection"
+        },
+        {
+          "title": "Use the scan test as a design rehearsal",
+          "explanation": "The reading’s time boxes help test whether the page exposes the right information quickly. They are not a universal recruiter behaviour measurement.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "First glance",
+                "detail": "Can a stranger identify the role you want?",
+                "icon": "briefcase"
+              },
+              {
+                "label": "First case",
+                "detail": "Can they see a meaningful number with context?",
+                "icon": "chart"
+              },
+              {
+                "label": "Quick inspection",
+                "detail": "Can they open at least two pieces of evidence?",
+                "icon": "check"
+              }
+            ]
+          },
+          "takeaway": "If the proof is buried, improve the reading order before adding another project.",
+          "caption": "Concept illustration, not a platform screenshot. Follow the labels and the relationships shown.",
+          "checkpoint": {
+            "question": "Can a practice campaign appear in a portfolio?",
+            "answer": "Yes, when its practice status, simulated data and your contribution are explicit. It must not be presented as a live client outcome."
+          },
+          "id": "m8-t1-v5",
+          "section": "5. The ninety-second scan test"
+        }
+      ]
+    },
+    "m8-t2": {
+      "introduction": "Make the résumé, profile and certificates point to the same credible story. Track applications as a process you can improve.",
+      "sections": [
+        {
+          "title": "Build a résumé for a useful scan",
+          "explanation": "A focused résumé makes the target role, relevant skills and evidence visible without a long introduction.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Target role",
+                "detail": "Use a role-specific heading and concise identity.",
+                "icon": "briefcase"
+              },
+              {
+                "label": "Relevant evidence",
+                "detail": "Lead with projects and decisions that match the job.",
+                "icon": "file"
+              },
+              {
+                "label": "Skills / credentials",
+                "detail": "List only what you can explain or demonstrate.",
+                "icon": "check"
+              },
+              {
+                "label": "Access",
+                "detail": "Make contact and portfolio links work in the exported file.",
+                "icon": "link"
+              }
+            ]
+          },
+          "takeaway": "Prefer clean structure and readable text over decorative layouts that obscure information.",
+          "caption": "Concept illustration, not a platform screenshot. Follow the labels and the relationships shown.",
+          "id": "m8-t2-v1",
+          "section": "1. The résumé: structure for the scan"
+        },
+        {
+          "title": "A strong bullet shows the mechanism",
+          "explanation": "Connect the action to what you changed and the result you can support.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Verb",
+                "detail": "Audited, built, analysed or improved.",
+                "icon": "cursor"
+              },
+              {
+                "label": "Mechanism",
+                "detail": "Explain the method or operational change.",
+                "icon": "layers"
+              },
+              {
+                "label": "Result / scope",
+                "detail": "Use a verified outcome, or an honest deliverable if results are unavailable.",
+                "icon": "chart"
+              },
+              {
+                "label": "Evidence",
+                "detail": "Keep the artefact ready for an interview follow-up.",
+                "icon": "check"
+              }
+            ]
+          },
+          "takeaway": "Do not invent a percentage just because quantified bullets look impressive.",
+          "caption": "Concept illustration, not a platform screenshot. Follow the labels and the relationships shown.",
+          "id": "m8-t2-v2",
+          "section": "2. The bullet pattern: verb + mechanism + result"
+        },
+        {
+          "title": "A profile should be findable and credible",
+          "explanation": "Use relevant professional language while making the proof easy to inspect.",
+          "diagram": {
+            "kind": "hub",
+            "items": [
+              {
+                "label": "Headline",
+                "detail": "Name the role focus and practical skills honestly.",
+                "icon": "briefcase"
+              },
+              {
+                "label": "About",
+                "detail": "Explain the kind of problem you can help solve.",
+                "icon": "message"
+              },
+              {
+                "label": "Featured work",
+                "detail": "Link a small set of appropriate evidence cases.",
+                "icon": "file"
+              },
+              {
+                "label": "Consistency",
+                "detail": "Keep dates, claims and contact routes aligned with the résumé.",
+                "icon": "check"
+              }
+            ],
+            "center": "Professional profile"
+          },
+          "takeaway": "Keyword stuffing cannot replace a clear work story and a useful portfolio.",
+          "caption": "Concept illustration, not a platform screenshot. Follow the labels and the relationships shown.",
+          "id": "m8-t2-v3",
+          "section": "3. LinkedIn: being findable and credible"
+        },
+        {
+          "title": "A credential has a precise status",
+          "explanation": "Keep completed, in-progress and planned learning distinct.",
+          "diagram": {
+            "kind": "compare",
+            "items": [
+              {
+                "label": "Earned",
+                "detail": "Use the actual award name, issuer and verification link where available.",
+                "icon": "check"
+              },
+              {
+                "label": "In progress",
+                "detail": "State that it is unfinished without implying certification.",
+                "icon": "clock"
+              },
+              {
+                "label": "Planned",
+                "detail": "Treat it as a learning goal, not an earned qualification.",
+                "icon": "target"
+              }
+            ]
+          },
+          "takeaway": "A certificate supports evidence of skill; it is not a guarantee of competence or employment.",
+          "caption": "Concept illustration, not a platform screenshot. Follow the labels and the relationships shown.",
+          "id": "m8-t2-v4",
+          "section": "4. Certifications: which, why, and honest presentation"
+        },
+        {
+          "title": "Run applications as a feedback system",
+          "explanation": "A small application log helps you follow up and learn where the process is breaking down.",
+          "diagram": {
+            "kind": "cycle",
+            "items": [
+              {
+                "label": "Select",
+                "detail": "Choose roles that fit the evidence you can show.",
+                "icon": "search"
+              },
+              {
+                "label": "Tailor",
+                "detail": "Reorder the résumé and portfolio honestly.",
+                "icon": "file"
+              },
+              {
+                "label": "Track",
+                "detail": "Record date, stage, contact and next action.",
+                "icon": "clock"
+              },
+              {
+                "label": "Review",
+                "detail": "Use response and interview feedback to improve.",
+                "icon": "chart"
+              }
+            ],
+            "center": "Improve the fit"
+          },
+          "takeaway": "Quality and relevance matter more than sending the same document everywhere.",
+          "caption": "Concept illustration, not a platform screenshot. Follow the labels and the relationships shown.",
+          "checkpoint": {
+            "question": "What should a result bullet say if there is no reliable performance data?",
+            "answer": "Describe the real deliverable, method and scope without inventing impact. For example, say you audited two pages and produced an evidence-backed roadmap, then show it."
+          },
+          "id": "m8-t2-v5",
+          "section": "5. The application system"
+        }
+      ]
+    },
+    "m8-t3": {
+      "introduction": "Practise explaining decisions, not reciting tool names. Use a structure for behavioural stories, a separate frame for new cases and evidence for every result.",
+      "sections": [
+        {
+          "title": "STAR-R turns experience into a clear answer",
+          "explanation": "The reflection step shows what changed in your judgement after the result.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Situation / task",
+                "detail": "State the context, goal and real constraints.",
+                "icon": "target"
+              },
+              {
+                "label": "Action",
+                "detail": "Explain your decisions and why you chose them.",
+                "icon": "cursor"
+              },
+              {
+                "label": "Result",
+                "detail": "Use a defined number with a baseline and evidence.",
+                "icon": "chart"
+              },
+              {
+                "label": "Reflection",
+                "detail": "Say what you would repeat or do differently.",
+                "icon": "check"
+              }
+            ]
+          },
+          "takeaway": "Be explicit about your own contribution when the project was a team effort.",
+          "caption": "Concept illustration, not a platform screenshot. Follow the labels and the relationships shown.",
+          "id": "m8-t3-v1",
+          "section": "1. STAR, adapted for marketing evidence"
+        },
+        {
+          "title": "G-S-M-A-P is a thinking order",
+          "explanation": "Use the case frame to expose assumptions before prescribing tactics.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Goal & metrics",
+                "detail": "Restate the objective and cost or quality guardrails.",
+                "icon": "target"
+              },
+              {
+                "label": "Situation & audience",
+                "detail": "Ask for missing context and customer evidence.",
+                "icon": "users"
+              },
+              {
+                "label": "Strategy & mix",
+                "detail": "Choose channel roles with a reason.",
+                "icon": "layers"
+              },
+              {
+                "label": "Actions & timeline",
+                "detail": "Sequence foundations, launch and learning.",
+                "icon": "clock"
+              },
+              {
+                "label": "Prediction & measurement",
+                "detail": "Show the arithmetic, assumptions and review rule.",
+                "icon": "chart"
+              }
+            ]
+          },
+          "takeaway": "Acknowledge uncertainty. A neat framework does not make invented estimates factual.",
+          "caption": "Concept illustration, not a platform screenshot. Follow the labels and the relationships shown.",
+          "id": "m8-t3-v2",
+          "section": "2. The campaign case framework: G-S-M-A-P"
+        },
+        {
+          "title": "A failure story can demonstrate judgement",
+          "explanation": "Own the miss without hiding behind a platform or a teammate.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Miss",
+                "detail": "Name what failed against the target.",
+                "icon": "chart"
+              },
+              {
+                "label": "Diagnosis",
+                "detail": "Explain the evidence and what remains uncertain.",
+                "icon": "search"
+              },
+              {
+                "label": "Change",
+                "detail": "Describe the action and its observed outcome.",
+                "icon": "cursor"
+              },
+              {
+                "label": "Transfer",
+                "detail": "State the rule you now apply to similar work.",
+                "icon": "check"
+              }
+            ]
+          },
+          "takeaway": "Do not turn a small sample or a before/after comparison into an unsupported causal claim.",
+          "caption": "Concept illustration, not a platform screenshot. Follow the labels and the relationships shown.",
+          "id": "m8-t3-v3",
+          "section": "3. Presenting campaigns honestly"
+        },
+        {
+          "title": "Build an evidence shelf for common questions",
+          "explanation": "Prepare reusable stories, then adapt them to the actual question rather than memorising a monologue.",
+          "diagram": {
+            "kind": "compare",
+            "items": [
+              {
+                "label": "Execution story",
+                "detail": "A campaign or content decision with constraints and proof.",
+                "icon": "file"
+              },
+              {
+                "label": "Diagnosis story",
+                "detail": "An SEO or CPA problem investigated in a sensible order.",
+                "icon": "search"
+              },
+              {
+                "label": "People story",
+                "detail": "A feedback or community incident handled responsibly.",
+                "icon": "users"
+              },
+              {
+                "label": "Learning story",
+                "detail": "A failure that changed your next decision.",
+                "icon": "check"
+              }
+            ]
+          },
+          "takeaway": "Keep an honest tool demonstration ready and ask useful questions about the role and team.",
+          "caption": "Concept illustration, not a platform screenshot. Follow the labels and the relationships shown.",
+          "id": "m8-t3-v4",
+          "section": "4. The ten questions you will face"
+        },
+        {
+          "title": "Rehearse the answer, inspect the evidence",
+          "explanation": "Speaking aloud exposes gaps that silent preparation misses.",
+          "diagram": {
+            "kind": "cycle",
+            "items": [
+              {
+                "label": "Speak",
+                "detail": "Answer a shuffled question aloud within the time limit.",
+                "icon": "message"
+              },
+              {
+                "label": "Record",
+                "detail": "Review clarity, pace and unsupported claims.",
+                "icon": "clock"
+              },
+              {
+                "label": "Peer challenge",
+                "detail": "Ask a partner to question the number or decision.",
+                "icon": "users"
+              },
+              {
+                "label": "Revise",
+                "detail": "Improve the reasoning and evidence, then repeat.",
+                "icon": "check"
+              }
+            ],
+            "center": "Better delivery"
+          },
+          "takeaway": "Keep the portfolio open and offer the evidence when you cite a result.",
+          "caption": "Concept illustration, not a platform screenshot. Follow the labels and the relationships shown.",
+          "checkpoint": {
+            "question": "What is a stronger response to “why did the campaign fail” than “the algorithm changed”?",
+            "answer": "State the miss, show the diagnosis and its limits, explain the action you took, and describe the lesson you now apply. Separate evidence from a convenient explanation."
+          },
+          "id": "m8-t3-v5",
+          "section": "5. The rehearsal protocol"
+        }
+      ]
+    },
+    "m8-cap": {
+      "introduction": "Connect the whole course into one honest campaign story. Plan the live run early enough to meet the minimum duration, then show evidence, consent and learning at Demo Day.",
+      "sections": [
+        {
+          "title": "The capstone joins strategy, execution and learning",
+          "explanation": "A campaign is complete only when its channels, relationship and measurement reinforce one another.",
+          "diagram": {
+            "kind": "cycle",
+            "items": [
+              {
+                "label": "Plan",
+                "detail": "Choose the client, audience, goal, baseline and constraints.",
+                "icon": "target"
+              },
+              {
+                "label": "Launch",
+                "detail": "Use at least three channels including an owned route.",
+                "icon": "megaphone"
+              },
+              {
+                "label": "Run / improve",
+                "detail": "Observe, experiment and apply the pre-set decision rules.",
+                "icon": "chart"
+              },
+              {
+                "label": "Explain",
+                "detail": "Present results, limits, failure and the next recommendation.",
+                "icon": "message"
+              }
+            ],
+            "center": "Campaign story"
+          },
+          "takeaway": "Protect at least two full weeks of campaign operation. Preparation and pitch work do not replace the required run.",
+          "caption": "Concept illustration, not a platform screenshot. Follow the labels and the relationships shown.",
+          "id": "m8-cap-v1",
+          "section": "The brief"
+        },
+        {
+          "title": "Make the campaign pack a traceable story",
+          "explanation": "An assessor should be able to follow the chain from the first goal to the final recommendation.",
+          "diagram": {
+            "kind": "hub",
+            "items": [
+              {
+                "label": "Strategy + assets",
+                "detail": "One-pager, channel assets and the calendar.",
+                "icon": "target"
+              },
+              {
+                "label": "Consent + measurement",
+                "detail": "Permission copy, working exit, event plan and dashboard.",
+                "icon": "shield"
+              },
+              {
+                "label": "Journal + experiment",
+                "detail": "At least three entries, an experiment and a kill / scale decision.",
+                "icon": "file"
+              },
+              {
+                "label": "Results + failure",
+                "detail": "Report against baselines and analyse the weakest element.",
+                "icon": "chart"
+              },
+              {
+                "label": "Disclosure + pitch",
+                "detail": "Specific AI-use statement and a rehearsed five-minute presentation.",
+                "icon": "message"
+              }
+            ],
+            "center": "Demo Day pack"
+          },
+          "takeaway": "Use the original ordered submission list. Keep customer details and confidential business information out of public evidence.",
+          "caption": "Concept illustration, not a platform screenshot. Follow the labels and the relationships shown.",
+          "id": "m8-cap-v2",
+          "section": "What to submit"
+        },
+        {
+          "title": "Show the course connections explicitly",
+          "explanation": "The capstone assesses integration, so make the dependency between modules visible.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Foundations + SEO + content",
+                "detail": "Use the brief, useful search or listing work and a content strategy.",
+                "icon": "search"
+              },
+              {
+                "label": "Paid or social execution",
+                "detail": "Run appropriate real channel operations with constraints disclosed.",
+                "icon": "megaphone"
+              },
+              {
+                "label": "Analytics",
+                "detail": "Keep the dashboard, experiment and insight ritual active.",
+                "icon": "chart"
+              },
+              {
+                "label": "Lifecycle + consent",
+                "detail": "Use a permitted relationship or CRM route with a working exit.",
+                "icon": "shield"
+              }
+            ]
+          },
+          "takeaway": "Numbers without consent and launches without measurement both miss the integration requirement.",
+          "caption": "Concept illustration, not a platform screenshot. Follow the labels and the relationships shown.",
+          "id": "m8-cap-v3",
+          "section": "Coverage requirements"
+        },
+        {
+          "title": "Schedule backwards from the required run",
+          "explanation": "Confirm dates with the facilitator so setup, a minimum two-week run and the final presentation can all fit.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Before launch",
+                "detail": "Lock access, goal, baseline, consent, assets and tested tracking.",
+                "icon": "check"
+              },
+              {
+                "label": "Run for at least 14 days",
+                "detail": "Operate channels, record the required journal entries and test responsibly.",
+                "icon": "clock"
+              },
+              {
+                "label": "Close the evidence",
+                "detail": "Pull comparable results and record failures and decisions.",
+                "icon": "file"
+              },
+              {
+                "label": "Rehearse / present",
+                "detail": "Time the pitch, check links and prepare for questions.",
+                "icon": "message"
+              }
+            ]
+          },
+          "takeaway": "If the calendar cannot accommodate the minimum run, resolve the schedule before launch rather than claiming a shorter period meets it.",
+          "caption": "Concept illustration, not a platform screenshot. Follow the labels and the relationships shown.",
+          "id": "m8-cap-v4",
+          "section": "Process"
+        },
+        {
+          "title": "A professional pitch makes the evidence easy to challenge",
+          "explanation": "The strongest presentation can explain both the useful result and the limitation behind it.",
+          "diagram": {
+            "kind": "compare",
+            "items": [
+              {
+                "label": "Strategy + execution",
+                "detail": "Show the reason for the channel mix and what actually ran.",
+                "icon": "target"
+              },
+              {
+                "label": "Measurement + integrity",
+                "detail": "Show baselines, defined outcomes and labelled practice data.",
+                "icon": "chart"
+              },
+              {
+                "label": "Lifecycle + learning",
+                "detail": "Show consent, iteration and what a failure changed.",
+                "icon": "shield"
+              },
+              {
+                "label": "Communication",
+                "detail": "Use the five-minute format and answer with evidence.",
+                "icon": "message"
+              }
+            ]
+          },
+          "takeaway": "The original capstone rubric, pass conditions and live-presentation requirement remain unchanged.",
+          "caption": "Concept illustration, not a platform screenshot. Follow the labels and the relationships shown.",
+          "checkpoint": {
+            "question": "Does a polished pitch compensate for a campaign that ran for less than two weeks?",
+            "answer": "No. Check the original minimum run and coverage rules. Plan earlier or agree a revised schedule with the facilitator; never relabel a shorter run or invent missing journal evidence."
+          },
+          "id": "m8-cap-v5",
+          "section": "Rubric"
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,528 @@
+{
+  "moduleId": "m4",
+  "topics": {
+    "m4-t1": {
+      "introduction": "Understand paid media as an amplifier, not a repair service. Read the auction conceptually and run the campaign arithmetic before spending.",
+      "sections": [
+        {
+          "title": "Paid traffic multiplies what is already there",
+          "explanation": "Ads can bring attention quickly. They also expose a weak offer, irrelevant page or broken tracking more quickly.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Offer",
+                "detail": "Confirm the customer need and a credible promise.",
+                "icon": "target"
+              },
+              {
+                "label": "Destination",
+                "detail": "Make the page and next action work.",
+                "icon": "globe"
+              },
+              {
+                "label": "Measurement",
+                "detail": "Test the event that represents business value.",
+                "icon": "chart"
+              },
+              {
+                "label": "Amplify",
+                "detail": "Buy appropriate distribution with a controlled plan.",
+                "icon": "megaphone"
+              }
+            ]
+          },
+          "takeaway": "A budget cannot make an unwanted or confusing offer automatically useful.",
+          "caption": "Concept illustration, not a platform screenshot. Follow the labels and the relationships shown.",
+          "id": "m4-t1-v1",
+          "section": "1. What paid media is for"
+        },
+        {
+          "title": "Relevance can beat a larger bid",
+          "explanation": "Use this comparison to understand the direction of the trade-off, not to calculate a real auction result.",
+          "diagram": {
+            "kind": "compare",
+            "items": [
+              {
+                "label": "Larger bid, weaker fit",
+                "detail": "A generic ad points to a home page that does not answer the query.",
+                "icon": "megaphone"
+              },
+              {
+                "label": "Smaller bid, stronger fit",
+                "detail": "The ad and landing page answer the same specific need.",
+                "icon": "target"
+              },
+              {
+                "label": "Real auction context",
+                "detail": "Platforms also consider thresholds, context, expected impact and other signals.",
+                "icon": "filter"
+              }
+            ]
+          },
+          "takeaway": "Bid × quality is a teaching simplification. Google Quality Score is diagnostic; it is not a literal input you can multiply to reproduce Ad Rank.",
+          "caption": "Conceptual auction comparison. This is not a pricing formula, platform simulator or promise of cheaper clicks.",
+          "id": "m4-t1-v2",
+          "section": "2. The auction: bid × quality"
+        },
+        {
+          "title": "Billing and optimisation are not the same thing",
+          "explanation": "Know both what is billed and what the bidding system is trying to achieve.",
+          "diagram": {
+            "kind": "compare",
+            "items": [
+              {
+                "label": "CPC",
+                "detail": "Spend is expressed per click; useful for traffic cost reasoning.",
+                "icon": "cursor"
+              },
+              {
+                "label": "CPM",
+                "detail": "Spend is expressed per thousand impressions; useful for exposure cost reasoning.",
+                "icon": "megaphone"
+              },
+              {
+                "label": "Target CPA / value",
+                "detail": "The system optimises toward actions or value; actual billing and eligibility depend on the platform.",
+                "icon": "chart"
+              }
+            ]
+          },
+          "takeaway": "Selecting a target CPA does not generally mean you only pay when someone converts. Check the actual billing terms.",
+          "caption": "Concept illustration, not a platform screenshot. Follow the labels and the relationships shown.",
+          "id": "m4-t1-v3",
+          "section": "3. Formats and buying models — the vocabulary"
+        },
+        {
+          "title": "The paid pre-flight chain",
+          "explanation": "This synthetic example follows the reading: ₹6,000 ÷ ₹12 CPC = 500 clicks; at 4%, that is 20 expected orders and ₹300 media CPA.",
+          "diagram": {
+            "kind": "funnel",
+            "unit": "people",
+            "items": [
+              {
+                "label": "Clicks",
+                "value": 500,
+                "detail": "₹6,000 budget divided by ₹12 assumed CPC."
+              },
+              {
+                "label": "Expected orders",
+                "value": 20,
+                "detail": "4% of 500 clicks."
+              }
+            ]
+          },
+          "takeaway": "A ₹300 CPA is not automatically profitable. Include contribution margin, refunds, fulfilment and other acquisition costs in the verdict.",
+          "caption": "Synthetic worked example, not live campaign data or an industry benchmark.",
+          "checkpoint": {
+            "question": "Does choosing target CPA guarantee paying only for conversions?",
+            "answer": "No. Target CPA is usually an optimisation goal, not a universal billing rule. Confirm how the selected platform charges and verify conversion tracking first."
+          },
+          "id": "m4-t1-v4",
+          "section": "4. Estimate before you spend"
+        }
+      ]
+    },
+    "m4-t2": {
+      "introduction": "Keep the search query, ad group, message and landing page aligned. Protect the budget with exclusions and diagnose outcomes after the click.",
+      "sections": [
+        {
+          "title": "Organise around a coherent intent",
+          "explanation": "A campaign groups the budget and objective. Ad groups keep related queries and messages close together.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Campaign",
+                "detail": "One business objective, geography and budget logic.",
+                "icon": "target"
+              },
+              {
+                "label": "Ad group",
+                "detail": "A tightly related theme such as weekend coaching.",
+                "icon": "layers"
+              },
+              {
+                "label": "Keywords / ads",
+                "detail": "Use query-relevant language and useful variants.",
+                "icon": "search"
+              },
+              {
+                "label": "Landing page",
+                "detail": "Answer that same promise with a clear action.",
+                "icon": "globe"
+              }
+            ]
+          },
+          "takeaway": "A tidy account structure makes performance easier to interpret; structure alone does not create demand.",
+          "caption": "Concept illustration, not a platform screenshot. Follow the labels and the relationships shown.",
+          "id": "m4-t2-v1",
+          "section": "1. Campaign architecture: theme everything"
+        },
+        {
+          "title": "Match types open the door; negatives guard it",
+          "explanation": "Broadness is a reach choice. Negative keywords help filter irrelevant demand, but exclusions need review too.",
+          "diagram": {
+            "kind": "compare",
+            "items": [
+              {
+                "label": "Broader reach",
+                "detail": "More possible queries; potentially more discovery and waste.",
+                "icon": "users"
+              },
+              {
+                "label": "Tighter intent",
+                "detail": "More focused query matching; still inspect actual search terms.",
+                "icon": "search"
+              },
+              {
+                "label": "Negative shield",
+                "detail": "Exclude irrelevant needs such as jobs when selling a course.",
+                "icon": "shield"
+              }
+            ]
+          },
+          "takeaway": "Match behaviour evolves. Review current platform documentation and actual queries rather than relying on punctuation alone.",
+          "caption": "Concept illustration, not a platform screenshot. Follow the labels and the relationships shown.",
+          "id": "m4-t2-v2",
+          "section": "2. Match types and the negative shield"
+        },
+        {
+          "title": "The ad should answer the query",
+          "explanation": "Use the limited space to show relevance, a supported reason to choose you and a clear destination.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Query",
+                "detail": "“Weekend CA Foundation classes Mysuru”.",
+                "icon": "search"
+              },
+              {
+                "label": "Message",
+                "detail": "Name the course, weekend timing and location honestly.",
+                "icon": "message"
+              },
+              {
+                "label": "Proof / detail",
+                "detail": "Use real fees, support or batch information where appropriate.",
+                "icon": "check"
+              },
+              {
+                "label": "Destination",
+                "detail": "Open the weekend-batch page, not a generic welcome page.",
+                "icon": "cursor"
+              }
+            ]
+          },
+          "takeaway": "Do not create an attractive ad promise the landing page cannot fulfil.",
+          "caption": "Concept illustration, not a platform screenshot. Follow the labels and the relationships shown.",
+          "id": "m4-t2-v3",
+          "section": "3. Writing the ad: answer the query"
+        },
+        {
+          "title": "Read the chain, not one isolated metric",
+          "explanation": "A click-through improvement can still produce worse business results if the traffic is less relevant.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Search terms",
+                "detail": "Are the queries actually relevant?",
+                "icon": "search"
+              },
+              {
+                "label": "Ad response",
+                "detail": "Do impressions become useful clicks?",
+                "icon": "cursor"
+              },
+              {
+                "label": "Page response",
+                "detail": "Do clicks become qualified enquiries?",
+                "icon": "filter"
+              },
+              {
+                "label": "Cost outcome",
+                "detail": "Does the media CPA fit the agreed guardrail?",
+                "icon": "chart"
+              }
+            ]
+          },
+          "takeaway": "Check tracking, definitions and sample size before declaring a winner.",
+          "caption": "Concept illustration, not a platform screenshot. Follow the labels and the relationships shown.",
+          "checkpoint": {
+            "question": "An ad gets many clicks but almost no qualified enquiries. What do you inspect?",
+            "answer": "Check actual search terms, the promise-to-page match, form usability, qualification criteria and event tracking. Do not assume increasing the bid solves the problem."
+          },
+          "id": "m4-t2-v4",
+          "section": "4. Reading a live campaign"
+        }
+      ]
+    },
+    "m4-t3": {
+      "introduction": "Interruption media must earn attention before it can ask for action. Connect audience warmth, creative and exposure frequency to the campaign’s role.",
+      "sections": [
+        {
+          "title": "Intent capture and interruption do different jobs",
+          "explanation": "Someone searching for a cake is in a different moment from someone scrolling past a cake video.",
+          "diagram": {
+            "kind": "compare",
+            "items": [
+              {
+                "label": "Search moment",
+                "detail": "The person is already expressing a need.",
+                "icon": "search"
+              },
+              {
+                "label": "Feed / video moment",
+                "detail": "The creative must earn attention and establish relevance.",
+                "icon": "megaphone"
+              },
+              {
+                "label": "Appropriate next step",
+                "detail": "Match the ask to readiness rather than demanding a purchase immediately.",
+                "icon": "cursor"
+              }
+            ]
+          },
+          "takeaway": "Judge a discovery ad on its agreed role without pretending awareness alone proves sales impact.",
+          "caption": "Concept illustration, not a platform screenshot. Follow the labels and the relationships shown.",
+          "id": "m4-t3-v1",
+          "section": "1. Interruption media: the job and the price"
+        },
+        {
+          "title": "Build an audience ladder",
+          "explanation": "As familiarity changes, the appropriate message changes. Respect consent and platform restrictions on audience use.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Cold audience",
+                "detail": "Introduce a relevant problem and a credible promise.",
+                "icon": "users"
+              },
+              {
+                "label": "Engaged audience",
+                "detail": "Offer more explanation, demonstrations and proof.",
+                "icon": "message"
+              },
+              {
+                "label": "High-intent audience",
+                "detail": "Answer remaining objections and make action easier.",
+                "icon": "cursor"
+              },
+              {
+                "label": "Existing customers",
+                "detail": "Use helpful lifecycle communication where permitted.",
+                "icon": "heart"
+              }
+            ]
+          },
+          "takeaway": "Retargeting is not permission to use sensitive data or ignore opt-outs.",
+          "caption": "Concept illustration, not a platform screenshot. Follow the labels and the relationships shown.",
+          "id": "m4-t3-v2",
+          "section": "2. Audiences: the real levers of social"
+        },
+        {
+          "title": "Creative has a small sequence of jobs",
+          "explanation": "Good feed creative makes its meaning visible quickly, even without sound.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Hook",
+                "detail": "Show the customer’s relevant situation.",
+                "icon": "target"
+              },
+              {
+                "label": "Demonstrate",
+                "detail": "Use visual proof or one clear explanation.",
+                "icon": "check"
+              },
+              {
+                "label": "Clarify",
+                "detail": "Make the offer and important conditions readable.",
+                "icon": "file"
+              },
+              {
+                "label": "Invite",
+                "detail": "Name a next step that matches the stage.",
+                "icon": "cursor"
+              }
+            ]
+          },
+          "takeaway": "Test a meaningful creative hypothesis, not just a different background colour.",
+          "caption": "Concept illustration, not a platform screenshot. Follow the labels and the relationships shown.",
+          "id": "m4-t3-v3",
+          "section": "3. Creative that survives the scroll"
+        },
+        {
+          "title": "Frequency is exposure, not a count of people",
+          "explanation": "If 10,000 reached people receive 40,000 impressions, average frequency is 4. It does not mean everyone saw the ad exactly four times.",
+          "diagram": {
+            "kind": "bars",
+            "unit": "impressions",
+            "items": [
+              {
+                "label": "Days 1–3: introduction",
+                "value": 10000,
+                "detail": "First part of a synthetic sequence."
+              },
+              {
+                "label": "Days 4–7: demonstration",
+                "value": 15000,
+                "detail": "Second part: explain value to the appropriate audience."
+              },
+              {
+                "label": "Days 8–10: reminder",
+                "value": 15000,
+                "detail": "Third part: a useful reminder, with exclusions where appropriate."
+              }
+            ]
+          },
+          "takeaway": "These stages total 40,000 impressions. Monitor fatigue and useful outcomes; there is no universal ideal frequency.",
+          "caption": "Synthetic worked example, not live campaign data or an industry benchmark.",
+          "checkpoint": {
+            "question": "If average frequency is four, did every reached person see exactly four ads?",
+            "answer": "No. It is impressions divided by reach. Exposure is distributed unevenly, so use the average with creative-fatigue signals and outcome evidence."
+          },
+          "id": "m4-t3-v4",
+          "section": "4. Frequency and the retargeting sequence"
+        }
+      ]
+    },
+    "m4-t4": {
+      "introduction": "Treat the landing page, budget and tracking as one launch system. Test the measurement before the first rupee goes live.",
+      "sections": [
+        {
+          "title": "A landing page continues the promise",
+          "explanation": "Every extra distraction competes with the action the campaign was designed to support.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Recognise",
+                "detail": "Repeat the ad’s actual offer and context.",
+                "icon": "target"
+              },
+              {
+                "label": "Believe",
+                "detail": "Show useful details and genuine proof.",
+                "icon": "check"
+              },
+              {
+                "label": "Act",
+                "detail": "Keep the form or order route simple and accessible.",
+                "icon": "cursor"
+              },
+              {
+                "label": "Confirm",
+                "detail": "Explain what happens next and record the intended event.",
+                "icon": "message"
+              }
+            ]
+          },
+          "takeaway": "Remove friction without hiding fees, conditions or privacy information.",
+          "caption": "Concept illustration, not a platform screenshot. Follow the labels and the relationships shown.",
+          "id": "m4-t4-v1",
+          "section": "1. The landing page: one promise, zero friction"
+        },
+        {
+          "title": "Pacing is a budget control loop",
+          "explanation": "Compare cumulative spend with a plan. A variance is a prompt to investigate, not an automatic instruction to increase bids.",
+          "diagram": {
+            "kind": "bars",
+            "unit": "₹ cumulative spend",
+            "items": [
+              {
+                "label": "Week 1 plan",
+                "value": 3000,
+                "detail": "Half of a synthetic ₹6,000 two-week budget."
+              },
+              {
+                "label": "Week 1 actual",
+                "value": 4200,
+                "detail": "₹1,200 above the cumulative plan."
+              }
+            ]
+          },
+          "takeaway": "At this point ₹1,800 remains, not ₹3,000. Check schedule, audience, CPC and results before changing the plan.",
+          "caption": "Synthetic worked example, not live campaign data or an industry benchmark.",
+          "id": "m4-t4-v2",
+          "section": "2. Budgets and pacing"
+        },
+        {
+          "title": "The safe launch order",
+          "explanation": "A conversion report is useful only after the event path is verified. Do not spend first and debug the count later.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Define",
+                "detail": "Choose the meaningful action and event name.",
+                "icon": "target"
+              },
+              {
+                "label": "Implement",
+                "detail": "Add the event and consistent source tags.",
+                "icon": "link"
+              },
+              {
+                "label": "Test",
+                "detail": "Use a test visit and verify the event once, with expected parameters.",
+                "icon": "check"
+              },
+              {
+                "label": "Launch",
+                "detail": "Start with budget controls and a monitoring owner.",
+                "icon": "megaphone"
+              }
+            ]
+          },
+          "takeaway": "A form-button click is not the same as a successfully completed enquiry.",
+          "caption": "Concept illustration, not a platform screenshot. Follow the labels and the relationships shown.",
+          "id": "m4-t4-v3",
+          "section": "3. Tracking before launch — the non-negotiable order"
+        },
+        {
+          "title": "Check launch health before scaling",
+          "explanation": "Separate a technical check from a performance decision. Early weak results may also be a measurement failure.",
+          "diagram": {
+            "kind": "cycle",
+            "items": [
+              {
+                "label": "Confirm delivery",
+                "detail": "Check approval, targeting, dates and budget limits.",
+                "icon": "check"
+              },
+              {
+                "label": "Confirm experience",
+                "detail": "Open the ad path on a phone and complete a test action.",
+                "icon": "cursor"
+              },
+              {
+                "label": "Confirm data",
+                "detail": "Check source tags, event counts and duplicates.",
+                "icon": "chart"
+              },
+              {
+                "label": "Review rules",
+                "detail": "Use the pre-agreed pause, revise or scale criteria.",
+                "icon": "shield"
+              }
+            ],
+            "center": "Controlled launch"
+          },
+          "takeaway": "Document the change and the reason so the first-week review has an audit trail.",
+          "caption": "Concept illustration, not a platform screenshot. Follow the labels and the relationships shown.",
+          "checkpoint": {
+            "question": "What should happen before an ad campaign begins spending?",
+            "answer": "Define a meaningful outcome, implement and test its tracking, check the landing path on mobile, confirm consent and budget controls, and assign a monitoring owner."
+          },
+          "id": "m4-t4-v4",
+          "section": "4. Launch-day and first-week checklist"
+        }
+      ]
+    }
+  }
+}

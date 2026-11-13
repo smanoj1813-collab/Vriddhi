@@ -1,0 +1,378 @@
+{
+  "moduleId": "m4",
+  "topics": {
+    "m4-t1": {
+      "introduction": "See the concepts behind a usable Jira or spreadsheet board: a navigable hierarchy, explicit transition rules and safe traceability. The illustrations are not screenshots of a particular Jira version.",
+      "sections": [
+        {
+          "id": "pm-m4-t1-1",
+          "section": "1. Represent work at useful levels",
+          "title": "Use hierarchy to find work, not to manufacture value",
+          "explanation": "A larger pilot outcome can group small testable items, with implementation tasks beneath them. Each level answers a different navigation question. A grand epic name does not prove strategic value, and a completed subtask does not automatically create a usable journey.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Larger outcome",
+                "detail": "Placement registration pilot: the grouping and purpose.",
+                "icon": "briefcase"
+              },
+              {
+                "label": "Small testable work",
+                "detail": "Booking, cancellation and capacity visibility with criteria.",
+                "icon": "layers"
+              },
+              {
+                "label": "Implementation tasks",
+                "detail": "Concrete steps linked back to the parent item and evidence.",
+                "icon": "file"
+              }
+            ]
+          },
+          "caption": "Conceptual work hierarchy. Jira may use different labels, templates or permissions; a spreadsheet can represent the same relationships.",
+          "takeaway": "Keep only the hierarchy that helps people locate and review the work."
+        },
+        {
+          "id": "pm-m4-t1-2",
+          "section": "2. Workflow states need entry and exit rules",
+          "title": "A board state must mean something",
+          "explanation": "Write entry and exit rules before relying on column counts. In the practice snapshot, two items remain in Review; one is blocked. Neither has become accepted work simply because the board displays it. A blocker is information attached to the work, not a hiding place outside the workflow.",
+          "diagram": {
+            "kind": "board",
+            "items": [
+              {
+                "label": "To do",
+                "detail": "Waiting work remains visible; missing dates need their own check.",
+                "cards": [
+                  {
+                    "id": "PILOT-4",
+                    "label": "Resolve access question",
+                    "detail": "IT reviewer · no due date · needs a next action",
+                    "blocked": true
+                  },
+                  {
+                    "id": "PILOT-6",
+                    "label": "Plan support rota",
+                    "detail": "Operations lead · due 2026-10-02"
+                  }
+                ]
+              },
+              {
+                "label": "In progress",
+                "detail": "Started work needs explicit ownership.",
+                "cards": [
+                  {
+                    "id": "PILOT-3",
+                    "label": "Prepare staff guide",
+                    "detail": "Unassigned · due 2026-09-26"
+                  }
+                ]
+              },
+              {
+                "label": "Review",
+                "detail": "A reviewer checks evidence; a blocked review is not Done.",
+                "cards": [
+                  {
+                    "id": "PILOT-2",
+                    "label": "Test last-slot booking",
+                    "detail": "Reviewer · due 2026-09-25",
+                    "blocked": true
+                  },
+                  {
+                    "id": "PILOT-5",
+                    "label": "Review cancellation flow",
+                    "detail": "Reviewer · due 2026-09-30"
+                  }
+                ]
+              },
+              {
+                "label": "Done",
+                "detail": "Completed under the example policy; excluded from active WIP.",
+                "complete": true,
+                "cards": [
+                  {
+                    "id": "PILOT-1",
+                    "label": "Confirm acceptance criteria",
+                    "detail": "Coordinator · due 2026-09-20"
+                  }
+                ]
+              }
+            ]
+          },
+          "caption": "Synthetic six-record board from resources/practice-data.md at 2026-09-28. This conceptual board is not a Jira screenshot or a record of live delivery.",
+          "takeaway": "Review needs evidence and a reviewer; Done needs the agreed completion checks."
+        },
+        {
+          "id": "pm-m4-t1-3",
+          "section": "3. Permissions and traceability matter",
+          "title": "Link the evidence without exposing the account",
+          "explanation": "A reviewer should be able to trace an item to its owner, criteria, dependency and evidence. That does not require public access to raw accounts or sensitive attachments. Keep an editable restricted submission and publish only a safe synthetic or redacted view.",
+          "diagram": {
+            "kind": "compare",
+            "items": [
+              {
+                "label": "Work record",
+                "detail": "ID, parent, owner role, criteria, due date, blocker and evidence reference.",
+                "icon": "file"
+              },
+              {
+                "label": "Restricted evidence",
+                "detail": "Approved storage and access roles; never passwords or real student data on a public board.",
+                "icon": "shield"
+              },
+              {
+                "label": "Safe portfolio view",
+                "detail": "Synthetic records, redacted account details and a clear explanation.",
+                "icon": "briefcase"
+              }
+            ]
+          },
+          "caption": "Conceptual traceability and sharing lanes. The offline equivalent earns the same evidence-based assessment opportunity.",
+          "takeaway": "A paid tool or a screenshot is not a substitute for reviewable records.",
+          "checkpoint": {
+            "question": "If Jira is unavailable, what must the offline board preserve?",
+            "answer": "The same control logic: IDs, hierarchy, owner roles, workflow states and policies, criteria, dependencies, blockers, dates and evidence references."
+          }
+        }
+      ]
+    },
+    "m4-t2": {
+      "introduction": "Treat each filter as a testable selection rule. The practice fixture gives known result sets so that a reassuring zero can be challenged before publishing a dashboard.",
+      "sections": [
+        {
+          "id": "pm-m4-t2-1",
+          "section": "1. Query the decision, not the whole database",
+          "title": "Test the question against known IDs",
+          "explanation": "Start with active work, the stated cut-off and a strict overdue rule. Then check the selected IDs manually. Sorting the result makes it easier to use, but cannot repair a wrong selection or a field the viewer has no permission to see.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Define the decision",
+                "detail": "Which active pilot items have due dates before 2026-09-28?",
+                "icon": "target"
+              },
+              {
+                "label": "Apply the rule",
+                "detail": "Exclude Done; compare present due dates with the cut-off.",
+                "icon": "filter"
+              },
+              {
+                "label": "Check the expected set",
+                "detail": "PILOT-2 and PILOT-3 should be returned.",
+                "icon": "check"
+              },
+              {
+                "label": "Publish with context",
+                "detail": "Save purpose, owner, scope and the intended audience’s view.",
+                "icon": "users"
+              }
+            ]
+          },
+          "caption": "Synthetic board fixture at 2026-09-28. The lesson’s JQL is conceptual; verify local fields, project key and timezone behaviour.",
+          "takeaway": "A known result set is a small but valuable query test."
+        },
+        {
+          "id": "pm-m4-t2-2",
+          "section": "2. Missing fields need separate checks",
+          "title": "Missing dates are not “not overdue” evidence",
+          "explanation": "Complementary filters answer different questions. PILOT-3 is both overdue and unassigned, so these sets overlap and must not be summed as unique troubled items. PILOT-4 has no date; an overdue-only chart can miss it entirely.",
+          "diagram": {
+            "kind": "bars",
+            "unit": "records",
+            "items": [
+              {
+                "label": "Active overdue",
+                "detail": "PILOT-2 and PILOT-3; due date before the stated cut-off.",
+                "value": 2,
+                "icon": "chart"
+              },
+              {
+                "label": "Unassigned",
+                "detail": "PILOT-3 has a missing owner.",
+                "value": 1,
+                "icon": "chart"
+              },
+              {
+                "label": "Undated",
+                "detail": "PILOT-4 has a missing due date.",
+                "value": 1,
+                "icon": "chart"
+              },
+              {
+                "label": "Blocked",
+                "detail": "PILOT-2 and PILOT-4 need next actions.",
+                "value": 2,
+                "icon": "chart"
+              }
+            ]
+          },
+          "caption": "Synthetic six-record fixture at 2026-09-28. Categories overlap; blanks are missing values, not zero dates or proof of health.",
+          "takeaway": "Use separate hygiene checks for absent owners, dates and acceptance evidence."
+        },
+        {
+          "id": "pm-m4-t2-3",
+          "section": "3. Dashboards support a conversation",
+          "title": "Every dashboard measure needs a conversation",
+          "explanation": "A useful summary pairs a measure with the action it can trigger and the role that will follow up. Validate what the intended viewer can actually see. Avoid comparing people by ticket count when items differ in size, risk and value.",
+          "diagram": {
+            "kind": "compare",
+            "items": [
+              {
+                "label": "Open blockers → unblock",
+                "detail": "Ask the owner for a next action and a review date.",
+                "icon": "shield"
+              },
+              {
+                "label": "Ageing review → finish",
+                "detail": "Ask reviewers to clear evidence gaps before starting more work.",
+                "icon": "clock"
+              },
+              {
+                "label": "Missing fields → repair",
+                "detail": "Agree who corrects records and when to recheck the filter.",
+                "icon": "file"
+              }
+            ]
+          },
+          "caption": "Conceptual dashboard-to-decision map; raw card counts are not individual productivity measures.",
+          "takeaway": "A dashboard is decision support, not a replacement for the underlying records.",
+          "checkpoint": {
+            "question": "Why should the dashboard not add 2 overdue + 1 unassigned + 1 undated as four unique affected records?",
+            "answer": "PILOT-3 appears in both overdue and unassigned sets. Preserve IDs and de-duplicate when counting distinct records; the filters answer separate questions."
+          }
+        }
+      ]
+    },
+    "m4-t3": {
+      "introduction": "Make waiting, blocking and WIP visible, then use consistent boundaries for flow measures. Averages can inform a trial without promising the next item’s completion date.",
+      "sections": [
+        {
+          "id": "pm-m4-t3-1",
+          "section": "1. Visualise the actual system",
+          "title": "An exceeded WIP limit is a request to collaborate",
+          "explanation": "A queue is work the system has started but not finished. In this small illustrative board, review contains four cards against a limit of three, including the blocked one. The response is to help resolve review work, not delete a card or rename it to make the count fit.",
+          "diagram": {
+            "kind": "board",
+            "items": [
+              {
+                "label": "In progress",
+                "detail": "Only a small illustrative subset of work is shown.",
+                "wipLimit": 2,
+                "cards": [
+                  {
+                    "id": "FLOW-1",
+                    "label": "Cancellation journey",
+                    "detail": "Coordinator · preparing evidence"
+                  }
+                ]
+              },
+              {
+                "label": "Review",
+                "detail": "Explicit policy: check criteria and attach evidence before Done.",
+                "wipLimit": 3,
+                "cards": [
+                  {
+                    "id": "FLOW-2",
+                    "label": "Last-slot check",
+                    "detail": "Reviewer · needs defect fix",
+                    "blocked": true
+                  },
+                  {
+                    "id": "FLOW-3",
+                    "label": "Staff guide",
+                    "detail": "Reviewer · compare with workflow"
+                  },
+                  {
+                    "id": "FLOW-4",
+                    "label": "Access examples",
+                    "detail": "IT reviewer · check permissions"
+                  },
+                  {
+                    "id": "FLOW-5",
+                    "label": "Rebooking check",
+                    "detail": "Reviewer · regression evidence"
+                  }
+                ]
+              },
+              {
+                "label": "Done",
+                "detail": "Evidence checked against this example’s policy.",
+                "complete": true,
+                "cards": [
+                  {
+                    "id": "FLOW-6",
+                    "label": "Criteria agreed",
+                    "detail": "Coordinator · decision reference retained"
+                  }
+                ]
+              }
+            ]
+          },
+          "caption": "Synthetic reduced board created to illustrate a review WIP limit of three. It is separate from the six-record PILOT fixture and the opening scenario’s larger queue.",
+          "takeaway": "Blocked review work remains inside the active WIP count."
+        },
+        {
+          "id": "pm-m4-t3-2",
+          "section": "2. Distinguish the flow measures",
+          "title": "Name the clock boundaries before comparing numbers",
+          "explanation": "Lead time can begin at request arrival while cycle time starts at an agreed work-start point. Open-item age uses the same start but has no finish yet. Throughput counts completed items per period; it is not a duration. Keep the calendar convention and item types comparable.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Request arrives",
+                "detail": "A possible start for lead time; the item may wait before commitment.",
+                "icon": "message"
+              },
+              {
+                "label": "Work starts",
+                "detail": "Defined start for cycle time and open-item age in this model.",
+                "icon": "clock"
+              },
+              {
+                "label": "Work completes",
+                "detail": "Ends cycle time; completed items contribute to throughput per period.",
+                "icon": "check"
+              }
+            ]
+          },
+          "caption": "Conceptual measurement boundaries, not a time-scaled chart. Define boundaries explicitly in the actual system.",
+          "takeaway": "An average for finished items can hide an old item still waiting."
+        },
+        {
+          "id": "pm-m4-t3-3",
+          "section": "3. Use Little’s Law carefully",
+          "title": "Little’s Law describes stable-system averages",
+          "explanation": "Keep items, weeks and boundaries consistent: average cycle time equals average WIP divided by average throughput. The result is an average relationship, not a deadline for each new card. If demand, item types or observation periods change, investigate before forecasting.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Average WIP: 12 items",
+                "detail": "Same system boundary and stable observation period.",
+                "icon": "layers"
+              },
+              {
+                "label": "Average throughput: 4/week",
+                "detail": "Completed items per week, not active cards.",
+                "icon": "chart"
+              },
+              {
+                "label": "Average cycle time: 3 weeks",
+                "detail": "12 items ÷ (4 items/week) = 3 weeks.",
+                "icon": "clock"
+              }
+            ]
+          },
+          "caption": "Synthetic stable-system example from the lesson. It does not assert that every item takes three weeks or that one WIP change proves causation.",
+          "takeaway": "Use ageing and throughput evidence to review a WIP trial.",
+          "checkpoint": {
+            "question": "Can you promise a particular new item will finish in three weeks from this calculation?",
+            "answer": "No. Little’s Law relates stable-system averages. Individual times vary, and changing boundaries, item mix or demand can invalidate a naive forecast."
+          }
+        }
+      ]
+    }
+  }
+}
