@@ -2056,6 +2056,20 @@ service cloud.firestore {
       allow write: if isSuperadmin();
     }
 
+    // Academic early warnings, device tokens, delivery leases and audit history
+    // are callable/trigger-only. In particular there is NO client-wide HOD read
+    // rule: current tenant, recipient and department are rechecked server-side.
+    match /riskAlerts/{id} { allow read, write: if false; }
+    match /riskSubjectRuns/{id} { allow read, write: if false; }
+    match /academicRiskSettings/{id} { allow read, write: if false; }
+    match /riskStaffSchedules/{id} { allow read, write: if false; }
+    match /riskPushDevices/{id} { allow read, write: if false; }
+    match /riskPushOutbox/{id} { allow read, write: if false; }
+    match /riskJobs/{id} { allow read, write: if false; }
+    match /riskRefreshLocks/{id} { allow read, write: if false; }
+    match /riskSubjectLocks/{id} { allow read, write: if false; }
+    match /riskConfigurationAudit/{id} { allow read, write: if false; }
+
     match /{document=**} {
       allow read, write: if false;
     }

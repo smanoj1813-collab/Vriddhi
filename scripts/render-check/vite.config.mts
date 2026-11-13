@@ -27,6 +27,7 @@ export default defineConfig({
       // …and the relative spelling a page inside the same module uses
       // ('../../auth/context/AuthContext' from the student pages).
       { find: /(?:\.\.\/)+auth\/context\/AuthContext$/, replacement: stub('AuthContext.ts') },
+      { find: /(?:\.\.\/)+modules\/auth\/context\/AuthContext$/, replacement: stub('AuthContext.ts') },
       { find: '@/shared/api/staffAttendanceApi', replacement: stub('staffAttendanceApi.ts') },
       { find: '@/shared/services/prepContentService', replacement: stub('prepContentService.ts') },
       { find: '@/shared/services/resumeService', replacement: stub('resumeService.ts') },

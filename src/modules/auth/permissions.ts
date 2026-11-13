@@ -43,6 +43,7 @@ export const PERMISSION_MATRIX: Readonly<Record<string, readonly UserRole[]>> = 
 
   // ── Academic administration (department heads + principal) ────
   'academic.admin': ['admin', 'hod', 'principal'],
+  'academic.risk.inbox': ['admin', 'hod', 'principal'],
   'grade.manage': ['hod', 'principal', 'admin', 'employee'],
   'college.manage': ['admin'],
   'users.manage': ['admin'],
@@ -189,6 +190,7 @@ export const ADMIN_ROUTE_PERMISSIONS: ReadonlyArray<{ path: string; permission: 
   { path: '/admin/schedule-workflow', permission: 'academic.schedule.workflow' },
   { path: '/admin/class-schedule', permission: 'academic.schedule.workflow' },
   { path: '/admin/workflow-inbox', permission: 'academic.workflow.inbox' },
+  { path: '/admin/risk-alerts', permission: 'academic.risk.inbox' },
   // Principal
   // Everyone in the shell
   { path: '/admin/install-app', permission: null },

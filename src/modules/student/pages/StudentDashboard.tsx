@@ -1,7 +1,9 @@
+import RiskAlertsSummary from '@/shared/components/RiskAlertsSummary';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useStudentData } from '../hooks/useStudentData';
 import StudentAcademicSummary from '../components/StudentAcademicSummary';
+import PortalIllustration from '@/shared/components/PortalIllustration';
 import {
   Calendar, BookOpen, FileText, CreditCard, Clock, CheckCircle, AlertTriangle,
   Bell, ChevronRight, TrendingUp, MapPin, BarChart3, Library, Settings, Receipt,
@@ -84,7 +86,7 @@ function StatCard({ icon: Icon, label, value, subtext, color }: {
   const scheme = colorMap[color] || colorMap.teal;
 
   return (
-    <div className={`rounded-2xl border ${scheme.border} ${scheme.bg} p-4 md:p-5 shadow-sm transition-all duration-200 hover:shadow-md`}>
+    <div className={`portal-motion-target rounded-2xl border ${scheme.border} ${scheme.bg} p-4 md:p-5 shadow-sm transition-shadow duration-200 hover:shadow-md`}>
       <div className="flex items-start justify-between">
         <div className="min-w-0">
           <p className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1 truncate">{label}</p>
@@ -92,7 +94,7 @@ function StatCard({ icon: Icon, label, value, subtext, color }: {
           {subtext && <p className="text-xs mt-1 text-slate-500 dark:text-slate-400 truncate font-medium">{subtext}</p>}
         </div>
         <div className={`p-2.5 rounded-xl bg-white dark:bg-slate-900/60 shadow-xs shrink-0 ${scheme.text}`}>
-          <Icon className="w-5 h-5" />
+          <Icon aria-hidden="true" className="portal-interactive-icon w-5 h-5" />
         </div>
       </div>
     </div>
@@ -210,10 +212,10 @@ function QuickAction({ to, icon: Icon, label, color }: {
   return (
     <Link
       to={to}
-      className="p-3 md:p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-xs hover:border-teal-500/50 hover:shadow-md transition-all text-center group flex flex-col items-center justify-center"
+      className="portal-motion-target p-3 md:p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-xs hover:border-teal-500/50 hover:shadow-md transition-colors text-center group flex flex-col items-center justify-center"
     >
-      <div className="w-10 h-10 rounded-xl bg-teal-50 dark:bg-teal-950/50 text-teal-600 flex items-center justify-center mb-2 group-hover:scale-110 group-hover:bg-teal-600 group-hover:text-slate-900 dark:text-white transition-all shadow-xs">
-        <Icon className="w-5 h-5" />
+      <div className="w-10 h-10 rounded-xl bg-teal-50 dark:bg-teal-950/50 text-teal-700 dark:text-teal-300 flex items-center justify-center mb-2 group-hover:bg-teal-100 dark:group-hover:bg-teal-900/50 transition-colors shadow-xs">
+        <Icon aria-hidden="true" className="portal-interactive-icon w-5 h-5" />
       </div>
       <p className="text-xs font-bold text-slate-800 dark:text-slate-200 group-hover:text-teal-700 dark:group-hover:text-teal-400 transition-colors">{label}</p>
     </Link>
@@ -320,38 +322,38 @@ export default function StudentDashboard() {
         </div>
       ))}
 
-      {/* Welcome Banner */}
-      <div className="rounded-3xl bg-gradient-to-r from-teal-600 via-teal-700 to-teal-800 text-white p-5 md:p-8 shadow-lg shadow-teal-600/15 relative overflow-hidden">
-        <div className="relative z-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div className="flex items-center gap-4">
-            <div className="w-14 h-14 md:w-16 md:h-16 rounded-2xl bg-white/15 backdrop-blur-md border border-white/20 flex items-center justify-center font-black text-2xl md:text-3xl text-white shadow-inner shrink-0">
-              {profile?.name?.charAt(0) || 'S'}
+      {/* Landing-style artwork stays beside the welcome copy, never behind
+          names, access information or the assessment action. */}
+      <header className="student-welcome-banner rounded-3xl bg-gradient-to-br from-teal-700 via-teal-700 to-teal-900 text-white p-5 md:p-7 shadow-lg shadow-teal-600/15 overflow-hidden">
+        <div className="grid grid-cols-[minmax(0,1fr)_96px] sm:grid-cols-[minmax(0,1fr)_160px] xl:grid-cols-[minmax(0,1fr)_240px] items-center gap-x-3 sm:gap-x-6 gap-y-3">
+          <div className="min-w-0">
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/15 text-[10px] font-bold uppercase tracking-wider text-teal-50 mb-2">
+              <GraduationCap aria-hidden="true" size={13} className="shrink-0" />
+              {t('student.studentPortal')}
             </div>
-            <div>
-              <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-white/20 text-[11px] font-bold uppercase tracking-wider text-teal-100 mb-1">
-                <GraduationCap size={13} />
-                {t('student.studentPortal')}
-              </div>
-              <h1 className="text-xl md:text-3xl font-extrabold tracking-tight">
-                {t('student.welcomeBack', { name: profile?.name?.split(' ')[0] || t('role.student') })}
-              </h1>
-              <p className="text-xs md:text-sm text-teal-100 font-medium mt-0.5">
-                {profile?.regNo || 'Reg. ID'} &bull; {profile?.course || 'Undergraduate'} &bull; {profile?.batch || '2026'}
-              </p>
-              {profile && <AccessBadge profile={profile} />}
-            </div>
+            <h1 className="text-xl md:text-2xl xl:text-3xl font-extrabold tracking-tight break-words">
+              {t('student.welcomeBack', { name: profile.name?.split(' ')[0] || t('role.student') })}
+            </h1>
+            <p className="text-xs md:text-sm text-teal-50 font-medium mt-1.5 break-words">
+              {profile.regNo || 'Reg. ID'} &bull; {profile.course || 'Undergraduate'} &bull; {profile.batch || '2026'}
+            </p>
           </div>
-          <div className="flex items-center gap-2">
+          <PortalIllustration scene="dashboard" className="col-start-2 row-start-1 sm:row-span-2" />
+          <div className="col-span-2 sm:col-span-1 sm:row-start-2 flex flex-wrap items-center gap-x-3 gap-y-2">
             <Link
               to="/student/assessments"
-              className="w-full sm:w-auto justify-center px-4 py-3 sm:py-2.5 rounded-xl bg-white text-teal-800 hover:bg-teal-50 font-bold text-xs md:text-sm shadow-sm transition-all active:scale-95 flex items-center gap-1.5"
+              className="portal-motion-target justify-center px-4 py-2.5 rounded-xl bg-white text-teal-900 hover:bg-teal-50 font-bold text-xs md:text-sm shadow-sm transition-colors flex items-center gap-2"
             >
-              <BookOpen size={16} />
+              <BookOpen aria-hidden="true" size={16} className="portal-interactive-icon" />
               {t('student.takeTests')}
+              <ChevronRight aria-hidden="true" size={14} className="portal-link-arrow" />
             </Link>
+            <AccessBadge profile={profile} />
           </div>
         </div>
-      </div>
+      </header>
+
+      <RiskAlertsSummary />
 
       {/* Stats Grid */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-5">

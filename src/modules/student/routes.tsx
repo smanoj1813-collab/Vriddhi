@@ -7,6 +7,7 @@ import { StudentDataProvider } from './hooks/useStudentData';
 import { studentCourseRoutes } from '@/modules/courses/routes';
 
 // ── Lazy-loaded pages (all read identity from AuthContext) ────────────
+const AcademicRiskAlertsPage = lazy(() => import('@/shared/pages/AcademicRiskAlertsPage'));
 const StudentDashboard = lazy(() => import('./pages/StudentDashboard'));
 const StudentGrades = lazy(() => import('./pages/StudentGrades'));
 const StudentSettings = lazy(() => import('./pages/StudentSettings'));
@@ -54,6 +55,7 @@ export const studentRoutes: RouteObject[] = [
       </RoleRoute>
     ),
     children: [
+      { path: 'risk-alerts', element: <AcademicRiskAlertsPage /> },
       { index: true, element: <StudentDashboard /> },
       { path: 'dashboard', element: <StudentDashboard /> },
 

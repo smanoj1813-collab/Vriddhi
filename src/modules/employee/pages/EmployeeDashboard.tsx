@@ -1,3 +1,4 @@
+import RoleWelcomeBanner from '@/shared/components/RoleWelcomeBanner';
 // src/modules/employee/pages/EmployeeDashboard.tsx
 //
 // Landing screen for a Vriddhi platform employee. Two jobs:
@@ -91,13 +92,8 @@ export default function EmployeeDashboard() {
 
   return (
     <Box sx={{ p: { xs: 2, md: 3 }, maxWidth: 1100, mx: 'auto' }}>
-      <Typography variant="h5" gutterBottom sx={{ fontWeight: 700 }}>
-        Vriddhi Employee Workspace
-      </Typography>
-      <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-        Platform employee access — academic work across every assigned college. Marks you record are submitted to
-        that college&apos;s HOD for approval.
-      </Typography>
+      <RoleWelcomeBanner role="employee" headingLevel={1} className="mb-6" title="Vriddhi Employee Workspace"
+        subtitle="Platform employee access — academic work across every assigned college. Marks you record are submitted to that college's HOD for approval." />
 
       {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
 

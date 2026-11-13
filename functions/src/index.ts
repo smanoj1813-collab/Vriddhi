@@ -402,3 +402,11 @@ export {
   submitCourseRegistration,
   scheduledFirestoreExport,
 }
+
+// Server-owned academic risk inbox, scoped escalation, settings and opt-in push.
+export {
+  getMyAcademicRiskAlerts, markMyAcademicRiskAlertRead, refreshMyAcademicRiskAlerts,
+  getAcademicRiskConfiguration, saveAcademicRiskConfiguration, saveFacultyRiskWorkSchedule,
+  sweepAcademicRiskAlerts, registerMyAcademicRiskDevice, unregisterMyAcademicRiskDevice,
+  sendAcademicRiskPush, retryAcademicRiskPush,
+} from './riskAlerts'

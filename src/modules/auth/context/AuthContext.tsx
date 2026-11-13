@@ -1,3 +1,4 @@
+import { setRiskPushAccount } from '@/shared/pwa/riskPushAccount';
 import React, { createContext, useState, useEffect, useCallback, useContext, useMemo, useRef } from 'react';
 import { onAuthStateChanged, signInWithEmailAndPassword, signOut, User as FirebaseUser } from 'firebase/auth';
 import { setSentryUser } from '@/shared/utils/sentry';
@@ -141,6 +142,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (fbUser) => {
+      setRiskPushAccount(fbUser?.uid || null);
       if (justLoggedIn.current) { justLoggedIn.current = false; return; }
       setFirebaseUser(fbUser);
       if (fbUser) {
@@ -190,6 +192,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Clear the collegeId path selector so a later session on a shared browser
     // cannot observe (or act on) the previous user's college.
     localStorage.removeItem('vriddhi_college_id');
+    const uid = auth.currentUser?.uid;
+    setRiskPushAccount(null); // hide/close notices before any network operation
+    if (uid) {
+      // A failed/offline token cleanup must not prevent signing out. The local
+      // worker binding already blocks all further notices for this account.
+      await Promise.race([
+        import('@/shared/services/riskPush').then(push => push.disableRiskPushOnThisDevice(uid)).catch(() => {}),
+        new Promise(resolve => setTimeout(resolve, 1500)),
+      ]);
+    }
     await signOut(auth); setUser(null); setFirebaseUser(null);
   }, []);
 

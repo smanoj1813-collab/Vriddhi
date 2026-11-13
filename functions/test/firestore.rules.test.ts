@@ -2669,3 +2669,35 @@ describe('college scheme configuration trust boundary', () => {
     await assertFails(getDoc(doc(studentContext().firestore(), 'schemePackAudit', 'audit-a')))
   })
 })
+
+// Recipients use authenticated callables, never a client query over risk
+// materializations or token-bearing device/outbox documents. Even the named
+// owner and platform superadmin cannot bypass the server's current-scope check.
+describe('academic risk server-only storage boundary', () => {
+  for (const name of [
+    'riskAlerts', 'riskSubjectRuns', 'academicRiskSettings', 'riskStaffSchedules',
+    'riskPushDevices', 'riskPushOutbox', 'riskJobs', 'riskRefreshLocks',
+    'riskSubjectLocks', 'riskConfigurationAudit',
+  ]) {
+    it(`${name} denies direct reads, listing and writes to every client role`, async () => {
+      await testEnv.withSecurityRulesDisabled(async context => {
+        await setDoc(doc(context.firestore(), name, 'owned-row'), {
+          collegeId: COLLEGE_A, recipientUid: STUDENT_UID, subjectUid: STUDENT_UID,
+          uid: STUDENT_UID, facultyUid: 'faculty-a', role: 'student', enabled: true,
+        })
+      })
+      const contexts = [
+        testEnv.unauthenticatedContext(), studentContext(), facultyContext(),
+        hodContext(), adminContext(), principalContext(), superadminContext(),
+      ]
+      for (const context of contexts) {
+        const db = context.firestore(), owned = doc(db, name, 'owned-row')
+        await assertFails(getDoc(owned))
+        await assertFails(getDocs(query(collection(db, name), where('collegeId', '==', COLLEGE_A), limit(1))))
+        await assertFails(setDoc(doc(db, name, 'forged'), { collegeId: COLLEGE_A, recipientUid: STUDENT_UID }))
+        await assertFails(updateDoc(owned, { enabled: false, state: 'resolved' }))
+        await assertFails(deleteDoc(owned))
+      }
+    })
+  }
+})

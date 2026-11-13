@@ -1265,16 +1265,208 @@
           "order": "ASCENDING"
         }
       ]
+    },
+    {
+      "collectionGroup": "classSessions",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "collegeId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "facultyId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "date",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "attendance",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "collegeId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "facultyId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "date",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "staffAttendance",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "collegeId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "facultyId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "date",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "weeklySchedules",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "collegeId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "facultyId",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "facultyTopics",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "collegeId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "facultyId",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "curriculumFacultyMappings",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "collegeId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "facultyId",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "riskAlerts",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "recipientUid",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "collegeId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "updatedAt",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "riskAlerts",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "subjectUid",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "collegeId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "state",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "riskPushOutbox",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "status",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "createdAt",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "users",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "collegeId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "role",
+          "order": "ASCENDING"
+        }
+      ]
     }
   ],
   "fieldOverrides": [
-    { "collectionGroup": "colleges", "fieldPath": "schemePackAssignments", "indexes": [] },
-    { "collectionGroup": "colleges", "fieldPath": "schemePackSnapshot", "indexes": [] },
-    { "collectionGroup": "colleges", "fieldPath": "schemePackRoutes", "indexes": [] },
-    { "collectionGroup": "schemePacks", "fieldPath": "courses", "indexes": [] },
-    { "collectionGroup": "schemePacks", "fieldPath": "assessmentProfiles", "indexes": [] },
-    { "collectionGroup": "schemePacks", "fieldPath": "creditRequirements", "indexes": [] },
-    { "collectionGroup": "gradeRecords", "fieldPath": "schemePolicySnapshot", "indexes": [] },
-    { "collectionGroup": "gradeRecords", "fieldPath": "assessmentEvidence", "indexes": [] }
+    {
+      "collectionGroup": "colleges",
+      "fieldPath": "schemePackAssignments",
+      "indexes": []
+    },
+    {
+      "collectionGroup": "colleges",
+      "fieldPath": "schemePackSnapshot",
+      "indexes": []
+    },
+    {
+      "collectionGroup": "colleges",
+      "fieldPath": "schemePackRoutes",
+      "indexes": []
+    },
+    {
+      "collectionGroup": "schemePacks",
+      "fieldPath": "courses",
+      "indexes": []
+    },
+    {
+      "collectionGroup": "schemePacks",
+      "fieldPath": "assessmentProfiles",
+      "indexes": []
+    },
+    {
+      "collectionGroup": "schemePacks",
+      "fieldPath": "creditRequirements",
+      "indexes": []
+    },
+    {
+      "collectionGroup": "gradeRecords",
+      "fieldPath": "schemePolicySnapshot",
+      "indexes": []
+    },
+    {
+      "collectionGroup": "gradeRecords",
+      "fieldPath": "assessmentEvidence",
+      "indexes": []
+    }
   ]
 }

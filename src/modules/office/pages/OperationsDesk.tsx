@@ -1,3 +1,4 @@
+import RoleWelcomeBanner from '@/shared/components/RoleWelcomeBanner';
 // /admin/operations — the operations team's home: library circulation,
 // reservations, stores alerts, assets and purchasing.
 
@@ -5,7 +6,7 @@ import { Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { ArrowRight, BookOpen, Boxes, ClipboardList, LayoutDashboard, Library, PackageCheck, ShieldCheck, ShoppingCart, ArrowLeftRight, Wrench } from 'lucide-react'
 import { useAuth } from '@/modules/auth/context/AuthContext'
-import { OfficeReadError, PageHeader, StatCard, btn } from '../components/officeUi'
+import { OfficeReadError, StatCard, btn } from '../components/officeUi'
 import { useOfficeSelfHeal } from '../hooks/useOfficeSelfHeal'
 import { fetchActiveLoans, fetchOpenReservations } from '../api/libraryApi'
 import { fetchNoDuesRequests, fetchNoDuesSettings } from '../api/noDuesApi'
@@ -48,17 +49,17 @@ export default function OperationsDesk() {
   const readyNd = (ndQ.data?.reqs || []).filter(r => r.status === 'cleared')
 
   const links = [
-    { to: '/admin/library/desk', label: 'Issue & return desk', icon: <ArrowLeftRight className="w-4 h-4" /> },
-    { to: '/admin/library', label: 'Library', icon: <Library className="w-4 h-4" /> },
-    { to: '/admin/inventory', label: 'Inventory & assets', icon: <Boxes className="w-4 h-4" /> },
-    { to: '/admin/purchase-orders', label: 'Purchase orders', icon: <ClipboardList className="w-4 h-4" /> },
-    { to: '/admin/purchase-requests', label: 'Purchase requests', icon: <ShoppingCart className="w-4 h-4" /> },
-    { to: '/admin/no-dues', label: 'No-dues', icon: <ShieldCheck className="w-4 h-4" /> },
+    { to: '/admin/library/desk', label: 'Issue & return desk', icon: <ArrowLeftRight className="portal-interactive-icon w-4 h-4" /> },
+    { to: '/admin/library', label: 'Library', icon: <Library className="portal-interactive-icon w-4 h-4" /> },
+    { to: '/admin/inventory', label: 'Inventory & assets', icon: <Boxes className="portal-interactive-icon w-4 h-4" /> },
+    { to: '/admin/purchase-orders', label: 'Purchase orders', icon: <ClipboardList className="portal-interactive-icon w-4 h-4" /> },
+    { to: '/admin/purchase-requests', label: 'Purchase requests', icon: <ShoppingCart className="portal-interactive-icon w-4 h-4" /> },
+    { to: '/admin/no-dues', label: 'No-dues', icon: <ShieldCheck className="portal-interactive-icon w-4 h-4" /> },
   ]
 
   return (
     <div className="p-4 md:p-6 max-w-7xl mx-auto">
-      <PageHeader title="Operations Desk" subtitle={`Library, stores and purchasing${user?.name ? ` — ${user.name.split(' ')[0]}` : ''}`} icon={<LayoutDashboard className="w-5 h-5" />} />
+      <RoleWelcomeBanner role="operations" headingLevel={1} className="mb-6" title="Operations Desk" subtitle={`Good day${user?.name ? `, ${user.name.split(' ')[0]}` : ''} — keep your campus moving`} />
       <OfficeReadError
         desk="operations desk"
         healAttempted={hasHealed}
@@ -93,8 +94,8 @@ export default function OperationsDesk() {
         </div>
         <div className="space-y-2">
           <h3 className="font-semibold">Go to</h3>
-          {links.map(l => <Link key={l.to} to={l.to} className={`${btn.ghost} w-full justify-between`}><span className="flex items-center gap-2">{l.icon}{l.label}</span><ArrowRight className="w-4 h-4" /></Link>)}
-          <Link to="/admin/inventory/assets" className={`${btn.ghost} w-full justify-between`}><span className="flex items-center gap-2"><Wrench className="w-4 h-4" />Maintenance</span><ArrowRight className="w-4 h-4" /></Link>
+          {links.map(l => <Link key={l.to} to={l.to} className={`portal-motion-target ${btn.ghost} w-full justify-between`}><span className="flex items-center gap-2">{l.icon}{l.label}</span><ArrowRight className="portal-interactive-icon w-4 h-4" /></Link>)}
+          <Link to="/admin/inventory/assets" className={`portal-motion-target ${btn.ghost} w-full justify-between`}><span className="flex items-center gap-2"><Wrench className="portal-interactive-icon w-4 h-4" />Maintenance</span><ArrowRight className="portal-interactive-icon w-4 h-4" /></Link>
         </div>
       </div>
     </div>

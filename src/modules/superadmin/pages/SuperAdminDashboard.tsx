@@ -1,3 +1,4 @@
+import RoleWelcomeBanner from '@/shared/components/RoleWelcomeBanner';
 import React from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useDashboardStats, useSystemHealth } from '../hooks/useSuperAdmin';
@@ -97,6 +98,7 @@ const SuperAdminDashboard: React.FC = () => {
 
   return (
     <div className="space-y-6">
+      <RoleWelcomeBanner role="superadmin" title="Your campus network, connected" subtitle="Institutional onboarding, academic access and platform health — one place to keep the bigger picture in view." />
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
@@ -141,15 +143,15 @@ const SuperAdminDashboard: React.FC = () => {
           <button
             onClick={() => void refetch()}
             disabled={isFetching}
-            className="flex items-center gap-2 px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 text-xs font-bold transition-all shadow-xs disabled:opacity-60"
+            className="portal-motion-target flex items-center gap-2 px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 text-xs font-bold transition-all shadow-xs disabled:opacity-60"
           >
-            {isFetching ? <Loader2 className="w-4 h-4 animate-spin text-teal-600" /> : <RefreshCw className="w-4 h-4 text-teal-600" />}
+            {isFetching ? <Loader2 className="w-4 h-4 animate-spin text-teal-600" /> : <RefreshCw aria-hidden="true" className="portal-interactive-icon w-4 h-4 text-teal-600" />}
             Refresh
           </button>
           <button
             onClick={handleSeedUniversities}
             disabled={seedMutation.isPending}
-            className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 text-xs font-bold transition-all shadow-xs"
+            className="portal-motion-target flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 text-xs font-bold transition-all shadow-xs"
           >
             {seedMutation.isPending ? (
               <>
@@ -158,7 +160,7 @@ const SuperAdminDashboard: React.FC = () => {
               </>
             ) : (
               <>
-                <Database className="w-4 h-4 text-teal-600" />
+                <Database aria-hidden="true" className="portal-interactive-icon w-4 h-4 text-teal-600" />
                 Seed Universities
               </>
             )}
@@ -178,10 +180,10 @@ const SuperAdminDashboard: React.FC = () => {
         {statCards.map((card) => {
           const Icon = card.icon;
           return (
-            <div key={card.label} className={`p-4 rounded-2xl border ${card.bg} shadow-xs`}>
+            <div key={card.label} className={`portal-motion-target p-4 rounded-2xl border ${card.bg} shadow-xs`}>
               <div className="flex items-center justify-between mb-2">
                 <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 truncate">{card.label}</span>
-                <Icon className={`w-4 h-4 ${card.color} shrink-0`} />
+                <Icon aria-hidden="true" className={`portal-interactive-icon w-4 h-4 ${card.color} shrink-0`} />
               </div>
               <p className={`text-2xl font-extrabold ${card.color}`}>{card.value}</p>
             </div>
@@ -198,7 +200,7 @@ const SuperAdminDashboard: React.FC = () => {
               <Building2 className="w-5 h-5 text-teal-600" /> Active Member Institutions
             </h2>
             <Link to="/superadmin/colleges" className="text-xs font-bold text-teal-600 dark:text-teal-400 hover:underline flex items-center gap-1">
-              View All <ArrowUpRight className="w-3.5 h-3.5" />
+              View All <ArrowUpRight aria-hidden="true" className="portal-interactive-icon w-3.5 h-3.5" />
             </Link>
           </div>
 
@@ -226,7 +228,7 @@ const SuperAdminDashboard: React.FC = () => {
                       onClick={() => navigate(`/superadmin/colleges/${c.id}`)}
                       className="p-2 rounded-xl text-slate-400 hover:text-teal-600 hover:bg-white dark:hover:bg-slate-800 transition-colors"
                     >
-                      <ArrowUpRight className="w-4 h-4" />
+                      <ArrowUpRight aria-hidden="true" className="portal-interactive-icon w-4 h-4" />
                     </button>
                   </div>
                 </div>

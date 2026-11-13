@@ -1,3 +1,4 @@
+import RoleWelcomeBanner from '@/shared/components/RoleWelcomeBanner';
 // /admin/accounts — the accounts team's home: today's collections, fee
 // balances, bills to approve/pay, library fines and purchase approvals.
 
@@ -6,7 +7,7 @@ import { useQuery } from '@tanstack/react-query'
 import { AlertTriangle, ArrowRight, BookOpen, CreditCard, IndianRupee, Receipt, ShoppingCart, Wallet } from 'lucide-react'
 import { useAuth } from '@/modules/auth/context/AuthContext'
 import { calculateSummary, fetchFeePayments } from '@/modules/admin/api/feeApi'
-import { Loading, OfficeReadError, PageHeader, StatCard, btn, inr } from '../components/officeUi'
+import { Loading, OfficeReadError, StatCard, btn, inr } from '../components/officeUi'
 import { buildDaybook } from '../api/financeReportsApi'
 import { fetchFines } from '../api/libraryApi'
 import { billPayState } from '../api/procurementApi'
@@ -39,17 +40,17 @@ export default function AccountsDesk() {
   const openFines = finesQ.data || []
 
   const links = [
-    { to: '/admin/fees', label: 'Fee management', icon: <CreditCard className="w-4 h-4" /> },
-    { to: '/admin/vendor-bills', label: 'Vendor bills', icon: <Receipt className="w-4 h-4" /> },
-    { to: '/admin/library-fines', label: 'Library fines', icon: <BookOpen className="w-4 h-4" /> },
-    { to: '/admin/purchase-requests', label: 'Purchase approvals', icon: <ShoppingCart className="w-4 h-4" /> },
-    { to: '/admin/finance-reports', label: 'Day book & Tally', icon: <IndianRupee className="w-4 h-4" /> },
-    { to: '/admin/no-dues', label: 'No-dues', icon: <Wallet className="w-4 h-4" /> },
+    { to: '/admin/fees', label: 'Fee management', icon: <CreditCard className="portal-interactive-icon w-4 h-4" /> },
+    { to: '/admin/vendor-bills', label: 'Vendor bills', icon: <Receipt className="portal-interactive-icon w-4 h-4" /> },
+    { to: '/admin/library-fines', label: 'Library fines', icon: <BookOpen className="portal-interactive-icon w-4 h-4" /> },
+    { to: '/admin/purchase-requests', label: 'Purchase approvals', icon: <ShoppingCart className="portal-interactive-icon w-4 h-4" /> },
+    { to: '/admin/finance-reports', label: 'Day book & Tally', icon: <IndianRupee className="portal-interactive-icon w-4 h-4" /> },
+    { to: '/admin/no-dues', label: 'No-dues', icon: <Wallet className="portal-interactive-icon w-4 h-4" /> },
   ]
 
   return (
     <div className="p-4 md:p-6 max-w-7xl mx-auto">
-      <PageHeader title="Accounts Desk" subtitle={`Good day${user?.name ? `, ${user.name.split(' ')[0]}` : ''} — here's what needs attention`} icon={<Wallet className="w-5 h-5" />} />
+      <RoleWelcomeBanner role="accounts" headingLevel={1} className="mb-6" title="Accounts Desk" subtitle={`Good day${user?.name ? `, ${user.name.split(' ')[0]}` : ''} — here's what needs attention`} />
       <OfficeReadError
         desk="accounts desk"
         healAttempted={hasHealed}
@@ -90,7 +91,7 @@ export default function AccountsDesk() {
         </div>
         <div className="space-y-2">
           <h3 className="font-semibold">Go to</h3>
-          {links.map(l => <Link key={l.to} to={l.to} className={`${btn.ghost} w-full justify-between`}><span className="flex items-center gap-2">{l.icon}{l.label}</span><ArrowRight className="w-4 h-4" /></Link>)}
+          {links.map(l => <Link key={l.to} to={l.to} className={`portal-motion-target ${btn.ghost} w-full justify-between`}><span className="flex items-center gap-2">{l.icon}{l.label}</span><ArrowRight className="portal-interactive-icon w-4 h-4" /></Link>)}
         </div>
       </div>
     </div>
@@ -100,7 +101,7 @@ export default function AccountsDesk() {
 function Todo({ show, to, text, danger }: { show: boolean; to: string; text: string; danger?: boolean }) {
   if (!show) return null
   return (
-    <Link to={to} className={`glass-card p-3 flex items-center gap-3 hover:bg-vriddhi-border/20 ${danger ? 'border-l-4 border-red-500' : 'border-l-4 border-amber-500'}`}>
+    <Link to={to} className={`portal-motion-target glass-card p-3 flex items-center gap-3 hover:bg-vriddhi-border/20 ${danger ? 'border-l-4 border-red-500' : 'border-l-4 border-amber-500'}`}>
       <AlertTriangle className={`w-4 h-4 ${danger ? 'text-red-500' : 'text-amber-500'}`} />
       <span className="text-sm flex-1">{text}</span>
       <ArrowRight className="w-4 h-4 text-vriddhi-muted" />
