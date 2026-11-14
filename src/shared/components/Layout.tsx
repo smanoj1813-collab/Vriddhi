@@ -256,9 +256,9 @@ const navItems: NavItem[] = [
 
 // ─── Faculty Collapsible Navigation ──────────────────────────────────────────
 //
-// The faculty sidebar is organised into master groups (Attendance, Students,
-// Curriculum, Assessments) that expand/collapse, with single-page entries
-// (Dashboard, Announcements, Calendar, Settings) rendered as plain links.
+// Daily destinations stay visible; related tools live in compact accordions.
+// Calendar has one home under Schedule, alongside rescheduling. Account tools
+// share a group rather than extending the sidebar with several loose links.
 // Every path here must exist in src/modules/faculty/routes.tsx — this is a
 // navigation-only reorganisation; no routes were added, removed, or renamed.
 
@@ -273,8 +273,9 @@ type SidebarEntry =
   | { kind: "group"; label: string; icon: React.ReactNode; children: SidebarLeaf[] };
 
 const facultyNav: SidebarEntry[] = [
-  { kind: "link", label: "Risk Alerts", path: "/faculty/risk-alerts", icon: <NotificationsNone fontSize="small" /> },
   { kind: "link", label: "Dashboard", path: "/faculty/dashboard", icon: <Dashboard fontSize="small" /> },
+  { kind: "link", label: "Journey", path: "/faculty/journey", icon: <TrendingUp fontSize="small" /> },
+  { kind: "link", label: "Risk Alerts", path: "/faculty/risk-alerts", icon: <NotificationsNone fontSize="small" /> },
 
   {
     kind: "group",
@@ -302,12 +303,11 @@ const facultyNav: SidebarEntry[] = [
     label: "Curriculum",
     icon: <School fontSize="small" />,
     children: [
-      { label: "Program Insights", path: "/faculty/insights", icon: <TrendingUp fontSize="small" /> },
       { label: "My Curriculum", path: "/faculty/curriculum", icon: <School fontSize="small" /> },
       { label: "Topics", path: "/faculty/topics", icon: <School fontSize="small" /> },
       { label: "Assignments", path: "/faculty/assignments", icon: <Assignment fontSize="small" /> },
       { label: "Upload Materials", path: "/faculty/upload-material", icon: <UploadFile fontSize="small" /> },
-      { label: "Reschedule Class", path: "/faculty/reschedule", icon: <CalendarToday fontSize="small" /> },
+      { label: "Program Insights", path: "/faculty/insights", icon: <TrendingUp fontSize="small" /> },
     ],
   },
 
@@ -318,6 +318,7 @@ const facultyNav: SidebarEntry[] = [
     children: [
       { label: "My Weekly Schedule", path: "/faculty/schedule", icon: <CalendarToday fontSize="small" /> },
       { label: "Calendar", path: "/faculty/calendar", icon: <CalendarToday fontSize="small" /> },
+      { label: "Reschedule Class", path: "/faculty/reschedule", icon: <CalendarToday fontSize="small" /> },
     ],
   },
 
@@ -336,20 +337,17 @@ const facultyNav: SidebarEntry[] = [
     ],
   },
 
+  { kind: "link", label: "Announcements", path: "/faculty/announcements", icon: <Campaign fontSize="small" /> },
   {
     kind: "group",
-    label: "Insights",
-    icon: <TrendingUp fontSize="small" />,
+    label: "Account",
+    icon: <Settings fontSize="small" />,
     children: [
-      { label: "Journey", path: "/faculty/journey", icon: <TrendingUp fontSize="small" /> },
+      { label: "My Salary", path: "/faculty/my-salary", icon: <AttachMoney fontSize="small" /> },
+      { label: "Install App", path: "/faculty/install-app", icon: <InstallMobile fontSize="small" /> },
+      { label: "Settings", path: "/faculty/settings", icon: <Settings fontSize="small" /> },
     ],
   },
-
-  { kind: "link", label: "My Salary", path: "/faculty/my-salary", icon: <AttachMoney fontSize="small" /> },
-  { kind: "link", label: "Install App", path: "/faculty/install-app", icon: <InstallMobile fontSize="small" /> },
-  { kind: "link", label: "Announcements", path: "/faculty/announcements", icon: <Campaign fontSize="small" /> },
-  { kind: "link", label: "Calendar", path: "/faculty/calendar", icon: <CalendarToday fontSize="small" /> },
-  { kind: "link", label: "Settings", path: "/faculty/settings", icon: <Settings fontSize="small" /> },
 ];
 
 /**
@@ -949,11 +947,10 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       });
   }, [effectiveRole]);
 
-  // ─── Faculty collapsible groups ────────────────────────────────────────────
-  // One open/closed set for the master groups. Landing on (or navigating to) a
-  // child route auto-opens the group that owns it, so a deep link like
-  // /faculty/assignments never renders with its group mysteriously shut.
-  // Groups may still be closed manually — the effect only runs on route change.
+  // ─── Collapsible groups ────────────────────────────────────────────────────
+  // Faculty uses a single-open accordion so menus do not accumulate as they
+  // navigate. Other portals retain their existing multi-open behaviour. Deep
+  // links open the owning group; a user can still close it manually.
   const [openGroups, setOpenGroups] = useState<Set<string>>(() => new Set());
   const pathname = location.pathname;
 
@@ -977,16 +974,22 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     );
   }, [collapsibleNav, pathname]);
 
+  const activeGroupLabel = activeGroup?.kind === "group" ? activeGroup.label : null;
   useEffect(() => {
-    if (activeGroup && activeGroup.kind === "group") {
+    if (effectiveRole === "faculty") {
+      setOpenGroups(new Set(activeGroupLabel ? [activeGroupLabel] : []));
+    } else if (activeGroupLabel) {
       setOpenGroups((prev) =>
-        prev.has(activeGroup.label) ? prev : new Set(prev).add(activeGroup.label)
+        prev.has(activeGroupLabel) ? prev : new Set(prev).add(activeGroupLabel)
       );
     }
-  }, [activeGroup]);
+  }, [activeGroupLabel, effectiveRole, pathname]);
 
   const toggleGroup = (label: string) => {
     setOpenGroups((prev) => {
+      if (effectiveRole === "faculty") {
+        return new Set(prev.has(label) ? [] : [label]);
+      }
       const next = new Set(prev);
       if (next.has(label)) next.delete(label);
       else next.add(label);

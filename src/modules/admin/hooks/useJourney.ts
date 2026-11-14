@@ -4,9 +4,11 @@
 
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { getCurriculumProgress } from '../api/classSessionApi'
+import { useAuth } from '@/modules/auth/context/AuthContext'
+import { fetchFacultyProfile, facultyIdentityFor, type FacultyTimelineIdentity } from '@/shared/api/facultyProfileApi'
+import { summarizeMenteePerformance, yearsOfService } from '@/modules/faculty/utils/facultyJourney'
 import {
   fetchMilestones,
-  fetchFacultyByEmail,
   fetchStudentsByMentor,
   fetchScoresByStudentIds,
   fetchAttendanceByStudentId,
@@ -17,7 +19,6 @@ import {
   fetchGradesByStudentId,
   GradeRecordRow,
   Milestone,
-  FacultyRecord,
   StudentRecord,
   ScoreRecord,
   AttendanceRecord,
@@ -67,17 +68,23 @@ const MAX_RANKABLE_COHORT = 150
 
 export interface FacultyJourneyData {
   faculty: { name: string; title: string; department: string }
-  yearsOfService: number
-  totalStudents: number
-  avgStudentScore: number
-  classesThisWeek: number
-  topicsCovered: number
-  topicsPending: number
-  papersUploaded: number
-  avgAttendance: number
-  studentPerformanceDistribution: { good: number; average: number; weak: number }
-  goodStudentsCount: number
-  weakStudentsCount: number
+  timelineIdentity: FacultyTimelineIdentity
+  profileMissing: boolean
+  warnings: string[]
+  // Unavailable records remain null, not invented zeroes or percentages.
+  yearsOfService: number | null
+  totalStudents: number | null
+  avgStudentScore: number | null
+  avgClassesPerWeek: number | null
+  topicsCovered: number | null
+  topicsPending: number | null
+  papersUploaded: number | null
+  avgAttendance: number | null
+  studentPerformanceDistribution: { good: number; average: number; weak: number } | null
+  goodStudentsCount: number | null
+  weakStudentsCount: number | null
+  scoredStudentsCount: number | null
+  ungradedStudentsCount: number | null
 }
 
 export function useCollegeJourney() {
@@ -122,39 +129,34 @@ export function useCollegeJourney() {
   return { milestones, loading, refresh }
 }
 
-// Real faculty timeline from assessments, papers, etc.
-export function useFacultyTimeline(facultyEmail: string, facultyName: string) {
-  const [milestones, setMilestones] = useState<Milestone[]>([])
-  const [loading, setLoading] = useState(true)
-  const loadedRef = useRef(false)
-
+// Reload when the resolved faculty identity changes; never keep the previous
+// account's timeline or mistake a failed query for an empty activity history.
+export function useFacultyTimeline(identity: FacultyTimelineIdentity | null | undefined) {
+  const key = identity ? JSON.stringify(identity) : ''
+  const request = useRef(0)
+  const [state, setState] = useState<{ key: string; milestones: Milestone[]; loading: boolean; error: string | null; limited: boolean }>({ key: '', milestones: [], loading: false, error: null, limited: false })
+  const current = state.key === key ? state : { milestones: [], loading: !!identity, error: null, limited: false }
   const fetchData = useCallback(async () => {
-    if (!facultyEmail && !facultyName) {
-      setLoading(false)
+    const run = ++request.current
+    if (!key) {
+      setState({ key, milestones: [], loading: false, error: null, limited: false })
       return
     }
-    setLoading(true)
+    setState({ key, milestones: [], loading: true, error: null, limited: false })
     try {
-      const data = await fetchFacultyTimelineFromRealData(facultyEmail, facultyName)
-      setMilestones(data)
-      loadedRef.current = true
-    } catch (e) {
-      console.error('[useFacultyTimeline] failed', e)
-    } finally {
-      setLoading(false)
+      const result = await fetchFacultyTimelineFromRealData(JSON.parse(key) as FacultyTimelineIdentity)
+      if (run === request.current) setState({ key, ...result, loading: false, error: null })
+    } catch (error) {
+      console.error('[useFacultyTimeline] failed', error)
+      if (run === request.current) setState({ key, milestones: [], loading: false, limited: false, error: 'Your activity timeline could not be loaded. Retry to check your recorded assessments and papers.' })
     }
-  }, [facultyEmail, facultyName])
+  }, [key])
 
   useEffect(() => {
-    if (!loadedRef.current) fetchData()
+    void fetchData()
+    return () => { request.current++ }
   }, [fetchData])
-
-  const refresh = useCallback(() => {
-    loadedRef.current = false
-    fetchData()
-  }, [fetchData])
-
-  return { milestones, loading, refresh }
+  return { ...current, refresh: fetchData }
 }
 
 // Real student timeline from fees, challans, hall tickets, grades, assessments
@@ -193,107 +195,110 @@ export function useStudentTimeline(studentId: string) {
 }
 
 export function useFacultyJourney() {
-  const [data, setData] = useState<FacultyJourneyData | null>(null)
-  const [loading, setLoading] = useState(true)
-  const loadedRef = useRef(false)
+  const { user, loading: authLoading } = useAuth()
+  const uid = user?.uid || user?.id || ''
+  const collegeId = user?.collegeId || ''
+  const email = user?.email || ''
+  const name = user?.name || user?.displayName || ''
+  const department = user?.department || ''
+  const key = JSON.stringify([uid, collegeId, email, name, department])
+  const request = useRef(0)
+  const [state, setState] = useState<{ key: string; data: FacultyJourneyData | null; loading: boolean; error: string | null }>({ key: '', data: null, loading: true, error: null })
+  const current = !authLoading && state.key === key ? state : { data: null, loading: true, error: null }
 
   const fetchData = useCallback(async () => {
-    setLoading(true)
+    const run = ++request.current
+    setState({ key, data: null, loading: true, error: null })
+    if (authLoading) return
     try {
-      const userStr = localStorage.getItem('vriddhi_user')
-      if (!userStr) {
-        setLoading(false)
-        return
+      if (!uid) throw new Error('Sign in again to load your faculty journey.')
+      if (!collegeId) throw new Error('Your sign-in is not linked to a college. Ask your college administrator to repair your college access, then sign in again.')
+      const profile = await fetchFacultyProfile({ collegeId, uid, email })
+      if (run !== request.current) return
+      const identity = facultyIdentityFor({ uid, collegeId, email, name }, profile)
+      const warnings: string[] = []
+      const [menteeResult, progressResult] = await Promise.allSettled([
+        fetchStudentsByMentor([...identity.ids, ...identity.emails, ...identity.names], collegeId),
+        getCurriculumProgress({ facultyId: profile?.id || uid }),
+      ])
+      if (run !== request.current) return
+
+      let totalStudents: number | null = null
+      let outcomes: Pick<FacultyJourneyData, 'avgStudentScore' | 'studentPerformanceDistribution' | 'goodStudentsCount' | 'weakStudentsCount' | 'scoredStudentsCount' | 'ungradedStudentsCount'> = {
+        avgStudentScore: null, studentPerformanceDistribution: null, goodStudentsCount: null,
+        weakStudentsCount: null, scoredStudentsCount: null, ungradedStudentsCount: null,
       }
-      const user = JSON.parse(userStr)
-
-      const faculty = await fetchFacultyByEmail(user.email)
-      if (!faculty) {
-        setLoading(false)
-        return
-      }
-
-      const students = await fetchStudentsByMentor(user.name)
-      const studentIds = students.map(s => s.id)
-      const scores = await fetchScoresByStudentIds(studentIds)
-
-      const percentages = scores.map(s => s.percentage)
-      const avgScore = percentages.length ? percentages.reduce((a, b) => a + b, 0) / percentages.length : 0
-
-      const good = percentages.filter(s => s >= 80).length
-      const average = percentages.filter(s => s >= 60 && s < 80).length
-      const weak = percentages.filter(s => s < 60).length
-
-      // ─── Slice 2 S2.4: compute the coverage numbers from real data ──────
-      // These three were fabricated before: `classesThisWeek` was hardcoded to
-      // 0, `topicsCovered`/`topicsPending` came from static number fields typed
-      // into the faculty document, and `avgAttendance` silently defaulted to 85
-      // whenever the field was missing — so the gauge read the same whether or
-      // not a single class had been marked (audit finding F4).
-      let classesThisWeek = 0
-      let topicsCovered = 0
-      let topicsPending = 0
-      let avgAttendance: number | null = null
-      try {
-        const progress = await getCurriculumProgress({ facultyId: faculty.id })
-        const own =
-          progress.faculty.find((row: { facultyId: string }) => row.facultyId === faculty.id) ||
-          progress.totals
-        if (own) {
-          topicsCovered = own.topics.covered
-          topicsPending = own.topics.pending
-          // Classes delivered in the most recent elapsed week.
-          classesThisWeek =
-            own.pace.weeksElapsed > 0
-              ? Math.round(own.pace.completed / own.pace.weeksElapsed)
-              : 0
-          avgAttendance = own.attendance.marked > 0 ? own.attendance.pct : null
+      if (menteeResult.status === 'fulfilled') {
+        totalStudents = menteeResult.value.length
+        try {
+          const ids = menteeResult.value.map(student => student.id)
+          const scores = await fetchScoresByStudentIds(ids, collegeId)
+          outcomes = summarizeMenteePerformance(ids, scores)
+        } catch (error) {
+          console.warn('[useFacultyJourney] mentee scores unavailable:', error)
+          warnings.push('Mentee scores are unavailable. Refresh to try again; no performance conclusion is shown for missing results.')
         }
-      } catch (progressError) {
-        // The journey page is a summary, not a report: if coverage cannot be
-        // computed, show nothing rather than a number nobody can defend.
-        console.warn('[useJourney] curriculum progress unavailable:', progressError)
+      } else {
+        console.warn('[useFacultyJourney] mentees unavailable:', menteeResult.reason)
+        warnings.push(menteeResult.reason instanceof Error && menteeResult.reason.message.includes('too large')
+          ? menteeResult.reason.message : 'The mentee roster could not be loaded. Refresh to try again.')
       }
 
-      setData({
+      let topicsCovered: number | null = null
+      let topicsPending: number | null = null
+      let avgAttendance: number | null = null
+      let avgClassesPerWeek: number | null = null
+      if (progressResult.status === 'fulfilled') {
+        // Never fall back to college-wide totals. Self-service progress accepts
+        // uid/profile aliases, while administrative readers receive our filter.
+        const own = progressResult.value.faculty.filter(row => identity.ids.includes(row.facultyId))
+        topicsCovered = own.reduce((sum, row) => sum + row.topics.covered, 0)
+        topicsPending = own.reduce((sum, row) => sum + row.topics.pending, 0)
+        const marked = own.reduce((sum, row) => sum + row.attendance.marked, 0)
+        const present = own.reduce((sum, row) => sum + row.attendance.present, 0)
+        avgAttendance = marked > 0 ? Math.round(present / marked * 1000) / 10 : null
+        // The callable returns a term average, NOT a count for this week.
+        // Self-service alias rows share the same sessions, so do not sum them.
+        const weeks = Math.max(0, ...own.map(row => row.pace.weeksElapsed))
+        const completed = Math.max(0, ...own.map(row => row.pace.completed))
+        avgClassesPerWeek = weeks > 0 ? Math.round(completed / weeks * 10) / 10 : null
+      } else {
+        console.warn('[useFacultyJourney] teaching progress unavailable:', progressResult.reason)
+        warnings.push('Teaching progress is unavailable. Refresh to try again; coverage and attendance have not been assumed.')
+      }
+
+      const data: FacultyJourneyData = {
         faculty: {
-          name: `${faculty.firstName} ${faculty.lastName || ''}`.trim(),
-          title: faculty.designation || 'Faculty',
-          department: faculty.department || 'General',
+          name: profile?.name || [profile?.firstName, profile?.lastName].filter(Boolean).join(' ') || name || email || 'Faculty member',
+          title: profile?.designation || 'Faculty',
+          department: profile?.department || department || '',
         },
-        yearsOfService: faculty.joiningDate
-          ? Math.floor((Date.now() - new Date(faculty.joiningDate).getTime()) / (365 * 24 * 60 * 60 * 1000))
-          : 0,
-        totalStudents: students.length,
-        avgStudentScore: Math.round(avgScore * 10) / 10,
-        classesThisWeek,
+        timelineIdentity: identity,
+        profileMissing: !profile,
+        warnings,
+        yearsOfService: yearsOfService(profile?.joiningDate),
+        totalStudents,
+        ...outcomes,
+        avgClassesPerWeek,
         topicsCovered,
         topicsPending,
-        papersUploaded: faculty.papersUploaded || 0,
-        // null (not 85) when nothing has been marked — the page renders '—'.
-        avgAttendance: avgAttendance ?? 0,
-        studentPerformanceDistribution: { good, average, weak },
-        goodStudentsCount: good,
-        weakStudentsCount: weak,
-      })
-      loadedRef.current = true
+        papersUploaded: profile?.papersUploaded ?? null,
+        avgAttendance,
+      }
+      if (run === request.current) setState({ key, data, loading: false, error: null })
     } catch (error) {
-      console.error('Error fetching faculty journey:', error)
-    } finally {
-      setLoading(false)
+      console.error('[useFacultyJourney] failed:', error)
+      const message = error instanceof Error && (!uid || !collegeId || error.message.includes('More than one faculty profile'))
+        ? error.message : 'Your faculty profile could not be loaded. Retry, or sign out and back in if your college access was recently changed.'
+      if (run === request.current) setState({ key, data: null, loading: false, error: message })
     }
-  }, [])
+  }, [key, uid, collegeId, email, name, department, authLoading])
 
   useEffect(() => {
-    if (!loadedRef.current) fetchData()
+    void fetchData()
+    return () => { request.current++ }
   }, [fetchData])
-
-  const refresh = useCallback(() => {
-    loadedRef.current = false
-    fetchData()
-  }, [fetchData])
-
-  return { data, loading, refresh }
+  return { ...current, refresh: fetchData }
 }
 
 export function useStudentJourney(studentId?: string) {

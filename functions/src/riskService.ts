@@ -2,6 +2,7 @@ import * as admin from 'firebase-admin'
 import * as logger from 'firebase-functions/logger'
 import { HttpsError } from 'firebase-functions/v2/https'
 import { createHash } from 'node:crypto'
+import { isDeepStrictEqual } from 'node:util'
 import { normalizeRole } from './identityShared'
 import { readCollegeSchemes } from './academic/schemeResolution'
 import { selectCollegeScheme, type CollegeSchemeConfiguration } from './academic/collegeSchemes'
@@ -39,7 +40,7 @@ export async function readRiskRows(ctx: RiskReadContext, source: string, query: 
   } catch (error) {
     logger.error('[academicRisk] source unavailable', { source, error: error instanceof Error ? error.message : String(error) })
     ctx.complete[source] = false
-    ctx.coverage.push(`${SOURCE_LABELS[source] || source} could not be read. Related checks are incomplete; retry later.`)
+    ctx.coverage.push(`${SOURCE_LABELS[source] || source} could not be read. Related checks are incomplete and will be revisited at the next monthly review.`)
     return []
   }
 }
@@ -238,13 +239,20 @@ async function saveRiskAlert(subject: RiskPerson, recipient: RiskPerson, finding
   await db().runTransaction(async tx => {
     const previous = await tx.get(ref), old = previous.data()
     const { notify, generation, read } = riskAlertTransition(old, finding)
-    tx.set(ref, {
+    const next = {
       ...finding, id, collegeId: subject.collegeId, recipientUid: recipient.uid, recipientRole: recipient.role,
       subjectUid: subject.uid, subjectRole: subject.role, subjectName: subject.name, subjectDepartments: subject.departments,
       path: alertPathFor(recipient, subject, finding), state: 'active', stale: false,
-      read,
-      generation, createdAt: old?.createdAt || now, updatedAt: now, checkedAt: now, resolvedAt: null,
-    })
+      read, ...(read && typeof old?.readAt === 'number' ? { readAt: old.readAt } : {}),
+      generation, createdAt: old?.createdAt || now, resolvedAt: null,
+    }
+    if (old) {
+      const { updatedAt: _updatedAt, checkedAt: _checkedAt, ...previousContent } = old
+      // A fresh run timestamp is stored once per subject below. Do not bill an
+      // alert write (or change inbox order) for an unchanged finding copy.
+      if (isDeepStrictEqual(previousContent, next)) return
+    }
+    tx.set(ref, { ...next, updatedAt: now, checkedAt: now })
     if (notify) tx.create(db().collection('riskPushOutbox').doc(`${id}__${generation}`), { alertId: id, generation, recipientUid: recipient.uid, collegeId: subject.collegeId, status: 'pending', createdAt: now, attempts: 0 })
   })
 }
@@ -284,6 +292,7 @@ async function refreshRiskSubjectWithLease(person: RiskPerson, college: CollegeE
     const old = doc.data()
     if (nextKeys.has(old.key)) continue
     const state = riskReconciliationState(old, nextKeys, evidence.complete, evidence.settings.enabled, now)
+    if (old.state === state && old.stale === (state === 'unverified')) continue
     batch.update(doc.ref, { state, stale: state === 'unverified', checkedAt: now, updatedAt: now, ...(state === 'resolved' ? { resolvedAt: now } : {}) })
     pending++
     if (pending >= 400) { await batch.commit(); batch = db().batch(); pending = 0 }

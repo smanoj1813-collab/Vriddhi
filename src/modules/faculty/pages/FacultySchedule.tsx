@@ -7,6 +7,7 @@ import {
   CardContent,
   Skeleton,
   Alert,
+  Button,
   IconButton,
   Tooltip,
 } from '@mui/material';
@@ -60,8 +61,11 @@ export default function FacultySchedule() {
 
   if (error) {
     return (
-      <Box sx={{ p: 3 }}>
-        <Alert severity="error">{error}</Alert>
+      <Box sx={{ p: 3, maxWidth: 1200, mx: 'auto' }}>
+        <Typography variant="h4" component="h1" sx={{ fontWeight: 700, mb: 2 }}>Weekly Schedule</Typography>
+        <Alert severity="error" action={<Button color="inherit" onClick={() => void refetch()}>Retry schedule</Button>}>
+          {error}
+        </Alert>
       </Box>
     );
   }
@@ -69,7 +73,7 @@ export default function FacultySchedule() {
   return (
     <Box sx={{ p: 3, maxWidth: 1200, mx: 'auto' }}>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-        <Typography variant="h4" sx={{ fontWeight: 700 }}>
+        <Typography variant="h4" component="h1" sx={{ fontWeight: 700 }}>
           Weekly Schedule
         </Typography>
         <Tooltip title="Refresh schedule from server">
@@ -104,7 +108,13 @@ export default function FacultySchedule() {
         />
       </Box>
 
-      {DAYS.map((day) => {
+      {totalClasses === 0 && (
+        <Alert severity="info" sx={{ mb: 3 }}>
+          No weekly classes are assigned to your faculty profile yet. Ask your timetable administrator to assign or publish your schedule, then refresh.
+        </Alert>
+      )}
+
+      {[...DAYS, ...(weeklySchedule.Sunday?.length ? ['Sunday' as DayOfWeek] : [])].map((day) => {
         const classes = weeklySchedule[day] || [];
         return (
           <Box key={day} sx={{ mb: 3 }}>

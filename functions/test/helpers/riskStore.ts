@@ -8,15 +8,20 @@ export function makeRiskStore() {
   const failedCollections = new Set<string>()
   const pushes: any[] = []
   const reads: string[] = []
+  // Count committed document operations, not merely surviving documents: an
+  // unchanged overwrite still costs a write in Firestore.
+  const writeLog: Array<{ op: string; path: string; value?: any }> = []
   let nextId = 0
   let failPush = false
   let transactionTail: Promise<unknown> = Promise.resolve()
+  let readObserver: ((path: string) => void) | undefined
+  const read = (path: string) => { reads.push(path); readObserver?.(path) }
   const clone = (v: any) => v === undefined ? undefined : structuredClone(v)
   class Ref {
     constructor(readonly path: string) {}
     get id() { return this.path.split('/').pop()! }
     collection(name: string) { return new Query(`${this.path}/${name}`) }
-    async get() { reads.push(this.path); if (failedCollections.has(this.path.split('/')[0])) throw new Error('Fixture read failure'); return snap(this) }
+    async get() { read(this.path); if (failedCollections.has(this.path.split('/')[0])) throw new Error('Fixture read failure'); return snap(this) }
     async set(value: any, options?: { merge?: boolean }) { apply([{ op: 'set', ref: this, value, options }]) }
     async update(value: any) { apply([{ op: 'update', ref: this, value }]) }
     async delete() { apply([{ op: 'delete', ref: this }]) }
@@ -29,7 +34,7 @@ export function makeRiskStore() {
     startAfter(value: string) { return new Query(this.path, this.filters, this.max, this.ordering, value) }
     doc(id = `auto-${++nextId}`) { return new Ref(`${this.path}/${id}`) }
     async get() {
-      reads.push(this.path)
+      read(this.path)
       if (failedCollections.has(this.path.split('/')[0])) throw new Error('Fixture read failure')
       let rows = [...data.entries()].filter(([path, value]) => path.startsWith(`${this.path}/`) && path.split('/').length === this.path.split('/').length + 1 && this.filters.every(([field, op, expected]) => {
         const actual = value[field]
@@ -67,6 +72,7 @@ export function makeRiskStore() {
       else next.set(w.ref.path, w.op === 'update' || w.options?.merge ? { ...next.get(w.ref.path), ...clone(w.value) } : clone(w.value))
     }
     data.clear(); for (const [path, value] of next) data.set(path, value)
+    writeLog.push(...writes.map(w => ({ op: w.op, path: w.ref.path, value: clone(w.value) })))
   }
   const batch = () => {
     const writes: Write[] = []
@@ -102,5 +108,8 @@ export function makeRiskStore() {
     },
   }
   const messaging = { async sendEachForMulticast(message: any) { pushes.push(message); if (failPush) throw new Error('Fixture transient FCM error'); return { successCount: message.tokens.length, failureCount: 0, responses: message.tokens.map(() => ({ success: true })) } } }
-  return { data, accounts, failedCollections, pushes, reads, db, auth, messaging, setFailPush: (value: boolean) => { failPush = value }, reset: () => { data.clear(); accounts.clear(); failedCollections.clear(); pushes.length = 0; reads.length = 0; failPush = false; nextId = 0 } }
+  return { data, accounts, failedCollections, pushes, reads, writes: writeLog, db, auth, messaging,
+    setReadObserver: (observer?: (path: string) => void) => { readObserver = observer },
+    setFailPush: (value: boolean) => { failPush = value },
+    reset: () => { data.clear(); accounts.clear(); failedCollections.clear(); pushes.length = 0; reads.length = 0; writeLog.length = 0; readObserver = undefined; failPush = false; nextId = 0 } }
 }

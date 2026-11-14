@@ -78,6 +78,8 @@ export interface JourneyGrades {
 }
 
 export interface JourneyStanding {
+  /** Shared cohort evidence is reused for at most 90 seconds on the server. */
+  asOf?: string;
   branch: string;
   batch: string;
   cohortSize: number;
@@ -129,12 +131,12 @@ export function useMyJourney(): UseMyJourneyReturn {
     setLoading(true);
     setError(null);
 
-    const getMyAcademicJourney = httpsCallable<Record<string, never>, AcademicJourney>(
+    const getMyAcademicJourney = httpsCallable<{ fresh?: boolean }, AcademicJourney>(
       functions,
       'getMyAcademicJourney'
     );
 
-    getMyAcademicJourney({})
+    getMyAcademicJourney({ fresh: nonce > 0 })
       .then((result) => {
         if (cancelled) return;
         setJourney(result.data);

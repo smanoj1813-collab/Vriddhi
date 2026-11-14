@@ -25,6 +25,7 @@ import {
 import { ensureClassSession } from './classSessionApi'
 import { normalizeSessionDate } from '@/shared/utils/sessionDate'
 import { divisionValuesFromStudentRecords } from '@/shared/utils/divisionGroups'
+import { fetchFacultyProfile, facultyIdentityFor } from '@/shared/api/facultyProfileApi'
 
 export type { ScheduleFilters }
 
@@ -382,59 +383,46 @@ export async function fetchWeeklySchedules(collegeId?: string): Promise<WeeklyCl
 
 // ─── Fetch weekly schedules for a specific faculty ──────
 
-export async function fetchFacultyWeeklySchedule(facultyId: string): Promise<WeeklyClassSchedule[]> {
-  console.log('[ScheduleApi] fetchFacultyWeeklySchedule — facultyId:', facultyId)
-  if (!facultyId) {
-    console.warn('[ScheduleApi] No facultyId provided')
-    return []
-  }
-
+export async function fetchFacultyWeeklySchedule(
+  facultyId: string,
+  scope: { collegeId?: string; email?: string | null } = {},
+): Promise<WeeklyClassSchedule[]> {
+  if (!facultyId.trim()) return []
+  const collegeId = scope.collegeId || getCollegeId()
   try {
-    // Keep each Firestore query to one equality constraint. Admin schedules use
-    // the faculty profile document ID, while signed-in faculty usually have an
-    // Auth UID. Try the UID directly, then resolve its faculty profile.
-    const runScheduleQuery = (id: string) => getDocs(query(
+    const profile = await fetchFacultyProfile({ collegeId, uid: facultyId, email: scope.email })
+    const { ids } = facultyIdentityFor({ uid: facultyId, collegeId }, profile)
+    // Rules require collegeId on EVERY query. Filtering after getDocs cannot
+    // authorize a cross-college query. Merge all aliases even when the uid
+    // already has a slot: older profile-id slots must not disappear.
+    const snapshots = await Promise.all(ids.map(id => getDocs(query(
       collection(db, WEEKLY_COLLECTION),
+      where('collegeId', '==', collegeId),
       where('facultyId', '==', id),
-      limit(100)
-    ))
-
-    let snap = await runScheduleQuery(facultyId)
-    trackRead(snap.size)
-
-    if (snap.empty) {
-      const profileSnap = await getDocs(query(
-        collection(db, 'faculty'),
-        where('uid', '==', facultyId),
-        limit(1)
-      ))
-      trackRead(profileSnap.size)
-      const profileId = profileSnap.docs[0]?.id
-      if (profileId && profileId !== facultyId) {
-        snap = await runScheduleQuery(profileId)
-        trackRead(snap.size)
+      limit(101),
+    ))))
+    const rows = new Map<string, WeeklyClassSchedule>()
+    for (const snap of snapshots) {
+      trackRead(snap.size)
+      if (snap.size > 100) throw new Error('The faculty timetable exceeds the summary limit.')
+      for (const d of snap.docs) {
+        const schedule = docToWeeklySchedule(d.data(), d.id)
+        if (schedule.collegeId === collegeId && schedule.isActive) rows.set(d.id, schedule)
       }
     }
-
-    console.log('[ScheduleApi] fetchFacultyWeeklySchedule — docs found:', snap.size)
-    return snap.docs
-      .map(d => docToWeeklySchedule(d.data(), d.id))
-      .filter(schedule => schedule.isActive)
-      .sort((a, b) => {
-        const dayOrder = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
-        const dayDiff = dayOrder.indexOf(a.dayOfWeek) - dayOrder.indexOf(b.dayOfWeek)
-        if (dayDiff !== 0) return dayDiff
-        return a.startTime.localeCompare(b.startTime)
-      })
+    return [...rows.values()].sort((a, b) => {
+      const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
+      return days.indexOf(a.dayOfWeek) - days.indexOf(b.dayOfWeek) || a.startTime.localeCompare(b.startTime)
+    })
   } catch (err) {
     console.error('[ScheduleApi] Faculty weekly fetch failed:', err)
-    throw new Error('Failed to load your weekly schedule. Please try again.')
+    throw new Error('Failed to load your weekly schedule. Please try again. If this continues, ask your college administrator to check your faculty profile link and college access.')
   }
 }
 
 // ─── Fetch weekly schedules by faculty NAME (fallback when ID doesn't match) ─
 
-export async function fetchFacultyWeeklyScheduleByName(facultyName: string): Promise<WeeklyClassSchedule[]> {
+export async function fetchFacultyWeeklyScheduleByName(facultyName: string, collegeId = getCollegeId()): Promise<WeeklyClassSchedule[]> {
   console.log('[ScheduleApi] fetchFacultyWeeklyScheduleByName — facultyName:', facultyName)
   if (!facultyName) {
     console.warn('[ScheduleApi] No facultyName provided')
@@ -444,8 +432,8 @@ export async function fetchFacultyWeeklyScheduleByName(facultyName: string): Pro
   try {
     const q = query(
       collection(db, WEEKLY_COLLECTION),
+      where('collegeId', '==', collegeId),
       where('facultyName', '==', facultyName),
-      where('isActive', '==', true),
       limit(100)
     )
     const snap = await getDocs(q)
@@ -454,6 +442,7 @@ export async function fetchFacultyWeeklyScheduleByName(facultyName: string): Pro
 
     return snap.docs
       .map(d => docToWeeklySchedule(d.data(), d.id))
+      .filter(schedule => schedule.collegeId === collegeId && schedule.isActive)
       .sort((a, b) => {
         const dayOrder = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
         const dayDiff = dayOrder.indexOf(a.dayOfWeek) - dayOrder.indexOf(b.dayOfWeek)

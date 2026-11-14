@@ -1,5 +1,9 @@
 // Records the calls components make, and returns empty docs so no network I/O.
 export const calls: string[] = [];
+// Structured query logs / optional boundary guard let regressions assert that
+// the real APIs carry the college constraint Firestore rules require.
+export const queries: any[] = [];
+export function documentId() { return '__name__'; }
 export function collection(_db: any, ...p: string[]) { calls.push('collection:' + p.join('/')); return { __collection: p.join('/') }; }
 export function doc(_db: any, ...p: string[]) {
   calls.push('doc:' + p.join('/'));
@@ -36,13 +40,18 @@ export async function getDoc(ref: any) {
   return { exists: () => false, data: () => undefined, id: '' };
 }
 export async function getDocs(q: any) {
+  queries.push(q);
+  const guard = (globalThis as any).__RC_FIRESTORE_QUERY_GUARD;
+  if (guard) await guard(q);
   // A render check can stand in for real rows by setting
   // globalThis.__RC_FIRESTORE_DOCS to [{ id, data: () => ({...}) }]. Unset,
   // the stub behaves exactly as before: an empty collection.
   const collections = (globalThis as any).__RC_FIRESTORE_COLLECTIONS;
   let seeded = collections ? collections[q?.__collection] || [] : (globalThis as any).__RC_FIRESTORE_DOCS;
   if (collections) for (const c of q?.__constraints || []) {
-    if (c?.__field && c.__operator === '==') seeded = seeded.filter((d: any) => d.data()[c.__field] === c.__value);
+    const fieldValue = (d: any) => c.__field === '__name__' ? d.id : d.data()[c.__field];
+    if (c?.__field && c.__operator === '==') seeded = seeded.filter((d: any) => fieldValue(d) === c.__value);
+    if (c?.__field && c.__operator === 'in') seeded = seeded.filter((d: any) => c.__value.includes(fieldValue(d)));
     if (c?.__limit) seeded = seeded.slice(0, c.__limit);
   }
   if (Array.isArray(seeded) && seeded.length > 0) {
@@ -75,6 +84,8 @@ export async function updateDoc(...a: any[]) {
 }
 export async function deleteDoc(..._a: any[]) { calls.push('deleteDoc'); }
 export async function runTransaction(_db: any, fn: (t: any) => Promise<any>) {
+  const boundary = (globalThis as any).__RC_TRANSACTION;
+  if (boundary) return boundary(fn);
   return fn({ set: async () => {}, update: async () => {}, get: async () => ({ exists: () => false, data: () => undefined }) });
 }
 export function onSnapshot(..._a: any[]) { calls.push('onSnapshot'); return () => {}; }
@@ -130,7 +141,7 @@ export class Timestamp {
   get nanoseconds() { return (this.ms % 1000) * 1e6; }
 }
 export default {
-  collection, doc, query, where, orderBy, limit, getDoc, getDocs, setDoc,
+  collection, doc, documentId, query, where, orderBy, limit, getDoc, getDocs, setDoc,
   addDoc, updateDoc, deleteDoc, runTransaction, onSnapshot, arrayUnion,
   arrayRemove, increment, serverTimestamp, deleteField, getFirestore, Timestamp,
 };

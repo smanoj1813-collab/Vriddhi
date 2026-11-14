@@ -34,7 +34,7 @@ export function httpsCallable(_functions: unknown, name: string) {
         code: 'functions/internal',
       });
     }
-    return { data };
+    return { data: await data };
   };
 }
 

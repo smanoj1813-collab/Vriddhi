@@ -5,7 +5,8 @@
 // Why: the superadmin dashboard used to answer "how many students do we have?"
 // by downloading the whole collection and counting rows in the browser — that
 // is where the ≈81,000 reads/day/tab in the costing sheet came from. Aggregation
-// queries (`count()`) answer the same question in one read, and a 15-minute
+// queries (`count()`) avoid row downloads (billing scales with index entries),
+// and a 15-minute
 // scheduled refresh puts the answer in a single document so the console reads
 // ONE doc per view instead of four whole collections.
 //
@@ -20,6 +21,7 @@
 // The document is server-only for writes and superadmin-only for reads
 // (firestore.rules, `platform/{doc}`).
 
+import { shouldWritePlatformStats } from './platformStatsGuard'
 import { onSchedule } from 'firebase-functions/v2/scheduler'
 import { logger } from 'firebase-functions'
 import * as admin from 'firebase-admin'
@@ -170,8 +172,15 @@ export const refreshPlatformStats = onSchedule(
   async () => {
     try {
       const stats = await collectPlatformStats()
-      await admin.firestore().collection(PLATFORM_STATS_COLLECTION).doc(PLATFORM_STATS_DOC).set(stats)
+      const ref = admin.firestore().collection(PLATFORM_STATS_COLLECTION).doc(PLATFORM_STATS_DOC)
+      const written = await admin.firestore().runTransaction(async transaction => {
+        const previous = (await transaction.get(ref)).data()
+        if (!shouldWritePlatformStats(previous, { ...stats })) return false
+        transaction.set(ref, stats)
+        return true
+      })
       logger.info('[PlatformStats] refreshed', {
+        written,
         colleges: stats.totalColleges,
         students: stats.totalStudents,
         faculty: stats.totalFaculty,

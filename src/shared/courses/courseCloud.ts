@@ -14,6 +14,7 @@ import {
 } from 'firebase/firestore'
 import { auth } from '@/Firebase/config'
 import { db } from '@/Firebase/data'
+import { sameFirestoreValue } from '@/shared/utils/firestoreEquality'
 import { stripUndefined } from '@/shared/utils/firestoreClean'
 import { extractStudentCohortFields, normalizeProgramName } from '@/shared/utils/cohortMatching'
 import {
@@ -211,7 +212,11 @@ export async function saveCourseProgress(
       updatedAt: merged.updatedAt || now,
       ...(allRead ? { completedAt: merged.completedAt || now } : {}),
     }
-    transaction.set(ref, stripUndefined(record))
+    // The initial cloud merge/catalog mount may have nothing new to save.
+    // Compare the complete derived record as well, so manifest/version/credit
+    // changes and cross-device unions are never mistaken for no-ops.
+    const clean = stripUndefined(record)
+    if (!snapshot.exists() || !sameFirestoreValue(snapshot.data(), clean)) transaction.set(ref, clean)
     return { ...merged, ...(allRead ? { completedAt: record.completedAt } : {}) }
   })
 }

@@ -2676,7 +2676,7 @@ describe('college scheme configuration trust boundary', () => {
 describe('academic risk server-only storage boundary', () => {
   for (const name of [
     'riskAlerts', 'riskSubjectRuns', 'academicRiskSettings', 'riskStaffSchedules',
-    'riskPushDevices', 'riskPushOutbox', 'riskJobs', 'riskRefreshLocks',
+    'riskPushDevices', 'riskPushOutbox', 'riskJobs', 'riskSweepRequests', 'riskRefreshLocks',
     'riskSubjectLocks', 'riskConfigurationAudit',
   ]) {
     it(`${name} denies direct reads, listing and writes to every client role`, async () => {

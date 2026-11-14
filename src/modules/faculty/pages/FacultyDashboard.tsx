@@ -75,7 +75,7 @@ function collegeRef(collegeId: string, path: string) {
 }
 
 // ─── Firestore Hook ───────────────────────────────────────────────────────────
-function useFacultyData(collegeId: string | undefined, facultyId: string | undefined) {
+function useFacultyData(collegeId: string | undefined, facultyId: string | undefined, email?: string | null) {
   const [schedule, setSchedule] = useState<ScheduleItem[]>([]);
   const [announcements, setAnnouncements] = useState<AnnouncementItem[]>([]);
   const [stats, setStats] = useState({ totalClasses: 0, totalStudents: 0, attendanceRate: 0 });
@@ -98,7 +98,7 @@ function useFacultyData(collegeId: string | undefined, facultyId: string | undef
         // admin writes to (via AdminClassSchedule), then show today's classes.
         // (Previously this read the legacy `colleges/{cid}/schedules` subcollection,
         // which admin scheduling never wrote to, so the widget stayed empty.)
-        const weekly = await fetchFacultyWeeklySchedule(fid);
+        const weekly = await fetchFacultyWeeklySchedule(fid, { collegeId: cid, email });
         const today = new Date().toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
         const nowTime = `${String(new Date().getHours()).padStart(2, '0')}:${String(
           new Date().getMinutes()
@@ -174,7 +174,7 @@ function useFacultyData(collegeId: string | undefined, facultyId: string | undef
 
     fetchData();
     return () => { cancelled = true; };
-  }, [collegeId, facultyId]);
+  }, [collegeId, facultyId, email]);
 
   return { schedule, announcements, stats, loading };
 }
@@ -184,7 +184,7 @@ export default function FacultyDashboard() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const facultyId = user?.uid || user?.id;
-  const { schedule, announcements, stats, loading } = useFacultyData(user?.collegeId, facultyId);
+  const { schedule, announcements, stats, loading } = useFacultyData(user?.collegeId, facultyId, user?.email);
 
   const quickActions: QuickStat[] = [
     {

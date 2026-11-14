@@ -71,7 +71,7 @@ const reset = () => {
   localStorage.clear();
   globalThis.__RC_PATHNAME = '/student/dashboard';
   globalThis.__RC_ROLE = 'student';
-  globalThis.__RC_CALLABLE_DATA = { getMyAcademicRiskAlerts: { alerts: [], checkedAt: null, truncated: false, canRefresh: true, canConfigure: false } };
+  globalThis.__RC_CALLABLE_DATA = { getMyAcademicRiskAlerts: { alerts: [], checkedAt: null, truncated: false, canRefresh: false, canConfigure: false } };
   delete globalThis.__RC_STUDENT_DATA;
   document.documentElement.classList.remove('dark');
 };

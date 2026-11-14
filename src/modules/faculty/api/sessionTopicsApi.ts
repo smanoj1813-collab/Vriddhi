@@ -92,7 +92,7 @@ async function fetchTaughtSubjects(facultyId: string, collegeId = ''): Promise<S
   // The timetable is the second source of "what do I teach" — it works even
   // when no curriculum has been mapped yet.
   try {
-    const weekly = await fetchFacultyWeeklySchedule(facultyId)
+    const weekly = await fetchFacultyWeeklySchedule(facultyId, { collegeId: collegeId || undefined })
     weekly.forEach((w) => {
       if (w.subject) subjects.add(String(w.subject).trim().toLowerCase())
       if (w.subjectCode) subjects.add(String(w.subjectCode).trim().toLowerCase())

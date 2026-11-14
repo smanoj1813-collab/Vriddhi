@@ -32,7 +32,6 @@ import {
   toggleAutoRenew,
   sendRenewalReminder,
   getSystemHealth,
-  getHealthHistory,
   getSlowQueries,
   getErrorLogs,
   getPerformanceMetrics,
@@ -155,7 +154,7 @@ export const superAdminKeys = {
   payments: (options?: object) => [...superAdminKeys.all, "payments", options || {}] as const,
   renewals: () => [...superAdminKeys.all, "renewals"] as const,
   health: () => [...superAdminKeys.all, "health"] as const,
-  healthHistory: (hours: number) => [...superAdminKeys.all, "health-history", hours] as const,
+  healthHistory: (hours: number) => [...superAdminKeys.all, "performance", hours] as const,
   slowQueries: (limit: number) => [...superAdminKeys.all, "slow-queries", limit] as const,
   errors: (options?: object) => [...superAdminKeys.all, "errors", options || {}] as const,
   performance: (hours: number) => [...superAdminKeys.all, "performance", hours] as const,
@@ -542,9 +541,14 @@ export const useSendRenewalReminder = () => {
 // SYSTEM HEALTH HOOKS
 // ═══════════════════════════════════════════════════════════════════════
 export const useSystemHealth = (queryOptions?: Omit<UseQueryOptions<SystemHealthStatus, SuperAdminApiError>, "queryKey" | "queryFn">) => {
+  const cache = useQueryClient();
   return useQuery<SystemHealthStatus, SuperAdminApiError>({
     queryKey: superAdminKeys.health(),
-    queryFn: getSystemHealth,
+    queryFn: () => getSystemHealth({
+      metrics: cache.fetchQuery({ queryKey: superAdminKeys.performance(24), queryFn: () => getPerformanceMetrics(24), staleTime: 60_000 }),
+      errors: cache.fetchQuery({ queryKey: superAdminKeys.errors({}), queryFn: () => getErrorLogs(), staleTime: 60_000 }),
+      slowQueries: cache.fetchQuery({ queryKey: superAdminKeys.slowQueries(20), queryFn: () => getSlowQueries(20), staleTime: 60_000 }),
+    }),
     staleTime: 1000 * 60 * 2,
     refetchInterval: 1000 * 60 * 5,
     ...queryOptions,
@@ -554,9 +558,10 @@ export const useSystemHealth = (queryOptions?: Omit<UseQueryOptions<SystemHealth
 export const useHealthHistory = (hours: number = 24, queryOptions?: Omit<UseQueryOptions<PerformanceMetric[], SuperAdminApiError>, "queryKey" | "queryFn">) => {
   return useQuery<PerformanceMetric[], SuperAdminApiError>({
     queryKey: superAdminKeys.healthHistory(hours),
-    queryFn: () => getHealthHistory(hours),
+    queryFn: () => getPerformanceMetrics(hours),
     staleTime: 1000 * 60,
-    refetchInterval: 1000 * 60 * 2,
+    // The performance observer owns the timer; this chart observes the same cache.
+    refetchInterval: false,
     ...queryOptions,
   });
 };

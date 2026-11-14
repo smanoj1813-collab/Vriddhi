@@ -14,9 +14,19 @@
 // ------------------------------------------------------------------
 
 import * as admin from 'firebase-admin'
+import { createReadThroughCache } from './readThroughCache'
 import { HttpsError, onCall } from 'firebase-functions/v2/https'
 import { latestCreditRows, summarizeCredits, auditAssignedProgrammeCredits, type CreditRow } from './academic/creditEngine'
 import { resolveCollegeSchemesOnServer } from './schemePacks'
+
+// Only shared rank evidence is coalesced. Personal transcripts/attendance,
+// identity checks and policy resolution are always read normally. No paid
+// cache documents or additional background scans are introduced.
+const standingEvidence = createReadThroughCache<{
+  grades: FirebaseFirestore.QuerySnapshot
+  roster: FirebaseFirestore.QuerySnapshot
+  asOf: string
+}>(90_000, 8)
 
 interface JourneyStudent {
   uid: string
@@ -169,7 +179,7 @@ export const getMyAcademicJourney = onCall(
     const student = await resolveStudent(uid, request.auth?.token || {})
     const db = admin.firestore()
 
-    const [attendanceSnap, assessmentSnap, gradeSnap, rosterSnap, myGradeSnap] = await Promise.all([
+    const [attendanceSnap, assessmentSnap, cohort, myGradeSnap] = await Promise.all([
       db
         .collection('attendanceRecords')
         .where('collegeId', '==', student.collegeId)
@@ -177,19 +187,16 @@ export const getMyAcademicJourney = onCall(
         .limit(1000)
         .get(),
       db.collection('studentAssessments').where('studentId', '==', student.studentId).limit(500).get(),
-      db
-        .collection('gradeRecords')
-        .where('collegeId', '==', student.collegeId)
-        .where('status', '==', 'published')
-        .limit(2000)
-        .get(),
-      db
-        .collection('students')
-        .where('collegeId', '==', student.collegeId)
-        .limit(2000)
-        .get(),
+      standingEvidence.get(student.collegeId, async () => {
+        const [grades, roster] = await Promise.all([
+          db.collection('gradeRecords').where('collegeId', '==', student.collegeId).where('status', '==', 'published').limit(2000).get(),
+          db.collection('students').where('collegeId', '==', student.collegeId).select('branch', 'department', 'batch', 'academicYear').limit(2000).get(),
+        ])
+        return { grades, roster, asOf: new Date().toISOString() }
+      }, request.data?.fresh === true),
       db.collection('gradeRecords').where('collegeId', '==', student.collegeId).where('studentId', '==', student.studentId).where('status', '==', 'published').limit(500).get(),
     ])
+    const { grades: gradeSnap, roster: rosterSnap, asOf: standingAsOf } = cohort
     if (myGradeSnap.size >= 500) throw new HttpsError('resource-exhausted', 'Transcript exceeds the safe summary limit. Ask the college to review its grade records.')
 
     // ── Attendance: real marked rows, late counts as attended (matches the
@@ -356,6 +363,7 @@ export const getMyAcademicJourney = onCall(
         creditAudit,
       },
       standing: {
+        asOf: standingAsOf,
         branch: student.branch,
         batch: student.batch,
         cohortSize,
