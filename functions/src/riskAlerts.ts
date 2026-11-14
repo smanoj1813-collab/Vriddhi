@@ -46,10 +46,12 @@ export const markMyAcademicRiskAlertRead = onCall(OPTIONS, async request => {
 })
 /** Retired callable kept as a deny-only compatibility endpoint. Removing the
  * export alone can leave an older deployed scanner reachable. No role, payload
- * or college can trigger a check here; reject before Auth-admin/Firestore I/O. */
-export const refreshMyAcademicRiskAlerts = onCall({ ...OPTIONS, memory: '128MiB', timeoutSeconds: 10, maxInstances: 2 }, async request => {
+ * or college can trigger a check here; reject before Auth-admin/Firestore I/O.
+ * Keep OPTIONS' 512 MiB for the shared Node.js bootstrap: 128 MiB exhausted
+ * memory during production startup, before this small handler could run. */
+export const refreshMyAcademicRiskAlerts = onCall({ ...OPTIONS, timeoutSeconds: 10, maxInstances: 2 }, async request => {
   if (!request.auth?.uid) throw new HttpsError('unauthenticated', 'Sign in to view academic alerts')
-  throw new HttpsError('permission-denied', 'Manual academic risk checks are disabled. Reviews run automatically once per month.')
+  throw new HttpsError('permission-denied', 'Manual academic risk checks are disabled. Reviews run automatically on the server schedule.')
 })
 export const getAcademicRiskConfiguration = onCall(OPTIONS, async request => {
   const person = await requireRiskPerson(request.auth?.uid)
