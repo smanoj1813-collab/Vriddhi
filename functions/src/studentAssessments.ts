@@ -1,3 +1,4 @@
+import { canReuseAssessmentReport, loadEndedTestPages, memoizeRunLoad } from './assessmentMaintenance'
 import admin from 'firebase-admin'
 import * as logger from 'firebase-functions/logger'
 import { HttpsError, onCall } from 'firebase-functions/v2/https'
@@ -2126,7 +2127,22 @@ export const getAssessmentTestReport = onCall(
       throw new HttpsError('permission-denied', 'Test belongs to another college')
     }
 
-    const snapshot = await db.collection('studentAssessments')
+    // A cheap change probe covers both test changes and attempt autosaves.
+    // Missing/building index => full report, never a broken report page.
+    let reportRevision = ''
+    try {
+      const latest = await db.collection('studentAssessments').where('testId', '==', testId)
+        .orderBy('updatedAt', 'desc').limit(1).get()
+      const stamp = (value?: FirebaseFirestore.Timestamp) => value ? `${value.seconds}:${value.nanoseconds}` : ''
+      reportRevision = stamp(testDoc.updateTime) + '|' + latest.docs.map(doc => `${doc.id}:${stamp(doc.updateTime)}`).join(',')
+      if (canReuseAssessmentReport(request.data || {}, reportRevision)) return { unchanged: true as const, reportRevision }
+    } catch (error) {
+      const code = (error as { code?: unknown })?.code
+      if (code !== 9 && code !== 'failed-precondition' && code !== 'FAILED_PRECONDITION') throw error
+      logger.warn('[StudentAssessments] Report change-probe index unavailable; using full report')
+    }
+
+    const reportQuery = db.collection('studentAssessments')
       .where('testId', '==', testId)
       .select(
         'studentId', 'studentName', 'regNo', 'status',
@@ -2134,11 +2150,16 @@ export const getAssessmentTestReport = onCall(
         'marksObtained', 'percentage', 'grade', 'timeSpent',
         'submittedAt', 'gradedAt', 'isLateSubmission', 'latePenaltyPercentage',
         'autoSubmitted', 'needsManualGrading',
-        'branch', 'section', 'semester', 'batch', 'gradingBreakdown'
+        'branch', 'section', 'semester', 'batch', 'gradingBreakdown', 'updatedAt'
       )
       .limit(500)
-      .get()
+    const snapshot = await reportQuery.get()
     const rows = snapshot.docs.map((doc) => doc.data() || {})
+    // The change probe assumes canonical timestamp ordering. A mixed legacy
+    // string/missing updatedAt could hide newer autosaves behind an old row.
+    // Keep those reports on the original full-read path until normal writes
+    // repair their metadata; do not trade live correctness for fewer reads.
+    if (rows.some(row => !(row.updatedAt instanceof Date) && typeof row.updatedAt?.toMillis !== 'function')) reportRevision = ''
 
     let submitted = 0
     let graded = 0
@@ -2181,12 +2202,22 @@ export const getAssessmentTestReport = onCall(
       || (Number(test.totalSubmitted) === 0 && submitted > 0)
     const needsGradedHeal = test.totalGraded === undefined && graded > 0
     if (needsSubmittedHeal || needsGradedHeal) {
-      const heal: admin.firestore.DocumentData = {
-        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-      }
-      if (needsSubmittedHeal) heal.totalSubmitted = admin.firestore.FieldValue.increment(submitted)
-      if (needsGradedHeal) heal.totalGraded = admin.firestore.FieldValue.increment(graded)
-      void testRef.update(heal).catch(() => undefined)
+      // One atomic repair, not competing fire-and-forget increments. Recount in
+      // the same transaction so a concurrent submission cannot be overwritten.
+      await db.runTransaction(async transaction => {
+        const current = (await transaction.get(testRef)).data()
+        if (!current) return
+        const healSubmitted = current.totalSubmitted === undefined || (Number(current.totalSubmitted) === 0 && submitted > 0)
+        const healGraded = current.totalGraded === undefined && graded > 0
+        if (!healSubmitted && !healGraded) return
+        const freshRows = await transaction.get(reportQuery)
+        const statuses = freshRows.docs.map(doc => String(doc.data().status || ''))
+        transaction.update(testRef, {
+          ...(healSubmitted ? { totalSubmitted: statuses.filter(status => ['submitted', 'graded'].includes(status)).length } : {}),
+          ...(healGraded ? { totalGraded: statuses.filter(status => status === 'graded').length } : {}),
+          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        })
+      })
     }
 
     // Section-wise scores: the test document froze the section structure at
@@ -2232,6 +2263,7 @@ export const getAssessmentTestReport = onCall(
     }
 
     return {
+      reportRevision,
       test: {
         id: testId,
         title: String(test.title || ''),
@@ -2305,17 +2337,15 @@ export const getAssessmentTestReport = onCall(
 )
 
 async function finalizeExpiredAttempt(
-  attemptDoc: FirebaseFirestore.QueryDocumentSnapshot
+  attemptDoc: FirebaseFirestore.QueryDocumentSnapshot,
+  loadQuestions: (testId: string) => Promise<ServerQuestion[]>
 ): Promise<'submitted' | 'graded' | 'skipped'> {
   const db = admin.firestore()
   const initialRow = attemptDoc.data()
   const testId = String(initialRow.testId || initialRow.assessmentId || '')
   if (!testId) return 'skipped'
   const testRef = db.collection('scheduledTests').doc(testId)
-  const testDoc = await testRef.get()
-  const test = testDoc.data()
-  if (!testDoc.exists || !test || test.status === 'cancelled') return 'skipped'
-  const questions = await loadTestQuestions(testId, test)
+  const questions = await loadQuestions(testId)
   if (questions.length === 0) return 'skipped'
 
   return db.runTransaction(async (transaction) => {
@@ -2454,7 +2484,13 @@ export const autoSubmitExpiredStudentTests = onSchedule(
     legacy.docs.forEach((attempt) => {
       if (!attempt.data().autoSubmitAt) attempts.set(attempt.id, attempt)
     })
-    const outcomes = await Promise.allSettled([...attempts.values()].map(finalizeExpiredAttempt))
+    const loadQuestions = memoizeRunLoad(async (testId: string) => {
+      const doc = await admin.firestore().collection('scheduledTests').doc(testId).get()
+      const test = doc.data()
+      if (!doc.exists || !test || test.status === 'cancelled') return []
+      return loadTestQuestions(testId, test)
+    })
+    const outcomes = await Promise.allSettled([...attempts.values()].map(attempt => finalizeExpiredAttempt(attempt, loadQuestions)))
     const failures = outcomes.filter((outcome) => outcome.status === 'rejected')
     if (failures.length > 0) {
       logger.error('[StudentAssessments] Some expired attempts could not be finalized', {
@@ -2468,18 +2504,23 @@ export const autoSubmitExpiredStudentTests = onSchedule(
     // Close out tests whose window has ended: published/ongoing → completed.
     // Nothing else ever moved the stored status, so a test whose window had
     // passed kept showing "ongoing" in the scheduler forever.
-    // Query each live status separately and check the timestamp in memory.
-    // The old `status in (...) + endDateTime <= now` query requires a composite
-    // index that normal `deploy:all` does not deploy, so production cleanup
-    // could fail forever and leave tests labelled ongoing.
-    const liveTestSnapshots = await Promise.all(
-      ['published', 'ongoing'].map((status) => admin.firestore().collection('scheduledTests')
-        .where('status', '==', status)
-        .limit(250)
-        .get())
+    // Filter canonical timestamps by due time on the server. Keep a bounded
+    // string-only legacy pass: timezone-offset strings cannot safely use a
+    // lexical UTC deadline comparison. JS still checks their actual instant.
+    // Both paths use the shipped index and retain its rollout fallback.
+    const liveTests = await loadEndedTestPages(
+      async (status, format) => {
+        const lower = format === 'timestamp' ? admin.firestore.Timestamp.fromMillis(0) : ''
+        const upper = format === 'timestamp' ? now : '\uf8ff'
+        const page = await admin.firestore().collection('scheduledTests')
+          .where('status', '==', status).where('endDateTime', '>=', lower).where('endDateTime', '<=', upper)
+          .orderBy('endDateTime', 'asc').limit(250).get()
+        return page.docs
+      },
+      async status => (await admin.firestore().collection('scheduledTests').where('status', '==', status).limit(250).get()).docs,
+      () => logger.warn('[StudentAssessments] Due-test index unavailable; using compatible cleanup query'),
     )
-    const endedTests = liveTestSnapshots
-      .flatMap((snapshot) => snapshot.docs)
+    const endedTests = [...new Map(liveTests.map(doc => [doc.id, doc])).values()]
       .filter((testDoc) => {
         const end = timestampToDate(testDoc.data().endDateTime)
         return Boolean(end && end.getTime() <= now.toMillis())

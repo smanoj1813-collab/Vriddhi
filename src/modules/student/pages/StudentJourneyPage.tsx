@@ -208,7 +208,7 @@ export default function StudentJourneyPage() {
           suffix={standing.cohortSize > 0 ? `/ ${standing.cohortSize}` : undefined}
           hint={
             standing.percentile !== null
-              ? `Top ${(100 - standing.percentile).toFixed(1)}% of your branch & batch`
+              ? `Top ${(100 - standing.percentile).toFixed(1)}% of your branch & batch${standing.asOf ? ` · as of ${new Date(standing.asOf).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}` : ''}`
               : 'Ranked once grades are published'
           }
           icon={<Trophy className="w-4 h-4" />}

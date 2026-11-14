@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useVisiblePolling } from '@/shared/hooks/useVisiblePolling';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import * as XLSX from '@e965/xlsx';
 import {
@@ -227,6 +228,7 @@ function TestReport({ testId, onBack }: { testId: string; onBack: () => void }) 
   const collegeId = user?.collegeId || '';
   const [report, setReport] = useState<AssessmentTestReport | null>(null);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [categories, setCategories] = useState<PerformanceCategory[]>([]);
   const [categoryDialogOpen, setCategoryDialogOpen] = useState(false);
@@ -237,22 +239,43 @@ function TestReport({ testId, onBack }: { testId: string; onBack: () => void }) 
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [sectionFilter, setSectionFilter] = useState('all');
 
-  const load = useCallback(async () => {
-    try {
-      setError(null);
-      const fn = httpsCallable<{ testId: string }, AssessmentTestReport>(functions, 'getAssessmentTestReport');
-      const res = await fn({ testId });
-      setReport(res.data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'The test report could not be loaded.');
-    } finally {
-      setLoading(false);
-    }
+  const lastFull = useRef<{ testId: string; revision: string; loadedAt: number } | null>(null);
+  const inFlight = useRef<{ testId: string; promise: Promise<void> } | null>(null);
+  const currentTestId = useRef(testId);
+  currentTestId.current = testId;
+  const load = useCallback((force = false): Promise<void> => {
+    if (inFlight.current?.testId === testId) return inFlight.current.promise;
+    const entry = { testId, promise: Promise.resolve() };
+    inFlight.current = entry;
+    entry.promise = (async () => {
+      setRefreshing(true);
+      try {
+        setError(null);
+        const previous = lastFull.current?.testId === testId ? lastFull.current : null;
+        const fn = httpsCallable<
+          { testId: string; knownRevision?: string; loadedAt?: number },
+          AssessmentTestReport | { unchanged: true; reportRevision: string }
+        >(functions, 'getAssessmentTestReport');
+        const res = await fn({ testId, ...(!force && previous ? { knownRevision: previous.revision, loadedAt: previous.loadedAt } : {}) });
+        if (currentTestId.current !== testId || inFlight.current !== entry) return;
+        if ('unchanged' in res.data) return;
+        lastFull.current = { testId, revision: res.data.reportRevision || '', loadedAt: Date.now() };
+        setReport(res.data);
+      } catch (err) {
+        if (currentTestId.current === testId && inFlight.current === entry) setError(err instanceof Error ? err.message : 'The test report could not be loaded.');
+      } finally {
+        if (inFlight.current === entry) {
+          inFlight.current = null;
+          if (currentTestId.current === testId) { setLoading(false); setRefreshing(false); }
+        }
+      }
+    })();
+    return entry.promise;
   }, [testId]);
 
   useEffect(() => {
     setLoading(true);
-    void load();
+    void load(true);
   }, [load]);
 
   // College-configured status categories (defaults applied server-side when
@@ -267,17 +290,18 @@ function TestReport({ testId, onBack }: { testId: string; onBack: () => void }) 
     return () => { active = false; };
   }, []);
 
-  // While the test window is open, keep the report live.
+  // Only the local clock ticks when hidden/upcoming. Database polling is
+  // visibility-aware, non-overlapping, and stops when the test window closes.
+  const [now, setNow] = useState(Date.now);
   useEffect(() => {
-    if (!report) return;
-    const now = Date.now();
-    const start = toMs(report.test.startDateTime);
-    const end = toMs(report.test.endDateTime);
-    const live = !Number.isNaN(start) && !Number.isNaN(end) && now >= start && now <= end;
-    if (!live) return;
-    const id = setInterval(() => { void load(); }, 30_000);
+    const id = setInterval(() => setNow(Date.now()), 30_000);
     return () => clearInterval(id);
-  }, [report, load]);
+  }, []);
+  const start = report ? toMs(report.test.startDateTime) : NaN;
+  const end = report ? toMs(report.test.endDateTime) : NaN;
+  const live = !['cancelled', 'completed'].includes(report?.test.status || '')
+    && Number.isFinite(start) && Number.isFinite(end) && now >= start && now <= end;
+  useVisiblePolling(() => load(), live ? 30_000 : null);
 
   if (loading && !report) {
     return (
@@ -461,6 +485,7 @@ function TestReport({ testId, onBack }: { testId: string; onBack: () => void }) 
     <Box>
       <Box sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 1.5, mb: 2 }}>
         <Button startIcon={<ArrowBack />} variant="outlined" onClick={onBack}>Back</Button>
+        <Button variant="outlined" disabled={refreshing} onClick={() => { void load(true); }}>{refreshing ? 'Refreshing…' : 'Refresh report'}</Button>
         <Box sx={{ flex: 1, minWidth: 200 }}>
           <Typography variant="h6" sx={{ fontWeight: 700 }}>{test.title || 'Test report'}</Typography>
           <Typography variant="body2" color="text.secondary">

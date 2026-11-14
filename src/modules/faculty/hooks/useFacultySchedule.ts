@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useAuth } from '../../auth/context/AuthContext';
 import { fetchFacultyWeeklySchedule } from '../../admin/api/scheduleApi';
 import type { WeeklyClassSchedule } from '../../admin/types/schedule';
@@ -63,34 +63,34 @@ function toFacultySchedule(item: WeeklyClassSchedule): ClassSchedule {
 }
 
 export function useFacultySchedule() {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const facultyId = user?.uid || user?.id || '';
-  const [schedule, setSchedule] = useState<ClassSchedule[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const collegeId = user?.collegeId || '';
+  const email = user?.email || '';
+  const identityKey = JSON.stringify([facultyId, collegeId, email]);
+  const request = useRef(0);
+  const [state, setState] = useState<{ key: string; schedule: ClassSchedule[]; loading: boolean; error: string | null }>({ key: '', schedule: [], loading: true, error: null });
+  // Do not display the previous account/college's timetable during a switch.
+  const current = !authLoading && state.key === identityKey ? state : { schedule: [], loading: true, error: null };
+  const { schedule, loading, error } = current;
 
   const loadSchedule = useCallback(async () => {
-    if (!facultyId) {
-      setSchedule([]);
-      setLoading(false);
-      return;
-    }
-
-    setLoading(true);
-    setError(null);
+    const run = ++request.current;
+    setState({ key: identityKey, schedule: [], loading: true, error: null });
+    if (authLoading) return;
     try {
-      const weekly = await fetchFacultyWeeklySchedule(facultyId);
-      setSchedule(weekly.map(toFacultySchedule));
+      if (!facultyId) throw new Error('Sign in again to load your weekly schedule.');
+      if (!collegeId) throw new Error('Your sign-in is not linked to a college. Ask your administrator to repair your college access, then sign in again.');
+      const weekly = await fetchFacultyWeeklySchedule(facultyId, { collegeId, email });
+      if (run === request.current) setState({ key: identityKey, schedule: weekly.map(toFacultySchedule), loading: false, error: null });
     } catch (err) {
-      setSchedule([]);
-      setError(err instanceof Error ? err.message : 'Failed to load your schedule.');
-    } finally {
-      setLoading(false);
+      if (run === request.current) setState({ key: identityKey, schedule: [], loading: false, error: err instanceof Error ? err.message : 'Failed to load your schedule.' });
     }
-  }, [facultyId]);
+  }, [facultyId, collegeId, email, identityKey, authLoading]);
 
   useEffect(() => {
     void loadSchedule();
+    return () => { request.current++; };
   }, [loadSchedule]);
 
   const weeklySchedule = useMemo<WeeklySchedule>(() => {

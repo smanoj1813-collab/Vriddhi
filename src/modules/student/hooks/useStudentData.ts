@@ -3,7 +3,7 @@
 // Aggregates all real Firestore data for the student dashboard.
 // Identity comes from useCurrentStudent() → no localStorage tokens.
 // ------------------------------------------------------------------
-import { createContext, createElement, useCallback, useContext, useEffect, useState, type ReactNode } from 'react';
+import { createContext, createElement, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
 import type {
   Assignment,
   Notification,
@@ -55,6 +55,8 @@ export interface UseStudentDataReturn {
   error: string | null;
   warnings: string[];
   refresh: () => void;
+  /** Targeted assessment revalidation; never reloads unrelated portal domains. */
+  refreshTests: () => Promise<void>;
   /** The resolved Firestore student document id (used by other pages). */
   studentId: string;
   collegeId: string;
@@ -204,6 +206,37 @@ const useStudentDataSource = (explicitStudentId?: string): UseStudentDataReturn 
   const [error, setError] = useState<string | null>(null);
   const [warnings, setWarnings] = useState<string[]>([]);
   const [refreshKey, setRefreshKey] = useState(0);
+  const refresh = useCallback(() => setRefreshKey((key) => key + 1), []);
+  const identity = `${user?.uid || ''}:${studentDocId}:${collegeId}`;
+  const currentIdentity = useRef(identity);
+  currentIdentity.current = identity;
+  const testsRequest = useRef<{ identity: string; promise: Promise<void> } | null>(null);
+  const refreshTests = useCallback((): Promise<void> => {
+    if (!user?.uid || !studentDocId || !collegeId) return Promise.resolve();
+    if (testsRequest.current?.identity === identity) return testsRequest.current.promise;
+    const promise = (async () => {
+      try {
+        const api = await import('../api/studentDataApi');
+        const rows = await api.fetchStudentTests(collegeId, studentDocId);
+        if (currentIdentity.current !== identity) return;
+        const next = rows.map((test) => withEffectiveStudentAssessmentLifecycle(test));
+        setTests(next);
+        setAssessments(mapAssessments(next.filter((test) => isStudentAssessmentActionable(test))));
+        const count = next.filter((test) => test.status === 'upcoming' || isStudentAssessmentActionable(test)).length;
+        setStats((previous) => previous ? { ...previous, upcomingTests: count, upcomingAssessments: count } : previous);
+        setWarnings((previous) => previous.filter((warning) => !warning.startsWith('Assessment refresh failed:')));
+      } catch (err) {
+        if (currentIdentity.current !== identity) return;
+        const reason = err instanceof Error ? err.message : String(err);
+        // Keep the last good cards and unrelated data on a transient failure.
+        setWarnings((previous) => [...previous.filter((warning) => !warning.startsWith('Assessment refresh failed:')), `Assessment refresh failed: ${reason}`]);
+      } finally {
+        if (testsRequest.current?.identity === identity) testsRequest.current = null;
+      }
+    })();
+    testsRequest.current = { identity, promise };
+    return promise;
+  }, [user?.uid, studentDocId, collegeId, identity]);
 
   const todayDate = new Date().toLocaleDateString('en-IN', {
     weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
@@ -381,7 +414,8 @@ const useStudentDataSource = (explicitStudentId?: string): UseStudentDataReturn 
     loading,
     error,
     warnings,
-    refresh: () => setRefreshKey((k) => k + 1),
+    refresh,
+    refreshTests,
     studentId: studentDocId,
     collegeId,
     codingLabEnabled,

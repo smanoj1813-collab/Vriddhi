@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   PlayArrow, Schedule, CheckCircle, Cancel,
@@ -7,6 +7,7 @@ import {
 } from "@mui/icons-material";
 import { MathRenderer } from '../components/MathRenderer';
 import { useStudentData } from '../hooks/useStudentData';
+import { useVisiblePolling } from '@/shared/hooks/useVisiblePolling';
 import type { StudentTestCardData } from '../api/studentDataApi';
 
 const TABS = [
@@ -39,27 +40,14 @@ function getTimeRemaining(iso: string): string {
 
 const StudentTestDashboard: React.FC = () => {
   const navigate = useNavigate();
-  const { tests, loading, error, warnings, refresh } = useStudentData();
+  const { tests, loading, error, warnings, refresh, refreshTests } = useStudentData();
   const [activeTab, setActiveTab] = useState<TabKey>("upcoming");
 
-  // While a future test is on screen, poll so the card flips from
-  // "Yet to start" to "Start Test" at the window open without a manual
-  // refresh. Pauses while the browser tab is hidden (no reads for a tab
-  // nobody is looking at).
-  const hasUpcoming = tests.some((t) => t.status === "upcoming");
-  useEffect(() => {
-    if (!hasUpcoming) return;
-    let id: ReturnType<typeof setInterval> | null = null;
-    const start = () => { if (id === null) id = setInterval(() => refresh(), 30_000); };
-    const stop = () => { if (id !== null) { clearInterval(id); id = null; } };
-    const onVisibility = () => (document.hidden ? stop() : start());
-    start();
-    document.addEventListener("visibilitychange", onVisibility);
-    return () => {
-      stop();
-      document.removeEventListener("visibilitychange", onVisibility);
-    };
-  }, [hasUpcoming, refresh]);
+  // Revalidate only tests. Keep the existing 30-second availability guarantee
+  // without reloading fees, assignments, profile, timetable or announcements.
+  // Hidden tabs stop completely; returning to the tab revalidates immediately.
+  const needsLiveTests = tests.some((test) => ['upcoming', 'available', 'ongoing'].includes(test.status));
+  useVisiblePolling(refreshTests, needsLiveTests ? 30_000 : null);
 
   const results = useMemo(
     () => tests.filter((t) => t.status === "completed" || t.status === "graded"),

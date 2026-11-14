@@ -220,6 +220,15 @@ export function rowToRecent(row: AttendanceRowLike & { id: string }): Attendance
   }
 }
 
+/** Ignore audit/display-only writes which cannot change any summary bucket
+ * or recent-row field. Notes, timestamps, identity and status changes remain
+ * meaningful and still run through the existing delta transaction. */
+export function attendanceSummaryAffected(before: AttendanceRowLike | null, after: AttendanceRowLike | null): boolean {
+  if (!before || !after) return true
+  return before.studentId !== after.studentId || before.collegeId !== after.collegeId
+    || JSON.stringify(rowToRecent({ ...before, id: '_' })) !== JSON.stringify(rowToRecent({ ...after, id: '_' }))
+}
+
 /** Rebuilds a summary from raw rows — used by the backfill and the reconcile pass. */
 export function summariseAttendanceRows(
   rows: Array<AttendanceRowLike & { id: string }>,
@@ -286,6 +295,7 @@ export const onAttendanceRecordWrite = onDocumentWritten(
     const before = event.data?.before?.exists ? (event.data.before.data() as AttendanceRowLike) : null
     const after = event.data?.after?.exists ? (event.data.after.data() as AttendanceRowLike) : null
     if (!before && !after) return
+    if (!attendanceSummaryAffected(before, after)) return
 
     const studentId = String(after?.studentId ?? before?.studentId ?? '')
     if (!studentId) {
@@ -364,7 +374,13 @@ export const reconcileAttendanceSummaries = onSchedule(
   },
   async () => {
     const db = admin.firestore()
-    const summaries = await db.collection(ATTENDANCE_SUMMARIES_COLLECTION).limit(RECONCILE_BATCH).get()
+    // A durable cursor gives the nightly safety check whole-roster coverage
+    // instead of paying to inspect the same first 200 students forever.
+    const checkpoint = db.collection('platform').doc('attendanceReconcileCursor')
+    const cursor = String((await checkpoint.get()).data()?.cursor || '')
+    const firstPage = db.collection(ATTENDANCE_SUMMARIES_COLLECTION).orderBy(admin.firestore.FieldPath.documentId()).limit(RECONCILE_BATCH)
+    let summaries = await (cursor ? firstPage.startAfter(cursor) : firstPage).get()
+    if (summaries.empty && cursor) summaries = await firstPage.get()
     let checked = 0
     let repaired = 0
     for (const doc of summaries.docs) {
@@ -386,6 +402,8 @@ export const reconcileAttendanceSummaries = onSchedule(
         })
       }
     }
+    const nextCursor = summaries.size === RECONCILE_BATCH ? summaries.docs[summaries.size - 1].id : ''
+    if (nextCursor !== cursor) await checkpoint.set({ cursor: nextCursor })
     logger.info('[AttendanceSummary] reconcile finished', { checked, repaired })
   },
 )

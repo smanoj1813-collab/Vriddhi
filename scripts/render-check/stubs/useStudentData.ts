@@ -31,6 +31,7 @@ export function useStudentData() {
     loading: false,
     error: null,
     refresh: () => {},
+    refreshTests: async () => {},
     ...(globalThis as any).__RC_STUDENT_DATA,
   } as any;
 }

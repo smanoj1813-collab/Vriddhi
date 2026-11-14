@@ -6,7 +6,7 @@
 - Staff navigation and dashboard action icons use finite hover/keyboard-focus greetings. Decorative illustrations stop within five seconds, have unique SVG resource IDs, are hidden from assistive technology and respect `prefers-reduced-motion`. No image requests or animation library was added.
 - Students, faculty/mentors, HODs and Principals have a **Risk Alerts** inbox. Faculty/student dashboards and supervisor overviews include a compact entry card. Student phone navigation exposes the inbox in **More → Account**; existing thumb tabs are unchanged.
 
-This is an early-warning tool, not a final exam-eligibility, compliance, disciplinary or university-policy decision. It does not change attendance, grades, deadlines or academic policies.
+Checks run as **bounded automatic reviews, daily by default**, not live early-warning monitoring. Operators can explicitly deploy a slower weekly or monthly cadence. **Check my records now** is removed, and no college/client role can initiate a scan. This is not a final exam-eligibility, compliance, disciplinary or university-policy decision. It does not change attendance, grades, deadlines or academic policies. See the [current safe cost controls and rollout](firestore-cost-controls.md) before deploying.
 
 ## Evidence and scope
 
@@ -52,7 +52,7 @@ Inbox reads, acknowledgements and push sends recheck recipient ownership, curren
 - **Archived:** a time-bounded observation aged outside its window, not evidence it was fixed.
 - **Coverage warnings:** displayed separately; never pushed as confirmed academic risk.
 
-Alert IDs are deterministic over college + subject + recipient + finding key. A read acknowledgement does not resolve the underlying issue. A transactional outbox opens a new push generation only for first opening/reopening or severity escalation, not every sweep or count change. Subject leases prevent a simultaneous self-service and background check from overwriting one another.
+Alert IDs are deterministic over college + subject + recipient + finding key. A read acknowledgement does not resolve the underlying issue. A transactional outbox opens a new push generation only for first opening/reopening or severity escalation, not every sweep or count change. Subject leases prevent overlapping scheduled worker deliveries from overwriting one another.
 
 ## Principal configuration
 
@@ -68,15 +68,19 @@ Open **Principal → Risk Alerts → Warning settings**.
 | Curriculum lag buffer | 10% of past-due dated topics | 0–100 |
 | Grading backlog deadline | 7 days | 1–60 |
 
-These are **operational warning defaults**, not default academic regulations. The attendance minimum always comes from the linked student's explicitly assigned academic scheme. Settings are validated server-side, revision-checked and audited. The Principal can pause checks; pausing never marks old issues resolved.
+These are **operational warning defaults**, not default academic regulations. The attendance minimum always comes from the linked student's explicitly assigned academic scheme. Settings are validated server-side, revision-checked and audited. The Principal can enable/pause the scheduled checks; saving settings does not initiate a check. Changes apply at the next scheduled review; pausing never marks old issues resolved.
 
 Staff check-in/out monitoring additionally requires choosing a verified faculty member, explicit working weekdays, same-day check-in/out times, an effective start date and optional end/excluded dates. Removing a schedule pauses coverage instead of silently claiming earlier attendance issues were fixed.
 
 ## Background checking and bounded reads
 
-`sweepAcademicRiskAlerts` runs every 15 minutes in `asia-south1`, with IST scheduling. It scans discovered student/faculty/mentor accounts in deterministic pages of 25, validates them against Auth, processes at most three subjects concurrently and resumes its cursor when its seven-minute/1,000-successful-check budget is reached (checked between completed pages; failed/ineligible accounts do not count as successes). One leased sweep runs at a time. Inspect `riskJobs/academic-sweep` for cursor, checkpoint, processed/error counts and cycle completion.
+**Cost-control revision: automatic checking is a bounded scheduled snapshot, not continuous early-warning monitoring.** The deployment setting `ACADEMIC_RISK_REVIEW_CADENCE` selects daily, weekly or monthly reviews; the default is **daily, 03:00 IST** (`0 3 * * *`, `asia-south1`) to fit the initial 48-hour deadline-warning window. Durable cadence/IST-period guards prevent retries or leftover frequent deliveries from starting another cycle in the same period. The starter only creates a server-owned `riskSweepRequests` document; it does not scan academic evidence. The inbox displays backend-supplied cadence, not a fixed monthly promise. See [safe Firestore cost controls](firestore-cost-controls.md) for the complete current policy and rollout.
 
-This is **not a promise that every account is checked every 15 minutes**. Large institutions may need several ticks. The inbox shows evidence timestamps and warns when received checks are over four hours old. Students/faculty can request **Check my records now** once every two minutes; inbox refresh alone only reloads materialized results.
+`continueAcademicRiskSweep` handles create-triggered continuations only while that cycle has remaining work. It discovers student/faculty/mentor accounts in deterministic pages of 25, validates Auth, and checks at most three subjects concurrently. Each chunk stops between completed pages after seven minutes or 1,000 **discovered** accounts (including orphan/invalid hints), checkpoints its cursor, and atomically queues the next chunk. Large rosters therefore finish within the same scheduled cycle rather than waiting another cycle after the first 1,000 accounts. Leases serialize chunks; completed deliveries are idempotent; claimed chunk attempts are capped at three, with at most 200 chunks per review. Failure budgets stop visibly instead of triggering unbounded scans. Inspect `riskJobs/academic-sweep` and `riskSweepRequests` for period, cursor, counts, status, errors and completion; discovery completion is not an academic “all clear.”
+
+Unchanged findings and unchanged unverified states no longer rewrite alert copies just to advance timestamps. `riskSubjectRuns` stores check freshness once per subject; authorized inbox responses derive current check times from those runs. Read acknowledgements and their timestamps are preserved. The inbox has **no interval/focus/reconnect polling**: it loads on entry, explicit refresh, successful user actions, or a real foreground push. No student, faculty, mentor, HOD, department-admin, Principal or other client can request an on-demand check. The old `refreshMyAcademicRiskAlerts` export is a deny-only compatibility endpoint, not a scanner; deploying that replacement blocks cached apps and direct requests as well as the removed UI. The inbox returns `canRefresh: false` for cached older clients. Scheduled checks can miss intervening attendance/deadline changes; the UI explicitly states that it is not live monitoring. Inbox refresh only reloads saved results. Acknowledgement, push enrollment and Principal settings/schedule saves never trigger recomputation.
+
+See [safe cost controls and rollout](firestore-cost-controls.md), especially the deployment ordering and the fact that a Hosting-only deploy does not stop an already-deployed 15-minute scheduler.
 
 Caps are explicit, checked with `limit + 1` and reported as incomplete coverage:
 
@@ -85,7 +89,7 @@ Caps are explicit, checked with `limit + 1` and reported as incomplete coverage:
 - Faculty: last 30 days of classes/registers (1,000 each), 200 timetable slots, last seven days of staff attendance (50), 1,500 ledger topics, 100 mappings, up to 5,000 related submissions/attempts.
 - Inbox: latest 300 recipient entries, explicitly marked if truncated. Previous active/unverified history is bounded at 3,000 rows per subject before requiring maintenance. Configuration directory lists up to 500 staff/schedules.
 
-A capped or failed source cannot produce a missing-evidence risk or falsely resolve an earlier finding. Do not simply raise caps indefinitely for a large institution: move discovery/catalogues to indexed active-term queries/partitioned jobs, keep completeness markers, and monitor Firestore read cost and sweep cycle times. Accounts without a canonical `users` discovery document can still self-check, but should have their provisioning linkage repaired to participate in scheduled scans.
+A capped or failed source cannot produce a missing-evidence risk or falsely resolve an earlier finding. Do not simply raise caps indefinitely for a large institution: move discovery/catalogues to indexed active-term queries/partitioned jobs, keep completeness markers, and monitor Firestore read cost and sweep cycle times. Accounts without a canonical `users` discovery document need their provisioning linkage repaired to participate in the next scheduled review; no self-check fallback is provided.
 
 ## Opt-in web push
 
@@ -99,7 +103,7 @@ Push is implemented, but **no deployment, browser opt-in or live FCM delivery is
 
 `riskPushDevices` is server-only, token-hashed, owner-bound and bounded to ten devices per account. Re-registering a shared-browser token replaces the previous binding, and one user cannot unregister another user's token. Unused devices older than 90 days are not used for sends; invalid/unregistered tokens are removed when FCM reports them. Plan retention/cleanup of old alert, device and audit records under the institution's policy.
 
-Delivery revalidates current recipient/subject scope and active alert generation. Outbox sends are leased, transient failures retry (at most eight attempts/24 hours), and a scheduled recovery catches interrupted deliveries. Web Push TTL is 15 minutes. Delivery is best-effort/at-least-once: a stable browser notification tag replaces a retry of the same alert rather than stacking duplicates; it is not an exactly-once guarantee.
+Delivery revalidates current recipient/subject scope and active alert generation. Outbox sends are leased and transient failures use the create trigger's retries (at most eight claimed send attempts/24 hours). The recovery scheduler now runs **daily at 06:00 IST**, independently of the full-review cadence, not every 15 minutes; it queries only pending messages created within the delivery window so expired backlog cannot crowd out fresh messages. Recovery remains bounded to 100 messages and best-effort; old outbox retention is an operator task. Only new/reopened/escalated findings materialized by the scheduled review create risk-push events; ordinary record edits do not trigger a scan. Web Push TTL is 15 minutes. Delivery is best-effort/at-least-once: a stable browser notification tag replaces a retry of the same alert rather than stacking duplicates; it is not an exactly-once guarantee.
 
 FCM messages contain only routing/account identifiers, **not faculty/student names, marks, attendance percentages or issue text**. The worker checks a persisted active-account + explicit-enrollment binding before showing a generic private-inbox reminder. Sign-out/account switching clears the binding and closes old notices locally even if server token cleanup is offline. Foreground messages invalidate the signed-in inbox cache. Notification clicks only open the same-origin role inbox.
 
@@ -107,8 +111,8 @@ FCM messages contain only routing/account identifiers, **not faculty/student nam
 
 1. In the normal deployment checkout, **pull merged `main` first**; do not deploy a stale checkout. Keep this Arena working branch unchanged during implementation.
 2. Install locked root and Functions dependencies, run tests, build root and Functions with the public VAPID setting if push is wanted.
-3. Deploy the checked-in Firestore indexes and wait for them to be ready, then Functions, rules and Hosting to `vriddhi-academic`. New compound risk queries need the included indexes. A missing index is surfaced as coverage failure, not an empty successful check.
-4. Have the Principal review warning defaults, explicit working schedules, existing assigned academic packs and faculty/HOD/Principal provisioning links. Run self-service checks on sample real accounts before relying on the rotating sweep.
+3. Deploy the checked-in Firestore indexes and wait for them to be ready, then follow the [current safe rollout order](firestore-cost-controls.md#safe-rollout--only-after-approval): pause legacy 15-minute jobs, wait for active work, deploy the deny-only manual endpoint/saved inbox, deploy the continuation trigger **before** its starter, then the configured starter/daily push recovery, rules and Hosting to `vriddhi-academic`. New compound risk queries need the included indexes. A missing index is surfaced as coverage failure, not an empty successful check.
+4. Have the Principal review warning defaults, explicit working schedules, existing assigned academic packs and faculty/HOD/Principal provisioning links. Confirm no sample college account can trigger a scan, including direct calls to the retired endpoint, and that inbox/configuration actions do not start work. Observe the next scheduled review; do not offer a manual run option.
 5. Check `riskJobs`, `riskSubjectRuns`, coverage warnings, Functions logs and outbox delivery state. Perform the real-device acceptance cases above. No data migration, default university activation, production configuration or deployment was executed here.
 
 ## Validation commands
@@ -124,11 +128,13 @@ npm run build
 npm --prefix functions run build
 ```
 
-New coverage includes pure decisions, actual callable handlers against an atomic in-memory SDK boundary (including reads-before-writes, auth/tenant/department boundaries, outbox/device ownership, deduplication, incomplete rechecks and 805-row reconciliation), the actual push client with held/released SDK calls, the actual worker in an isolated IDB/event boundary, role dashboards/shared shell and real inbox/configuration renders. Tenant + faculty schedule IDs are hashed structured tuples, avoiding delimiter collisions; both stored faculty and college links are rechecked when loading a schedule.
+New coverage includes pure decisions, actual scheduled handlers/internal materialization and authenticated inbox/configuration/push callables against an atomic in-memory SDK boundary (including reads-before-writes, auth/tenant/department boundaries, outbox/device ownership, deduplication, incomplete rechecks and 805-row reconciliation), the actual push client with held/released SDK calls, the actual worker in an isolated IDB/event boundary, role dashboards/shared shell and real inbox/configuration renders. Tenant + faculty schedule IDs are hashed structured tuples, avoiding delimiter collisions; both stored faculty and college links are rechecked when loading a schedule.
 
 Ten new collection-boundary cases were also added to `functions/test/firestore.rules.test.ts` for anonymous, student, faculty, HOD, department-admin, Principal and superadmin direct get/list/create/update/delete denials. Those emulator tests were **not run in this sandbox**, which has no Java runtime. They are part of the existing blocking Java-enabled CI rules suite.
 
-### Local acceptance — 13 November 2026
+### Original feature acceptance — 13 November 2026 (before monthly-only revision)
+
+These historical results describe the initial feature. See [current cost-control checks](firestore-cost-controls.md#reproducible-checks) for the latest suites, including the removal of all client-triggered scans.
 
 | Validation | Result |
 | --- | --- |

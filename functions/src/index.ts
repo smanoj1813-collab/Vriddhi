@@ -407,6 +407,6 @@ export {
 export {
   getMyAcademicRiskAlerts, markMyAcademicRiskAlertRead, refreshMyAcademicRiskAlerts,
   getAcademicRiskConfiguration, saveAcademicRiskConfiguration, saveFacultyRiskWorkSchedule,
-  sweepAcademicRiskAlerts, registerMyAcademicRiskDevice, unregisterMyAcademicRiskDevice,
+  sweepAcademicRiskAlerts, continueAcademicRiskSweep, registerMyAcademicRiskDevice, unregisterMyAcademicRiskDevice,
   sendAcademicRiskPush, retryAcademicRiskPush,
 } from './riskAlerts'
