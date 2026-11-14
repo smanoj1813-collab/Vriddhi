@@ -25,13 +25,15 @@ function userForRole(role: string) {
 }
 export function useAuth() {
   const role = (globalThis as any).__RC_ROLE ?? 'principal';
-  const __user = userForRole(role);
+  const __user = Object.prototype.hasOwnProperty.call(globalThis, '__RC_AUTH_USER')
+    ? (globalThis as any).__RC_AUTH_USER : userForRole(role);
+  const loading = (globalThis as any).__RC_AUTH_LOADING === true;
   return {
     user: __user,
     firebaseUser: null,
-    isLoading: false,
-    loading: false,
-    isAuthenticated: true,
+    isLoading: loading,
+    loading,
+    isAuthenticated: !!__user,
     login: async () => __user,
     logout: async () => {},
     hasRole: () => true,

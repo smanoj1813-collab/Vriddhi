@@ -105,7 +105,7 @@ export function useFacultyCurriculum(
       setCurriculum(views as FacultyCurriculumView[]);
 
       // Schedule: weekly recurring classes for this faculty
-      const weekly = await fetchFacultyWeeklySchedule(facultyId);
+      const weekly = await fetchFacultyWeeklySchedule(facultyId, { collegeId });
       const mapped: FacultyScheduleItem[] = weekly.map((w) => {
         const date = nextOccurrenceISO(w.dayOfWeek);
         return {

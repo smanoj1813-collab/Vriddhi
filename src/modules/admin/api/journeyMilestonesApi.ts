@@ -4,6 +4,9 @@
 import { collection, getDocs, query, orderBy, limit, where, Timestamp, type DocumentData, type Query, type QueryDocumentSnapshot } from 'firebase/firestore'
 import { db } from '@/Firebase/data'
 import type { Milestone } from './journeyApi'
+import type { FacultyTimelineIdentity } from '@/shared/api/facultyProfileApi'
+import { normalizeSessionDate } from '@/shared/utils/sessionDate'
+import { normalizeMentorReference } from '@/modules/faculty/utils/facultyJourney'
 
 function getCollegeId(): string {
   const id = localStorage.getItem('vriddhi_college_id')
@@ -210,86 +213,82 @@ export async function fetchCollegeMilestonesFromRealData(): Promise<Milestone[]>
   }
 }
 
-// Faculty journey timeline from real data
-export async function fetchFacultyTimelineFromRealData(facultyEmail: string, facultyName: string): Promise<Milestone[]> {
-  const collegeId = getCollegeId()
-  const milestones: Milestone[] = []
-
-  try {
-    // Assessments created by faculty
-    const assessmentSnap = await getDocs(query(collection(db, 'assessments'), where('collegeId', '==', collegeId), limit(20)))
-    const facultyAssessments = assessmentSnap.docs.filter(d => {
-      const data = d.data()
-      return data.createdBy === facultyEmail || data.facultyName === facultyName || data.createdByName === facultyName
-    })
-
-    facultyAssessments.forEach(d => {
-      const data = d.data()
-      milestones.push({
-        id: `faculty_assessment_${d.id}`,
-        title: `Created Assessment: ${data.title || 'Untitled'}`,
-        date: toDateString(data.createdAt),
-        status: data.status === 'published' || data.status === 'active' ? 'completed' : 'upcoming',
-        description: `${data.courseName || data.subject || ''} • ${data.totalMarks || 0} marks • ${data.totalQuestions || 0} questions`,
-        metric: `${data.status || 'draft'}`,
-      })
-    })
-
-    // Papers generated
-    const papersSnap = await getDocs(query(collection(db, 'papers'), where('collegeId', '==', collegeId), limit(10)))
-    const facultyPapers = papersSnap.docs.filter(d => {
-      const data = d.data()
-      return data.createdBy === facultyEmail || data.createdByName === facultyName
-    })
-
-    facultyPapers.forEach(d => {
-      const data = d.data()
-      milestones.push({
-        id: `faculty_paper_${d.id}`,
-        title: `Generated Paper: ${data.title || 'Paper'}`,
-        date: toDateString(data.createdAt),
-        status: 'completed',
-        description: `${data.subjectId || ''} • ${data.totalMarks || 0} marks • ${data.totalQuestions || 0} questions`,
-        metric: 'Paper generator',
-      })
-    })
-
-    // If no data, starter
-    if (milestones.length === 0) {
-      return [
-        {
-          id: 'faculty_start_1',
-          title: 'Faculty Onboarding',
-          date: new Date().toISOString().slice(0, 10),
-          status: 'completed',
-          description: `${facultyName} • ${facultyEmail} • Teaching assignment`,
-          metric: 'Active faculty',
-        },
-        {
-          id: 'faculty_start_2',
-          title: 'Create First Assessment',
-          date: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
-          status: 'upcoming',
-          description: 'Use AI Question Generator → Paper Generator → Schedule Test',
-          metric: 'Next: 5M/10M questions',
-        },
-        {
-          id: 'faculty_start_3',
-          title: 'Auto-Grading 5M/10M',
-          date: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
-          status: 'upcoming',
-          description: 'Grade descriptive answers with rubric + one-click presets • Save 70% time',
-          metric: 'Faculty → Auto-Grading',
-        },
-      ]
-    }
-
-    milestones.sort((a, b) => b.date.localeCompare(a.date))
-    return milestones.slice(0, 15)
-  } catch (e) {
-    console.error('[journeyMilestonesApi] Faculty timeline failed:', e)
-    return []
+// Faculty activity is queried by owner BEFORE the limit, not selected from
+// the college's first 20 rows (which hid activity in any moderately busy college).
+export async function fetchFacultyTimelineFromRealData(
+  identity: FacultyTimelineIdentity,
+): Promise<{ milestones: Milestone[]; limited: boolean }> {
+  if (!identity.collegeId) throw new Error('A college is required to load faculty activity.')
+  const ownerIds = [...new Set([...identity.ids, ...identity.emails].map(value => value.trim()).filter(Boolean))]
+  const names = [...new Set(identity.names.map(value => value.trim()).filter(Boolean))]
+  const nameKeys = new Set(names.map(normalizeMentorReference))
+  const emails = new Set(identity.emails.map(value => value.toLowerCase()))
+  const belongsToFaculty = (data: DocumentData): boolean => {
+    const owners = [data.createdBy, data.facultyId, data.facultyUid].filter(value => typeof value === 'string' && value.trim()) as string[]
+    if (owners.some(owner => identity.ids.includes(owner) || emails.has(owner.trim().toLowerCase()))) return true
+    // A matching display name must not override somebody else's explicit id.
+    if (owners.length) return false
+    return [data.createdByName, data.facultyName].some(value => nameKeys.has(normalizeMentorReference(value)))
   }
+  let limited = false
+  const readOwned = async (path: string, fields: Array<[string, string[]]>) => {
+    const queries = fields.flatMap(([field, values]) => {
+      const batches: string[][] = []
+      for (let i = 0; i < values.length; i += 10) batches.push(values.slice(i, i + 10))
+      return batches.map(batch => getDocs(query(
+        collection(db, path),
+        where('collegeId', '==', identity.collegeId),
+        where(field, 'in', batch),
+        limit(51),
+      )))
+    })
+    const snapshots = await Promise.all(queries)
+    const rows = new Map<string, QueryDocumentSnapshot<DocumentData>>()
+    for (const snap of snapshots) {
+      if (snap.size > 50) limited = true
+      for (const row of snap.docs.slice(0, 50)) {
+        if (row.data().collegeId === identity.collegeId && belongsToFaculty(row.data())) rows.set(row.id, row)
+      }
+    }
+    return [...rows.values()]
+  }
+
+  // Fail visibly on a transport/permission error: [] is reserved for a
+  // successful read with no activity. The page offers an independent retry.
+  const [assessments, papers] = await Promise.all([
+    readOwned('assessments', [['createdBy', ownerIds], ['facultyId', identity.ids], ['createdByName', names], ['facultyName', names]]),
+    readOwned('papers', [['createdBy', ownerIds], ['createdByName', names]]),
+  ])
+  const describeActivity = (subject: string, data: DocumentData) => [
+    subject,
+    typeof data.totalMarks === 'number' && Number.isFinite(data.totalMarks) ? `${data.totalMarks} marks` : '',
+    typeof data.totalQuestions === 'number' && Number.isFinite(data.totalQuestions) ? `${data.totalQuestions} questions` : '',
+  ].filter(Boolean).join(' • ')
+  const milestones: Milestone[] = [
+    ...assessments.map(row => {
+      const data = row.data()
+      return {
+        id: `faculty_assessment_${row.id}`,
+        title: `Created Assessment: ${data.title || 'Untitled'}`,
+        date: normalizeSessionDate(data.createdAt),
+        status: 'completed' as const,
+        description: describeActivity(data.courseName || data.subject || 'Assessment', data),
+        metric: String(data.status || 'draft'),
+      }
+    }),
+    ...papers.map(row => {
+      const data = row.data()
+      return {
+        id: `faculty_paper_${row.id}`,
+        title: `Generated Paper: ${data.title || 'Paper'}`,
+        date: normalizeSessionDate(data.createdAt),
+        status: 'completed' as const,
+        description: describeActivity(data.subjectId || data.subject || 'Question paper', data),
+        metric: 'Paper generator',
+      }
+    }),
+  ].sort((a, b) => b.date.localeCompare(a.date))
+  return { milestones: milestones.slice(0, 15), limited: limited || milestones.length > 15 }
 }
 
 // Student journey timeline from real data (beyond getMyAcademicJourney)

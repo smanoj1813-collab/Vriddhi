@@ -11,6 +11,8 @@ import {
   limit,
 } from 'firebase/firestore'
 import { db } from '@/Firebase/data'
+import { fetchFacultyProfile, type FacultyProfile } from '@/shared/api/facultyProfileApi'
+import { isFacultyMentee } from '@/modules/faculty/utils/facultyJourney'
 
 const MAX_READS = 500
 
@@ -54,19 +56,7 @@ export interface Milestone {
   metric?: string
 }
 
-export interface FacultyRecord {
-  id: string
-  firstName: string
-  lastName?: string
-  designation?: string
-  department?: string
-  email: string
-  joiningDate?: string
-  topicsCovered?: number
-  topicsPending?: number
-  papersUploaded?: number
-  avgAttendance?: number
-}
+export type FacultyRecord = FacultyProfile
 
 export interface StudentRecord {
   id: string
@@ -148,59 +138,54 @@ export async function fetchMilestones(): Promise<Milestone[]> {
     .slice(0, 10)
 }
 
-export async function fetchFacultyByEmail(email: string): Promise<FacultyRecord | null> {
-  const snap = await getDocs(
-    query(collegeRef('faculty'), where('email', '==', email), limit(1))
-  )
-  if (!trackRead(snap.size)) return null
-
-  if (snap.empty) return null
-  const doc = snap.docs[0]
-  return { id: doc.id, ...doc.data() } as FacultyRecord
+export async function fetchFacultyByEmail(email: string, collegeId = getCollegeId()): Promise<FacultyRecord | null> {
+  return fetchFacultyProfile({ collegeId, email })
 }
 
-export async function fetchStudentsByMentor(mentorName: string): Promise<StudentRecord[]> {
-  const snap = await getDocs(
-    query(
-      scopedRef('students'),
-      where('collegeId', '==', getCollegeId()),
-      where('mentor', '==', mentorName),
-      limit(MAX_READS)
-    )
-  )
-  if (!trackRead(snap.size)) return []
-
+export async function fetchStudentsByMentor(
+  mentor: string | readonly string[],
+  collegeId = getCollegeId(),
+): Promise<StudentRecord[]> {
+  const aliases = typeof mentor === 'string' ? [mentor] : mentor
+  if (!aliases.some(value => value.trim())) return []
+  // There is no normalized mentor field in older imports. Read only this
+  // college's bounded roster, then match uid/profile/email/name spellings.
+  const snap = await getDocs(query(
+    scopedRef('students'),
+    where('collegeId', '==', collegeId),
+    limit(MAX_READS + 1),
+  ))
+  // This section has a per-request cap; it must not consume the legacy
+  // student-tab counter and poison that tab after a faculty refresh.
+  // Never turn a capped roster into an apparently complete mentor count.
+  if (snap.size > MAX_READS) throw new Error('The roster is too large for the Journey summary. Use Student Analysis for the full roster.')
   return snap.docs
-    .map(d => ({ id: d.id, ...d.data() }) as StudentRecord)
-    .sort((a, b) => a.name.localeCompare(b.name))
+    .filter(d => d.data().collegeId === collegeId && isFacultyMentee(d.data(), aliases))
+    .map(d => ({ ...d.data(), id: d.id }) as StudentRecord)
+    .sort((a, b) => (a.name || '').localeCompare(b.name || ''))
 }
 
-export async function fetchScoresByStudentIds(studentIds: string[]): Promise<ScoreRecord[]> {
+export async function fetchScoresByStudentIds(studentIds: string[], collegeId = getCollegeId()): Promise<ScoreRecord[]> {
   if (studentIds.length === 0) return []
-  // Firestore 'in' limit is 10, so batch if needed
-  const batches = []
-  for (let i = 0; i < studentIds.length; i += 10) {
-    const batch = studentIds.slice(i, i + 10)
-    batches.push(batch)
-  }
-
+  const ids = [...new Set(studentIds)]
   const allScores: ScoreRecord[] = []
-  const collegeId = getCollegeId()
-  for (const batch of batches) {
-    const snap = await getDocs(
-      query(scopedRef('studentAssessments'), where('studentId', 'in', batch), limit(MAX_READS))
-    )
-    if (!trackRead(snap.size)) continue
-    allScores.push(
-      ...snap.docs
-        .map(d => ({ id: d.id, ...d.data() }) as ScoreRecord)
-        // Only graded attempts carry a defensible percentage, and only rows
-        // belonging to this college may contribute to a journey.
-        .filter(r => r.collegeId === collegeId && r.status === 'graded')
-    )
+  for (let i = 0; i < ids.length; i += 10) {
+    const snap = await getDocs(query(
+      scopedRef('studentAssessments'),
+      // Rules authorize candidate documents, not the client-side filter below.
+      where('collegeId', '==', collegeId),
+      where('studentId', 'in', ids.slice(i, i + 10)),
+      where('status', '==', 'graded'),
+      limit(MAX_READS - allScores.length + 1),
+    ))
+    allScores.push(...snap.docs.map(d => ({ ...d.data(), id: d.id }) as ScoreRecord))
+    if (allScores.length > MAX_READS) throw new Error('There are too many results for the Journey summary. Use Student Analysis for detailed results.')
   }
-
-  return allScores.sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''))
+  // These faculty summary reads use per-request caps: repeated Retry/Refresh
+  // must not exhaust a module-global counter and silently turn real data to [].
+  return allScores
+    .filter(r => r.collegeId === collegeId && r.status === 'graded')
+    .sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''))
 }
 
 export async function fetchAttendanceByStudentId(studentId: string): Promise<AttendanceRecord[]> {

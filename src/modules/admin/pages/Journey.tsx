@@ -10,8 +10,9 @@ import {
   TrendingDown, Minus, User, Layers, Activity, Loader2
 } from 'lucide-react'
 import { useDashboardData } from '../../admin/hooks/useDashboardData'
-import { useCollegeJourney, useFacultyJourney, useStudentJourney, useFacultyTimeline, useStudentTimeline } from '../hooks/useJourney'
+import { useCollegeJourney, useStudentJourney, useStudentTimeline } from '../hooks/useJourney'
 import PWAInstallCard from '@/shared/components/PWAInstallCard'
+import FacultyJourneyPage from '@/modules/faculty/pages/FacultyJourneyPage'
 
 // ─── Helper Components ──────────────────────────────────
 
@@ -224,157 +225,9 @@ const CollegeJourney = () => {
 
 // ─── Faculty Journey ────────────────────────────────────
 
-const FacultyJourney = () => {
-  const { data, loading } = useFacultyJourney()
-  const facultyEmail = (() => {
-    try {
-      const raw = localStorage.getItem('vriddhi_user')
-      return raw ? JSON.parse(raw).email || '' : ''
-    } catch { return '' }
-  })()
-  const facultyName = data?.faculty.name || ''
-  const { milestones: facultyMilestones, loading: timelineLoading } = useFacultyTimeline(facultyEmail, facultyName)
-
-  if (loading) {
-    return <div className="flex items-center justify-center py-20"><Loader2 className="w-8 h-8 animate-spin text-slate-500" /></div>
-  }
-
-  if (!data) {
-    return <div className="glass-card p-8 text-center"><p className="text-slate-600 dark:text-slate-400">No faculty data available. Please check your profile settings.</p></div>
-  }
-
-  const stats = [
-    { label: 'Years of Service', value: data.yearsOfService ?? 0, icon: <Clock className="w-5 h-5" />, color: 'text-purple-400' },
-    { label: 'Students Mentored', value: data.totalStudents ?? 0, icon: <Users className="w-5 h-5" />, color: 'text-blue-400' },
-    { label: 'Avg Student Score', value: `${data.avgStudentScore ?? 0}%`, icon: <BarChart3 className="w-5 h-5" />, color: 'text-amber-400' },
-    { label: 'Classes This Week', value: data.classesThisWeek ?? 0, icon: <BookOpen className="w-5 h-5" />, color: 'text-emerald-400' },
-  ]
-
-  // "Expected Promotion: Professor by 2027", "12 papers by 2026", "3 new
-  // faculty hires" with 85/78/72/65% confidence were pure invention — nothing in
-  // the system tracks promotions, publications or hiring plans. Replaced with
-  // figures the records actually support.
-  const covered = data.topicsCovered
-  const totalTopics = data.topicsCovered + data.topicsPending
-  const facts = [
-    {
-      label: 'Syllabus coverage',
-      value: totalTopics > 0 ? `${covered} of ${totalTopics} topics` : 'No topics mapped',
-      detail: totalTopics > 0 ? `${Math.round((covered / totalTopics) * 100)}% of the mapped syllabus delivered` : 'Map the syllabus to track coverage',
-    },
-    {
-      label: 'Mentee outcomes',
-      value: data.totalStudents > 0 ? `${data.avgStudentScore}% average` : 'No mentees',
-      detail: data.totalStudents > 0
-        ? `${data.goodStudentsCount} strong · ${data.studentPerformanceDistribution.average} average · ${data.weakStudentsCount} needing support`
-        : 'No students are assigned to this mentor',
-    },
-    {
-      label: 'Class attendance',
-      value: data.avgAttendance > 0 ? `${data.avgAttendance}%` : 'Not marked',
-      detail: data.avgAttendance > 0
-        ? `${data.classesThisWeek} class${data.classesThisWeek === 1 ? '' : 'es'} per week on average`
-        : 'No attendance marked for these classes',
-    },
-  ]
-
-  const pieData = [
-    { label: 'Good', value: data.studentPerformanceDistribution.good, color: 'bg-green-500' },
-    { label: 'Average', value: data.studentPerformanceDistribution.average, color: 'bg-amber-500' },
-    { label: 'Weak', value: data.studentPerformanceDistribution.weak, color: 'bg-red-500' },
-  ]
-  const totalStudents = data.studentPerformanceDistribution.good + data.studentPerformanceDistribution.average + data.studentPerformanceDistribution.weak
-
-  return (
-    <div className="space-y-6">
-      <div className="glass-card p-6">
-        <div className="flex items-center gap-4 mb-4">
-          <div className="w-14 h-14 rounded-xl bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center"><User className="w-7 h-7 text-purple-600 dark:text-purple-400" /></div>
-          <div>
-            <h2 className="text-xl font-bold text-slate-900 dark:text-white">{data.faculty.title} {data.faculty.name}</h2>
-            <p className="text-slate-600 dark:text-slate-400 text-sm">{data.faculty.department} Department · {data.yearsOfService} years of service</p>
-          </div>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        {stats.map((stat, i) => <StatCard key={i} {...stat} />)}
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 glass-card p-6">
-          <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-6 flex items-center gap-2"><MapPin className="w-5 h-5 text-purple-600 dark:text-purple-400" />Career Timeline — Connected to Real Data</h3>
-          {timelineLoading ? (
-            <div className="flex items-center justify-center py-10"><Loader2 className="w-6 h-6 animate-spin text-slate-500" /></div>
-          ) : facultyMilestones.length === 0 ? (
-            <p className="text-slate-500 text-center py-10">No faculty activity yet. Create assessments, papers to see timeline.</p>
-          ) : (
-            <Timeline milestones={facultyMilestones} />
-          )}
-        </div>
-
-        <div className="space-y-6">
-          <div className="glass-card p-6">
-            <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2"><Users className="w-5 h-5 text-purple-600 dark:text-purple-400" />Student Performance</h3>
-            <div className="space-y-3">
-              <div className="flex items-center gap-3">
-                <div className="flex-1 h-3 bg-slate-700 rounded-full overflow-hidden flex">
-                  {pieData.map((d, i) => (
-                    <div key={i} className={`${d.color} h-full`} style={{ width: `${totalStudents > 0 ? (d.value / totalStudents) * 100 : 0}%` }} />
-                  ))}
-                </div>
-              </div>
-              <div className="flex justify-between text-xs">
-                {pieData.map((d, i) => (
-                  <div key={i} className="flex items-center gap-1.5">
-                    <div className={`w-2 h-2 rounded-full ${d.color}`} />
-                    <span className="text-slate-600 dark:text-slate-400">{d.label}: <span className="text-slate-900 dark:text-white">{d.value}</span></span>
-                  </div>
-                ))}
-              </div>
-              <div className="grid grid-cols-3 gap-2 mt-4">
-                <div className="p-2 rounded-lg bg-green-500/10 text-center"><p className="text-lg font-bold text-emerald-600 dark:text-emerald-400">{data.goodStudentsCount}</p><p className="text-[10px] text-slate-600 dark:text-slate-400">Good</p></div>
-                <div className="p-2 rounded-lg bg-amber-500/10 text-center"><p className="text-lg font-bold text-amber-600 dark:text-amber-400">{data.studentPerformanceDistribution.average}</p><p className="text-[10px] text-slate-600 dark:text-slate-400">Average</p></div>
-                <div className="p-2 rounded-lg bg-red-500/10 text-center"><p className="text-lg font-bold text-red-600 dark:text-red-400">{data.weakStudentsCount}</p><p className="text-[10px] text-slate-600 dark:text-slate-400">Weak</p></div>
-              </div>
-            </div>
-          </div>
-
-          <div className="glass-card p-6">
-            <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2"><Target className="w-5 h-5 text-amber-600 dark:text-amber-400" />Teaching Record</h3>
-            <div className="space-y-3">
-              {facts.map((item) => (
-                <div key={item.label} className="p-3 rounded-lg glass-card/30">
-                  <span className="text-xs text-slate-600 dark:text-slate-400">{item.label}</span>
-                  <p className="text-slate-900 dark:text-white font-medium text-sm mt-1">{item.value}</p>
-                  <p className="text-xs text-slate-500 mt-0.5">{item.detail}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="glass-card p-6">
-            <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2"><Layers className="w-5 h-5 text-emerald-400" />Teaching Progress</h3>
-            <div className="space-y-3">
-              <div className="p-3 rounded-lg bg-slate-100 dark:bg-slate-800/50">
-                <div className="flex justify-between mb-1"><span className="text-xs text-slate-600 dark:text-slate-400">Topics Covered</span><span className="text-xs text-emerald-400">{data.topicsCovered}/{data.topicsCovered + data.topicsPending}</span></div>
-                <div className="w-full h-2 bg-slate-700 rounded-full overflow-hidden"><div className="h-full bg-emerald-500 rounded-full" style={{ width: `${(data.topicsCovered + data.topicsPending) > 0 ? (data.topicsCovered / (data.topicsCovered + data.topicsPending)) * 100 : 0}%` }} /></div>
-              </div>
-              <div className="p-3 rounded-lg bg-slate-100 dark:bg-slate-800/50">
-                <div className="flex justify-between mb-1"><span className="text-xs text-slate-600 dark:text-slate-400">Papers Uploaded</span><span className="text-xs text-blue-600 dark:text-blue-400">{data.papersUploaded}</span></div>
-                <div className="w-full h-2 bg-slate-700 rounded-full overflow-hidden"><div className="h-full bg-blue-500 rounded-full" style={{ width: `${Math.min(data.papersUploaded * 20, 100)}%` }} /></div>
-              </div>
-              <div className="p-3 rounded-lg bg-slate-100 dark:bg-slate-800/50">
-                <div className="flex justify-between mb-1"><span className="text-xs text-slate-600 dark:text-slate-400">Avg Attendance</span><span className="text-xs text-purple-600 dark:text-purple-400">{data.avgAttendance}%</span></div>
-                <div className="w-full h-2 bg-slate-700 rounded-full overflow-hidden"><div className="h-full bg-purple-500 rounded-full" style={{ width: `${data.avgAttendance}%` }} /></div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  )
-}
+// Keep the faculty tab aligned with the dedicated faculty portal (live Auth
+// identity, real activity, recoverable errors and unknown-value semantics).
+const FacultyJourney = () => <FacultyJourneyPage embedded />
 
 // ─── Student Journey ────────────────────────────────────
 

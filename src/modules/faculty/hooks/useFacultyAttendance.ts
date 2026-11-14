@@ -48,8 +48,9 @@ export function useFacultyAttendance() {
   const [searchParams] = useSearchParams();
   const preselectedSessionId = searchParams.get('sessionId');
 
-  const collegeId = (user as any)?.collegeId as string | undefined;
-  const facultyId = user?.id;
+  const collegeId = user?.collegeId;
+  const facultyId = user?.uid || user?.id;
+  const facultyEmail = user?.email;
   const facultyName = user?.name || 'Faculty';
 
   const [selectedDate, setSelectedDate] = useState(todayLocalISO);
@@ -96,12 +97,12 @@ export function useFacultyAttendance() {
 
   // ─── Load class sessions ────────────────────────────────
   useEffect(() => {
-    if (!facultyId) return;
+    if (!facultyId || !collegeId) return;
     const fid = facultyId;
     async function load() {
       setLoading(true);
       try {
-        const sessions = await fetchFacultyClassSessions(fid, selectedDate);
+        const sessions = await fetchFacultyClassSessions(fid, selectedDate, { collegeId, email: facultyEmail });
         setClassSessions(sessions);
 
         const preselected = preselectedSessionId
@@ -121,7 +122,7 @@ export function useFacultyAttendance() {
       }
     }
     load();
-  }, [facultyId, preselectedSessionId, selectedDate]);
+  }, [facultyId, collegeId, facultyEmail, preselectedSessionId, selectedDate]);
 
   // ─── Load students when class selected ──────────────────
   useEffect(() => {

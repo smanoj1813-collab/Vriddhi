@@ -82,7 +82,8 @@ function buildFacultyStudent(d: any, id: string): FacultyStudent {
 
 export async function fetchFacultyClassSessions(
   facultyId: string,
-  dateStr?: string
+  dateStr?: string,
+  scope: { collegeId?: string; email?: string | null } = {},
 ): Promise<FacultyClassSession[]> {
   if (sessionReadCount >= MAX_READS_PER_SESSION) return [];
   if (!facultyId) return [];
@@ -96,8 +97,10 @@ export async function fetchFacultyClassSessions(
   try {
     // Admin creates recurring classes in weeklySchedules. Turn the matching
     // weekday into dated attendance sessions for the selected date.
-    const weekly = await fetchFacultyWeeklySchedule(facultyId);
-    const scheduleFacultyId = weekly[0]?.facultyId || facultyId;
+    const weekly = await fetchFacultyWeeklySchedule(facultyId, scope);
+    const collegeId = scope.collegeId || weekly[0]?.collegeId || localStorage.getItem('vriddhi_college_id');
+    if (!collegeId) throw new Error('A college is required to load class sessions.');
+    const facultyIds = [...new Set([facultyId, ...weekly.map(slot => slot.facultyId)].filter(Boolean))];
     const recurringSessions: FacultyClassSession[] = weekly
       .filter(item => item.dayOfWeek === requestedDay)
       .map(item => ({
@@ -131,20 +134,24 @@ export async function fetchFacultyClassSessions(
         attendanceMarked: false,
       }));
 
-    // Preserve explicitly-created/rescheduled daily sessions. Use one server
-    // filter and filter the date client-side to avoid a composite index.
-    const q = query(
+    // Preserve explicitly-created/rescheduled daily sessions under every id
+    // returned by the timetable, not just the first slot's profile/uid spelling.
+    const snapshots = await Promise.all(facultyIds.map(id => getDocs(query(
       collection(db, 'classSessions'),
-      where('facultyId', '==', scheduleFacultyId),
-      limit(100)
-    );
-    const snap = await getDocs(q);
-    trackRead(snap.size);
+      where('collegeId', '==', collegeId),
+      where('facultyId', '==', id),
+      limit(100),
+    ))));
+    const docs = new Map<string, QueryDocumentSnapshot<DocumentData>>();
+    for (const snap of snapshots) {
+      trackRead(snap.size);
+      snap.docs.forEach(d => docs.set(d.id, d));
+    }
 
     // Legacy rows store `date` as a yyyy-mm-dd string, an ISO datetime or a
     // Timestamp (see src/shared/utils/sessionDate.ts), so compare on the
     // normalised form rather than raw equality.
-    const datedSessions = snap.docs
+    const datedSessions = [...docs.values()]
       .filter(d => normalizeSessionDate(d.data().date) === requestedDate)
       .map(d => {
         const data = d.data();
