@@ -1,0 +1,724 @@
+{
+  "moduleId": "m1",
+  "topics": {
+    "m1-t1": {
+      "introduction": "A second way to understand “Why GenAI is rewriting careers”: read the original explanation, follow the diagram and play or step through its focus points. All practice stays separate from your reading and quiz requirements.",
+      "sections": [
+        {
+          "title": "Start with tasks, not a disappearing job title",
+          "explanation": "A role contains many different tasks. Examine those tasks before deciding where AI assistance belongs.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Map the work",
+                "detail": "List recurring tasks, stakeholders and consequences before choosing a tool.",
+                "icon": "briefcase"
+              },
+              {
+                "label": "Separate the tasks",
+                "detail": "Distinguish routine drafting from judgement, relationships and authorised decisions.",
+                "icon": "layers"
+              },
+              {
+                "label": "Choose assistance",
+                "detail": "Try a bounded draft or comparison that you can independently check.",
+                "icon": "sparkles"
+              },
+              {
+                "label": "Review the result",
+                "detail": "Check accuracy and usefulness before it reaches another person.",
+                "icon": "check"
+              }
+            ]
+          },
+          "takeaway": "Keep responsibility with the person even when a draft is machine-assisted.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m1-t1-v1",
+          "section": "1. AI changes tasks before it changes jobs"
+        },
+        {
+          "title": "The augmented graduate’s evidence loop",
+          "explanation": "Capability becomes visible when a learner can show both the output and the checking behind it.",
+          "diagram": {
+            "kind": "cycle",
+            "items": [
+              {
+                "label": "Understand",
+                "detail": "Use your subject knowledge to recognise the actual problem.",
+                "icon": "target"
+              },
+              {
+                "label": "Direct",
+                "detail": "Provide a clear brief and relevant authorised material.",
+                "icon": "message"
+              },
+              {
+                "label": "Verify",
+                "detail": "Check facts, calculations and fitness for the audience.",
+                "icon": "shield"
+              },
+              {
+                "label": "Explain",
+                "detail": "Show your contribution, corrections and resulting artefact.",
+                "icon": "file"
+              }
+            ],
+            "center": "Your judgement"
+          },
+          "takeaway": "An attractive AI output is not proof that its author can verify or explain it.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m1-t1-v2",
+          "section": "2. The \"AI-augmented graduate\" is the new entry-level standard"
+        },
+        {
+          "title": "Local context is an input, not an assumption",
+          "explanation": "A useful Indian-language or local-business deliverable needs context the assistant may not possess.",
+          "diagram": {
+            "kind": "hub",
+            "items": [
+              {
+                "label": "Language",
+                "detail": "Specify the intended language and check natural wording with a fluent speaker.",
+                "icon": "message"
+              },
+              {
+                "label": "Audience",
+                "detail": "Name the reader’s knowledge, purpose and constraints.",
+                "icon": "users"
+              },
+              {
+                "label": "Local evidence",
+                "detail": "Supply approved documents or observations rather than invented local facts.",
+                "icon": "file"
+              },
+              {
+                "label": "Access",
+                "detail": "Choose an available workflow and an acceptable offline alternative.",
+                "icon": "globe"
+              }
+            ],
+            "center": "Useful locally"
+          },
+          "takeaway": "Ask a knowledgeable local reviewer to check meaning and context; do not treat translation as validation.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m1-t1-v3",
+          "section": "3. Why this matters more in India, not less"
+        },
+        {
+          "title": "Three career plays, one evidence standard",
+          "explanation": "Using AI in a profession, building useful workflows and creating new offerings require different demonstrations.",
+          "diagram": {
+            "kind": "compare",
+            "items": [
+              {
+                "label": "Improve your role",
+                "detail": "Show how a checked workflow helps a task in your chosen discipline.",
+                "icon": "briefcase"
+              },
+              {
+                "label": "Build a solution",
+                "detail": "Demonstrate a narrow assistant, automation or app with safe failure handling.",
+                "icon": "layers"
+              },
+              {
+                "label": "Create an offering",
+                "detail": "Test whether a specific audience finds the proposed service useful.",
+                "icon": "target"
+              }
+            ]
+          },
+          "takeaway": "Choose a concrete problem and evidence of competence, not a fashionable label.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m1-t1-v4",
+          "section": "4. The three career plays"
+        },
+        {
+          "title": "The skills the tool does not take over",
+          "explanation": "Delegating a draft does not delegate accountability, relationships or the ability to recognise an error.",
+          "diagram": {
+            "kind": "hub",
+            "items": [
+              {
+                "label": "Domain understanding",
+                "detail": "Know enough to identify misleading assumptions and wrong answers.",
+                "icon": "search"
+              },
+              {
+                "label": "Human relationships",
+                "detail": "Listen, negotiate and understand needs beyond a written prompt.",
+                "icon": "users"
+              },
+              {
+                "label": "Integrity",
+                "detail": "Disclose assistance and own the claims you submit.",
+                "icon": "shield"
+              },
+              {
+                "label": "Learning habits",
+                "detail": "Keep practising the skill instead of only collecting outputs.",
+                "icon": "repeat"
+              }
+            ],
+            "center": "Human agency"
+          },
+          "takeaway": "Your judgement, communication and evidence of learning remain part of every submission.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m1-t1-v5",
+          "section": "5. What does not change",
+          "checkpoint": {
+            "question": "Can a polished AI-generated report demonstrate competence on its own?",
+            "answer": "No. Show how you framed the task, checked the claims, corrected errors and explain your own contribution."
+          }
+        }
+      ]
+    },
+    "m1-t2": {
+      "introduction": "A second way to understand “AI, ML, deep learning & GenAI — what is actually different”: read the original explanation, follow the diagram and play or step through its focus points. All practice stays separate from your reading and quiz requirements.",
+      "sections": [
+        {
+          "title": "Read the AI family map as a teaching simplification",
+          "explanation": "The lesson focuses on modern deep-learning-based generative systems. These labels describe related methods and capabilities, not four stages a user must complete.",
+          "diagram": {
+            "kind": "compare",
+            "items": [
+              {
+                "label": "Artificial intelligence",
+                "detail": "The broad field includes rule-based methods as well as learned systems.",
+                "icon": "layers"
+              },
+              {
+                "label": "Machine learning",
+                "detail": "Systems learn patterns from examples rather than only hand-written rules.",
+                "icon": "chart"
+              },
+              {
+                "label": "Deep learning",
+                "detail": "Layered neural networks learn representations from data.",
+                "icon": "link"
+              },
+              {
+                "label": "Modern GenAI",
+                "detail": "Many current systems generate text or other media using deep neural networks.",
+                "icon": "sparkles"
+              }
+            ]
+          },
+          "takeaway": "Many modern GenAI systems use deep learning; generative methods more broadly are not all deep-learning systems.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m1-t2-v1",
+          "section": "1. Four nested circles"
+        },
+        {
+          "title": "An answer is assembled one token at a time",
+          "explanation": "Follow the generation loop. A token can be a word part, a word or punctuation; fluency alone does not verify an answer.",
+          "diagram": {
+            "kind": "cycle",
+            "items": [
+              {
+                "label": "Read context",
+                "detail": "The system receives the available instructions, conversation and supplied material.",
+                "icon": "file"
+              },
+              {
+                "label": "Predict possibilities",
+                "detail": "The model estimates possible next tokens from the current context.",
+                "icon": "layers"
+              },
+              {
+                "label": "Choose and append",
+                "detail": "A decoding procedure selects a token and adds it to the output.",
+                "icon": "cursor"
+              },
+              {
+                "label": "Continue or stop",
+                "detail": "The updated text becomes context until an ending condition is reached.",
+                "icon": "repeat"
+              }
+            ],
+            "center": "Generation"
+          },
+          "takeaway": "A plausible next token is not an authoritative fact check, and generated citations still need opening.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m1-t2-v2",
+          "section": "2. How a language model actually works (the honest, non-mathematical version)"
+        },
+        {
+          "title": "Keep the moving parts distinct",
+          "explanation": "The same chat interface brings together a trained model, temporary context and sometimes tools. They are not interchangeable sources of knowledge.",
+          "diagram": {
+            "kind": "hub",
+            "items": [
+              {
+                "label": "Model and training",
+                "detail": "Learned parameters come from training; a cut-off does not establish current knowledge.",
+                "icon": "layers"
+              },
+              {
+                "label": "Prompt and context",
+                "detail": "Instructions and available conversation guide this particular response.",
+                "icon": "message"
+              },
+              {
+                "label": "Tokens and window",
+                "detail": "Token limits bound the material a system can consider at once.",
+                "icon": "file"
+              },
+              {
+                "label": "Fine-tuning",
+                "detail": "Additional training changes model behaviour; it differs from attaching a document.",
+                "icon": "repeat"
+              },
+              {
+                "label": "Tools and modalities",
+                "detail": "Search, actions, images or audio depend on enabled product features and permissions.",
+                "icon": "globe"
+              }
+            ],
+            "center": "Know the parts"
+          },
+          "takeaway": "Attaching a file is context or retrieval, not necessarily retraining the model.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m1-t2-v3",
+          "section": "3. Vocabulary you will use every week"
+        },
+        {
+          "title": "Different media, different checks",
+          "explanation": "Generation can produce several kinds of media. Each needs a review that fits the medium rather than a generic “looks good”.",
+          "diagram": {
+            "kind": "compare",
+            "items": [
+              {
+                "label": "Text",
+                "detail": "Verify claims, sources, calculations, audience and wording.",
+                "icon": "file"
+              },
+              {
+                "label": "Images",
+                "detail": "Inspect composition, text rendering, likeness and permission to use the result.",
+                "icon": "sparkles"
+              },
+              {
+                "label": "Speech and audio",
+                "detail": "Listen for pronunciation, meaning, consent and licence conditions.",
+                "icon": "message"
+              },
+              {
+                "label": "Video",
+                "detail": "Review every shot for continuity, misleading edits and accessible captions.",
+                "icon": "layers"
+              }
+            ]
+          },
+          "takeaway": "Check meaning, rights, accessibility and continuity as appropriate for the output.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m1-t2-v4",
+          "section": "4. Where the other GenAI types fit"
+        },
+        {
+          "title": "A powerful pattern learner still needs verification",
+          "explanation": "Broad language patterns can support useful drafting and explanation. They do not guarantee that a specific answer is true.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Useful draft",
+                "detail": "Use the model to propose a structure, explanation or alternative.",
+                "icon": "sparkles"
+              },
+              {
+                "label": "Locate claims",
+                "detail": "Separate checkable facts from suggestions and invented examples.",
+                "icon": "search"
+              },
+              {
+                "label": "Check evidence",
+                "detail": "Open primary sources or reproduce the calculation independently.",
+                "icon": "check"
+              },
+              {
+                "label": "Own the final",
+                "detail": "Correct, qualify or reject unsupported material before use.",
+                "icon": "shield"
+              }
+            ]
+          },
+          "takeaway": "Match the checking effort to the cost of a mistake, not to the confidence of the writing.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m1-t2-v5",
+          "section": "5. Why \"just predicting the next word\" is not a put-down",
+          "checkpoint": {
+            "question": "Does an answer that sounds confident prove that the model looked up a reliable source?",
+            "answer": "No. It may be generated from learned patterns. Inspect the actual source and verify the specific claim."
+          }
+        }
+      ]
+    },
+    "m1-t3": {
+      "introduction": "A second way to understand “The GenAI ecosystem: tools, tiers & your starter toolkit”: read the original explanation, follow the diagram and play or step through its focus points. All practice stays separate from your reading and quiz requirements.",
+      "sections": [
+        {
+          "title": "Choose a tool category before a brand",
+          "explanation": "Start with the kind of work you need to do. One product can span categories, but its permissions and capabilities still need checking.",
+          "diagram": {
+            "kind": "hub",
+            "items": [
+              {
+                "label": "Conversation",
+                "detail": "Draft, explain and compare text with a chat assistant.",
+                "icon": "message"
+              },
+              {
+                "label": "Research",
+                "detail": "Find and organise sources, then open and verify them.",
+                "icon": "search"
+              },
+              {
+                "label": "Visual creation",
+                "detail": "Generate or edit images and design artefacts.",
+                "icon": "sparkles"
+              },
+              {
+                "label": "Video",
+                "detail": "Plan, generate and assemble moving-image content.",
+                "icon": "layers"
+              },
+              {
+                "label": "Audio",
+                "detail": "Create or edit speech and sound with consent and rights checks.",
+                "icon": "heart"
+              },
+              {
+                "label": "Automation",
+                "detail": "Connect bounded steps, tools and no-code applications.",
+                "icon": "repeat"
+              }
+            ],
+            "center": "Your task"
+          },
+          "takeaway": "Choose a workflow for the task; do not collect accounts merely because a tool is popular.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m1-t3-v1",
+          "section": "1. The six categories"
+        },
+        {
+          "title": "Compare assistants on the same task",
+          "explanation": "A fair comparison controls the prompt and input material, then checks the outputs against the same requirements.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Fix the task",
+                "detail": "Use the same permitted brief and source material.",
+                "icon": "target"
+              },
+              {
+                "label": "Run candidates",
+                "detail": "Record the tool and relevant settings for each attempt.",
+                "icon": "message"
+              },
+              {
+                "label": "Check consistently",
+                "detail": "Judge correctness, constraints and usefulness with the same rubric.",
+                "icon": "check"
+              },
+              {
+                "label": "Log a choice",
+                "detail": "Keep examples and note where each option failed.",
+                "icon": "file"
+              }
+            ]
+          },
+          "takeaway": "A preference on one test is not proof that one assistant is universally best.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m1-t3-v2",
+          "section": "2. Choosing a chat assistant"
+        },
+        {
+          "title": "Availability and price are not learning outcomes",
+          "explanation": "Tool limits and plans change. Plan around the required artefact and a viable alternative rather than a promised free feature.",
+          "diagram": {
+            "kind": "compare",
+            "items": [
+              {
+                "label": "Needed capability",
+                "detail": "Identify the specific action the exercise needs.",
+                "icon": "target"
+              },
+              {
+                "label": "Access conditions",
+                "detail": "Check age, institution, region, usage and account restrictions.",
+                "icon": "shield"
+              },
+              {
+                "label": "Fallback workflow",
+                "detail": "Use an allowed free or offline alternative when the feature is unavailable.",
+                "icon": "repeat"
+              }
+            ]
+          },
+          "takeaway": "Check current limits and terms before signing up or committing a project to a paid capability.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m1-t3-v3",
+          "section": "3. Free tiers, paid tiers and \"student\" pricing"
+        },
+        {
+          "title": "“Open” and “local” answer different questions",
+          "explanation": "Model availability, execution location, licence terms and data handling are separate properties.",
+          "diagram": {
+            "kind": "compare",
+            "items": [
+              {
+                "label": "Model access",
+                "detail": "Check which weights or code are available and under what licence.",
+                "icon": "file"
+              },
+              {
+                "label": "Execution location",
+                "detail": "Identify whether processing happens on a device or a remote service.",
+                "icon": "globe"
+              },
+              {
+                "label": "Operational responsibility",
+                "detail": "Review resources, updates, data exposure and who maintains the system.",
+                "icon": "shield"
+              }
+            ]
+          },
+          "takeaway": "Local execution does not automatically make a workflow safe, lawful or suitable.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m1-t3-v4",
+          "section": "4. Open models and \"local\" AI"
+        },
+        {
+          "title": "Set up the boundary before the first upload",
+          "explanation": "An account is an access route to data and tools. Configure it deliberately before using course or workplace material.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Protect access",
+                "detail": "Use a unique password and available multi-factor authentication.",
+                "icon": "shield"
+              },
+              {
+                "label": "Review settings",
+                "detail": "Inspect retention, training-use and sharing controls for that account.",
+                "icon": "search"
+              },
+              {
+                "label": "Minimise inputs",
+                "detail": "Use synthetic or approved material and remove unnecessary personal details.",
+                "icon": "filter"
+              },
+              {
+                "label": "Keep recovery safe",
+                "detail": "Store recovery information securely and review connected access.",
+                "icon": "check"
+              }
+            ]
+          },
+          "takeaway": "Use only authorised material and do not share passwords, credentials or private records in prompts.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m1-t3-v5",
+          "section": "5. Account hygiene from day one",
+          "checkpoint": {
+            "question": "Does running an open model locally remove the need for a privacy review?",
+            "answer": "No. Licence, device security, access, data retention and the sensitivity of the task still matter."
+          }
+        }
+      ]
+    },
+    "m1-t4": {
+      "introduction": "A second way to understand “Capabilities, limits & responsible use”: read the original explanation, follow the diagram and play or step through its focus points. All practice stays separate from your reading and quiz requirements.",
+      "sections": [
+        {
+          "title": "Capability and consequence belong on the same map",
+          "explanation": "A fluent draft, a specialised factual answer and a consequential decision need different levels of supervision.",
+          "diagram": {
+            "kind": "compare",
+            "items": [
+              {
+                "label": "Easy to inspect",
+                "detail": "Formatting and a low-stakes draft can often be checked directly.",
+                "icon": "file"
+              },
+              {
+                "label": "Evidence-dependent",
+                "detail": "Facts, calculations and specialist claims need independent verification.",
+                "icon": "search"
+              },
+              {
+                "label": "High consequence",
+                "detail": "Sensitive or irreversible decisions need appropriate authority and human review.",
+                "icon": "shield"
+              }
+            ]
+          },
+          "takeaway": "Do not move a task into unattended automation just because one demonstration looked convincing.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m1-t4-v1",
+          "section": "1. What GenAI is good at, unreliable at and bad at"
+        },
+        {
+          "title": "Five warning signs are reasons to investigate",
+          "explanation": "Different failure modes can coexist in the same answer. Read for evidence and context, not only grammar.",
+          "diagram": {
+            "kind": "hub",
+            "items": [
+              {
+                "label": "Fabrication",
+                "detail": "A convincing claim or citation may not exist.",
+                "icon": "file"
+              },
+              {
+                "label": "Bias",
+                "detail": "Language or recommendations may treat people unfairly.",
+                "icon": "users"
+              },
+              {
+                "label": "Stale context",
+                "detail": "The response may rely on old or missing information.",
+                "icon": "clock"
+              },
+              {
+                "label": "Confident error",
+                "detail": "A forceful tone can conceal weak support.",
+                "icon": "message"
+              },
+              {
+                "label": "Privacy exposure",
+                "detail": "The workflow may disclose material that should never have been entered.",
+                "icon": "shield"
+              }
+            ],
+            "center": "Check the risk"
+          },
+          "takeaway": "A second AI answer can be another error; use an independent check where correctness matters.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m1-t4-v2",
+          "section": "2. Five failure modes to recognise on sight"
+        },
+        {
+          "title": "Automate, augment or avoid",
+          "explanation": "The decision depends on risk, verifiability and permission, not only how much time a tool might save.",
+          "diagram": {
+            "kind": "compare",
+            "items": [
+              {
+                "label": "Automate",
+                "detail": "Use only for bounded, low-risk work with clear checks and permission.",
+                "icon": "repeat"
+              },
+              {
+                "label": "Augment",
+                "detail": "Let AI assist while a knowledgeable person verifies and decides.",
+                "icon": "users"
+              },
+              {
+                "label": "Avoid",
+                "detail": "Do not delegate prohibited, unsafe or unverifiable work.",
+                "icon": "shield"
+              }
+            ]
+          },
+          "takeaway": "Keep meaningful review where errors could harm a person or an institution.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m1-t4-v3",
+          "section": "3. The Automate / Augment / Avoid framework"
+        },
+        {
+          "title": "Assistance is not authorship permission",
+          "explanation": "A course’s project policy and an exam’s restrictions can differ. Check the actual rule before using a tool.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Read the policy",
+                "detail": "Identify what assistance this particular task allows.",
+                "icon": "file"
+              },
+              {
+                "label": "Keep your work",
+                "detail": "Retain your drafts, sources and reasoning evidence.",
+                "icon": "layers"
+              },
+              {
+                "label": "Disclose assistance",
+                "detail": "Name the tools and the contributions you accepted or changed.",
+                "icon": "message"
+              },
+              {
+                "label": "Defend the result",
+                "detail": "Be able to reproduce and explain your submission independently.",
+                "icon": "check"
+              }
+            ]
+          },
+          "takeaway": "Disclosure does not make a prohibited use permissible; follow the specific assessment rules.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m1-t4-v4",
+          "section": "4. Academic integrity: the rules in this course and in your degree"
+        },
+        {
+          "title": "Responsibility continues after the classroom",
+          "explanation": "Real use introduces affected people, organisational authority and consequences beyond a good assignment mark.",
+          "diagram": {
+            "kind": "cycle",
+            "items": [
+              {
+                "label": "Define purpose",
+                "detail": "State who benefits and who could be harmed.",
+                "icon": "target"
+              },
+              {
+                "label": "Review boundaries",
+                "detail": "Check data, rights, institutional policy and applicable requirements.",
+                "icon": "shield"
+              },
+              {
+                "label": "Test safely",
+                "detail": "Use permitted examples and include likely failures.",
+                "icon": "search"
+              },
+              {
+                "label": "Monitor and stop",
+                "detail": "Assign an owner and a way to withdraw a harmful workflow.",
+                "icon": "repeat"
+              }
+            ],
+            "center": "Responsible use"
+          },
+          "takeaway": "If a safeguard or approval is missing, pause the proposed use rather than assume permission.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m1-t4-v5",
+          "section": "5. Responsible use beyond the classroom",
+          "checkpoint": {
+            "question": "If an AI-use statement is present, can you use AI in an exam that prohibits it?",
+            "answer": "No. Disclosure is not permission. Follow the rules of that particular assessment."
+          }
+        }
+      ]
+    }
+  }
+}

@@ -26,7 +26,7 @@ async function unlockBefore(page: Page, targetId: string, course = manifest) {
       if (topic.id === targetId) break outer
       progress.read[topic.id] = at
       progress.completed[topic.id] = at
-      if (topic.type === 'lesson') progress.quiz[topic.id] = { score: 5, total: 5, attempts: 1, at }
+      if (topic.type === 'lesson') progress.quiz[topic.id] = { score: course.lessonQuizQuestionCount ?? 5, total: course.lessonQuizQuestionCount ?? 5, attempts: 1, at }
     }
     progress.moduleAssessments[module.id] = { score: 10, total: 10, attempts: 1, at }
   }
@@ -406,4 +406,279 @@ test.describe('Project Management illustrated edition', () => {
     await expect(page.locator('.course-illustration')).toHaveCount(3)
     await expectNoOverflow(page)
   })
+})
+
+const genaiManifest = JSON.parse(readFileSync(path.join(coursesRoot, 'genai-certification/course.json'), 'utf8'))
+const hrManifest = JSON.parse(readFileSync(path.join(coursesRoot, 'hr-analytics/course.json'), 'utf8'))
+const newEditions = [
+  { course: genaiManifest, topics: 41, figures: 5, artwork: 'The responsible GenAI studio', lab: 'CO-STAR prompt lab' },
+  { course: hrManifest, topics: 29, figures: 3, artwork: 'The responsible HR analytics studio', lab: 'Workforce denominator lab' },
+]
+
+for (const edition of newEditions) {
+  const { course, topics, figures, artwork, lab } = edition
+  const base = `/courses/${course.id}`
+  test.describe(`${course.shortTitle}: animated illustrated edition`, () => {
+    test('overview artwork and benefits are discoverable without fetching a lesson bank', async ({ page }) => {
+      const requests: string[] = []
+      page.on('request', (request) => requests.push(request.url()))
+      await page.goto(base)
+      const banner = page.getByRole('region', { name: 'Illustrated course edition' })
+      await expect(banner).toContainText(`${topics} illustrated topics`)
+      await expect(banner).toContainText(lab)
+      await expect(banner.getByRole('img', { name: artwork, exact: true })).toBeVisible()
+      await expect(banner.getByRole('link', { name: /Explore the illustrated lesson/ })).toHaveAttribute('href', `${base}/learn/m1-t1`)
+      expect(requests.some(isVisualDataRequest)).toBe(false)
+      await expectNoOverflow(page)
+    })
+
+    test('preserves the full reading, text-only switch, checkpoint and original quiz gate', async ({ page }) => {
+      await page.goto(`${base}/learn/m1-t1`)
+      await expect(page.locator('.course-illustration')).toHaveCount(figures)
+      const original = await originalReadingText(page)
+      const quiz = page.getByRole('tab', { name: /^Quiz/ })
+      await expect(quiz).toBeDisabled()
+      expect(await page.locator('.course-animated-diagram[data-playing="true"]').count()).toBe(0)
+      const toggle = page.getByRole('switch', { name: 'Show lesson illustrations' })
+      await toggle.focus()
+      await toggle.press('Space')
+      await expect(page.locator('.course-illustration')).toHaveCount(0)
+      expect(await page.locator('.course-markdown').textContent()).toBe(original)
+      await toggle.press('Space')
+      await expect(page.locator('.course-illustration')).toHaveCount(figures)
+      await expect(quiz).toBeDisabled()
+      const checkpoint = page.locator('.course-illustration').last().locator('details')
+      await checkpoint.locator('summary').focus()
+      await checkpoint.locator('summary').press('Enter')
+      await expect(checkpoint).toHaveAttribute('open', '')
+      await expect(checkpoint.locator('p')).not.toBeEmpty()
+      await page.getByText('End of topic · reaching this point marks the content as read', { exact: true }).scrollIntoViewIfNeeded()
+      await expect(page.getByText('End of topic · content read', { exact: true })).toBeVisible()
+      await expect(quiz).toBeEnabled()
+      await quiz.click()
+      const bank = JSON.parse(readFileSync(path.join(coursesRoot, course.id, 'modules', course.modules[0].slug, 'quiz.json'), 'utf8'))
+      const questions = bank.questions['m1-t1']
+      for (const q of questions) await page.locator(`input[name="${q.id}"][value="${q.answerIndex}"]`).check()
+      await page.getByRole('button', { name: 'Check answers' }).click()
+      await expect(page.getByText(`${questions.length} / ${questions.length} correct (100%)`, { exact: true })).toBeVisible()
+      const stored = await page.evaluate((key) => JSON.parse(localStorage.getItem(key) ?? '{}'), `vriddhi.course.progress.guest.${course.id}`)
+      expect(stored.read['m1-t1']).toBeTruthy()
+      expect(stored.quiz['m1-t1'].total).toBe(questions.length)
+      expect(stored.quiz['m1-t1'].score).toBe(questions.length)
+      await expectNoOverflow(page)
+    })
+
+    test('reduced motion supplies keyboard-operated static steps and never starts a timer', async ({ page }) => {
+      await page.emulateMedia({ reducedMotion: 'reduce' })
+      await page.goto(`${base}/learn/m1-t1`)
+      await expect(page.locator('.course-illustration')).toHaveCount(figures)
+      const diagram = page.locator('.course-animated-diagram').first()
+      const controls = diagram.getByRole('group')
+      await expect(controls.getByRole('button', { name: 'Play animation' })).toBeDisabled()
+      await expect(controls).toContainText('Reduced motion is on')
+      const steps = controls.getByRole('list', { name: 'Diagram focus steps' }).getByRole('button')
+      await steps.nth(1).focus()
+      await steps.nth(1).press('Enter')
+      await expect(diagram.locator('[data-walkthrough-status]')).toContainText('Focus 2 of 4')
+      await expect(steps.nth(1)).toHaveAttribute('aria-pressed', 'true')
+      await expect(diagram.locator('.course-diagram-item[data-active="true"]')).toHaveCount(1)
+      await expect(diagram.locator('.course-diagram-item')).toHaveCount(4)
+      await controls.getByRole('button', { name: 'Previous diagram step' }).click()
+      await expect(diagram.locator('[data-walkthrough-status]')).toContainText('Focus 1 of 4')
+      await expect(controls.getByRole('button', { name: 'Previous diagram step' })).toBeDisabled()
+      await controls.getByRole('button', { name: 'Next diagram step' }).click()
+      await expect(diagram.locator('[data-walkthrough-status]')).toContainText('Focus 2 of 4')
+      await expect(diagram).not.toHaveAttribute('data-playing', 'true')
+      await expect(page.getByRole('tab', { name: /^Quiz/ })).toBeDisabled()
+      await expectNoOverflow(page)
+    })
+
+    test('all project briefs retain their original sections with additive visuals', async ({ page }) => {
+      test.setTimeout(90_000)
+      const projects = course.modules.flatMap((module: { topics: { id: string; type: string; lesson: string }[] }) => module.topics).filter((topic: { type: string }) => topic.type === 'project')
+      await unlockBefore(page, projects[projects.length - 1].id, course)
+      for (const project of projects) {
+        const source = readFileSync(path.join(coursesRoot, course.id, project.lesson), 'utf8')
+        const headings = [...source.matchAll(/^## (.+)$/gm)].map((match) => match[1])
+        await page.goto(`${base}/learn/${project.id}`)
+        await expect(page.locator('.course-illustration')).toHaveCount(headings.length)
+        await expect(page.getByRole('tab', { name: 'Brief', exact: true })).toHaveAttribute('aria-selected', 'true')
+        await expect(page.getByRole('heading', { name: headings[0], exact: true })).toBeVisible()
+        const original = await originalReadingText(page)
+        await page.getByRole('switch', { name: 'Show lesson illustrations' }).click()
+        expect(await page.locator('.course-markdown').textContent()).toBe(original)
+        await page.getByRole('switch', { name: 'Show lesson illustrations' }).click()
+        await expect(page.locator('.course-illustration')).toHaveCount(headings.length)
+        await expectNoOverflow(page)
+      }
+    })
+
+    test('a failed companion download leaves every original explanation usable and retries', async ({ page }) => {
+      const request = (url: URL) => url.pathname.endsWith(`/${course.id}/modules/${course.modules[0].slug}/illustrations.json`) && !url.searchParams.has('url')
+      await page.route(request, (route) => route.abort('failed'))
+      await page.goto(`${base}/learn/m1-t1`)
+      await expect(page.getByText('The visual companion could not be loaded.', { exact: false })).toBeVisible()
+      await expect(page.getByRole('heading', { name: 'Learning objectives', exact: true })).toBeVisible()
+      await expect(page.locator('.course-illustration')).toHaveCount(0)
+      await page.unroute(request)
+      await page.getByRole('button', { name: 'Retry illustrations' }).click()
+      await expect(page.locator('.course-illustration')).toHaveCount(figures)
+      await expectNoOverflow(page)
+    })
+  })
+}
+
+test.describe('GenAI / HR local learning interactions', () => {
+  test('animation is opt-in, finite, pausable, replayable and stops offscreen or when hidden', async ({ page }) => {
+    test.setTimeout(60_000)
+    await page.emulateMedia({ reducedMotion: 'no-preference' })
+    await page.goto('/courses/genai-certification/learn/m1-t1')
+    await expect(page.locator('.course-illustration')).toHaveCount(5)
+    const diagram = page.locator('.course-animated-diagram').first()
+    const controls = diagram.getByRole('group')
+    const status = diagram.locator('[data-walkthrough-status]')
+    await controls.scrollIntoViewIfNeeded()
+    await expect(diagram).not.toHaveAttribute('data-playing', 'true')
+    await page.clock.install()
+    await controls.getByRole('button', { name: 'Play animation' }).click()
+    await expect(diagram).toHaveAttribute('data-playing', 'true')
+    await expect(status).toContainText('Focus 1 of 4')
+    await page.clock.fastForward(2700)
+    await expect(status).toContainText('Focus 2 of 4')
+    await controls.getByRole('button', { name: 'Pause animation' }).click()
+    await page.clock.fastForward(6000)
+    await expect(status).toContainText('Focus 2 of 4')
+    await controls.getByRole('button', { name: 'Play animation' }).click()
+    for (const focus of [3, 4]) {
+      await page.clock.fastForward(2700)
+      await expect(status).toContainText(`Focus ${focus} of 4`)
+    }
+    await page.clock.fastForward(2700)
+    await expect(controls.getByRole('button', { name: 'Replay animation' })).toBeVisible()
+    await expect(diagram).not.toHaveAttribute('data-playing', 'true')
+    await page.clock.fastForward(12_000)
+    await expect(status).toContainText('Focus 4 of 4')
+    await controls.getByRole('button', { name: 'Replay animation' }).click()
+    await expect(status).toContainText('Focus 1 of 4')
+    await page.evaluate(() => window.scrollTo(0, 0))
+    await expect(diagram).not.toHaveAttribute('data-playing', 'true')
+    await controls.scrollIntoViewIfNeeded()
+    await controls.getByRole('button', { name: 'Play animation' }).click()
+    await expect(diagram).toHaveAttribute('data-playing', 'true')
+    await page.evaluate(() => {
+      Object.defineProperty(document, 'hidden', { configurable: true, value: true })
+      document.dispatchEvent(new Event('visibilitychange'))
+    })
+    await expect(diagram).not.toHaveAttribute('data-playing', 'true')
+    await page.evaluate(() => { delete (document as unknown as Record<string, unknown>).hidden })
+    await page.emulateMedia({ reducedMotion: 'reduce' })
+    await expect(controls.getByRole('button', { name: /Play animation/ })).toBeDisabled()
+    await expect(page.getByRole('tab', { name: /^Quiz/ })).toBeDisabled()
+    await expectNoOverflow(page)
+  })
+
+  test('CO-STAR toggles change only the local brief, reset cleanly and retain the original reading', async ({ page }) => {
+    await unlockBefore(page, 'm2-t2', genaiManifest)
+    await page.goto('/courses/genai-certification/learn/m2-t2')
+    const lab = page.locator('.course-prompt-lab')
+    const output = lab.locator('output')
+    const prompt = lab.getByRole('textbox', { name: 'Assembled practice prompt' })
+    const original = await originalReadingText(page)
+    await expect(output).toContainText('6 of 6 brief parts included — not a truth or quality score')
+    await expect(prompt).toHaveAttribute('readonly', '')
+    await expect(prompt).toHaveValue(/\[DATE TO CONFIRM\]/)
+    const context = lab.getByRole('checkbox', { name: 'Include Context', exact: true })
+    await context.focus()
+    await context.press('Space')
+    await expect(output).toContainText('5 of 6')
+    await expect(prompt).not.toHaveValue(/Fictional practice: a Mysuru college/)
+    for (const part of ['Objective', 'Style', 'Tone', 'Audience', 'Response']) await lab.getByRole('checkbox', { name: `Include ${part}`, exact: true }).uncheck()
+    await expect(prompt).toHaveValue('No parts selected. Add a brief component above.')
+    await expect(output).toContainText('0 of 6')
+    await lab.getByRole('button', { name: 'Reset prompt' }).click()
+    await expect(output).toContainText('6 of 6')
+    await expect(lab).toContainText('no AI request is sent and no learner text is collected')
+    expect(await originalReadingText(page)).toBe(original)
+    await expect(page.getByRole('tab', { name: /^Quiz/ })).toBeDisabled()
+    const progress = await page.evaluate(() => JSON.parse(localStorage.getItem('vriddhi.course.progress.guest.genai-certification') ?? '{}'))
+    expect(progress.read['m2-t2']).toBeUndefined()
+    // Unlock the next topic through the original reading + quiz flow, not through the lab.
+    await page.getByText('End of topic · reaching this point marks the content as read', { exact: true }).scrollIntoViewIfNeeded()
+    await expect(page.getByText('End of topic · content read', { exact: true })).toBeVisible()
+    await page.getByRole('tab', { name: /^Quiz/ }).click()
+    const module = genaiManifest.modules[1]
+    const bank = JSON.parse(readFileSync(path.join(coursesRoot, genaiManifest.id, 'modules', module.slug, 'quiz.json'), 'utf8'))
+    for (const q of bank.questions['m2-t2']) await page.locator(`input[name="${q.id}"][value="${q.answerIndex}"]`).check()
+    await page.getByRole('button', { name: 'Check answers' }).click()
+    await expect(page.getByText('15 / 15 correct (100%)', { exact: true })).toBeVisible()
+    await page.getByRole('tab', { name: 'Lesson', exact: true }).click()
+    await context.uncheck()
+    await page.getByRole('switch', { name: 'Show lesson illustrations' }).click()
+    await page.getByRole('button', { name: 'Next · 2.3', exact: true }).click()
+    await expect(page).toHaveURL(/\/learn\/m2-t3$/)
+    await expect(page.getByRole('switch', { name: 'Show lesson illustrations' })).toHaveAttribute('aria-checked', 'true')
+    await page.getByRole('link', { name: /Previous$/ }).click()
+    await expect(output).toContainText('6 of 6')
+    await expect(context).toBeChecked()
+    await expectNoOverflow(page)
+  })
+
+  test('workforce scenarios distinguish denominators, cap cohort exits, handle zero and reset', async ({ page }) => {
+    await unlockBefore(page, 'm4-t2', hrManifest)
+    await page.goto('/courses/hr-analytics/learn/m4-t2')
+    const lab = page.locator('.course-workforce-lab')
+    const output = lab.locator('output')
+    const original = await originalReadingText(page)
+    await expect(output).toHaveText('Period turnover: 10% · Opening-cohort retention: 92%')
+    const joinerLeavers = lab.getByRole('slider', { name: 'Leavers among period joiners', exact: true })
+    await joinerLeavers.focus()
+    await joinerLeavers.press('ArrowRight')
+    await expect(output).toHaveText('Period turnover: 10.96% · Opening-cohort retention: 92%')
+    const opening = lab.getByRole('slider', { name: 'Opening headcount', exact: true })
+    await opening.focus()
+    await opening.press('Home')
+    await expect(lab.getByRole('slider', { name: 'Leavers from opening cohort', exact: true })).toHaveValue('0')
+    await expect(output).toContainText('Opening-cohort retention: Not defined (zero denominator)')
+    const joiners = lab.getByRole('slider', { name: 'Joiners in period', exact: true })
+    await joiners.focus()
+    await joiners.press('Home')
+    await expect(joinerLeavers).toHaveValue('0')
+    await expect(output).toHaveText('Period turnover: Not defined (zero denominator) · Opening-cohort retention: Not defined (zero denominator)')
+    await lab.getByRole('button', { name: 'Reset workforce' }).click()
+    await expect(output).toHaveText('Period turnover: 10% · Opening-cohort retention: 92%')
+    await expect(lab).toContainText('not complements, diagnoses or individual employment-risk scores')
+    expect(await originalReadingText(page)).toBe(original)
+    const progress = await page.evaluate(() => JSON.parse(localStorage.getItem('vriddhi.course.progress.guest.hr-analytics') ?? '{}'))
+    expect(progress.read['m4-t2']).toBeUndefined()
+    await expect(page.getByRole('tab', { name: /^Quiz/ })).toBeDisabled()
+    await expectNoOverflow(page)
+  })
+
+  for (const mode of ['light', 'dark'] as const) {
+    test(`artwork, animations, prompt / workforce labs, funnels and matrices meet scoped WCAG checks in ${mode}`, async ({ page }) => {
+      test.setTimeout(120_000)
+      await unlockBefore(page, 'm8-t4', genaiManifest)
+      await unlockBefore(page, 'm8-cap', hrManifest)
+      await page.emulateMedia({ reducedMotion: 'reduce' })
+      for (const course of [genaiManifest, hrManifest]) {
+        await page.goto(`/courses/${course.id}`)
+        await expect(page.getByRole('region', { name: 'Illustrated course edition' })).toBeVisible()
+        await page.evaluate((dark) => document.documentElement.classList.toggle('dark', dark), mode === 'dark')
+        const result = await new AxeBuilder({ page }).include('[aria-label="Illustrated course edition"]').withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa']).analyze()
+        expect(result.violations.map((violation) => ({ course: course.id, rule: violation.id, nodes: violation.nodes.map((node) => node.target) }))).toEqual([])
+      }
+      for (const [courseId, topic, count] of [
+        ['genai-certification', 'm2-t2', 5], ['genai-certification', 'm5-t2', 6],
+        ['hr-analytics', 'm4-t2', 3], ['hr-analytics', 'm3-t1', 3], ['hr-analytics', 'm7-t2', 3],
+      ] as const) {
+        await page.goto(`/courses/${courseId}/learn/${topic}`)
+        await expect(page.locator('.course-illustration')).toHaveCount(count)
+        await page.evaluate((dark) => document.documentElement.classList.toggle('dark', dark), mode === 'dark')
+        await page.locator('.course-animated-diagram').first().getByRole('button', { name: 'Next diagram step' }).click()
+        const result = await new AxeBuilder({ page }).include('.course-visual-intro').include('.course-illustration').withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa']).analyze()
+        expect(result.violations.map((violation) => ({ courseId, topic, rule: violation.id, nodes: violation.nodes.map((node) => node.target) }))).toEqual([])
+        await expectNoOverflow(page)
+      }
+    })
+  }
 })

@@ -17,6 +17,22 @@ VDM-101 includes **162 inline visual explanations across all 31 lessons and 5 pr
 
 The visual layer includes step-by-step flows, system maps, feedback loops, comparisons, decision matrices, zero-based bar charts and schematic funnels. Lesson 1.2 has an interactive funnel/CPA lab with adjustable rates, a practice media budget, reset and an accessible data table. All numeric examples are labelled synthetic; forecasts are not performance promises. Learners can switch illustrations off for an exact text-only rendering.
 
+### GenAI Certification — illustrated edition (v1.2.0)
+
+VGC-101 adds **237 visual companions across all 35 lessons and 6 project briefs**. These cover every Core ideas subheading and every project section, after the complete original explanation. Locally bundled vector artwork introduces the course; prompt maps, generation loops, the RAG pipeline, human-review controls, responsible-AI checks and portfolio workflows provide a second way to understand the reading. The original Markdown, 605 quiz items, 20 slides, grading, reading/quiz gates and certificate requirements are unchanged.
+
+Lesson **2.2** includes a local **CO-STAR prompt-building lab**. Toggle Context, Objective, Style, Tone, Audience and Response to see which instruction disappears, then reset. The fictional placement-team scenario retains unconfirmed-date/venue placeholders. This is a brief assembler, **not an AI call, a truth/quality score or a new submission task**. No learner text is sent or collected.
+
+### HR Analytics — illustrated edition (v1.1.0)
+
+VHR-101 adds **117 visual companions across all 24 lessons and 5 project briefs**, plus course-specific vector artwork. Examples include a matched recruitment funnel, zero-based cost/capacity charts, survey participation, filtered acceptance denominators, percentage-point comparisons, a row-major confusion matrix and privacy-aware decision maps. All fixtures remain separate synthetic populations; no real employee data is needed. Original explanations, 200 quiz items, 72 slides, rubrics and institutional-award conditions are unchanged.
+
+Lesson **4.2** includes a **workforce denominator lab**: adjust opening headcount, joiners and exits from each cohort, inspect the headcount bridge, and compare period turnover with fixed-opening-cohort retention. The initial scenario reproduces 100 opening / 120 closing / 11 exits / 92 retained; the 31 joiners and 8 + 3 exit breakdown are explicitly illustrative. Counts are whole people from 0–200, exits cannot exceed their cohort, and reducing a cohort caps its exits. The opening/closing mean is only an approximate denominator; turnover may exceed 100%, retention cannot, and zero denominators are undefined rather than 0%. These are not complementary rates, diagnoses or individual employment-risk assessments.
+
+#### Optional animation, without changing completion
+
+Every new GenAI/HR diagram has an **opt-in, finite walkthrough**. Play highlights one focus point at a time (one pass, no loop); Pause, Replay, numbered buttons and Previous/Next give control. All diagram text stays visible. Sequences pause when hidden/offscreen, and reduced-motion users get static manual steps with timed playback disabled. Focus numbering follows the diagram's reading order, not necessarily chronological events. Nothing in the walkthrough or either lab records reading, submits a quiz or marks an external project. The illustrations switch still gives an exact text-only rendering.
+
 ### Project Management and HR Analytics
 
 Both new packs contain **8 modules, 24 lessons, 4 project blocks and a 12-hour capstone**. Each has five formative questions per lesson, ten advanced questions per module (**200 quiz items**), three companion slides per lesson (**72 slides**), worked examples, labs, journals, rubrics, certification policy and a facilitator guide. The 60 learning hours are 36 lesson hours (including labs) plus 12 project-block hours and 12 capstone hours; the institutional 90-minute final is scheduled separately.
@@ -109,8 +125,9 @@ Opt a pack in with `course.json.illustrations: { "title": "…", "description": 
 
 - `id`: unique lowercase slug; `section`: the **exact source heading**, including its number.
 - `title`, `explanation`, `takeaway`, `caption`: plain-language teaching content. This is additional explanation, not a replacement for the reading.
-- `diagram`: one of `flow`, `compare`, `cycle`, `hub`, `bars`, `funnel`, `matrix`, `schedule`, `board`, `raci`. Most kinds have 2–6 labelled items with explanatory details; a schedule supports 2–12 tasks. See `src/shared/courses/illustrationTypes.ts` and the Digital Marketing/Project Management banks for reviewed examples.
+- `diagram`: one of `flow`, `compare`, `cycle`, `hub`, `bars`, `funnel`, `matrix`, `schedule`, `board`, `raci`, `prompt`, `workforce`. Most kinds have 2–6 labelled items with explanatory details; a schedule supports 2–12 tasks. See `src/shared/courses/illustrationTypes.ts` and the four bundled course banks for examples.
 - Optional `checkpoint: { question, answer }`; at least one is required per topic.
+- Optional `walkthrough: true`: add the learner-started focus sequence. Omit it for an unchanged static visual. Do not add autoplay or completion dependencies.
 
 An illustrated pack must cover every `###` within **Core ideas** in a lesson and every `##` in a project brief, in source order. The renderer inserts each figure **after the complete original section**. Do not edit the Markdown to add images or duplicate the explanation. If a source heading changes, update its mapping; validation rejects missing, duplicate or orphaned mappings.
 
@@ -122,6 +139,11 @@ Project-specific schemas add these checks:
 - `board`: each column has label/detail and 0–12 cards with unique `id`, label/detail and optional boolean `blocked`; an optional positive `wipLimit` describes active work. Explicitly `complete` columns are excluded from the example’s WIP boundary and do not have active WIP limits. Blocked cards still count. Use a clearly labelled classroom policy rather than implying a live Jira configuration or individual productivity ranking.
 - `raci`: 2–6 distinct `roles`; each row has label/detail and a matching `assignments[]` of `R`, `A`, `C`, `I`, `RA` or `—`. Each deliverable needs exactly one accountable and at least one responsible role (`RA` satisfies both). Label proposals as illustrative agreements, not real appointments.
 
+Local-lab schemas also stay plain data:
+
+- `prompt`: exactly six distinctly labelled items, each with a non-empty `example` as well as label/detail. Examples are assembled in source order only for selected parts. The displayed inclusion count is not output evaluation or a quality guarantee.
+- `workforce`: exactly four labelled stages (opening, joiners, leavers, closing) and a `scenario` with exactly `opening`, `joiners`, `openingLeavers`, `joinerLeavers`. Each is a whole 0–200 count; cohort exits must not exceed the matching opening or joining population. The model allows one entry/exit per person, no rehires/transfers, and one synthetic period. Closing = opening + joiners − all exits; turnover uses all exits / approximate average headcount; retention uses remaining opening members / opening. Never silently replace undefined rates with zero or interpret these demonstrations as individual employment scores.
+
 Only the asset URLs enter the catalog. The app fetches and validates the current module's JSON on demand, caches successful loads and offers retry without blocking the original reading. Assets are bundled locally, require no image service, and production assets use the existing `/assets/` PWA runtime cache after a successful visit. Public and assigned-student routes use the same visual renderer; visibility and progress permissions are unchanged.
 
 ## Adding or changing a pack
@@ -130,9 +152,9 @@ Only the asset URLs enter the catalog. The app fetches and validates the current
 2. The app discovers packs automatically via `import.meta.glob` in `src/shared/courses/courseCatalog.ts` — no code change needed for a new pack.
 3. Run the checks:
    - `npm run validate:courses` — manifest paths, quiz banks, weights, visual schema and exact source-heading coverage.
-   - `npm run test:unit` — includes course models, illustration validation, funnel arithmetic, both CPM passes/resource scenarios, board counts and RACI invariants.
-   - `npm run test:render:courses` — renders the catalog, overview, lesson and quizzes; discovers every illustrated pack, sweeps all **279 illustrations across 65 topics**, and compares each topic's original DOM exactly after removing the additive figures. It also checks both public/student route families and interactive calculations.
-   - `npx playwright test e2e/course-illustrations.spec.ts` — public-preview desktop/mobile flows for both illustrated courses: keyboard controls, schedule/funnel scenarios, charts, boards, RACI, original completion/quiz behaviour, navigation, network retry and scoped light/dark WCAG checks. Requires Playwright Chromium.
+   - `npm run test:unit` — includes course models, exact four-pack visual coverage, malformed-bank safeguards, funnel/workforce arithmetic, prompt assembly, both CPM passes/resource scenarios, board counts and RACI invariants.
+   - `npm run test:render:courses` — renders the catalog, overview, lesson and quizzes; discovers every illustrated pack, sweeps all **633 illustrations across 135 topics**, and compares each topic's original DOM exactly after removing the additive figures. It also checks both public/student route families and interactive calculations.
+   - `npx playwright test e2e/course-illustrations.spec.ts --workers 2` — public-preview desktop/mobile flows for all four illustrated courses: keyboard controls, optional animation and reduced motion, prompt/workforce/schedule/funnel scenarios, charts, boards, RACI, original completion/quiz behaviour, navigation, network retry and scoped light/dark WCAG checks. These checks are not whole-app accessibility certification or a live authenticated/backend acceptance test. Requires Playwright Chromium.
 4. Bump `version` and `lastReviewed` in `course.json`; note the change in the facilitator guide if it affects delivery.
 
 ## Maintenance cadence

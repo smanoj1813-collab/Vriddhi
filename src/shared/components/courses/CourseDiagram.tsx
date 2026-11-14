@@ -8,6 +8,7 @@ import {
 import type { CourseDiagram, CourseDiagramIcon, CourseDiagramItem } from '@/shared/courses/illustrationTypes'
 import { costPerAcquisition, forecastFunnel } from '@/shared/courses/courseIllustrations'
 import { ProjectBoardDiagram, ProjectRaciDiagram, ProjectScheduleDiagram } from './CourseProjectDiagram'
+import { CoursePromptLab, CourseWorkforceLab } from './CourseVisualLabs'
 
 const icons = {
   target: Target, users: Users, search: Search, globe: Globe2, message: MessageCircle,
@@ -31,11 +32,11 @@ export function DiagramIcon({ name, className = 'h-5 w-5' }: { name?: CourseDiag
   return <Icon className={className} aria-hidden="true" />
 }
 
-function DiagramLegend({ items }: { items: CourseDiagramItem[] }) {
+function DiagramLegend({ items, activeItem }: { items: CourseDiagramItem[]; activeItem?: number | null }) {
   return (
     <ol className="grid gap-3 sm:grid-cols-2">
       {items.map((item, index) => (
-        <li key={item.label} className="flex gap-2.5">
+        <li key={item.label} data-active={activeItem === index || undefined} className="course-diagram-item rounded-lg p-1 flex gap-2.5">
           <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border text-xs font-bold ${tones[index % tones.length]}`} aria-hidden="true">{index + 1}</span>
           <div className="min-w-0">
             <p className="text-sm font-bold text-slate-900 dark:text-slate-100">{item.label}</p>
@@ -47,12 +48,12 @@ function DiagramLegend({ items }: { items: CourseDiagramItem[] }) {
   )
 }
 
-function LinearDiagram({ diagram }: { diagram: Extract<CourseDiagram, { kind: 'flow' | 'cycle' | 'hub' | 'compare' }> }) {
+function LinearDiagram({ diagram, activeItem }: { diagram: Extract<CourseDiagram, { kind: 'flow' | 'cycle' | 'hub' | 'compare' }>; activeItem?: number | null }) {
   const flow = diagram.kind === 'flow'
   return (
     <ol className={`grid gap-3 ${flow ? 'sm:grid-cols-2' : 'sm:grid-cols-2'} ${diagram.items.length === 3 ? 'xl:grid-cols-3' : ''}`}>
       {diagram.items.map((item, index) => (
-        <li key={item.label} className={`relative min-w-0 rounded-xl border p-4 ${tones[index % tones.length]}`}>
+        <li key={item.label} data-active={activeItem === index || undefined} className={`course-diagram-item relative min-w-0 rounded-xl border p-4 ${tones[index % tones.length]}`}>
           <div className="flex items-center justify-between gap-2">
             <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/80 shadow-sm dark:bg-slate-900/70"><DiagramIcon name={item.icon} /></span>
             <span className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider">
@@ -69,7 +70,7 @@ function LinearDiagram({ diagram }: { diagram: Extract<CourseDiagram, { kind: 'f
 }
 
 /** Vector relationship map; its numbered HTML legend is the full text equivalent. */
-function OrbitDiagram({ diagram }: { diagram: Extract<CourseDiagram, { kind: 'flow' | 'cycle' | 'hub' | 'compare' }> }) {
+function OrbitDiagram({ diagram, activeItem }: { diagram: Extract<CourseDiagram, { kind: 'flow' | 'cycle' | 'hub' | 'compare' }>; activeItem?: number | null }) {
   const id = useId().replace(/:/g, '')
   const isCycle = diagram.kind === 'cycle'
   const points = diagram.items.map((_, index) => {
@@ -91,8 +92,8 @@ function OrbitDiagram({ diagram }: { diagram: Extract<CourseDiagram, { kind: 'fl
           const dy = next.y - point.y
           const distance = Math.hypot(dx, dy)
           return isCycle ? (
-            <line key={`line-${index}`} x1={point.x + dx / distance * 34} y1={point.y + dy / distance * 34} x2={next.x - dx / distance * 39} y2={next.y - dy / distance * 39} stroke="#64748b" strokeWidth="2" markerEnd={`url(#${id}-arrow)`} />
-          ) : <line key={`line-${index}`} x1="260" y1="144" x2={point.x} y2={point.y} stroke="#94a3b8" strokeWidth="2" strokeDasharray="5 5" />
+            <line className="course-orbit-connection" key={`line-${index}`} x1={point.x + dx / distance * 34} y1={point.y + dy / distance * 34} x2={next.x - dx / distance * 39} y2={next.y - dy / distance * 39} stroke="#64748b" strokeWidth="2" markerEnd={`url(#${id}-arrow)`} />
+          ) : <line className="course-orbit-connection" key={`line-${index}`} x1="260" y1="144" x2={point.x} y2={point.y} stroke="#94a3b8" strokeWidth="2" strokeDasharray="5 5" />
         })}
         <rect x="201" y="113" width="118" height="62" rx="18" fill="#0f172a" />
         <text x="260" y="140" textAnchor="middle" fill="#99f6e4" fontSize="11" fontWeight="700" letterSpacing="1.2">{isCycle ? 'THE LOOP' : 'THE GOAL'}</text>
@@ -100,7 +101,8 @@ function OrbitDiagram({ diagram }: { diagram: Extract<CourseDiagram, { kind: 'fl
         {points.map((point, index) => {
           const Icon = icons[diagram.items[index].icon ?? 'target']
           return (
-            <g key={`node-${index}`}>
+            <g key={`node-${index}`} className="course-orbit-node" data-active={activeItem === index || undefined}>
+              <circle className="course-orbit-ring" cx={point.x} cy={point.y} r="36" fill="none" stroke={fills[index % fills.length]} strokeWidth="3" opacity="0" />
               <circle cx={point.x} cy={point.y} r="29" fill={fills[index % fills.length]} />
               <Icon x={point.x - 11} y={point.y - 11} width="22" height="22" color="white" strokeWidth="1.7" aria-hidden="true" />
               <circle cx={point.x + 24} cy={point.y - 21} r="11" fill="white" stroke={fills[index % fills.length]} strokeWidth="2" />
@@ -109,7 +111,7 @@ function OrbitDiagram({ diagram }: { diagram: Extract<CourseDiagram, { kind: 'fl
           )
         })}
       </svg>
-      <DiagramLegend items={diagram.items} />
+      <DiagramLegend items={diagram.items} activeItem={activeItem} />
     </div>
   )
 }
@@ -129,26 +131,26 @@ function DataTable({ items, unit, rates }: { items: (CourseDiagramItem & { value
   )
 }
 
-function BarDiagram({ diagram }: { diagram: Extract<CourseDiagram, { kind: 'bars' }> }) {
+function BarDiagram({ diagram, activeItem }: { diagram: Extract<CourseDiagram, { kind: 'bars' }>; activeItem?: number | null }) {
   const maximum = Math.max(1, ...diagram.items.map((item) => item.value))
   return (
     <div>
       <div className="mb-4 flex justify-between gap-2 border-b border-slate-200 pb-2 text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:border-slate-700 dark:text-slate-400"><span>Zero-based scale · {diagram.unit}</span><span>0 — {number.format(maximum)}</span></div>
-      <dl className="space-y-4">
+      <ul className="space-y-4">
         {diagram.items.map((item, index) => (
-          <div key={item.label}>
-            <div className="flex items-start justify-between gap-3 text-sm"><dt className="font-semibold text-slate-800 dark:text-slate-100">{item.label}</dt><dd className="shrink-0 font-extrabold tabular-nums text-slate-900 dark:text-white">{number.format(item.value)} <span className="text-[10px] font-medium text-slate-500 dark:text-slate-400">{diagram.unit}</span></dd></div>
+          <li key={item.label} data-active={activeItem === index || undefined} className="course-diagram-item rounded-lg p-1">
+            <div className="flex items-start justify-between gap-3 text-sm"><p className="font-semibold text-slate-800 dark:text-slate-100">{item.label}</p><p className="shrink-0 font-extrabold tabular-nums text-slate-900 dark:text-white">{number.format(item.value)} <span className="text-[10px] font-medium text-slate-500 dark:text-slate-400">{diagram.unit}</span></p></div>
             <div className="mt-1.5 h-7 overflow-hidden rounded-md bg-slate-100 dark:bg-slate-800" aria-hidden="true"><div className="h-full rounded-r-md" style={{ width: `${item.value / maximum * 100}%`, backgroundColor: fills[index % fills.length] }} /></div>
             <p className="mt-1 text-xs leading-5 text-slate-600 dark:text-slate-300">{item.detail}</p>
-          </div>
+          </li>
         ))}
-      </dl>
+      </ul>
       <DataTable items={diagram.items} unit={diagram.unit} />
     </div>
   )
 }
 
-function FunnelDiagram({ diagram }: { diagram: Extract<CourseDiagram, { kind: 'funnel' }> }) {
+function FunnelDiagram({ diagram, activeItem }: { diagram: Extract<CourseDiagram, { kind: 'funnel' }>; activeItem?: number | null }) {
   const initialRates = diagram.items.slice(1).map((item, index) => diagram.items[index].value > 0 ? item.value / diagram.items[index].value * 100 : 0)
   const [rates, setRates] = useState(initialRates)
   const [budget, setBudget] = useState(3000)
@@ -161,7 +163,7 @@ function FunnelDiagram({ diagram }: { diagram: Extract<CourseDiagram, { kind: 'f
       <p className="mb-4 text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Schematic funnel · widths are not to scale</p>
       <ol className="space-y-2.5">
         {items.map((item, index) => (
-          <li key={item.label}>
+          <li key={item.label} data-active={activeItem === index || undefined} className="course-diagram-item rounded-xl">
             <div className="relative flex min-h-16 items-center justify-between gap-3 overflow-hidden rounded-xl border border-slate-200 px-4 py-3 dark:border-slate-700">
               <div aria-hidden="true" className="absolute inset-y-0 left-0 opacity-10 dark:opacity-20" style={{ width: `${100 - index / items.length * 65}%`, backgroundColor: fills[index % fills.length], clipPath: 'polygon(0 0, 100% 0, 90% 100%, 0 100%)' }} />
               <div className="relative min-w-0"><p className="text-sm font-bold text-slate-900 dark:text-white">{item.label}</p><p className="mt-0.5 text-xs leading-5 text-slate-600 dark:text-slate-300">{diagram.interactive && index > 0 ? `${number.format(rates[index - 1])}% of the previous stage` : item.detail}</p></div>
@@ -193,7 +195,7 @@ function FunnelDiagram({ diagram }: { diagram: Extract<CourseDiagram, { kind: 'f
   )
 }
 
-function MatrixDiagram({ diagram }: { diagram: Extract<CourseDiagram, { kind: 'matrix' }> }) {
+function MatrixDiagram({ diagram, activeItem }: { diagram: Extract<CourseDiagram, { kind: 'matrix' }>; activeItem?: number | null }) {
   return (
     <div>
       <p className="mb-2 flex items-center justify-center gap-2 text-xs font-bold text-slate-600 dark:text-slate-300">{diagram.xLabel}<ArrowRight className="h-3.5 w-3.5" aria-hidden="true" /></p>
@@ -203,7 +205,7 @@ function MatrixDiagram({ diagram }: { diagram: Extract<CourseDiagram, { kind: 'm
           <div key={row}>
             <p className="mb-1.5 text-[11px] font-semibold text-slate-500 dark:text-slate-400">{diagram.yLabel}: {row}</p>
             <div className="grid grid-cols-1 gap-2 min-[380px]:grid-cols-2">
-              {diagram.items.slice(rowIndex * 2, rowIndex * 2 + 2).map((item, columnIndex) => <div key={item.label} className={`min-w-0 rounded-xl border p-3 ${tones[rowIndex * 2 + columnIndex]}`}><p className="mb-2 text-[10px] font-semibold text-slate-700 dark:text-slate-200">{diagram.columns[columnIndex]} · {row}</p><DiagramIcon name={item.icon} /><p className="mt-2 text-sm font-extrabold">{item.label}</p><p className="mt-1 text-xs leading-5 text-slate-700 dark:text-slate-300">{item.detail}</p></div>)}
+              {diagram.items.slice(rowIndex * 2, rowIndex * 2 + 2).map((item, columnIndex) => <div key={item.label} data-active={activeItem === rowIndex * 2 + columnIndex || undefined} className={`course-diagram-item min-w-0 rounded-xl border p-3 ${tones[rowIndex * 2 + columnIndex]}`}><p className="mb-2 text-[10px] font-semibold text-slate-700 dark:text-slate-200">{diagram.columns[columnIndex]} · {row}</p><DiagramIcon name={item.icon} /><p className="mt-2 text-sm font-extrabold">{item.label}</p><p className="mt-1 text-xs leading-5 text-slate-700 dark:text-slate-300">{item.detail}</p></div>)}
             </div>
           </div>
         ))}
@@ -212,15 +214,17 @@ function MatrixDiagram({ diagram }: { diagram: Extract<CourseDiagram, { kind: 'm
   )
 }
 
-export default function CourseDiagramView({ diagram }: { diagram: CourseDiagram }) {
+export default function CourseDiagramView({ diagram, activeItem }: { diagram: CourseDiagram; activeItem?: number | null }) {
   switch (diagram.kind) {
     case 'flow':
-    case 'compare': return <LinearDiagram diagram={diagram} />
+    case 'compare': return <LinearDiagram diagram={diagram} activeItem={activeItem} />
     case 'hub':
-    case 'cycle': return <OrbitDiagram diagram={diagram} />
-    case 'bars': return <BarDiagram diagram={diagram} />
-    case 'funnel': return <FunnelDiagram diagram={diagram} />
-    case 'matrix': return <MatrixDiagram diagram={diagram} />
+    case 'cycle': return <OrbitDiagram diagram={diagram} activeItem={activeItem} />
+    case 'bars': return <BarDiagram diagram={diagram} activeItem={activeItem} />
+    case 'funnel': return <FunnelDiagram diagram={diagram} activeItem={activeItem} />
+    case 'matrix': return <MatrixDiagram diagram={diagram} activeItem={activeItem} />
+    case 'prompt': return <CoursePromptLab diagram={diagram} activeItem={activeItem} />
+    case 'workforce': return <CourseWorkforceLab diagram={diagram} activeItem={activeItem} />
     case 'schedule': return <ProjectScheduleDiagram diagram={diagram} />
     case 'board': return <ProjectBoardDiagram diagram={diagram} />
     case 'raci': return <ProjectRaciDiagram diagram={diagram} />

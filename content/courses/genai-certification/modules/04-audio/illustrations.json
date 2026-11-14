@@ -1,0 +1,796 @@
+{
+  "moduleId": "m4",
+  "topics": {
+    "m4-t1": {
+      "introduction": "A second way to understand “Audio opportunities & voice generation”: read the original explanation, follow the diagram and play or step through its focus points. All practice stays separate from your reading and quiz requirements.",
+      "sections": [
+        {
+          "title": "Audio design starts with the listener",
+          "explanation": "Choose audio where it helps a specific audience receive a message, not merely because speech generation is available.",
+          "diagram": {
+            "kind": "hub",
+            "items": [
+              {
+                "label": "Purpose",
+                "detail": "Name the information or action the listener needs.",
+                "icon": "target"
+              },
+              {
+                "label": "Language",
+                "detail": "Specify language, accent, terminology and audience comfort.",
+                "icon": "users"
+              },
+              {
+                "label": "Context",
+                "detail": "Consider device, noise, bandwidth and listening situation.",
+                "icon": "globe"
+              },
+              {
+                "label": "Alternative",
+                "detail": "Provide an accurate transcript or another suitable form.",
+                "icon": "file"
+              }
+            ],
+            "center": "The listener"
+          },
+          "takeaway": "Audio should complement accessible written alternatives rather than replace them.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m4-t1-v1",
+          "section": "1. Where audio is growing"
+        },
+        {
+          "title": "Text-to-speech turns a script into a candidate performance",
+          "explanation": "A speech model maps text and voice controls to audio. It does not independently validate the script’s facts or pronunciation.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Prepare the script",
+                "detail": "Write phrases that are natural to hear.",
+                "icon": "file"
+              },
+              {
+                "label": "Choose a permitted voice",
+                "detail": "Match language and use conditions with consent where needed.",
+                "icon": "shield"
+              },
+              {
+                "label": "Generate a sample",
+                "detail": "Test names, numbers, pauses and code-mixed terms.",
+                "icon": "message"
+              },
+              {
+                "label": "Review and revise",
+                "detail": "Listen, adjust the script or controls, then check again.",
+                "icon": "check"
+              }
+            ]
+          },
+          "takeaway": "Listen to the actual result; correct text does not guarantee correct spoken names or numbers.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m4-t1-v2",
+          "section": "2. How text-to-speech works now"
+        },
+        {
+          "title": "Audition the workflow, not only the vendor",
+          "explanation": "Editor voices, dedicated TTS, language specialists and read-aloud tools can suit different needs. Availability changes.",
+          "diagram": {
+            "kind": "compare",
+            "items": [
+              {
+                "label": "Convenience",
+                "detail": "An editor’s voice may fit a short internal draft.",
+                "icon": "layers"
+              },
+              {
+                "label": "Voice control",
+                "detail": "A dedicated TTS workflow may provide useful pronunciation or style settings.",
+                "icon": "message"
+              },
+              {
+                "label": "Regional review",
+                "detail": "A language-specific sample needs a competent listener’s check.",
+                "icon": "users"
+              },
+              {
+                "label": "Source fidelity",
+                "detail": "A document overview must still be checked against the original.",
+                "icon": "file"
+              }
+            ]
+          },
+          "takeaway": "Test the intended language and distribution rights before creating the full episode.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m4-t1-v3",
+          "section": "3. The tool landscape (2026)"
+        },
+        {
+          "title": "Direct for meaning, language and pace",
+          "explanation": "Voice direction combines the audience’s needs with the script and an actual listening test.",
+          "diagram": {
+            "kind": "cycle",
+            "items": [
+              {
+                "label": "Define the voice brief",
+                "detail": "State purpose, audience, language and register.",
+                "icon": "target"
+              },
+              {
+                "label": "Write for the ear",
+                "detail": "Use short phrases and unambiguous spoken numbers.",
+                "icon": "file"
+              },
+              {
+                "label": "Audition a sample",
+                "detail": "Include difficult names and intended emotional tone.",
+                "icon": "message"
+              },
+              {
+                "label": "Choose with listeners",
+                "detail": "Check comprehension and suitability with the audience.",
+                "icon": "check"
+              }
+            ],
+            "center": "Voice direction"
+          },
+          "takeaway": "Use the selected voice consistently but recheck quality when the language or task changes.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m4-t1-v4",
+          "section": "4. Directing a voice"
+        },
+        {
+          "title": "Quality control means listening end to end",
+          "explanation": "A clip can contain mispronunciations, missing words or artefacts that a text-only review will not reveal.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Listen for words",
+                "detail": "Check names, dates, quantities and terminology.",
+                "icon": "search"
+              },
+              {
+                "label": "Listen for delivery",
+                "detail": "Review pace, pauses, emphasis and emotional fit.",
+                "icon": "heart"
+              },
+              {
+                "label": "Check continuity",
+                "detail": "Notice cut-off endings, duplicated sounds and voice changes.",
+                "icon": "repeat"
+              },
+              {
+                "label": "Check the mix",
+                "detail": "Keep speech clear without clipping or masking sound.",
+                "icon": "check"
+              }
+            ]
+          },
+          "takeaway": "Check intelligibility and meaning before treating a generated track as ready to publish.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m4-t1-v5",
+          "section": "5. Quality checklist for generated speech",
+          "checkpoint": {
+            "question": "Is a fact-checked script enough to approve a generated voice track?",
+            "answer": "No. Listen to the audio itself for pronunciation, numbers, missing words, pace, glitches and changes in meaning."
+          }
+        }
+      ]
+    },
+    "m4-t2": {
+      "introduction": "A second way to understand “Editing, music generation & voice cloning”: read the original explanation, follow the diagram and play or step through its focus points. All practice stays separate from your reading and quiz requirements.",
+      "sections": [
+        {
+          "title": "Capture a usable signal before enhancement",
+          "explanation": "Recording conditions determine what an editor has to work with. Repair cannot reliably recover every missing or distorted word.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Prepare the room",
+                "detail": "Reduce avoidable noise and echo safely.",
+                "icon": "shield"
+              },
+              {
+                "label": "Place the microphone",
+                "detail": "Test distance and angle rather than assume the first take is usable.",
+                "icon": "search"
+              },
+              {
+                "label": "Record clearly",
+                "detail": "Use a spoken script and repeat stumbled sentences cleanly.",
+                "icon": "message"
+              },
+              {
+                "label": "Keep the source",
+                "detail": "Save the original and a listening note before editing.",
+                "icon": "file"
+              }
+            ]
+          },
+          "takeaway": "Keep an untouched source recording and re-record when meaning is unclear.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m4-t2-v1",
+          "section": "1. Recording well is still step one"
+        },
+        {
+          "title": "An edit is a change to evidence",
+          "explanation": "Transcript cuts and enhancement can alter timing or meaning. Listen after each material change.",
+          "diagram": {
+            "kind": "cycle",
+            "items": [
+              {
+                "label": "Keep an original",
+                "detail": "Retain the unedited source and permitted use record.",
+                "icon": "file"
+              },
+              {
+                "label": "Edit lightly",
+                "detail": "Target the actual noise, filler or unwanted section.",
+                "icon": "cursor"
+              },
+              {
+                "label": "Listen in context",
+                "detail": "Check joins, pauses, meaning and introduced artefacts.",
+                "icon": "search"
+              },
+              {
+                "label": "Save a revision",
+                "detail": "Record the change and preserve a way back.",
+                "icon": "repeat"
+              }
+            ],
+            "center": "Careful editing"
+          },
+          "takeaway": "Do not remove context or regenerate speech in a way that misrepresents the speaker.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m4-t2-v2",
+          "section": "2. AI-assisted editing"
+        },
+        {
+          "title": "Music has a purpose and a permission boundary",
+          "explanation": "A background track should support intelligibility and the intended mood without implying someone else’s authorship or endorsement.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Define the role",
+                "detail": "Choose whether music is an intro, bed or transition.",
+                "icon": "target"
+              },
+              {
+                "label": "Find a permitted track",
+                "detail": "Use approved generation or library material.",
+                "icon": "shield"
+              },
+              {
+                "label": "Mix under speech",
+                "detail": "Keep the voice understandable on the intended device.",
+                "icon": "message"
+              },
+              {
+                "label": "Record the rights",
+                "detail": "Keep source, terms and disclosure information.",
+                "icon": "file"
+              }
+            ]
+          },
+          "takeaway": "Check the current licence for the exact channel and account tier; generation does not imply unrestricted use.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m4-t2-v3",
+          "section": "3. AI music"
+        },
+        {
+          "title": "A familiar voice is an identity cue",
+          "explanation": "Cloning can produce a statement that sounds authentic even when the person never said it. Consent must cover the intended use and words.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Confirm permission",
+                "detail": "Use only a permitted voice and documented consent where required.",
+                "icon": "shield"
+              },
+              {
+                "label": "Limit the use",
+                "detail": "Specify the script, purpose, duration and distribution.",
+                "icon": "file"
+              },
+              {
+                "label": "Review the actual output",
+                "detail": "Check what was said and the context it implies.",
+                "icon": "search"
+              },
+              {
+                "label": "Disclose and retain records",
+                "detail": "Label synthetic speech and keep the permission trail.",
+                "icon": "check"
+              }
+            ]
+          },
+          "takeaway": "Follow the course’s restricted voice policy; never impersonate a person or fabricate their approval.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m4-t2-v4",
+          "section": "4. Voice cloning"
+        },
+        {
+          "title": "Assemble for comprehension, not just smooth sound",
+          "explanation": "A short audio piece needs an intelligible structure and a clear next action. Exact timing depends on the script and audience.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Open with a purpose",
+                "detail": "Tell listeners why this is relevant.",
+                "icon": "target"
+              },
+              {
+                "label": "Develop a few points",
+                "detail": "Use clear spoken signposts and one coherent message.",
+                "icon": "message"
+              },
+              {
+                "label": "Close with an action",
+                "detail": "Give an appropriate next step and source route.",
+                "icon": "cursor"
+              },
+              {
+                "label": "Review the whole",
+                "detail": "Check language, audio quality, rights and transcript.",
+                "icon": "check"
+              }
+            ]
+          },
+          "takeaway": "Review the complete mix and keep the music from obscuring the message.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m4-t2-v5",
+          "section": "5. Assembling a short piece",
+          "checkpoint": {
+            "question": "Can enhancement make a clipped or missing word reliable evidence of what a speaker said?",
+            "answer": "No. Preserve the source and re-record or clarify when meaning is uncertain. A smooth repaired sound is not proof of the original words."
+          }
+        }
+      ]
+    },
+    "m4-t3": {
+      "introduction": "A second way to understand “Audio in your content stack”: read the original explanation, follow the diagram and play or step through its focus points. All practice stays separate from your reading and quiz requirements.",
+      "sections": [
+        {
+          "title": "Retell a document for the ear",
+          "explanation": "Listeners cannot skim a table or return to a heading as easily as readers. Adapt the structure without changing the facts.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Select the message",
+                "detail": "Identify the listener’s question and intended action.",
+                "icon": "target"
+              },
+              {
+                "label": "Rewrite for speech",
+                "detail": "Use clear signposts and explain visual information verbally.",
+                "icon": "message"
+              },
+              {
+                "label": "Generate or record",
+                "detail": "Use a permitted voice and inspect language quality.",
+                "icon": "heart"
+              },
+              {
+                "label": "Verify the adaptation",
+                "detail": "Compare the spoken content with the original source.",
+                "icon": "check"
+              }
+            ]
+          },
+          "takeaway": "Check every date, amount and eligibility claim against the authorised source before sharing.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m4-t3-v1",
+          "section": "1. Text → audio: the conversions that pay off"
+        },
+        {
+          "title": "A transcript is a fallible derivative",
+          "explanation": "Speech recognition can mishear names, numbers and technical terms or attribute a statement to the wrong person.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Permission and purpose",
+                "detail": "Confirm authorised recording, storage and transcription.",
+                "icon": "shield"
+              },
+              {
+                "label": "Transcribe",
+                "detail": "Treat the text as a draft interpretation of the audio.",
+                "icon": "file"
+              },
+              {
+                "label": "Check critical passages",
+                "detail": "Listen again at the relevant time and correct errors.",
+                "icon": "search"
+              },
+              {
+                "label": "Share minimally",
+                "detail": "Circulate only the approved summary or transcript layer.",
+                "icon": "filter"
+              }
+            ]
+          },
+          "takeaway": "Get recording permission and keep quotations traceable to the original audio.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m4-t3-v2",
+          "section": "2. Audio → text: capturing what would otherwise be lost"
+        },
+        {
+          "title": "A voice menu needs a path out",
+          "explanation": "A caller should understand the available actions and reach help without becoming trapped in a menu.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Orient the caller",
+                "detail": "State the purpose and offer a suitable language.",
+                "icon": "message"
+              },
+              {
+                "label": "Present clear options",
+                "detail": "Name actions in an understandable order.",
+                "icon": "layers"
+              },
+              {
+                "label": "Confirm an action",
+                "detail": "Check the caller’s intent before a consequential change.",
+                "icon": "check"
+              },
+              {
+                "label": "Provide an exit",
+                "detail": "Offer a repeat, callback or authorised human route.",
+                "icon": "users"
+              }
+            ]
+          },
+          "takeaway": "Confirm consequential choices and provide a human or callback route.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m4-t3-v3",
+          "section": "3. IVR and voice-bot scripts"
+        },
+        {
+          "title": "An inclusive audio stack is a maintained workflow",
+          "explanation": "A recurring format becomes reliable when an owner checks its facts, language and accessibility each time.",
+          "diagram": {
+            "kind": "cycle",
+            "items": [
+              {
+                "label": "Choose a recurring need",
+                "detail": "Pick a useful audience and a manageable format.",
+                "icon": "target"
+              },
+              {
+                "label": "Use a production template",
+                "detail": "Record voice, script, export and rights decisions.",
+                "icon": "file"
+              },
+              {
+                "label": "Run named reviews",
+                "detail": "Assign factual and language checks before release.",
+                "icon": "users"
+              },
+              {
+                "label": "Learn from listeners",
+                "detail": "Revise the template using actual feedback.",
+                "icon": "repeat"
+              }
+            ],
+            "center": "Audio workflow"
+          },
+          "takeaway": "Do not promise accessibility or confidentiality that the actual workflow cannot provide.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m4-t3-v4",
+          "section": "4. Designing an audio-inclusive stack"
+        },
+        {
+          "title": "Publish the supporting context with the audio",
+          "explanation": "A transcript, sources and credits let people understand, verify and reuse the episode appropriately.",
+          "diagram": {
+            "kind": "hub",
+            "items": [
+              {
+                "label": "Show notes",
+                "detail": "State the topic, sections and relevant links.",
+                "icon": "file"
+              },
+              {
+                "label": "Transcript",
+                "detail": "Offer an accurate text equivalent in the relevant languages.",
+                "icon": "message"
+              },
+              {
+                "label": "Credits and rights",
+                "detail": "Identify voices, music, sources and AI assistance.",
+                "icon": "shield"
+              },
+              {
+                "label": "Audience feedback",
+                "detail": "Ask what listeners understood and record the limitations of usage measures.",
+                "icon": "users"
+              }
+            ],
+            "center": "Audio package"
+          },
+          "takeaway": "A play count measures exposure, not comprehension or a proved outcome.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m4-t3-v5",
+          "section": "5. Show notes, transcripts and distribution",
+          "checkpoint": {
+            "question": "Why should a meeting transcript be checked against the recording before minutes are circulated?",
+            "answer": "Recognition can mishear statements or invent apparent commitments. Confirm important wording, speakers and agreed actions under the recording’s permission and sharing rules."
+          }
+        }
+      ]
+    },
+    "m4-pb3": {
+      "introduction": "A second way to understand “Project Block 3 — Bilingual Audio Episode”: read the original explanation, follow the diagram and play or step through its focus points. All practice stays separate from your reading and quiz requirements.",
+      "sections": [
+        {
+          "title": "Bilingual Audio Episode: from purpose to evidence",
+          "explanation": "An accurate and accessible English-plus-Indian-language audio explanation with checked speech, rights and listener feedback.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Purpose",
+                "detail": "An accurate and accessible English-plus-Indian-language audio explanation with checked speech, rights and listener feedback.",
+                "icon": "target"
+              },
+              {
+                "label": "Build an artefact",
+                "detail": "Create the required work for the stated audience and scope.",
+                "icon": "layers"
+              },
+              {
+                "label": "Verify and explain",
+                "detail": "Keep test evidence, permissions, limitations and your contribution.",
+                "icon": "check"
+              }
+            ]
+          },
+          "takeaway": "Use the full original brief for requirements, timing and marks; this diagram is a companion, not a replacement.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m4-pb3-v1",
+          "section": "The brief"
+        },
+        {
+          "title": "Organise the bilingual audio episode evidence pack",
+          "explanation": "Group the required files so a reviewer can inspect the work and its checks. The detailed checklist above remains unchanged.",
+          "diagram": {
+            "kind": "hub",
+            "items": [
+              {
+                "label": "Scripts and fact sheet",
+                "detail": "Provide both languages and trace every claim to the source you checked.",
+                "icon": "file"
+              },
+              {
+                "label": "Audio and production sheet",
+                "detail": "Record voice choices, pronunciation edits, mix and export decisions.",
+                "icon": "message"
+              },
+              {
+                "label": "Show notes and transcripts",
+                "detail": "Include timestamps, sources and an accurate text equivalent in both languages.",
+                "icon": "layers"
+              },
+              {
+                "label": "Consent and rights",
+                "detail": "Keep permitted voice-use and music-licence records.",
+                "icon": "shield"
+              },
+              {
+                "label": "Listener test",
+                "detail": "Get at least three intended listeners, including each language audience, and document revisions.",
+                "icon": "users"
+              },
+              {
+                "label": "Reflection and disclosure",
+                "detail": "Describe tool help, your editing and remaining language limitations.",
+                "icon": "repeat"
+              }
+            ],
+            "center": "Evidence pack"
+          },
+          "takeaway": "Reading the brief is not submission, external project marking or facilitator approval.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m4-pb3-v2",
+          "section": "What to submit"
+        },
+        {
+          "title": "Check the boundaries before the build or release",
+          "explanation": "A good-looking artefact cannot compensate for missing permission, invented evidence or an unsafe action.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Evidence and scope",
+                "detail": "Use the required real or clearly labelled practice evidence honestly.",
+                "icon": "file"
+              },
+              {
+                "label": "Permission and rights",
+                "detail": "Check relevant data, likeness, music and source permissions.",
+                "icon": "shield"
+              },
+              {
+                "label": "Human control",
+                "detail": "Keep the required review before consequential outward effects.",
+                "icon": "users"
+              },
+              {
+                "label": "Test and disclose",
+                "detail": "Record actual results, limitations and AI assistance.",
+                "icon": "check"
+              }
+            ]
+          },
+          "takeaway": "Follow the topic-specific constraints in full; a disclosure label does not override the rules.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m4-pb3-v3",
+          "section": "Constraints"
+        },
+        {
+          "title": "Plan, build, check and revise",
+          "explanation": "Use the original suggested schedule to reserve time for review rather than doing all the checking after the final export.",
+          "diagram": {
+            "kind": "cycle",
+            "items": [
+              {
+                "label": "Plan the scope",
+                "detail": "Start from the actual brief, required outputs and permitted inputs.",
+                "icon": "target"
+              },
+              {
+                "label": "Build deliberately",
+                "detail": "Work in small versions and retain intermediate artefacts.",
+                "icon": "layers"
+              },
+              {
+                "label": "Review evidence",
+                "detail": "Run the relevant source, language, functionality and safety checks.",
+                "icon": "search"
+              },
+              {
+                "label": "Revise and submit",
+                "detail": "Record the change and organise the complete evidence package.",
+                "icon": "file"
+              }
+            ],
+            "center": "Project workflow"
+          },
+          "takeaway": "Keep the process log while working; do not reconstruct fictitious experiments or approvals afterwards.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m4-pb3-v4",
+          "section": "Process (suggested)"
+        },
+        {
+          "title": "Make the published criteria inspectable",
+          "explanation": "The original rubric, weights, pass threshold and any caps remain authoritative. These panels point to the evidence behind its criteria.",
+          "diagram": {
+            "kind": "compare",
+            "items": [
+              {
+                "label": "Audio craft",
+                "detail": "Check pronunciation, pacing, clarity, level and music balance.",
+                "icon": "heart"
+              },
+              {
+                "label": "Script and accuracy",
+                "detail": "Write for the ear and verify the claims and language.",
+                "icon": "search"
+              },
+              {
+                "label": "Rights and disclosure",
+                "detail": "Keep consent, licence and synthetic-voice records.",
+                "icon": "shield"
+              },
+              {
+                "label": "Listener test and reflection",
+                "detail": "Show what feedback changed in the final piece.",
+                "icon": "users"
+              }
+            ]
+          },
+          "takeaway": "The animation does not grade work, award marks or override a safety or integrity cap.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m4-pb3-v5",
+          "section": "Rubric (7 marks)"
+        },
+        {
+          "title": "Use the review habits, not a success formula",
+          "explanation": "The original tips are practical prompts for reflection, not guarantees of a result or new assessment conditions.",
+          "diagram": {
+            "kind": "compare",
+            "items": [
+              {
+                "label": "Write for each audience",
+                "detail": "Retell meaning naturally instead of translating word for word.",
+                "icon": "message"
+              },
+              {
+                "label": "Audition with listeners",
+                "detail": "Check the intended language and difficult pronunciation early.",
+                "icon": "users"
+              },
+              {
+                "label": "Listen to the whole mix",
+                "detail": "Inspect the final file, not only isolated clips.",
+                "icon": "check"
+              }
+            ]
+          },
+          "takeaway": "Choose the habit that addresses your actual weakness and keep evidence of the correction.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m4-pb3-v6",
+          "section": "Tips from previous cohorts"
+        },
+        {
+          "title": "Separate tool help from your responsibility",
+          "explanation": "A useful statement tells the reviewer where assistance entered and what the learner independently checked.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Name the assistance",
+                "detail": "Identify tools and the tasks for which they were used.",
+                "icon": "message"
+              },
+              {
+                "label": "Trace the evidence",
+                "detail": "State which real sources, tests and outputs were checked.",
+                "icon": "file"
+              },
+              {
+                "label": "Own the judgement",
+                "detail": "Describe selection, revisions, decisions and individual or team contributions.",
+                "icon": "users"
+              },
+              {
+                "label": "Follow the policy",
+                "detail": "Keep assessment restrictions and rights boundaries intact.",
+                "icon": "shield"
+              }
+            ]
+          },
+          "takeaway": "Disclosure cannot legitimise fabricated evidence, prohibited tool use or missing permission.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m4-pb3-v7",
+          "section": "AI-use statement template",
+          "checkpoint": {
+            "question": "Is disclosure enough if a cloned voice has no documented consent under this project’s rules?",
+            "answer": "No. Follow the original voice restrictions and obtain the required permission. A synthetic label does not replace consent or authorise deception."
+          }
+        }
+      ]
+    }
+  }
+}

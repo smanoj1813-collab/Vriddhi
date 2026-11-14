@@ -1,0 +1,343 @@
+{
+  "moduleId": "m7",
+  "topics": {
+    "m7-t1": {
+      "introduction": "A second way to understand “Correlation, confounding and causal claims”: read the original explanation, follow the diagram and play or step through its focus points. All practice stays separate from your reading and quiz requirements.",
+      "sections": [
+        {
+          "title": "A shared cause can create an apparent relationship",
+          "explanation": "Training participation and retention may both relate to other factors. A correlation does not identify an intervention effect or its direction.",
+          "diagram": {
+            "kind": "hub",
+            "items": [
+              {
+                "label": "Proposed intervention",
+                "detail": "State the change whose effect you want to understand.",
+                "icon": "target"
+              },
+              {
+                "label": "Observed outcome",
+                "detail": "Define the follow-up result precisely.",
+                "icon": "chart"
+              },
+              {
+                "label": "Shared causes",
+                "detail": "Consider workload, role mix or other factors affecting both.",
+                "icon": "link"
+              },
+              {
+                "label": "Selection and direction",
+                "detail": "People may self-select, and the direction of influence can differ.",
+                "icon": "search"
+              }
+            ],
+            "center": "Causal questions"
+          },
+          "takeaway": "Draw plausible alternative pathways before claiming that changing one variable will change the other.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m7-t1-v1",
+          "section": "1. Association is not an intervention effect"
+        },
+        {
+          "title": "Design the comparison before seeing results",
+          "explanation": "A baseline, outcome window and suitable comparison make the evaluation more informative. Governance and essential support remain constraints.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Define the outcome",
+                "detail": "Set the population, measure and follow-up in advance.",
+                "icon": "file"
+              },
+              {
+                "label": "Choose a comparison",
+                "detail": "Use an ethical feasible design with explicit assumptions.",
+                "icon": "users"
+              },
+              {
+                "label": "Collect consistently",
+                "detail": "Use the same measurement rules across relevant groups.",
+                "icon": "layers"
+              },
+              {
+                "label": "Review the limitations",
+                "detail": "Record remaining differences and missing follow-up.",
+                "icon": "shield"
+              }
+            ]
+          },
+          "takeaway": "Do not choose only the favourable metric after looking at the data.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m7-t1-v2",
+          "section": "2. Design comparison before launch"
+        },
+        {
+          "title": "Uncertainty should constrain the conclusion",
+          "explanation": "Small samples, changing conditions and incomplete observation limit what a difference can establish.",
+          "diagram": {
+            "kind": "compare",
+            "items": [
+              {
+                "label": "Observed difference",
+                "detail": "Describe what the data actually show.",
+                "icon": "chart"
+              },
+              {
+                "label": "Required assumptions",
+                "detail": "State what a causal reading would need.",
+                "icon": "file"
+              },
+              {
+                "label": "Unresolved threats",
+                "detail": "Keep missing data and external changes visible.",
+                "icon": "search"
+              },
+              {
+                "label": "Proportionate decision",
+                "detail": "Recommend more evidence or a bounded test where appropriate.",
+                "icon": "check"
+              }
+            ]
+          },
+          "takeaway": "“Promising enough for a better pilot” can be a sound conclusion; statistical adjustment does not erase every bias.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m7-t1-v3",
+          "section": "3. Interpret uncertainty honestly",
+          "checkpoint": {
+            "question": "If trainees stay longer than non-trainees, does that prove training caused retention?",
+            "answer": "No. Selection, workload, role mix and other factors may explain both. Plan a suitable comparison and state the remaining assumptions and uncertainty."
+          }
+        }
+      ]
+    },
+    "m7-t2": {
+      "introduction": "A second way to understand “Predictive analytics limits and model review”: read the original explanation, follow the diagram and play or step through its focus points. All practice stays separate from your reading and quiz requirements.",
+      "sections": [
+        {
+          "title": "Read all four cells before quoting accuracy",
+          "explanation": "The synthetic positive class is “exit” in a fixed teaching evaluation. Four true positives plus 86 true negatives give 90% accuracy, the same as an all-stay baseline.",
+          "diagram": {
+            "kind": "matrix",
+            "items": [
+              {
+                "label": "True positive · 4",
+                "detail": "Four actual exits were predicted as exits.",
+                "icon": "check"
+              },
+              {
+                "label": "False negative · 6",
+                "detail": "Six actual exits were missed.",
+                "icon": "search"
+              },
+              {
+                "label": "False positive · 4",
+                "detail": "Four stayers were wrongly labelled as exits.",
+                "icon": "shield"
+              },
+              {
+                "label": "True negative · 86",
+                "detail": "Eighty-six stayers were predicted as stayers.",
+                "icon": "users"
+              }
+            ],
+            "xLabel": "Prediction",
+            "yLabel": "Observed outcome",
+            "columns": [
+              "Predicted exit",
+              "Predicted stay"
+            ],
+            "rows": [
+              "Actually exited",
+              "Actually stayed"
+            ]
+          },
+          "takeaway": "Precision is 4/(4+4) = 50%; recall is 4/(4+6) = 40%. The aggregate example does not authorise individual employee-risk scoring.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m7-t2-v1",
+          "section": "1. Compare with a meaningful baseline"
+        },
+        {
+          "title": "Error types have human consequences",
+          "explanation": "A threshold trades off errors under a defined evaluation. A score does not explain a person’s intentions.",
+          "diagram": {
+            "kind": "compare",
+            "items": [
+              {
+                "label": "False positive",
+                "detail": "Someone could be wrongly labelled or treated differently.",
+                "icon": "shield"
+              },
+              {
+                "label": "False negative",
+                "detail": "A real outcome is missed under the model’s rule.",
+                "icon": "search"
+              },
+              {
+                "label": "Threshold choice",
+                "detail": "Review the cost and distribution of mistakes, not only accuracy.",
+                "icon": "chart"
+              },
+              {
+                "label": "Human authority",
+                "detail": "Keep consequential decisions under qualified accountable processes.",
+                "icon": "users"
+              }
+            ]
+          },
+          "takeaway": "This course uses synthetic aggregate literacy only; do not deploy individual leaver lists or automated adverse actions.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m7-t2-v2",
+          "section": "2. Errors have different consequences"
+        },
+        {
+          "title": "Review time, leakage and operating authority",
+          "explanation": "A model can look accurate when it uses future information or the same cases for training and evaluation. Performance can also change over time.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Exclude future knowledge",
+                "detail": "Do not predict exits using fields known only after departure.",
+                "icon": "clock"
+              },
+              {
+                "label": "Separate evaluation",
+                "detail": "Use appropriate unseen cases and time boundaries.",
+                "icon": "layers"
+              },
+              {
+                "label": "Watch changed conditions",
+                "detail": "Review drift in roles, policy and populations.",
+                "icon": "search"
+              },
+              {
+                "label": "Check authority and remedy",
+                "detail": "Confirm the permitted purpose and route to challenge a consequential result.",
+                "icon": "shield"
+              }
+            ]
+          },
+          "takeaway": "A vendor score is insufficient: purpose, privacy, fairness, human accountability and contestability need review.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m7-t2-v3",
+          "section": "3. Check leakage, drift and authority",
+          "checkpoint": {
+            "question": "Why is 90% accuracy not a sufficient success claim in the synthetic exit example?",
+            "answer": "An all-stay baseline also reaches 90% accuracy while detecting no exits. Inspect the confusion matrix, precision, recall, population and human consequences."
+          }
+        }
+      ]
+    },
+    "m7-t3": {
+      "introduction": "A second way to understand “Fairness, disclosure and intervention governance”: read the original explanation, follow the diagram and play or step through its focus points. All practice stays separate from your reading and quiz requirements.",
+      "sections": [
+        {
+          "title": "A selection disparity is a signal, not a verdict",
+          "explanation": "The independent synthetic groups have 20 selected of 50 eligible in A and 12 of 40 in B. Counts, role mix and process context still matter.",
+          "diagram": {
+            "kind": "bars",
+            "items": [
+              {
+                "label": "Synthetic Group A",
+                "detail": "20 selected ÷ 50 eligible applicants.",
+                "value": 40,
+                "icon": "chart"
+              },
+              {
+                "label": "Synthetic Group B",
+                "detail": "12 selected ÷ 40 eligible applicants.",
+                "value": 30,
+                "icon": "chart"
+              }
+            ],
+            "unit": "% selected"
+          },
+          "takeaway": "Rates are 40% and 30%; B/A = 0.75. This is not proof of cause, a legal finding or permission to infer sensitive attributes.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m7-t3-v1",
+          "section": "1. A disparity is a signal to investigate"
+        },
+        {
+          "title": "A screening heuristic is not a law of fairness",
+          "explanation": "A selection-rate ratio can highlight a question for investigation. One threshold cannot establish universal fairness or legal compliance.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Check definitions",
+                "detail": "Use eligible comparable populations and an explicit reference.",
+                "icon": "file"
+              },
+              {
+                "label": "Inspect the ratio",
+                "detail": "Show both rates, counts and sample limitations.",
+                "icon": "chart"
+              },
+              {
+                "label": "Investigate context",
+                "detail": "Review role mix, criteria, missing data and consequences.",
+                "icon": "search"
+              },
+              {
+                "label": "Escalate appropriately",
+                "detail": "Use authorised qualified reviewers and applicable current requirements.",
+                "icon": "shield"
+              }
+            ]
+          },
+          "takeaway": "Use qualified HR and legal review for real decisions, not a classroom ratio as a clearance certificate.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m7-t3-v2",
+          "section": "2. Do not turn a heuristic into law"
+        },
+        {
+          "title": "Govern the action, not only the metric",
+          "explanation": "A review needs purpose, alternatives, data authority, affected people and a way to correct or contest errors.",
+          "diagram": {
+            "kind": "cycle",
+            "items": [
+              {
+                "label": "Define purpose and people",
+                "detail": "Name the use and who could be affected.",
+                "icon": "users"
+              },
+              {
+                "label": "Review alternatives",
+                "detail": "Consider a lower-risk or non-model approach.",
+                "icon": "layers"
+              },
+              {
+                "label": "Apply controls",
+                "detail": "Limit data, access, disclosure and consequential actions.",
+                "icon": "shield"
+              },
+              {
+                "label": "Review and remedy",
+                "detail": "Assign an owner, correction route and review date.",
+                "icon": "repeat"
+              }
+            ],
+            "center": "Responsible action"
+          },
+          "takeaway": "A simpler process improvement may answer the need without any individual scoring.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m7-t3-v3",
+          "section": "3. Govern the proposed action",
+          "checkpoint": {
+            "question": "Does a selection-rate ratio above a chosen threshold prove a process is fair and legally compliant?",
+            "answer": "No. A heuristic is not a universal fairness or Indian legal compliance test. Review definitions, data, context, harms and current requirements with qualified owners."
+          }
+        }
+      ]
+    }
+  }
+}

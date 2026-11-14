@@ -1,0 +1,339 @@
+{
+  "moduleId": "m5",
+  "topics": {
+    "m5-t1": {
+      "introduction": "A second way to understand “Engagement surveys and response bias”: read the original explanation, follow the diagram and play or step through its focus points. All practice stays separate from your reading and quiz requirements.",
+      "sections": [
+        {
+          "title": "A survey item should measure one defined idea",
+          "explanation": "Engagement, satisfaction and intention to stay are not interchangeable constructs. A practice survey is not a validated psychological instrument.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Name the construct",
+                "detail": "Choose the specific idea relevant to the decision.",
+                "icon": "target"
+              },
+              {
+                "label": "Write one clear item",
+                "detail": "Avoid leading wording and mixed questions.",
+                "icon": "message"
+              },
+              {
+                "label": "Use a consistent scale",
+                "detail": "Make response options understandable and comparable.",
+                "icon": "layers"
+              },
+              {
+                "label": "Pilot the wording",
+                "detail": "Check accessibility and meaning with an appropriate review.",
+                "icon": "check"
+              }
+            ]
+          },
+          "takeaway": "Do not draw health, personality or clinical conclusions from a few workplace questions.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m5-t1-v1",
+          "section": "1. Measure a defined construct"
+        },
+        {
+          "title": "Responses and favourable responses have different bases",
+          "explanation": "The independent synthetic survey scenario has 80 invitations, 48 replies and 30 favourable replies. The same funnel contains two distinct rates.",
+          "diagram": {
+            "kind": "funnel",
+            "items": [
+              {
+                "label": "Eligible invitations",
+                "detail": "80 people were invited under the scenario’s rule.",
+                "value": 80,
+                "icon": "chart"
+              },
+              {
+                "label": "Replies",
+                "detail": "48 people responded; nonrespondents may differ systematically.",
+                "value": 48,
+                "icon": "chart"
+              },
+              {
+                "label": "Favourable replies",
+                "detail": "30 of the 48 respondents met the stated favourable definition.",
+                "value": 30,
+                "icon": "chart"
+              }
+            ],
+            "unit": "people"
+          },
+          "takeaway": "Response is 48/80 = 60%; favourable among respondents is 30/48 = 62.5%. Neither establishes the opinions of nonrespondents.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m5-t1-v2",
+          "section": "2. Participation shapes interpretation"
+        },
+        {
+          "title": "A mean alone can hide different experiences",
+          "explanation": "Response distributions and context can reveal disagreement that one average conceals. Sharing still needs a disclosure review.",
+          "diagram": {
+            "kind": "hub",
+            "items": [
+              {
+                "label": "Distribution",
+                "detail": "Show the response pattern and counts across the scale.",
+                "icon": "chart"
+              },
+              {
+                "label": "Participation",
+                "detail": "Explain who replied and what is unknown about nonresponse.",
+                "icon": "users"
+              },
+              {
+                "label": "Free text",
+                "detail": "Remove identifying details before wider sharing.",
+                "icon": "file"
+              },
+              {
+                "label": "Trust",
+                "detail": "State who can see raw responses and how findings will be used.",
+                "icon": "shield"
+              }
+            ],
+            "center": "Survey interpretation"
+          },
+          "takeaway": "Describe actual confidentiality controls; never promise anonymity the workflow cannot provide.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m5-t1-v3",
+          "section": "3. Report distributions and protect trust",
+          "checkpoint": {
+            "question": "Does 62.5% favourable among respondents mean 62.5% of all invited employees were favourable?",
+            "answer": "No. The denominator is the 48 respondents, not all 80 invitations. The nonrespondents’ opinions are unknown."
+          }
+        }
+      ]
+    },
+    "m5-t2": {
+      "introduction": "A second way to understand “Retention cohorts and fair investigation”: read the original explanation, follow the diagram and play or step through its focus points. All practice stays separate from your reading and quiz requirements.",
+      "sections": [
+        {
+          "title": "Retention needs a fully observed cohort",
+          "explanation": "A ninety-day measure follows eligible joiners to the same follow-up boundary. Recent joiners have not had the same opportunity to be observed.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Define entry",
+                "detail": "State the joining event and cohort window.",
+                "icon": "users"
+              },
+              {
+                "label": "Define follow-up",
+                "detail": "Choose the exact day boundary and movement rules.",
+                "icon": "clock"
+              },
+              {
+                "label": "Check observation",
+                "detail": "Separate eligible fully observed cases from immature ones.",
+                "icon": "search"
+              },
+              {
+                "label": "Report the result",
+                "detail": "In the independent fixture, 34 of 40 fully observed joiners remain: 85%.",
+                "icon": "chart"
+              }
+            ]
+          },
+          "takeaway": "Do not count unfinished follow-up as confirmed retention success.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m5-t2-v1",
+          "section": "1. Define cohort entry and follow-up"
+        },
+        {
+          "title": "A group difference suggests questions, not a cause",
+          "explanation": "Role mix, workload, commute and other unmeasured factors may explain an observed difference. Exit feedback has its own response limits.",
+          "diagram": {
+            "kind": "compare",
+            "items": [
+              {
+                "label": "Observed pattern",
+                "detail": "State the rate, counts, cohort and period.",
+                "icon": "file"
+              },
+              {
+                "label": "Plausible explanations",
+                "detail": "List alternatives without selecting a favourite as fact.",
+                "icon": "search"
+              },
+              {
+                "label": "Missing evidence",
+                "detail": "Identify what would distinguish the hypotheses.",
+                "icon": "layers"
+              },
+              {
+                "label": "Safe investigation",
+                "detail": "Ask authorised process owners and protect identities.",
+                "icon": "shield"
+              }
+            ]
+          },
+          "takeaway": "Compare only where sample size and privacy permit, and label explanations as hypotheses.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m5-t2-v2",
+          "section": "2. Segment carefully and generate hypotheses"
+        },
+        {
+          "title": "Improve systems without labelling people",
+          "explanation": "Retention evidence can support clearer job previews, onboarding or schedule review under appropriate authority.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Choose a process issue",
+                "detail": "Identify a supported, changeable concern.",
+                "icon": "target"
+              },
+              {
+                "label": "Design a safe pilot",
+                "detail": "Name an owner and the proportionate action.",
+                "icon": "users"
+              },
+              {
+                "label": "Measure intended effects",
+                "detail": "Define the relevant outcome and follow-up.",
+                "icon": "chart"
+              },
+              {
+                "label": "Watch unintended harm",
+                "detail": "Keep access, workload and employee trust under review.",
+                "icon": "shield"
+              }
+            ]
+          },
+          "takeaway": "Do not publish individual “likely leaver” lists or treat an aggregate pattern as a person’s intention.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m5-t2-v3",
+          "section": "3. Act on systems, not speculative labels",
+          "checkpoint": {
+            "question": "Should someone who joined ten days ago be counted as a ninety-day retention success?",
+            "answer": "No. Their follow-up window is incomplete. Keep immature cohorts separate and use the agreed eligible denominator."
+          }
+        }
+      ]
+    },
+    "m5-t3": {
+      "introduction": "A second way to understand “Learning, onboarding and internal mobility metrics”: read the original explanation, follow the diagram and play or step through its focus points. All practice stays separate from your reading and quiz requirements.",
+      "sections": [
+        {
+          "title": "Participation, learning and application differ",
+          "explanation": "The evidence chain separates attending a programme from demonstrating knowledge and applying it at work.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Participation",
+                "detail": "Record who had access and took part.",
+                "icon": "users"
+              },
+              {
+                "label": "Learning evidence",
+                "detail": "Use a relevant task or knowledge check.",
+                "icon": "file"
+              },
+              {
+                "label": "Application",
+                "detail": "Observe job-related behaviour using clear, consistent criteria.",
+                "icon": "search"
+              },
+              {
+                "label": "Outcome context",
+                "detail": "Examine operational results without assuming the training caused them.",
+                "icon": "target"
+              }
+            ]
+          },
+          "takeaway": "A completed course or high quiz score alone does not prove workplace performance or monetary return.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m5-t3-v1",
+          "section": "1. Build an evidence chain"
+        },
+        {
+          "title": "Before and after need comparable measurement",
+          "explanation": "Tasks, scales, timing and eligible participants should match. Missing follow-up and other support can distort interpretation.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Set the baseline",
+                "detail": "Define the task, measure and eligible sample.",
+                "icon": "file"
+              },
+              {
+                "label": "Plan follow-up",
+                "detail": "Use comparable timing and conditions.",
+                "icon": "clock"
+              },
+              {
+                "label": "Check missingness",
+                "detail": "Show who did not complete the later measurement.",
+                "icon": "users"
+              },
+              {
+                "label": "Review alternative causes",
+                "detail": "Consider practice, selection and other changes before a causal claim.",
+                "icon": "search"
+              }
+            ]
+          },
+          "takeaway": "A before/after improvement is not by itself proof of a training effect.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m5-t3-v2",
+          "section": "2. Use comparable pre and post measures"
+        },
+        {
+          "title": "Mobility metrics include opportunity, not only uptake",
+          "explanation": "A low participation rate may reflect access barriers or missing openings rather than low motivation.",
+          "diagram": {
+            "kind": "hub",
+            "items": [
+              {
+                "label": "Eligibility",
+                "detail": "Define who could apply and which roles existed.",
+                "icon": "file"
+              },
+              {
+                "label": "Access",
+                "detail": "Check whether people could discover and use the opportunity.",
+                "icon": "globe"
+              },
+              {
+                "label": "Progression",
+                "detail": "Track applications, selection and movement as distinct events.",
+                "icon": "layers"
+              },
+              {
+                "label": "Fair review",
+                "detail": "Investigate patterns safely and keep consequential decisions accountable.",
+                "icon": "shield"
+              }
+            ],
+            "center": "Development access"
+          },
+          "takeaway": "Use job-related criteria and authorised human review; restrict individual assessment details.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m5-t3-v3",
+          "section": "3. Monitor access and mobility pathways",
+          "checkpoint": {
+            "question": "Can a low internal-mobility application rate prove that a group lacks motivation?",
+            "answer": "No. Eligibility, opportunity availability, communication and access barriers may differ. Investigate the process before attributing intent."
+          }
+        }
+      ]
+    }
+  }
+}

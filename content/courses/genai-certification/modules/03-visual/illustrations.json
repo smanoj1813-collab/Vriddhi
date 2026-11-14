@@ -1,0 +1,1235 @@
+{
+  "moduleId": "m3",
+  "topics": {
+    "m3-t1": {
+      "introduction": "A second way to understand “The visual content revolution & how image generators work”: read the original explanation, follow the diagram and play or step through its focus points. All practice stays separate from your reading and quiz requirements.",
+      "sections": [
+        {
+          "title": "A visual skill solves a communication problem",
+          "explanation": "An illustration becomes useful when it helps a particular viewer understand or do something.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Name the message",
+                "detail": "Choose the one idea the viewer needs to understand.",
+                "icon": "target"
+              },
+              {
+                "label": "Choose a form",
+                "detail": "Use a diagram, photograph, chart or layout that suits the idea.",
+                "icon": "layers"
+              },
+              {
+                "label": "Build and review",
+                "detail": "Inspect readability, accuracy, rights and cultural context.",
+                "icon": "search"
+              },
+              {
+                "label": "Test the use",
+                "detail": "Check the finished artefact on the intended device or medium.",
+                "icon": "check"
+              }
+            ]
+          },
+          "takeaway": "Judge the visual by the brief and audience, not only by how impressive it looks.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m3-t1-v1",
+          "section": "1. Why visual skills matter in non-design careers"
+        },
+        {
+          "title": "Diffusion: an intuition, not every tool’s architecture",
+          "explanation": "In a simplified diffusion example, a trained system iteratively refines noise under conditioning. Image tools can also use other generation architectures.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Training examples",
+                "detail": "The model learns patterns relating visual content to conditioning information.",
+                "icon": "layers"
+              },
+              {
+                "label": "Starting noise",
+                "detail": "A random initial representation provides a starting point.",
+                "icon": "sparkles"
+              },
+              {
+                "label": "Guided refinement",
+                "detail": "Repeated model steps steer the representation toward the requested content.",
+                "icon": "repeat"
+              },
+              {
+                "label": "Decoded image",
+                "detail": "The result still needs inspection for details, text, bias and meaning.",
+                "icon": "search"
+              }
+            ]
+          },
+          "takeaway": "A plausible picture is generated content, not evidence that an event, person or product really appeared that way.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m3-t1-v2",
+          "section": "2. How an image generator works (the intuition)"
+        },
+        {
+          "title": "Generation, design and editing are different jobs",
+          "explanation": "Choose the type of tool that solves the current bottleneck rather than forcing one generator to do the whole workflow.",
+          "diagram": {
+            "kind": "compare",
+            "items": [
+              {
+                "label": "Generate an asset",
+                "detail": "Create a candidate image from a permitted brief.",
+                "icon": "sparkles"
+              },
+              {
+                "label": "Design the message",
+                "detail": "Arrange text, image and information hierarchy in a layout.",
+                "icon": "layers"
+              },
+              {
+                "label": "Edit precisely",
+                "detail": "Crop, repair, mask or resize an existing asset with review.",
+                "icon": "cursor"
+              },
+              {
+                "label": "Export and test",
+                "detail": "Produce the required format and inspect the actual output.",
+                "icon": "check"
+              }
+            ]
+          },
+          "takeaway": "Review current capabilities, access conditions and terms before committing to a tool.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m3-t1-v3",
+          "section": "3. The tool landscape (2026)"
+        },
+        {
+          "title": "A visual brief prevents guessing",
+          "explanation": "A shared brief makes both creation and review more specific. It supplies constraints the generator cannot infer reliably.",
+          "diagram": {
+            "kind": "hub",
+            "items": [
+              {
+                "label": "Purpose and audience",
+                "detail": "Name the desired action and intended viewer.",
+                "icon": "users"
+              },
+              {
+                "label": "Format",
+                "detail": "Set dimensions, orientation and viewing context.",
+                "icon": "layers"
+              },
+              {
+                "label": "Must-haves",
+                "detail": "List approved text, marks and factual details.",
+                "icon": "file"
+              },
+              {
+                "label": "Style and constraints",
+                "detail": "Describe visual qualities, rights limits and exclusions.",
+                "icon": "shield"
+              }
+            ],
+            "center": "Creative brief"
+          },
+          "takeaway": "Use placeholders for unapproved details instead of letting the image invent them.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m3-t1-v4",
+          "section": "4. Reading a brief before you prompt"
+        },
+        {
+          "title": "A generated asset still has a rights trail",
+          "explanation": "Tool terms, input rights, likeness permission and the context of use all matter. No diagram can certify ownership or legal clearance.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Inspect input rights",
+                "detail": "Confirm permission for references, photographs and source material.",
+                "icon": "file"
+              },
+              {
+                "label": "Check use conditions",
+                "detail": "Review the account terms and intended distribution.",
+                "icon": "search"
+              },
+              {
+                "label": "Review depiction",
+                "detail": "Consider likeness, brands, sensitive context and misleading implications.",
+                "icon": "shield"
+              },
+              {
+                "label": "Keep a record",
+                "detail": "Store the relevant source, terms and disclosure decision.",
+                "icon": "check"
+              }
+            ]
+          },
+          "takeaway": "Check current terms and obtain qualified review for consequential uses; keep records of the permitted workflow.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m3-t1-v5",
+          "section": "5. Licences, in one paragraph",
+          "checkpoint": {
+            "question": "Can a generated picture serve as proof that a real event happened?",
+            "answer": "No. It is a generated depiction. Use genuine evidence for factual event claims and disclose synthetic content where it could mislead."
+          }
+        }
+      ]
+    },
+    "m3-t2": {
+      "introduction": "A second way to understand “Image prompt mastery & editing”: read the original explanation, follow the diagram and play or step through its focus points. All practice stays separate from your reading and quiz requirements.",
+      "sections": [
+        {
+          "title": "Compose the image request from distinct choices",
+          "explanation": "The prompt slots describe what is depicted and how it is presented. They are controls to test, not guarantees of precise output.",
+          "diagram": {
+            "kind": "hub",
+            "items": [
+              {
+                "label": "Subject",
+                "detail": "Name the main subject and action clearly.",
+                "icon": "target"
+              },
+              {
+                "label": "Setting",
+                "detail": "Describe place, time and relevant context.",
+                "icon": "globe"
+              },
+              {
+                "label": "Medium",
+                "detail": "Choose visual qualities such as line art or documentary photography.",
+                "icon": "sparkles"
+              },
+              {
+                "label": "Composition",
+                "detail": "Set framing, layout and space needed for text.",
+                "icon": "layers"
+              },
+              {
+                "label": "Lighting",
+                "detail": "Describe light and mood without contradicting the scene.",
+                "icon": "heart"
+              },
+              {
+                "label": "Constraints",
+                "detail": "State permitted content, palette and exclusions.",
+                "icon": "shield"
+              }
+            ],
+            "center": "Image brief"
+          },
+          "takeaway": "Inspect the result even when every slot is specified.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m3-t2-v1",
+          "section": "1. The image prompt formula"
+        },
+        {
+          "title": "Describe visual qualities instead of borrowed identity",
+          "explanation": "Concrete vocabulary makes a direction easier to reproduce and review than an artist name or vague praise.",
+          "diagram": {
+            "kind": "compare",
+            "items": [
+              {
+                "label": "Medium and texture",
+                "detail": "Specify flat vectors, paper texture, line weight or other visible qualities.",
+                "icon": "sparkles"
+              },
+              {
+                "label": "Framing and light",
+                "detail": "Name shot distance, viewpoint and illumination.",
+                "icon": "search"
+              },
+              {
+                "label": "Palette and exclusions",
+                "detail": "Use approved colours and explicit content boundaries.",
+                "icon": "shield"
+              }
+            ]
+          },
+          "takeaway": "Avoid imitating a living artist’s identity; describe the visual characteristics you need.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m3-t2-v2",
+          "section": "2. Vocabulary that works"
+        },
+        {
+          "title": "Change one visual decision at a time",
+          "explanation": "A controlled revision shows which instruction affected the result. A fixed base direction helps keep a set coherent.",
+          "diagram": {
+            "kind": "cycle",
+            "items": [
+              {
+                "label": "Choose a direction",
+                "detail": "Select a candidate against the brief, not random novelty.",
+                "icon": "target"
+              },
+              {
+                "label": "Change one slot",
+                "detail": "Adjust composition, light or palette with a clear intention.",
+                "icon": "cursor"
+              },
+              {
+                "label": "Compare the result",
+                "detail": "Check both the intended change and unwanted drift.",
+                "icon": "search"
+              },
+              {
+                "label": "Save the base",
+                "detail": "Keep the reusable instruction and its known limitations.",
+                "icon": "file"
+              }
+            ],
+            "center": "Visual iteration"
+          },
+          "takeaway": "Reference images need permission too, and consistency must be checked rather than assumed.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m3-t2-v3",
+          "section": "3. Iterating without wasting credits"
+        },
+        {
+          "title": "Choose an edit for the actual defect",
+          "explanation": "Region repair, canvas extension and ordinary layout edits solve different problems.",
+          "diagram": {
+            "kind": "compare",
+            "items": [
+              {
+                "label": "Repair a region",
+                "detail": "Use a mask or selection to target a local visual defect.",
+                "icon": "cursor"
+              },
+              {
+                "label": "Extend the canvas",
+                "detail": "Add surrounding space while reviewing newly generated content.",
+                "icon": "layers"
+              },
+              {
+                "label": "Adjust the layout",
+                "detail": "Crop, position and correct colours in an editor.",
+                "icon": "sparkles"
+              },
+              {
+                "label": "Add verified text",
+                "detail": "Use editable typography and proofread every character.",
+                "icon": "file"
+              }
+            ]
+          },
+          "takeaway": "After any edit, recheck the whole image for unintended changes.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m3-t2-v4",
+          "section": "4. Editing: the second half of the skill"
+        },
+        {
+          "title": "Representation needs a deliberate review",
+          "explanation": "A prompt can repeat stereotypes or depict a community inaccurately even when it is technically successful.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Set the context",
+                "detail": "Describe the intended audience and avoid stereotyped defaults.",
+                "icon": "users"
+              },
+              {
+                "label": "Check permission",
+                "detail": "Review likeness, references, brands and intended use.",
+                "icon": "shield"
+              },
+              {
+                "label": "Inspect the depiction",
+                "detail": "Ask whether people, symbols and details are represented accurately.",
+                "icon": "search"
+              },
+              {
+                "label": "Revise or stop",
+                "detail": "Change a misleading or harmful concept rather than only polishing it.",
+                "icon": "check"
+              }
+            ]
+          },
+          "takeaway": "Permission, respectful context and truthful claims matter more than a generation tool’s willingness to comply.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m3-t2-v5",
+          "section": "5. Prompting responsibly",
+          "checkpoint": {
+            "question": "After inpainting a small defect, what else should you inspect?",
+            "answer": "Review the whole image for drift, changed meaning, factual details, text, rights and representation—not only the selected region."
+          }
+        }
+      ]
+    },
+    "m3-t3": {
+      "introduction": "A second way to understand “Design workflows: Canva, presentations & infographics”: read the original explanation, follow the diagram and play or step through its focus points. All practice stays separate from your reading and quiz requirements.",
+      "sections": [
+        {
+          "title": "An asset is not the finished design",
+          "explanation": "Generation supplies material. Layout, typography, export and review turn it into usable communication.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Brief",
+                "detail": "Fix purpose, reader and approved details.",
+                "icon": "target"
+              },
+              {
+                "label": "Generate assets",
+                "detail": "Create and inspect candidate visuals.",
+                "icon": "sparkles"
+              },
+              {
+                "label": "Lay out and typeset",
+                "detail": "Arrange the message and add verified text in the design layer.",
+                "icon": "layers"
+              },
+              {
+                "label": "Export and inspect",
+                "detail": "Check readability, cropping and meaning in the actual format.",
+                "icon": "check"
+              }
+            ]
+          },
+          "takeaway": "Keep factual text editable and verify the final export on the target device.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m3-t3-v1",
+          "section": "1. Generation is not design"
+        },
+        {
+          "title": "Map a design feature to its job",
+          "explanation": "Different AI features accelerate parts of a design process. Availability and paid-tier restrictions can change.",
+          "diagram": {
+            "kind": "compare",
+            "items": [
+              {
+                "label": "Layout draft",
+                "detail": "Use a tool to suggest a starting arrangement.",
+                "icon": "layers"
+              },
+              {
+                "label": "Asset creation or repair",
+                "detail": "Generate, remove or extend selected visual material.",
+                "icon": "sparkles"
+              },
+              {
+                "label": "Text assistance",
+                "detail": "Draft or translate wording, then proofread it.",
+                "icon": "message"
+              },
+              {
+                "label": "Format adaptation",
+                "detail": "Resize and reflow while checking hierarchy and clipping.",
+                "icon": "cursor"
+              }
+            ]
+          },
+          "takeaway": "An equivalent accessible workflow is more important than a particular branded button.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m3-t3-v2",
+          "section": "2. Design-tool AI features worth learning"
+        },
+        {
+          "title": "A small brand kit keeps decisions consistent",
+          "explanation": "A shared kit records choices so a set can look coherent across people and formats.",
+          "diagram": {
+            "kind": "hub",
+            "items": [
+              {
+                "label": "Colour tokens",
+                "detail": "Save approved colours and contrast combinations.",
+                "icon": "sparkles"
+              },
+              {
+                "label": "Type system",
+                "detail": "Define readable headings and body text for each script.",
+                "icon": "file"
+              },
+              {
+                "label": "Marks and spacing",
+                "detail": "Record approved logos, clear space and placement rules.",
+                "icon": "layers"
+              },
+              {
+                "label": "Voice and imagery",
+                "detail": "Keep a consistent, respectful language and visual direction.",
+                "icon": "message"
+              }
+            ],
+            "center": "Brand kit"
+          },
+          "takeaway": "Check that fonts support the languages you actually publish.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m3-t3-v3",
+          "section": "3. A brand kit in fifteen minutes"
+        },
+        {
+          "title": "Build the narrative before the slide deck",
+          "explanation": "A generated deck is a draft. A presentation still needs a coherent argument, checked evidence and a clear ask.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Write the story",
+                "detail": "Choose the audience’s question and decision path.",
+                "icon": "target"
+              },
+              {
+                "label": "Outline messages",
+                "detail": "Give each slide one sentence-level point.",
+                "icon": "file"
+              },
+              {
+                "label": "Add evidence",
+                "detail": "Build charts from verified tables and label their sources.",
+                "icon": "chart"
+              },
+              {
+                "label": "Rehearse and revise",
+                "detail": "Check timing, readability and the final request.",
+                "icon": "check"
+              }
+            ]
+          },
+          "takeaway": "A decorative picture of a chart cannot replace a chart built from actual data.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m3-t3-v4",
+          "section": "4. AI presentation tools"
+        },
+        {
+          "title": "A truthful infographic starts in a data table",
+          "explanation": "Data visualisation encodes measured values. Image generation may invent visually plausible but meaningless marks.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Check the table",
+                "detail": "Verify values, definitions and the period.",
+                "icon": "file"
+              },
+              {
+                "label": "Choose the encoding",
+                "detail": "Match comparison, trend or distribution to a suitable chart.",
+                "icon": "chart"
+              },
+              {
+                "label": "Label honestly",
+                "detail": "Show units, scale, source and relevant limitations.",
+                "icon": "search"
+              },
+              {
+                "label": "Inspect the message",
+                "detail": "Check that the design does not exaggerate the evidence.",
+                "icon": "check"
+              }
+            ]
+          },
+          "takeaway": "Use a zero baseline for bar lengths, explicit units and a traceable source.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m3-t3-v5",
+          "section": "5. Data to infographic — honestly"
+        },
+        {
+          "title": "Design fundamentals work together",
+          "explanation": "Hierarchy tells the reader where to begin; alignment and spacing make the rest easier to follow.",
+          "diagram": {
+            "kind": "hub",
+            "items": [
+              {
+                "label": "Hierarchy",
+                "detail": "Make the most important message clearly identifiable.",
+                "icon": "target"
+              },
+              {
+                "label": "Alignment",
+                "detail": "Line up related elements consistently.",
+                "icon": "layers"
+              },
+              {
+                "label": "Contrast",
+                "detail": "Keep text and meaningful marks distinguishable.",
+                "icon": "search"
+              },
+              {
+                "label": "Proximity",
+                "detail": "Place related ideas together and separate unrelated ones.",
+                "icon": "link"
+              },
+              {
+                "label": "Restraint",
+                "detail": "Remove detail that competes with the main message.",
+                "icon": "filter"
+              }
+            ],
+            "center": "Clear design"
+          },
+          "takeaway": "Use labels and sufficient contrast instead of relying on colour or decoration alone.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m3-t3-v6",
+          "section": "6. Five fundamentals that fix most amateur designs",
+          "checkpoint": {
+            "question": "Why should an image generator not draw the bars for a factual infographic?",
+            "answer": "It can invent shapes and values. Build the chart from a checked table, label the units and source, and inspect the final design."
+          }
+        }
+      ]
+    },
+    "m3-t4": {
+      "introduction": "A second way to understand “AI video: text-to-video, avatars & short-form”: read the original explanation, follow the diagram and play or step through its focus points. All practice stays separate from your reading and quiz requirements.",
+      "sections": [
+        {
+          "title": "A video workflow combines several tool families",
+          "explanation": "Clip generation, avatar presentation and editing have different purposes and risks.",
+          "diagram": {
+            "kind": "compare",
+            "items": [
+              {
+                "label": "Generated clips",
+                "detail": "Create candidate motion material and inspect continuity.",
+                "icon": "sparkles"
+              },
+              {
+                "label": "Avatar presentation",
+                "detail": "Use an approved synthetic presenter with consent and disclosure.",
+                "icon": "users"
+              },
+              {
+                "label": "Editing",
+                "detail": "Arrange shots, narration, captions and sound into a coherent piece.",
+                "icon": "layers"
+              }
+            ]
+          },
+          "takeaway": "The finished video needs editorial and factual review regardless of how its clips were produced.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m3-t4-v1",
+          "section": "1. Three families of AI video tools"
+        },
+        {
+          "title": "A storyboard is cheaper than an avoidable reshoot",
+          "explanation": "The script and shot list decide what the viewer needs to see before generation starts.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Write for speech",
+                "detail": "State one message and the intended viewer action.",
+                "icon": "message"
+              },
+              {
+                "label": "Make a shot list",
+                "detail": "Pair script moments with the necessary visual evidence.",
+                "icon": "file"
+              },
+              {
+                "label": "Storyboard",
+                "detail": "Sketch composition and continuity before spending credits.",
+                "icon": "layers"
+              },
+              {
+                "label": "Confirm format",
+                "detail": "Check orientation, captions and viewing context.",
+                "icon": "check"
+              }
+            ]
+          },
+          "takeaway": "Decide the format early and preserve the factual meaning through every shot.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m3-t4-v2",
+          "section": "2. Plan before you generate"
+        },
+        {
+          "title": "Describe motion, then inspect motion",
+          "explanation": "A useful motion request distinguishes subject action from camera movement. Simpler shots are easier to review.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Start from a clear frame",
+                "detail": "Use a permitted still or a tightly scoped scene.",
+                "icon": "file"
+              },
+              {
+                "label": "Specify movement",
+                "detail": "Name the intended subject and camera motion.",
+                "icon": "cursor"
+              },
+              {
+                "label": "Generate a candidate",
+                "detail": "Keep the action simple enough to evaluate.",
+                "icon": "sparkles"
+              },
+              {
+                "label": "Review over time",
+                "detail": "Check bodies, objects, text, continuity and implied claims.",
+                "icon": "search"
+              }
+            ]
+          },
+          "takeaway": "A convincing first frame does not guarantee believable or truthful movement later.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m3-t4-v3",
+          "section": "3. Generating clips well"
+        },
+        {
+          "title": "An avatar needs more than a script",
+          "explanation": "A synthetic presenter can create a misleading impression of endorsement or identity.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Confirm authority",
+                "detail": "Check who may be depicted and for which use.",
+                "icon": "shield"
+              },
+              {
+                "label": "Approve the words",
+                "detail": "Verify the script and the consented scope.",
+                "icon": "file"
+              },
+              {
+                "label": "Disclose the medium",
+                "detail": "Tell viewers when the presenter is synthetic where relevant.",
+                "icon": "message"
+              },
+              {
+                "label": "Review the output",
+                "detail": "Inspect pronunciation, lip sync and misleading context.",
+                "icon": "check"
+              }
+            ]
+          },
+          "takeaway": "Use permitted stock or consented likenesses, disclose synthetic presentation and approve the actual script.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m3-t4-v4",
+          "section": "4. Avatars, done properly"
+        },
+        {
+          "title": "The edit is where separate assets become meaning",
+          "explanation": "Changing shot order, captions or sound can alter the claim even when every source clip is acceptable.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Place narration",
+                "detail": "Use the approved spoken message as a reference.",
+                "icon": "message"
+              },
+              {
+                "label": "Match shots",
+                "detail": "Keep visuals consistent with the actual claim.",
+                "icon": "layers"
+              },
+              {
+                "label": "Caption and mix",
+                "detail": "Correct text, preserve intelligibility and use permitted music.",
+                "icon": "file"
+              },
+              {
+                "label": "Export and watch",
+                "detail": "Review the complete piece on the intended device.",
+                "icon": "check"
+              }
+            ]
+          },
+          "takeaway": "Proofread captions against the audio and source, including names, dates and regional-language terms.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m3-t4-v5",
+          "section": "5. Assembling in an editor (the real work)"
+        },
+        {
+          "title": "One short video needs one clear promise",
+          "explanation": "A short format works best when it introduces a specific problem, delivers a useful idea and names the next action.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Earn attention",
+                "detail": "Introduce the real problem without a misleading claim.",
+                "icon": "target"
+              },
+              {
+                "label": "Deliver the idea",
+                "detail": "Use a small, coherent sequence with readable captions.",
+                "icon": "layers"
+              },
+              {
+                "label": "Give an action",
+                "detail": "Name an appropriate next step.",
+                "icon": "cursor"
+              },
+              {
+                "label": "Test comprehension",
+                "detail": "Ask viewers what they understood, not only whether they liked it.",
+                "icon": "check"
+              }
+            ]
+          },
+          "takeaway": "Do not trade accuracy, accessibility or context for a stronger hook.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m3-t4-v6",
+          "section": "6. Short-form fundamentals",
+          "checkpoint": {
+            "question": "Does a consented avatar licence permit any words to be put in that person’s mouth?",
+            "answer": "No. Check the permitted use and approve the actual script and context. Consent to one use is not blanket approval of every statement."
+          }
+        }
+      ]
+    },
+    "m3-t5": {
+      "introduction": "A second way to understand “Repurposing, brand consistency & visual ethics”: read the original explanation, follow the diagram and play or step through its focus points. All practice stays separate from your reading and quiz requirements.",
+      "sections": [
+        {
+          "title": "Repurpose the idea, not a decontextualised fragment",
+          "explanation": "One source can support several formats if its meaning and evidence remain intact.",
+          "diagram": {
+            "kind": "hub",
+            "items": [
+              {
+                "label": "Core source",
+                "detail": "Keep the full report, interview or recording as the reference.",
+                "icon": "file"
+              },
+              {
+                "label": "Short visual",
+                "detail": "Translate the main idea into a poster, card or carousel.",
+                "icon": "sparkles"
+              },
+              {
+                "label": "Spoken version",
+                "detail": "Retell for listeners and review against the source.",
+                "icon": "message"
+              },
+              {
+                "label": "Written summary",
+                "detail": "Adapt length and structure without inventing detail.",
+                "icon": "layers"
+              },
+              {
+                "label": "Distribution",
+                "detail": "Respect the audience, consent and channel requirements.",
+                "icon": "globe"
+              }
+            ],
+            "center": "Source meaning"
+          },
+          "takeaway": "A shorter extract must not turn a qualified statement into an absolute claim.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m3-t5-v1",
+          "section": "1. The repurposing matrix"
+        },
+        {
+          "title": "Consistency is a repeatable check",
+          "explanation": "A kit and base prompt reduce drift, while a publication checklist catches the errors they cannot prevent.",
+          "diagram": {
+            "kind": "cycle",
+            "items": [
+              {
+                "label": "Use the kit",
+                "detail": "Apply approved type, colour, marks and voice.",
+                "icon": "layers"
+              },
+              {
+                "label": "Adapt the message",
+                "detail": "Fit the audience and format without changing the claim.",
+                "icon": "message"
+              },
+              {
+                "label": "Run the checklist",
+                "detail": "Review text, rights, accessibility and disclosure.",
+                "icon": "check"
+              },
+              {
+                "label": "Record changes",
+                "detail": "Update the shared template when a recurring problem is found.",
+                "icon": "repeat"
+              }
+            ],
+            "center": "Consistent work"
+          },
+          "takeaway": "A template is a starting constraint, not permission to skip review.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m3-t5-v2",
+          "section": "2. Consistency at scale"
+        },
+        {
+          "title": "Accessibility belongs in the brief",
+          "explanation": "Clear labels, text alternatives and readable layout help people understand the same message in different ways.",
+          "diagram": {
+            "kind": "hub",
+            "items": [
+              {
+                "label": "Readable contrast",
+                "detail": "Check meaningful text and graphics against their backgrounds.",
+                "icon": "search"
+              },
+              {
+                "label": "Text alternatives",
+                "detail": "Describe informative visuals in their actual context.",
+                "icon": "file"
+              },
+              {
+                "label": "Captions and transcripts",
+                "detail": "Provide an accurate written equivalent for speech.",
+                "icon": "message"
+              },
+              {
+                "label": "Language and scale",
+                "detail": "Use suitable wording and inspect the intended screen or print size.",
+                "icon": "users"
+              }
+            ],
+            "center": "Access for all"
+          },
+          "takeaway": "Do not make colour, sound or animation the only way to receive essential information.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m3-t5-v3",
+          "section": "3. Accessibility is part of quality"
+        },
+        {
+          "title": "A visual can mislead without a false caption",
+          "explanation": "Synthetic realism, identity cues and persuasive layout can imply a fact or endorsement that never existed.",
+          "diagram": {
+            "kind": "compare",
+            "items": [
+              {
+                "label": "Reality claim",
+                "detail": "Could someone mistake this for evidence of an event?",
+                "icon": "search"
+              },
+              {
+                "label": "Identity and rights",
+                "detail": "Whose likeness, work, brand or cultural symbol appears?",
+                "icon": "shield"
+              },
+              {
+                "label": "Commerce",
+                "detail": "Does the image imply an untrue product result or testimonial?",
+                "icon": "briefcase"
+              },
+              {
+                "label": "Community context",
+                "detail": "Would the depicted audience recognise it as accurate and respectful?",
+                "icon": "users"
+              }
+            ]
+          },
+          "takeaway": "Review current policy and legal requirements for the actual use; disclosure is not a cure for every harmful depiction.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m3-t5-v4",
+          "section": "4. Ethics of visual GenAI"
+        },
+        {
+          "title": "Four publication questions make a practical gate",
+          "explanation": "Before publishing, check reality, permission, context and factual claims separately.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Real or synthetic?",
+                "detail": "Decide whether the depiction needs clearer labelling.",
+                "icon": "search"
+              },
+              {
+                "label": "Whose rights?",
+                "detail": "Confirm the relevant permission and scope.",
+                "icon": "shield"
+              },
+              {
+                "label": "Respectful and accurate?",
+                "detail": "Seek an appropriate reviewer for sensitive context.",
+                "icon": "users"
+              },
+              {
+                "label": "Claim supported?",
+                "detail": "Prove, qualify or remove the factual implication.",
+                "icon": "check"
+              }
+            ]
+          },
+          "takeaway": "When a necessary answer is unknown, pause publication and resolve it.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m3-t5-v5",
+          "section": "5. A decision routine",
+          "checkpoint": {
+            "question": "Can adding “AI-generated” make a fabricated product testimonial acceptable?",
+            "answer": "No. Disclosure does not make a false commercial claim truthful or supply the required permission."
+          }
+        }
+      ]
+    },
+    "m3-pb2": {
+      "introduction": "A second way to understand “Project Block 2 — Campaign Kit”: read the original explanation, follow the diagram and play or step through its focus points. All practice stays separate from your reading and quiz requirements.",
+      "sections": [
+        {
+          "title": "Multi-format Campaign Kit: from purpose to evidence",
+          "explanation": "A coherent, accessible campaign that goes from a specific brief and brand kit to reviewed multi-format assets.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Purpose",
+                "detail": "A coherent, accessible campaign that goes from a specific brief and brand kit to reviewed multi-format assets.",
+                "icon": "target"
+              },
+              {
+                "label": "Build an artefact",
+                "detail": "Create the required work for the stated audience and scope.",
+                "icon": "layers"
+              },
+              {
+                "label": "Verify and explain",
+                "detail": "Keep test evidence, permissions, limitations and your contribution.",
+                "icon": "check"
+              }
+            ]
+          },
+          "takeaway": "Use the full original brief for requirements, timing and marks; this diagram is a companion, not a replacement.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m3-pb2-v1",
+          "section": "The brief"
+        },
+        {
+          "title": "Organise the multi-format campaign kit evidence pack",
+          "explanation": "Group the required files so a reviewer can inspect the work and its checks. The detailed checklist above remains unchanged.",
+          "diagram": {
+            "kind": "hub",
+            "items": [
+              {
+                "label": "Brief and brand sheet",
+                "detail": "State purpose, audience, approved details, colours, type and base prompts.",
+                "icon": "file"
+              },
+              {
+                "label": "Campaign assets",
+                "detail": "Meet the original minimum eight assets across at least five formats, including its required types.",
+                "icon": "layers"
+              },
+              {
+                "label": "Process log",
+                "detail": "Record tools, prompts, iterations, edits and time as you work.",
+                "icon": "clock"
+              },
+              {
+                "label": "Accessibility and rights",
+                "detail": "Keep contrast, alt text, captions, language review, permission and source evidence.",
+                "icon": "shield"
+              },
+              {
+                "label": "Reflection",
+                "detail": "Explain what the tools did, what you edited and where they failed.",
+                "icon": "repeat"
+              },
+              {
+                "label": "AI-use statement",
+                "detail": "Credit generated assets, editing, voice, music and your own decisions.",
+                "icon": "message"
+              }
+            ],
+            "center": "Evidence pack"
+          },
+          "takeaway": "Reading the brief is not submission, external project marking or facilitator approval.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m3-pb2-v2",
+          "section": "What to submit"
+        },
+        {
+          "title": "Check the boundaries before the build or release",
+          "explanation": "A good-looking artefact cannot compensate for missing permission, invented evidence or an unsafe action.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Evidence and scope",
+                "detail": "Use the required real or clearly labelled practice evidence honestly.",
+                "icon": "file"
+              },
+              {
+                "label": "Permission and rights",
+                "detail": "Check relevant data, likeness, music and source permissions.",
+                "icon": "shield"
+              },
+              {
+                "label": "Human control",
+                "detail": "Keep the required review before consequential outward effects.",
+                "icon": "users"
+              },
+              {
+                "label": "Test and disclose",
+                "detail": "Record actual results, limitations and AI assistance.",
+                "icon": "check"
+              }
+            ]
+          },
+          "takeaway": "Follow the topic-specific constraints in full; a disclosure label does not override the rules.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m3-pb2-v3",
+          "section": "Constraints"
+        },
+        {
+          "title": "Plan, build, check and revise",
+          "explanation": "Use the original suggested schedule to reserve time for review rather than doing all the checking after the final export.",
+          "diagram": {
+            "kind": "cycle",
+            "items": [
+              {
+                "label": "Plan the scope",
+                "detail": "Start from the actual brief, required outputs and permitted inputs.",
+                "icon": "target"
+              },
+              {
+                "label": "Build deliberately",
+                "detail": "Work in small versions and retain intermediate artefacts.",
+                "icon": "layers"
+              },
+              {
+                "label": "Review evidence",
+                "detail": "Run the relevant source, language, functionality and safety checks.",
+                "icon": "search"
+              },
+              {
+                "label": "Revise and submit",
+                "detail": "Record the change and organise the complete evidence package.",
+                "icon": "file"
+              }
+            ],
+            "center": "Project workflow"
+          },
+          "takeaway": "Keep the process log while working; do not reconstruct fictitious experiments or approvals afterwards.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m3-pb2-v4",
+          "section": "Process (suggested)"
+        },
+        {
+          "title": "Make the published criteria inspectable",
+          "explanation": "The original rubric, weights, pass threshold and any caps remain authoritative. These panels point to the evidence behind its criteria.",
+          "diagram": {
+            "kind": "compare",
+            "items": [
+              {
+                "label": "Craft and consistency",
+                "detail": "Use one coherent kit with readable text and appropriate formats.",
+                "icon": "sparkles"
+              },
+              {
+                "label": "Process and fluency",
+                "detail": "Show planned iterations, editing and a traceable process log.",
+                "icon": "layers"
+              },
+              {
+                "label": "Accessibility and ethics",
+                "detail": "Provide the full review and permission records.",
+                "icon": "shield"
+              },
+              {
+                "label": "Brief fit and reflection",
+                "detail": "Explain how the work serves the intended audience.",
+                "icon": "target"
+              }
+            ]
+          },
+          "takeaway": "The animation does not grade work, award marks or override a safety or integrity cap.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m3-pb2-v5",
+          "section": "Rubric (7 marks)"
+        },
+        {
+          "title": "Use the review habits, not a success formula",
+          "explanation": "The original tips are practical prompts for reflection, not guarantees of a result or new assessment conditions.",
+          "diagram": {
+            "kind": "compare",
+            "items": [
+              {
+                "label": "Keep the brief specific",
+                "detail": "A small realistic purpose makes review more concrete.",
+                "icon": "target"
+              },
+              {
+                "label": "Plan the video early",
+                "detail": "Leave enough time for script, assembly and corrections.",
+                "icon": "clock"
+              },
+              {
+                "label": "Proofread before export",
+                "detail": "Use competent language readers and record the checks.",
+                "icon": "users"
+              }
+            ]
+          },
+          "takeaway": "Choose the habit that addresses your actual weakness and keep evidence of the correction.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m3-pb2-v6",
+          "section": "Tips from previous cohorts"
+        },
+        {
+          "title": "Separate tool help from your responsibility",
+          "explanation": "A useful statement tells the reviewer where assistance entered and what the learner independently checked.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Name the assistance",
+                "detail": "Identify tools and the tasks for which they were used.",
+                "icon": "message"
+              },
+              {
+                "label": "Trace the evidence",
+                "detail": "State which real sources, tests and outputs were checked.",
+                "icon": "file"
+              },
+              {
+                "label": "Own the judgement",
+                "detail": "Describe selection, revisions, decisions and individual or team contributions.",
+                "icon": "users"
+              },
+              {
+                "label": "Follow the policy",
+                "detail": "Keep assessment restrictions and rights boundaries intact.",
+                "icon": "shield"
+              }
+            ]
+          },
+          "takeaway": "Disclosure cannot legitimise fabricated evidence, prohibited tool use or missing permission.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m3-pb2-v7",
+          "section": "AI-use statement template",
+          "checkpoint": {
+            "question": "Can an image generator supply invented bars for the campaign’s data visual?",
+            "answer": "No. Build a factual chart from a real cited source, verify the values and label units and scale. A plausible chart image is not data."
+          }
+        }
+      ]
+    }
+  }
+}

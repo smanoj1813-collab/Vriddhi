@@ -1,0 +1,986 @@
+{
+  "moduleId": "m7",
+  "topics": {
+    "m7-t1": {
+      "introduction": "A second way to understand “AI ethics principles & real-world failures”: read the original explanation, follow the diagram and play or step through its focus points. All practice stays separate from your reading and quiz requirements.",
+      "sections": [
+        {
+          "title": "FATE turns a principle into a review question",
+          "explanation": "Fairness, accountability, transparency and ethics need evidence in the actual use context. A policy slogan alone is not a safeguard.",
+          "diagram": {
+            "kind": "hub",
+            "items": [
+              {
+                "label": "Fairness",
+                "detail": "Investigate unjustified differences and barriers for affected groups.",
+                "icon": "users"
+              },
+              {
+                "label": "Accountability",
+                "detail": "Assign an owner, correction process and human appeal route.",
+                "icon": "shield"
+              },
+              {
+                "label": "Transparency",
+                "detail": "Explain the AI’s role, evidence and meaningful limitations.",
+                "icon": "file"
+              },
+              {
+                "label": "Ethical purpose",
+                "detail": "Ask whether the proposed use is appropriate at all.",
+                "icon": "target"
+              }
+            ],
+            "center": "Responsible use"
+          },
+          "takeaway": "Name the people affected and the remedy available when the system is wrong.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m7-t1-v1",
+          "section": "1. FATE, in plain language"
+        },
+        {
+          "title": "Harm can enter at data, design or use",
+          "explanation": "A technically accurate model can still be part of a harmful system if its objective or deployment is wrong.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Data",
+                "detail": "Inspect coverage, labels and proxy variables.",
+                "icon": "file"
+              },
+              {
+                "label": "Design",
+                "detail": "Check the objective, interface, permissions and missing safeguards.",
+                "icon": "layers"
+              },
+              {
+                "label": "Use",
+                "detail": "Look for overreliance, changed purpose and effects at scale.",
+                "icon": "users"
+              },
+              {
+                "label": "Remedy",
+                "detail": "Provide a way to question, correct or stop the harm.",
+                "icon": "shield"
+              }
+            ]
+          },
+          "takeaway": "Review organisational choices instead of blaming an abstract algorithm.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m7-t1-v2",
+          "section": "2. Where harm comes from"
+        },
+        {
+          "title": "The setting changes the consequences",
+          "explanation": "The lesson’s five settings illustrate why an error needs a contextual harm review, not only a performance score.",
+          "diagram": {
+            "kind": "compare",
+            "items": [
+              {
+                "label": "Hiring",
+                "detail": "Unsupported screening can exclude people from opportunity.",
+                "icon": "briefcase"
+              },
+              {
+                "label": "Lending and insurance",
+                "detail": "Proxy-driven decisions can affect access to resources.",
+                "icon": "chart"
+              },
+              {
+                "label": "Policing and surveillance",
+                "detail": "Misidentification can affect liberty and lawful activity.",
+                "icon": "shield"
+              },
+              {
+                "label": "Exam proctoring",
+                "detail": "A flag can become a false accusation without fair human review.",
+                "icon": "file"
+              },
+              {
+                "label": "Moderation and recommendation",
+                "detail": "Language gaps and ranking objectives can affect speech and wellbeing.",
+                "icon": "message"
+              }
+            ]
+          },
+          "takeaway": "For a real case study, open primary evidence; these category labels do not establish a finding about a particular organisation.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m7-t1-v3",
+          "section": "3. Five failure categories"
+        },
+        {
+          "title": "An ethics analysis ends with a decision",
+          "explanation": "Start from purpose and affected people, investigate harm and alternatives, then state an accountable recommendation.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Scope and stakeholders",
+                "detail": "Name the system, use and everyone materially affected.",
+                "icon": "users"
+              },
+              {
+                "label": "Harm and sources",
+                "detail": "Identify potential consequences and their data, design or use causes.",
+                "icon": "search"
+              },
+              {
+                "label": "Controls and alternatives",
+                "detail": "Consider human review, appeal and a simpler or no-AI option.",
+                "icon": "shield"
+              },
+              {
+                "label": "Decision and ownership",
+                "detail": "Proceed, redesign or stop with reasons and review conditions.",
+                "icon": "check"
+              }
+            ]
+          },
+          "takeaway": "“Proceed with conditions” is meaningful only when the conditions, owners and review evidence are explicit.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m7-t1-v4",
+          "section": "4. A structured ethics analysis"
+        },
+        {
+          "title": "Apply the same scrutiny to your own build",
+          "explanation": "A course project is not exempt from harm because it is small or well-intentioned.",
+          "diagram": {
+            "kind": "cycle",
+            "items": [
+              {
+                "label": "Trace one user path",
+                "detail": "Follow a real task from input to result.",
+                "icon": "cursor"
+              },
+              {
+                "label": "Ask who could lose",
+                "detail": "Consider a wrong answer, misclassification or exposed file.",
+                "icon": "users"
+              },
+              {
+                "label": "Test the safeguard",
+                "detail": "Check the approval, access and recovery behaviour.",
+                "icon": "search"
+              },
+              {
+                "label": "Record and improve",
+                "detail": "Fix the gap or narrow the permitted use.",
+                "icon": "repeat"
+              }
+            ],
+            "center": "Your system"
+          },
+          "takeaway": "An honest discovered weakness and correction is stronger evidence than an unsupported “all safe” claim.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m7-t1-v5",
+          "section": "5. Your own systems",
+          "checkpoint": {
+            "question": "Is a high technical accuracy score enough to approve an AI use case?",
+            "answer": "No. Purpose, authority, affected people, fairness, privacy, error consequences, alternatives and remedies must also be reviewed."
+          }
+        }
+      ]
+    },
+    "m7-t2": {
+      "introduction": "A second way to understand “Detecting and reducing bias — hands-on”: read the original explanation, follow the diagram and play or step through its focus points. All practice stays separate from your reading and quiz requirements.",
+      "sections": [
+        {
+          "title": "Bias can enter before and after the model",
+          "explanation": "Representation, labelling, objectives, proxies and deployment context can each create unfair effects.",
+          "diagram": {
+            "kind": "hub",
+            "items": [
+              {
+                "label": "Representation",
+                "detail": "Some contexts or languages may be poorly covered.",
+                "icon": "globe"
+              },
+              {
+                "label": "Labels",
+                "detail": "Human judgements used as targets can embed bias.",
+                "icon": "file"
+              },
+              {
+                "label": "Objectives",
+                "detail": "A convenient measured goal may differ from the real need.",
+                "icon": "target"
+              },
+              {
+                "label": "Proxies",
+                "detail": "Other fields can carry correlated information.",
+                "icon": "link"
+              },
+              {
+                "label": "Deployment",
+                "detail": "A new population or use can change the consequences.",
+                "icon": "users"
+              }
+            ],
+            "center": "Bias pathways"
+          },
+          "takeaway": "Removing a visible attribute does not prove that all proxies or historical disadvantages disappeared.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m7-t2-v1",
+          "section": "1. Where bias enters"
+        },
+        {
+          "title": "A paired test changes one deliberate signal",
+          "explanation": "Use controlled synthetic variants and a written coding scheme to investigate systematic differences.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Specify the test",
+                "detail": "Define the use, synthetic variants and evaluation criteria.",
+                "icon": "file"
+              },
+              {
+                "label": "Hold context fixed",
+                "detail": "Change only the intended test signal between paired prompts.",
+                "icon": "layers"
+              },
+              {
+                "label": "Repeat and code",
+                "detail": "Record all runs with consistent human review.",
+                "icon": "search"
+              },
+              {
+                "label": "Compare and qualify",
+                "detail": "Show differences, uncertainty and what the small test cannot establish.",
+                "icon": "check"
+              }
+            ]
+          },
+          "takeaway": "Do not infer real people’s caste, religion or other sensitive traits from names or appearance. Synthetic test signals are not verified identities.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m7-t2-v2",
+          "section": "2. The bias-testing protocol"
+        },
+        {
+          "title": "Fairness definitions answer different questions",
+          "explanation": "Equal rules, outcome rates and error rates focus on different aspects of treatment. Trade-offs depend on the population and decision.",
+          "diagram": {
+            "kind": "compare",
+            "items": [
+              {
+                "label": "Same rule",
+                "detail": "Ask whether the process uses consistent relevant criteria.",
+                "icon": "file"
+              },
+              {
+                "label": "Outcome comparison",
+                "detail": "Inspect group access and selection patterns with context.",
+                "icon": "users"
+              },
+              {
+                "label": "Error comparison",
+                "detail": "Review the consequences of mistakes where valid outcomes exist.",
+                "icon": "shield"
+              },
+              {
+                "label": "Context and authority",
+                "detail": "Choose and justify the evaluation with qualified reviewers.",
+                "icon": "check"
+              }
+            ]
+          },
+          "takeaway": "Do not claim a universal fairness guarantee from one metric or one preferred target.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m7-t2-v3",
+          "section": "3. Fairness ideas, intuitively"
+        },
+        {
+          "title": "Mitigation needs more than a better prompt",
+          "explanation": "A prompt change can help one symptom but may leave the underlying data, objective or process harm unchanged.",
+          "diagram": {
+            "kind": "cycle",
+            "items": [
+              {
+                "label": "Identify the mechanism",
+                "detail": "Use evidence to understand where the problem enters.",
+                "icon": "search"
+              },
+              {
+                "label": "Change the control",
+                "detail": "Adjust data, process, interface or the permitted use.",
+                "icon": "layers"
+              },
+              {
+                "label": "Retest relevant cases",
+                "detail": "Include languages and contexts that were missed.",
+                "icon": "check"
+              },
+              {
+                "label": "Monitor and remediate",
+                "detail": "Assign an owner, appeal path and review date.",
+                "icon": "repeat"
+              }
+            ],
+            "center": "Mitigate and check"
+          },
+          "takeaway": "Retest the actual workflow, keep a human remedy and refuse a use whose serious harms cannot be controlled.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m7-t2-v4",
+          "section": "4. Mitigations you can actually apply"
+        },
+        {
+          "title": "A bias report links findings to action",
+          "explanation": "A reviewable report includes the method, examples, affected people and limitations as well as a recommendation.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Describe the method",
+                "detail": "Record synthetic variants, runs and coding rules.",
+                "icon": "file"
+              },
+              {
+                "label": "Show findings",
+                "detail": "Keep examples and counts traceable to the test sheet.",
+                "icon": "chart"
+              },
+              {
+                "label": "Judge consequences",
+                "detail": "Explain who may be harmed and under which use.",
+                "icon": "users"
+              },
+              {
+                "label": "Recommend and retest",
+                "detail": "Name a proportionate action, owner and remaining uncertainty.",
+                "icon": "shield"
+              }
+            ]
+          },
+          "takeaway": "The model under test should not be the sole judge of whether its own outputs are biased.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m7-t2-v5",
+          "section": "5. The bias report",
+          "checkpoint": {
+            "question": "Does deleting names from input prove a screening process is fair?",
+            "answer": "No. Other fields can act as proxies, historical patterns can remain, and the objective or process may still produce harm. Test the relevant use and provide human accountability."
+          }
+        }
+      ]
+    },
+    "m7-t3": {
+      "introduction": "A second way to understand “Explainability, model cards & transparency”: read the original explanation, follow the diagram and play or step through its focus points. All practice stays separate from your reading and quiz requirements.",
+      "sections": [
+        {
+          "title": "An opaque result is hard to question or repair",
+          "explanation": "A result becomes operationally risky when nobody can inspect its basis, correct data or take responsibility.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Understand the basis",
+                "detail": "Identify evidence, intended use and known limits.",
+                "icon": "search"
+              },
+              {
+                "label": "Enable a challenge",
+                "detail": "Give affected people a meaningful correction or review route.",
+                "icon": "users"
+              },
+              {
+                "label": "Debug failures",
+                "detail": "Keep appropriate logs and inspect changed behaviour.",
+                "icon": "file"
+              },
+              {
+                "label": "Own the decision",
+                "detail": "Name who may approve, override or withdraw the use.",
+                "icon": "shield"
+              }
+            ]
+          },
+          "takeaway": "A vendor’s model does not remove the deploying organisation’s duty to review its actual use.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m7-t3-v1",
+          "section": "1. Why black boxes are a business risk"
+        },
+        {
+          "title": "Explain for the stakeholder’s actual question",
+          "explanation": "Different audiences need different levels of detail, but every explanation must be accurate and appropriate for access.",
+          "diagram": {
+            "kind": "compare",
+            "items": [
+              {
+                "label": "Affected person",
+                "detail": "Explain the relevant outcome and how to seek correction.",
+                "icon": "users"
+              },
+              {
+                "label": "Operator",
+                "detail": "Show supporting inputs, boundaries and override conditions.",
+                "icon": "cursor"
+              },
+              {
+                "label": "Manager or auditor",
+                "detail": "Provide aggregate behaviour, tests and remaining risks.",
+                "icon": "chart"
+              },
+              {
+                "label": "Qualified reviewer",
+                "detail": "Keep appropriate documentation for the specific oversight process.",
+                "icon": "file"
+              }
+            ]
+          },
+          "takeaway": "Do not expose someone else’s private data while trying to make a decision transparent.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m7-t3-v2",
+          "section": "2. Who needs what kind of explanation"
+        },
+        {
+          "title": "Attribution is not a causal story",
+          "explanation": "Local surrogate methods and feature-contribution methods describe aspects of model behaviour under assumptions.",
+          "diagram": {
+            "kind": "compare",
+            "items": [
+              {
+                "label": "Local approximation",
+                "detail": "A simple model can approximate behaviour near one case.",
+                "icon": "search"
+              },
+              {
+                "label": "Feature contribution",
+                "detail": "A method can allocate a prediction difference relative to a chosen baseline.",
+                "icon": "chart"
+              },
+              {
+                "label": "Method limitations",
+                "detail": "Correlated inputs, background choices and local instability matter.",
+                "icon": "layers"
+              },
+              {
+                "label": "Human interpretation",
+                "detail": "Check suitability and avoid overclaiming what the explanation proves.",
+                "icon": "shield"
+              }
+            ]
+          },
+          "takeaway": "An importance value does not establish causation, truth of an input or a lawful decision.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m7-t3-v3",
+          "section": "3. How explanation methods work (intuition)"
+        },
+        {
+          "title": "An LLM’s self-explanation is another generated answer",
+          "explanation": "A chatbot does not provide a guaranteed faithful trace of its internal computation when asked why it answered.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Receive the explanation",
+                "detail": "Treat it as a claim about the answer.",
+                "icon": "message"
+              },
+              {
+                "label": "Inspect cited inputs",
+                "detail": "Check that the supporting passage or field actually exists.",
+                "icon": "file"
+              },
+              {
+                "label": "Test the claim",
+                "detail": "Reproduce the relevant calculation or compare controlled cases.",
+                "icon": "search"
+              },
+              {
+                "label": "Keep the uncertainty",
+                "detail": "Do not claim access to a verified internal reasoning trace.",
+                "icon": "shield"
+              }
+            ]
+          },
+          "takeaway": "Use inspectable evidence and reproducible tests rather than treating a persuasive explanation as proof.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m7-t3-v4",
+          "section": "4. Language models \"explaining themselves\""
+        },
+        {
+          "title": "Read a card for relevance, not reassurance",
+          "explanation": "A model or system card is useful when its use scope and evaluations match your proposed workflow.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Check intended use",
+                "detail": "Compare the documented and proposed tasks.",
+                "icon": "target"
+              },
+              {
+                "label": "Inspect evaluations",
+                "detail": "Look for languages, groups, sample conditions and limitations.",
+                "icon": "search"
+              },
+              {
+                "label": "Review controls",
+                "detail": "Identify known hazards and operational safeguards.",
+                "icon": "shield"
+              },
+              {
+                "label": "Record gaps",
+                "detail": "Request evidence or decline a use when a material question is unanswered.",
+                "icon": "file"
+              }
+            ]
+          },
+          "takeaway": "Published documentation is not independent certification of your deployment.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m7-t3-v5",
+          "section": "5. Reading model cards and system cards"
+        },
+        {
+          "title": "Transparency includes a route to correction",
+          "explanation": "A disclosure label, source link, system description and human contact help different parts of accountability.",
+          "diagram": {
+            "kind": "hub",
+            "items": [
+              {
+                "label": "Disclose AI",
+                "detail": "State what the automated feature does.",
+                "icon": "message"
+              },
+              {
+                "label": "Show evidence",
+                "detail": "Link relevant sources or input-tied reasons.",
+                "icon": "file"
+              },
+              {
+                "label": "Document the system",
+                "detail": "Record components, tests and limits.",
+                "icon": "layers"
+              },
+              {
+                "label": "Provide recourse",
+                "detail": "Name an accessible human review and correction route.",
+                "icon": "users"
+              }
+            ],
+            "center": "Visible boundaries"
+          },
+          "takeaway": "Do not promise more explanation, recourse or reliability than the workflow actually provides.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m7-t3-v6",
+          "section": "6. Transparency in your own builds",
+          "checkpoint": {
+            "question": "Can a feature-importance chart prove that a factor caused a real-world outcome?",
+            "answer": "No. It describes model behaviour under assumptions, not necessarily causation. The data, method and actual decision context still need review."
+          }
+        }
+      ]
+    },
+    "m7-t4": {
+      "introduction": "A second way to understand “Security, privacy law & AI governance”: read the original explanation, follow the diagram and play or step through its focus points. All practice stays separate from your reading and quiz requirements.",
+      "sections": [
+        {
+          "title": "A security boundary must exist outside the prompt",
+          "explanation": "Untrusted content, excessive tool permissions and exposed records can combine into a harmful workflow.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Minimise exposure",
+                "detail": "Keep secrets and unnecessary personal data out of inputs and logs.",
+                "icon": "filter"
+              },
+              {
+                "label": "Enforce permission",
+                "detail": "Limit data and tools to the authorised purpose.",
+                "icon": "shield"
+              },
+              {
+                "label": "Validate outputs",
+                "detail": "Check structured results and source support independently.",
+                "icon": "search"
+              },
+              {
+                "label": "Contain effects",
+                "detail": "Use human gates, monitoring and a tested stop path.",
+                "icon": "users"
+              }
+            ]
+          },
+          "takeaway": "Do not rely on model obedience to protect credentials, confidential documents or irreversible actions.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m7-t4-v1",
+          "section": "1. Security threats specific to GenAI"
+        },
+        {
+          "title": "A privacy framework needs a current, contextual review",
+          "explanation": "Data handling depends on actual purpose, parties, retention, safeguards and applicable commencement provisions. This is a review map, not legal advice.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Map the processing",
+                "detail": "Identify data, purpose, recipients and systems.",
+                "icon": "file"
+              },
+              {
+                "label": "Confirm the basis",
+                "detail": "Use the institution’s qualified process for applicable requirements.",
+                "icon": "shield"
+              },
+              {
+                "label": "Implement safeguards",
+                "detail": "Limit access and support appropriate retention and rights procedures.",
+                "icon": "layers"
+              },
+              {
+                "label": "Review changes",
+                "detail": "Check current official notices and operational evidence before real use.",
+                "icon": "search"
+              }
+            ]
+          },
+          "takeaway": "Check current official sources with the programme’s authorised privacy owner; the diagram does not certify compliance or update the original legal reading.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m7-t4-v2",
+          "section": "2. India's DPDP framework — what a non-lawyer must know"
+        },
+        {
+          "title": "AI obligations depend on role and use",
+          "explanation": "A risk-based legal framework cannot be applied from a generic product label alone. Jurisdiction and the actual use matter.",
+          "diagram": {
+            "kind": "compare",
+            "items": [
+              {
+                "label": "Use case",
+                "detail": "Describe what the system influences and who is affected.",
+                "icon": "target"
+              },
+              {
+                "label": "Jurisdiction and role",
+                "detail": "Identify the applicable territory and responsibilities.",
+                "icon": "globe"
+              },
+              {
+                "label": "Risk and duties",
+                "detail": "Review prohibitions, conditions and documentation with qualified owners.",
+                "icon": "shield"
+              },
+              {
+                "label": "Evidence and updates",
+                "detail": "Keep the current official source and the operational review record.",
+                "icon": "file"
+              }
+            ]
+          },
+          "takeaway": "Get qualified review of current official requirements; a classroom classification is not a legal determination.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m7-t4-v3",
+          "section": "3. The EU AI Act and the global direction"
+        },
+        {
+          "title": "A team policy turns boundaries into operating rules",
+          "explanation": "The policy needs clear ownership and procedures people can actually follow, not only a statement that AI should be used responsibly.",
+          "diagram": {
+            "kind": "hub",
+            "items": [
+              {
+                "label": "Tools and accounts",
+                "detail": "Name permitted services and who approves a new one.",
+                "icon": "layers"
+              },
+              {
+                "label": "Data rules",
+                "detail": "Specify prohibited and conditionally permitted inputs.",
+                "icon": "file"
+              },
+              {
+                "label": "Use and review",
+                "detail": "Define verification, disclosure and approval duties.",
+                "icon": "check"
+              },
+              {
+                "label": "Incidents and ownership",
+                "detail": "Explain reporting, correction, training and periodic review.",
+                "icon": "users"
+              }
+            ],
+            "center": "Team AI policy"
+          },
+          "takeaway": "An approved tool does not mean every dataset or task is approved for it.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m7-t4-v4",
+          "section": "4. Governance you can implement tomorrow: a team AI-use policy",
+          "checkpoint": {
+            "question": "Does an organisation-approved AI tool automatically authorise uploading any employee or student record?",
+            "answer": "No. The purpose, dataset, account arrangement, access and applicable institutional and legal requirements must be approved for the particular use."
+          }
+        }
+      ]
+    },
+    "m7-pb5": {
+      "introduction": "A second way to understand “Project Block 5 — AI Ethics Audit”: read the original explanation, follow the diagram and play or step through its focus points. All practice stays separate from your reading and quiz requirements.",
+      "sections": [
+        {
+          "title": "AI Ethics and Safety Audit: from purpose to evidence",
+          "explanation": "A scoped, evidence-based review that connects findings to affected people, conditions, owners and a retest date.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Purpose",
+                "detail": "A scoped, evidence-based review that connects findings to affected people, conditions, owners and a retest date.",
+                "icon": "target"
+              },
+              {
+                "label": "Build an artefact",
+                "detail": "Create the required work for the stated audience and scope.",
+                "icon": "layers"
+              },
+              {
+                "label": "Verify and explain",
+                "detail": "Keep test evidence, permissions, limitations and your contribution.",
+                "icon": "check"
+              }
+            ]
+          },
+          "takeaway": "Use the full original brief for requirements, timing and marks; this diagram is a companion, not a replacement.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m7-pb5-v1",
+          "section": "The brief"
+        },
+        {
+          "title": "Organise the ai ethics and safety audit evidence pack",
+          "explanation": "Group the required files so a reviewer can inspect the work and its checks. The detailed checklist above remains unchanged.",
+          "diagram": {
+            "kind": "hub",
+            "items": [
+              {
+                "label": "System and stakeholders",
+                "detail": "Define the use, scope, affected people and potential harm.",
+                "icon": "users"
+              },
+              {
+                "label": "Bias and transparency tests",
+                "detail": "Keep the actual paired-run coding sheet and documentation review.",
+                "icon": "search"
+              },
+              {
+                "label": "Privacy and security",
+                "detail": "Map data and permissions and record permitted safety tests.",
+                "icon": "shield"
+              },
+              {
+                "label": "Findings and decision",
+                "detail": "Tie each issue to evidence, severity, action and owner.",
+                "icon": "file"
+              },
+              {
+                "label": "Limits and reflection",
+                "detail": "Explain what was not tested and how it constrains the conclusion.",
+                "icon": "repeat"
+              },
+              {
+                "label": "AI-use statement",
+                "detail": "Separate drafting or tabulation help from your own coding and judgement.",
+                "icon": "message"
+              }
+            ],
+            "center": "Evidence pack"
+          },
+          "takeaway": "Reading the brief is not submission, external project marking or facilitator approval.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m7-pb5-v2",
+          "section": "What to submit"
+        },
+        {
+          "title": "Check the boundaries before the build or release",
+          "explanation": "A good-looking artefact cannot compensate for missing permission, invented evidence or an unsafe action.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Evidence and scope",
+                "detail": "Use the required real or clearly labelled practice evidence honestly.",
+                "icon": "file"
+              },
+              {
+                "label": "Permission and rights",
+                "detail": "Check relevant data, likeness, music and source permissions.",
+                "icon": "shield"
+              },
+              {
+                "label": "Human control",
+                "detail": "Keep the required review before consequential outward effects.",
+                "icon": "users"
+              },
+              {
+                "label": "Test and disclose",
+                "detail": "Record actual results, limitations and AI assistance.",
+                "icon": "check"
+              }
+            ]
+          },
+          "takeaway": "Follow the topic-specific constraints in full; a disclosure label does not override the rules.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m7-pb5-v3",
+          "section": "Constraints"
+        },
+        {
+          "title": "Plan, build, check and revise",
+          "explanation": "Use the original suggested schedule to reserve time for review rather than doing all the checking after the final export.",
+          "diagram": {
+            "kind": "cycle",
+            "items": [
+              {
+                "label": "Plan the scope",
+                "detail": "Start from the actual brief, required outputs and permitted inputs.",
+                "icon": "target"
+              },
+              {
+                "label": "Build deliberately",
+                "detail": "Work in small versions and retain intermediate artefacts.",
+                "icon": "layers"
+              },
+              {
+                "label": "Review evidence",
+                "detail": "Run the relevant source, language, functionality and safety checks.",
+                "icon": "search"
+              },
+              {
+                "label": "Revise and submit",
+                "detail": "Record the change and organise the complete evidence package.",
+                "icon": "file"
+              }
+            ],
+            "center": "Project workflow"
+          },
+          "takeaway": "Keep the process log while working; do not reconstruct fictitious experiments or approvals afterwards.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m7-pb5-v4",
+          "section": "Process (suggested)"
+        },
+        {
+          "title": "Make the published criteria inspectable",
+          "explanation": "The original rubric, weights, pass threshold and any caps remain authoritative. These panels point to the evidence behind its criteria.",
+          "diagram": {
+            "kind": "compare",
+            "items": [
+              {
+                "label": "Evidence quality",
+                "detail": "Use actual tests, opened sources and traceable examples.",
+                "icon": "search"
+              },
+              {
+                "label": "Review coverage",
+                "detail": "Consider fairness, accountability, transparency, privacy and security.",
+                "icon": "shield"
+              },
+              {
+                "label": "Actionable decision",
+                "detail": "Give scoped conditions, owners and retest dates.",
+                "icon": "target"
+              },
+              {
+                "label": "Clarity and honesty",
+                "detail": "Keep limitations visible and avoid unsupported clearance claims.",
+                "icon": "file"
+              }
+            ]
+          },
+          "takeaway": "The animation does not grade work, award marks or override a safety or integrity cap.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m7-pb5-v5",
+          "section": "Rubric (7 marks)"
+        },
+        {
+          "title": "Use the review habits, not a success formula",
+          "explanation": "The original tips are practical prompts for reflection, not guarantees of a result or new assessment conditions.",
+          "diagram": {
+            "kind": "compare",
+            "items": [
+              {
+                "label": "Test a narrow use well",
+                "detail": "A focused protocol is more useful than a thin universal verdict.",
+                "icon": "target"
+              },
+              {
+                "label": "Include relevant languages",
+                "detail": "Investigate context-specific differences with the same controlled method.",
+                "icon": "message"
+              },
+              {
+                "label": "Retest a mitigation",
+                "detail": "Keep before/after evidence and the remaining limitation.",
+                "icon": "repeat"
+              }
+            ]
+          },
+          "takeaway": "Choose the habit that addresses your actual weakness and keep evidence of the correction.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m7-pb5-v6",
+          "section": "Tips from previous cohorts"
+        },
+        {
+          "title": "Separate tool help from your responsibility",
+          "explanation": "A useful statement tells the reviewer where assistance entered and what the learner independently checked.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Name the assistance",
+                "detail": "Identify tools and the tasks for which they were used.",
+                "icon": "message"
+              },
+              {
+                "label": "Trace the evidence",
+                "detail": "State which real sources, tests and outputs were checked.",
+                "icon": "file"
+              },
+              {
+                "label": "Own the judgement",
+                "detail": "Describe selection, revisions, decisions and individual or team contributions.",
+                "icon": "users"
+              },
+              {
+                "label": "Follow the policy",
+                "detail": "Keep assessment restrictions and rights boundaries intact.",
+                "icon": "shield"
+              }
+            ]
+          },
+          "takeaway": "Disclosure cannot legitimise fabricated evidence, prohibited tool use or missing permission.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m7-pb5-v7",
+          "section": "AI-use statement template",
+          "checkpoint": {
+            "question": "Can an assistant invent representative test outputs to fill an audit report?",
+            "answer": "No. Findings must come from actual permitted runs or cited primary evidence. You own the coding, severity judgement and decision."
+          }
+        }
+      ]
+    }
+  }
+}
