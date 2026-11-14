@@ -1,6 +1,7 @@
 import { ArrowUpRight, Check, Sparkles } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import type { CourseManifest } from '@/shared/courses/types'
+import CourseLearningArtwork from './CourseLearningArtwork'
 
 /** A self-contained vector illustration: no remote images or paid media assets. */
 function MarketingSystemIllustration() {
@@ -56,9 +57,16 @@ export default function IllustratedCourseBanner({ manifest, firstLessonPath }: {
   const lessons = manifest.modules.flatMap((module) => module.topics)
   const marketing = manifest.id === 'digital-marketing'
   const projects = manifest.id === 'project-management'
+  const genai = manifest.id === 'genai-certification'
+  const people = manifest.id === 'hr-analytics'
+  const visualForms = genai ? 'Prompt maps, RAG pipelines & learner-controlled animations'
+    : people ? 'Cohort funnels, worked charts & learner-controlled animations'
+      : 'Step-by-step diagrams, worked charts & decision maps'
   const practice = marketing ? 'Interactive funnel lab and quick understanding checks'
     : projects ? 'Interactive schedule lab, work boards & responsibility tables'
-      : 'Visual practice and quick understanding checks'
+      : genai ? 'CO-STAR prompt lab, source checks & responsible-AI practice'
+        : people ? 'Workforce denominator lab, metric definitions & privacy checks'
+          : 'Visual practice and quick understanding checks'
   return (
     <section className="relative overflow-hidden rounded-3xl border border-slate-800 bg-slate-950 text-white shadow-lg" aria-label="Illustrated course edition">
       <div className="pointer-events-none absolute -right-10 -top-20 h-80 w-80 rounded-full bg-teal-500/10 blur-3xl" aria-hidden="true" />
@@ -68,12 +76,12 @@ export default function IllustratedCourseBanner({ manifest, firstLessonPath }: {
           <h2 className="mt-4 text-2xl font-extrabold leading-tight tracking-tight sm:text-3xl">{manifest.illustrations.title}</h2>
           <p className="mt-3 text-sm leading-7 text-slate-300">{manifest.illustrations.description}</p>
           <ul className="mt-4 space-y-2 text-xs font-medium text-slate-200">
-            {[`${lessons.length} illustrated topics, including project briefs`, 'Step-by-step diagrams, worked charts & decision maps', practice].map((item) => <li key={item} className="flex items-start gap-2"><Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-teal-300" aria-hidden="true" />{item}</li>)}
+            {[`${lessons.length} illustrated topics, including project briefs`, visualForms, practice].map((item) => <li key={item} className="flex items-start gap-2"><Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-teal-300" aria-hidden="true" />{item}</li>)}
           </ul>
           {firstLessonPath ? <Link to={firstLessonPath} className="mt-5 inline-flex min-h-10 items-center gap-2 rounded-xl bg-teal-300 px-4 py-2 text-xs font-extrabold text-slate-950 hover:bg-teal-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-teal-200">Explore the illustrated lesson <ArrowUpRight className="h-4 w-4" aria-hidden="true" /></Link> : null}
           <p className="mt-3 text-[10px] leading-5 text-slate-400">A new visual layer. The original explanations, assessments and course requirements are unchanged.</p>
         </div>
-        {marketing ? <MarketingSystemIllustration /> : <DeliverySystemIllustration generic={!projects} />}
+        {marketing ? <MarketingSystemIllustration /> : genai || people ? <CourseLearningArtwork course={genai ? 'genai' : 'hr'} /> : <DeliverySystemIllustration generic={!projects} />}
       </div>
     </section>
   )

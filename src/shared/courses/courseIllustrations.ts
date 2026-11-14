@@ -1,6 +1,7 @@
 import type { CourseModuleManifest } from './types'
 import { COURSE_DIAGRAM_ICONS } from './illustrationTypes'
 import { validateCourseProjectDiagram } from './projectDiagramValidation'
+import { calculateCourseWorkforce } from './courseVisualLabs'
 
 /** Keep arithmetic unrounded until presentation: forecasts can be fractional. */
 export function forecastFunnel(visitors: number, rates: number[]): number[] {
@@ -65,12 +66,15 @@ export function validateIllustrationBank(bank: unknown, module: CourseModuleMani
         || !hasText(section.checkpoint.question) || !hasText(section.checkpoint.answer))) {
         problems.push(`${label}: checkpoint needs a question and answer`)
       }
+      if (section.walkthrough !== undefined && typeof section.walkthrough !== 'boolean') {
+        problems.push(`${label}: walkthrough must be a boolean`)
+      }
       const diagram = section.diagram
       if (!isRecord(diagram)) {
         problems.push(`${label}: missing diagram`)
         return
       }
-      if (!['flow', 'cycle', 'hub', 'compare', 'bars', 'funnel', 'matrix', 'schedule', 'board', 'raci'].includes(String(diagram.kind))) {
+      if (!['flow', 'cycle', 'hub', 'compare', 'bars', 'funnel', 'matrix', 'schedule', 'board', 'raci', 'prompt', 'workforce'].includes(String(diagram.kind))) {
         problems.push(`${label}: unknown diagram kind`)
       }
       const maxItems = diagram.kind === 'schedule' ? 12 : 6
@@ -88,7 +92,7 @@ export function validateIllustrationBank(bank: unknown, module: CourseModuleMani
         }
       })
       if (diagram.center !== undefined && !hasText(diagram.center)) problems.push(`${label}: center must be non-empty text`)
-      if (['bars', 'funnel', 'schedule'].includes(String(diagram.kind))
+      if (['bars', 'funnel', 'schedule', 'workforce'].includes(String(diagram.kind))
         && (!hasText(section.caption) || !/synthetic|illustrative|hypothetical/i.test(section.caption))) {
         problems.push(`${label}: numeric examples must be labelled synthetic, illustrative or hypothetical`)
       }
@@ -115,6 +119,22 @@ export function validateIllustrationBank(bank: unknown, module: CourseModuleMani
         }
       } else if (diagram.interactive !== undefined && diagram.kind !== 'schedule') {
         problems.push(`${label}: only a funnel or schedule can be interactive`)
+      }
+      if (diagram.kind === 'prompt') {
+        if (diagram.items.length !== 6 || diagram.items.some((item: unknown) => !isRecord(item) || !hasText(item.example))) {
+          problems.push(`${label}: prompt lab needs six parts with non-empty examples`)
+        }
+        const labels = diagram.items.map((item: unknown) => isRecord(item) ? item.label : undefined)
+        if (new Set(labels).size !== labels.length) problems.push(`${label}: prompt part labels must be distinct`)
+      }
+      if (diagram.kind === 'workforce') {
+        try {
+          if (!isRecord(diagram.scenario)) throw new Error('missing scenario')
+          calculateCourseWorkforce(diagram.scenario as unknown as Parameters<typeof calculateCourseWorkforce>[0])
+        } catch {
+          problems.push(`${label}: workforce lab needs four whole 0–200 counts and valid cohort leavers`)
+        }
+        if (diagram.items.length !== 4) problems.push(`${label}: workforce lab needs four labelled stages`)
       }
       if (diagram.kind === 'matrix') {
         for (const field of ['xLabel', 'yLabel']) {

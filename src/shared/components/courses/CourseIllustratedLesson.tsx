@@ -3,11 +3,13 @@ import { ArrowDownRight, Eye, Lightbulb, Sparkles } from 'lucide-react'
 import type { CourseIllustration, CourseTopicIllustrations } from '@/shared/courses/illustrationTypes'
 import CourseMarkdown from './CourseMarkdown'
 import CourseDiagram from './CourseDiagram'
+import CourseAnimatedDiagram from './CourseAnimatedDiagram'
 
 const kindLabels = {
   flow: 'Step-by-step', cycle: 'Feedback loop', hub: 'System map', compare: 'Side by side',
   bars: 'Worked chart', funnel: 'Funnel model', matrix: 'Decision matrix',
   schedule: 'Schedule model', board: 'Work board', raci: 'Responsibility table',
+  prompt: 'Prompt-building lab', workforce: 'Workforce metrics lab',
 }
 
 function Illustration({ illustration, index, topicId }: { illustration: CourseIllustration; index: number; topicId: string }) {
@@ -23,7 +25,7 @@ function Illustration({ illustration, index, topicId }: { illustration: CourseIl
         <p className="mt-1.5 text-sm leading-6 text-slate-600 dark:text-slate-300">{illustration.explanation}</p>
       </figcaption>
       <div className="p-4 sm:p-5">
-        <CourseDiagram diagram={illustration.diagram} />
+        {illustration.walkthrough ? <CourseAnimatedDiagram diagram={illustration.diagram} title={illustration.title} /> : <CourseDiagram diagram={illustration.diagram} />}
         <aside className="mt-5 flex items-start gap-2 rounded-xl bg-slate-50 p-3.5 dark:bg-slate-800/60" aria-label="What to notice">
           <Lightbulb className="mt-0.5 h-4 w-4 shrink-0 text-amber-700 dark:text-amber-300" aria-hidden="true" />
           <p className="text-xs leading-6 text-slate-700 dark:text-slate-200"><span className="font-extrabold text-slate-900 dark:text-white">What to notice. </span>{illustration.takeaway}</p>
@@ -68,7 +70,7 @@ export default function CourseIllustratedLesson({ source, companion, topicId }: 
           </div>
           <h2 className="mt-4 text-xl font-extrabold tracking-tight sm:text-2xl">Read the idea. See how it works.</h2>
           <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-300">{companion.introduction}</p>
-          <p className="mt-3 text-[11px] leading-5 text-teal-200">{companion.sections.length} visual explanations · original reading preserved · no change to quizzes or completion</p>
+          <p className="mt-3 text-[11px] leading-5 text-teal-200">{companion.sections.length} visual explanations{companion.sections.some((section) => section.walkthrough) ? ' · learner-controlled animations' : ''} · original reading preserved · no change to quizzes or completion</p>
           {show ? (
             <details className="mt-4 border-t border-white/10 pt-3">
               <summary className="cursor-pointer text-xs font-semibold text-white focus-visible:outline-teal-300">Jump to a visual explanation</summary>

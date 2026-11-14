@@ -1,0 +1,1201 @@
+{
+  "moduleId": "m6",
+  "topics": {
+    "m6-t1": {
+      "introduction": "A second way to understand “Product concept & market validation”: read the original explanation, follow the diagram and play or step through its focus points. All practice stays separate from your reading and quiz requirements.",
+      "sections": [
+        {
+          "title": "Turn an idea into a testable problem",
+          "explanation": "A problem statement identifies a specific user, job and current workaround before proposing a feature.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Specific user",
+                "detail": "Name a group you can actually reach with permission.",
+                "icon": "users"
+              },
+              {
+                "label": "Job and pain",
+                "detail": "Describe the task and its observed difficulty.",
+                "icon": "target"
+              },
+              {
+                "label": "Current alternative",
+                "detail": "Find out how the work is done today.",
+                "icon": "search"
+              },
+              {
+                "label": "Testable claim",
+                "detail": "State what evidence would support or weaken the problem.",
+                "icon": "check"
+              }
+            ]
+          },
+          "takeaway": "A broad technology idea is not evidence that someone needs the product.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m6-t1-v1",
+          "section": "1. From idea to problem statement"
+        },
+        {
+          "title": "Ask about behaviour, not polite approval",
+          "explanation": "Past events and real workarounds are more informative than asking whether someone likes your idea.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Ask about the last time",
+                "detail": "Get a concrete event and its steps.",
+                "icon": "message"
+              },
+              {
+                "label": "Explore the workaround",
+                "detail": "Ask what was tried and what it cost in effort.",
+                "icon": "search"
+              },
+              {
+                "label": "Listen without pitching",
+                "detail": "Avoid leading the person toward your preferred answer.",
+                "icon": "users"
+              },
+              {
+                "label": "Synthesize faithfully",
+                "detail": "Keep quotations and interpretations distinct.",
+                "icon": "file"
+              }
+            ]
+          },
+          "takeaway": "Record permission, source and limitations; interview notes are not permission for unrestricted AI upload.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m6-t1-v2",
+          "section": "2. User interviews that tell the truth"
+        },
+        {
+          "title": "The alternative may not be another app",
+          "explanation": "A phone call, notebook or manual routine may be trusted and effective. Compare it honestly with the proposed change.",
+          "diagram": {
+            "kind": "compare",
+            "items": [
+              {
+                "label": "Current routine",
+                "detail": "Identify what users rely on and why.",
+                "icon": "file"
+              },
+              {
+                "label": "Its strengths",
+                "detail": "Understand trust, accessibility and low switching effort.",
+                "icon": "heart"
+              },
+              {
+                "label": "Its limits",
+                "detail": "Find observed gaps rather than invented competitor weaknesses.",
+                "icon": "search"
+              },
+              {
+                "label": "Switching burden",
+                "detail": "Include time, learning, access and risk in the comparison.",
+                "icon": "clock"
+              }
+            ]
+          },
+          "takeaway": "Do not call an alternative ineffective merely because it uses less technology.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m6-t1-v3",
+          "section": "3. Competitor and alternative scan"
+        },
+        {
+          "title": "A persona panel produces questions, not customers",
+          "explanation": "Synthetic objections can help you prepare research. They are not observations from real users.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Present known facts",
+                "detail": "Give the panel the same bounded problem statement.",
+                "icon": "file"
+              },
+              {
+                "label": "Collect objections",
+                "detail": "Ask for different concerns about value, cost and harm.",
+                "icon": "users"
+              },
+              {
+                "label": "Convert to questions",
+                "detail": "Identify the missing evidence behind each objection.",
+                "icon": "search"
+              },
+              {
+                "label": "Investigate for real",
+                "detail": "Use permitted interviews, observations or source checks.",
+                "icon": "check"
+              }
+            ]
+          },
+          "takeaway": "Label the rehearsal and take important objections back to real evidence.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m6-t1-v4",
+          "section": "4. Pressure-testing with a persona panel"
+        },
+        {
+          "title": "A lean canvas is a set of hypotheses",
+          "explanation": "The canvas connects user, problem, value, solution, reach, economics and measures. Its contents should change when evidence changes.",
+          "diagram": {
+            "kind": "hub",
+            "items": [
+              {
+                "label": "People and problem",
+                "detail": "State the target users, need and current alternatives.",
+                "icon": "users"
+              },
+              {
+                "label": "Value and solution",
+                "detail": "Describe the benefit and smallest plausible response.",
+                "icon": "target"
+              },
+              {
+                "label": "Reach and relationships",
+                "detail": "Explain how users would encounter and trust it.",
+                "icon": "globe"
+              },
+              {
+                "label": "Economics",
+                "detail": "Record cost and revenue assumptions without invented results.",
+                "icon": "chart"
+              },
+              {
+                "label": "Measures and evidence",
+                "detail": "Name the tests that would support or reject the assumptions.",
+                "icon": "search"
+              }
+            ],
+            "center": "Hypotheses"
+          },
+          "takeaway": "Do not present assumptions in a canvas as validated market facts.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m6-t1-v5",
+          "section": "5. The lean canvas"
+        },
+        {
+          "title": "Make the first version small enough to learn",
+          "explanation": "A narrow MVP tests a specific uncertainty. Manual steps can be valid when they are disclosed honestly.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "One user and job",
+                "detail": "Limit the audience and problem for the first test.",
+                "icon": "target"
+              },
+              {
+                "label": "One usable channel",
+                "detail": "Choose a delivery path the users can access.",
+                "icon": "globe"
+              },
+              {
+                "label": "Visible assumptions",
+                "detail": "Disclose manual work and unfinished automation.",
+                "icon": "file"
+              },
+              {
+                "label": "Measured learning",
+                "detail": "Collect the planned evidence and decide what to change.",
+                "icon": "check"
+              }
+            ]
+          },
+          "takeaway": "Define success and a decision date before seeing the result.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m6-t1-v6",
+          "section": "6. The smallest testable version"
+        },
+        {
+          "title": "A team charter makes contribution reviewable",
+          "explanation": "People need shared expectations about decisions, work and credit before the build becomes busy.",
+          "diagram": {
+            "kind": "hub",
+            "items": [
+              {
+                "label": "Roles",
+                "detail": "Name responsibilities and how they can rotate.",
+                "icon": "users"
+              },
+              {
+                "label": "Working rhythm",
+                "detail": "Set communication, review and disagreement rules.",
+                "icon": "message"
+              },
+              {
+                "label": "Done means",
+                "detail": "Agree what evidence makes a task complete.",
+                "icon": "check"
+              },
+              {
+                "label": "Contribution log",
+                "detail": "Keep attributed decisions and work records.",
+                "icon": "file"
+              }
+            ],
+            "center": "Team agreement"
+          },
+          "takeaway": "Record actual contributions rather than inventing a symmetrical team story at submission.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m6-t1-v7",
+          "section": "7. Forming the team",
+          "checkpoint": {
+            "question": "Can a synthetic persona panel replace required user interviews?",
+            "answer": "No. It can suggest questions but cannot provide genuine user behaviour, consent or validation evidence."
+          }
+        }
+      ]
+    },
+    "m6-t2": {
+      "introduction": "A second way to understand “Build sprint: app, AI feature & data”: read the original explanation, follow the diagram and play or step through its focus points. All practice stays separate from your reading and quiz requirements.",
+      "sections": [
+        {
+          "title": "Scope the sprint around what tests the idea",
+          "explanation": "A backlog should protect the smallest complete learning experience from expanding into an unfinished feature collection.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "State the user story",
+                "detail": "Connect an action to a specific user benefit.",
+                "icon": "users"
+              },
+              {
+                "label": "Identify the Musts",
+                "detail": "Keep only work necessary for the core test.",
+                "icon": "target"
+              },
+              {
+                "label": "Define done",
+                "detail": "Name observable behaviour and the evidence to check it.",
+                "icon": "check"
+              },
+              {
+                "label": "Defer deliberately",
+                "detail": "Record what will not be built this sprint.",
+                "icon": "file"
+              }
+            ]
+          },
+          "takeaway": "A feature is not “done” merely because its screen exists.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m6-t2-v1",
+          "section": "1. Scoping: the backlog and the definition of done"
+        },
+        {
+          "title": "Architecture is a map of data and authority",
+          "explanation": "Inputs, records, AI steps, automation and interfaces must fit together with explicit access and ownership.",
+          "diagram": {
+            "kind": "hub",
+            "items": [
+              {
+                "label": "Input",
+                "detail": "Collect the minimum permitted information.",
+                "icon": "file"
+              },
+              {
+                "label": "Data store",
+                "detail": "Keep validated records with ownership and access rules.",
+                "icon": "layers"
+              },
+              {
+                "label": "AI feature",
+                "detail": "Perform a narrow, checked transformation.",
+                "icon": "sparkles"
+              },
+              {
+                "label": "Automation",
+                "detail": "Move work with clear triggers and safeguards.",
+                "icon": "repeat"
+              },
+              {
+                "label": "Interface",
+                "detail": "Show states and actions appropriate for the user.",
+                "icon": "cursor"
+              }
+            ],
+            "center": "System blocks"
+          },
+          "takeaway": "Every connector expands the data-flow review; more integrations are not automatically better.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m6-t2-v2",
+          "section": "2. Choosing the architecture (no code required)"
+        },
+        {
+          "title": "An AI feature needs an enforced boundary",
+          "explanation": "A prompt specification is only one control. Validate the output and test failure behaviour before users rely on it.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Specify",
+                "detail": "Name inputs, output fields, allowed values and unknown states.",
+                "icon": "file"
+              },
+              {
+                "label": "Test offline",
+                "detail": "Try typical, malformed and boundary cases with expected results.",
+                "icon": "search"
+              },
+              {
+                "label": "Validate in the flow",
+                "detail": "Reject unsupported values and malformed structure outside the model.",
+                "icon": "shield"
+              },
+              {
+                "label": "Approve and monitor",
+                "detail": "Keep human checks, a review queue and an owner.",
+                "icon": "users"
+              }
+            ]
+          },
+          "takeaway": "A high pass count on a small sample does not justify ignoring an unacceptable safety failure.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m6-t2-v3",
+          "section": "3. Wiring the AI feature safely"
+        },
+        {
+          "title": "The build log is the report’s source of truth",
+          "explanation": "Daily evidence makes changes and contributions traceable. It prevents the final report from becoming a polished reconstruction.",
+          "diagram": {
+            "kind": "cycle",
+            "items": [
+              {
+                "label": "Record work",
+                "detail": "Name who did what and link the artefact.",
+                "icon": "file"
+              },
+              {
+                "label": "Record decisions",
+                "detail": "Explain the evidence and trade-off behind a choice.",
+                "icon": "message"
+              },
+              {
+                "label": "Record failures",
+                "detail": "Keep blockers, tests and corrections visible.",
+                "icon": "search"
+              },
+              {
+                "label": "Use the log",
+                "detail": "Write the report from records, not memory or invented figures.",
+                "icon": "check"
+              }
+            ],
+            "center": "Traceable work"
+          },
+          "takeaway": "Do not turn plans, estimates or test scenarios into claims of completed live results.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m6-t2-v4",
+          "section": "4. The build log"
+        },
+        {
+          "title": "A sprint rhythm should preserve a working path",
+          "explanation": "Short reviews expose blocked work early and make simplification possible before the final demonstration.",
+          "diagram": {
+            "kind": "cycle",
+            "items": [
+              {
+                "label": "Check in",
+                "detail": "Share progress, next work and blockers briefly.",
+                "icon": "users"
+              },
+              {
+                "label": "Demonstrate",
+                "detail": "Show the current end-to-end flow early.",
+                "icon": "cursor"
+              },
+              {
+                "label": "Simplify",
+                "detail": "Reduce scope when a task is not converging.",
+                "icon": "filter"
+              },
+              {
+                "label": "Retest",
+                "detail": "Keep the core path usable after each addition.",
+                "icon": "check"
+              }
+            ],
+            "center": "Build rhythm"
+          },
+          "takeaway": "An honest manual pilot step is preferable to a concealed broken integration.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m6-t2-v5",
+          "section": "5. Sprint rhythm"
+        },
+        {
+          "title": "AI contributions still need a named reviewer",
+          "explanation": "Planning, drafting and critique can accelerate work, but a person remains responsible for artefacts that enter the product.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Request bounded help",
+                "detail": "Use permitted material for a specific task.",
+                "icon": "target"
+              },
+              {
+                "label": "Inspect the suggestion",
+                "detail": "Check correctness, safety and fit with the build.",
+                "icon": "search"
+              },
+              {
+                "label": "Test before accepting",
+                "detail": "Run the relevant checks on the actual artefact.",
+                "icon": "check"
+              },
+              {
+                "label": "Credit and own it",
+                "detail": "Name the assistance and the responsible team member.",
+                "icon": "file"
+              }
+            ]
+          },
+          "takeaway": "Keep confidential data out of unapproved tools and log who checked each accepted contribution.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m6-t2-v6",
+          "section": "6. Using AI as a team member (properly)",
+          "checkpoint": {
+            "question": "Does a prompt that passed nineteen of twenty sample tests establish that a product is safe for every use?",
+            "answer": "No. It is limited sample evidence. Inspect the failed case, block unacceptable outputs and test integration, permissions, language and recovery for the actual use."
+          }
+        }
+      ]
+    },
+    "m6-t3": {
+      "introduction": "A second way to understand “Integration, testing, privacy & go-live”: read the original explanation, follow the diagram and play or step through its focus points. All practice stays separate from your reading and quiz requirements.",
+      "sections": [
+        {
+          "title": "Integration means testing every hand-off",
+          "explanation": "A working block can fail when another system supplies a different format, identity, time or permission.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Agree formats",
+                "detail": "Define dates, units, IDs and language codes.",
+                "icon": "file"
+              },
+              {
+                "label": "Match authority",
+                "detail": "Check each account’s permitted reads, writes and actions.",
+                "icon": "shield"
+              },
+              {
+                "label": "Coordinate timing",
+                "detail": "Use explicit time zones and dependencies.",
+                "icon": "clock"
+              },
+              {
+                "label": "Test the whole flow",
+                "detail": "Run fresh, duplicate and failure cases end to end.",
+                "icon": "check"
+              }
+            ]
+          },
+          "takeaway": "Test duplicate runs and least-privilege access as well as the normal happy path.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m6-t3-v1",
+          "section": "1. Integration: making the blocks one thing"
+        },
+        {
+          "title": "A test plan asks several different questions",
+          "explanation": "Functional success is only one part of readiness. Quality, recovery, privacy and usability need their own evidence.",
+          "diagram": {
+            "kind": "hub",
+            "items": [
+              {
+                "label": "Functional",
+                "detail": "Does each required task satisfy its definition of done?",
+                "icon": "check"
+              },
+              {
+                "label": "AI quality",
+                "detail": "Are content, language, structure and boundaries acceptable?",
+                "icon": "sparkles"
+              },
+              {
+                "label": "Failure",
+                "detail": "What happens when inputs, quotas or dependencies fail?",
+                "icon": "repeat"
+              },
+              {
+                "label": "Privacy and security",
+                "detail": "Are data and actions restricted to authorised roles?",
+                "icon": "shield"
+              },
+              {
+                "label": "Usability",
+                "detail": "Can the intended users understand and complete the task?",
+                "icon": "users"
+              }
+            ],
+            "center": "Readiness checks"
+          },
+          "takeaway": "Write expected results first and retain failures and fixes, not only the final green summary.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m6-t3-v2",
+          "section": "2. The test plan"
+        },
+        {
+          "title": "Graceful failure needs detection and ownership",
+          "explanation": "A fallback is useful when it tells the truth, prevents unsafe action and gives the user a recoverable next step.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Detect",
+                "detail": "Validate the input or receive a clear error signal.",
+                "icon": "search"
+              },
+              {
+                "label": "Contain",
+                "detail": "Stop unsafe actions and preserve the pending work.",
+                "icon": "shield"
+              },
+              {
+                "label": "Explain",
+                "detail": "Tell the user what happened without exposing private internals.",
+                "icon": "message"
+              },
+              {
+                "label": "Recover",
+                "detail": "Use a bounded retry or an owned review queue.",
+                "icon": "users"
+              }
+            ]
+          },
+          "takeaway": "Do not silently invent missing values or retry an outward action without limits.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m6-t3-v3",
+          "section": "3. Failure handling users can live with"
+        },
+        {
+          "title": "A privacy notice must describe the actual workflow",
+          "explanation": "A notice and data checklist are practical safeguards, not a standalone legal compliance certificate. Requirements depend on the real context.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Map data",
+                "detail": "List collection, processing, recipients and storage.",
+                "icon": "file"
+              },
+              {
+                "label": "Minimise",
+                "detail": "Remove fields unnecessary for the purpose.",
+                "icon": "filter"
+              },
+              {
+                "label": "Explain choices",
+                "detail": "Describe the actual use, retention and contact route clearly.",
+                "icon": "message"
+              },
+              {
+                "label": "Verify controls",
+                "detail": "Check permissions, deletion and withdrawal procedures where applicable.",
+                "icon": "shield"
+              }
+            ]
+          },
+          "takeaway": "Review current official requirements and institutional policy with an authorised owner; do not assume a template is sufficient.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m6-t3-v4",
+          "section": "4. Privacy notice and pre-launch data checklist"
+        },
+        {
+          "title": "External text must not acquire tool authority",
+          "explanation": "A user message or retrieved page can contain instructions that try to redirect a model. Prompt formatting alone cannot enforce a secure boundary.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Receive untrusted content",
+                "detail": "Treat forms, documents and messages as data.",
+                "icon": "file"
+              },
+              {
+                "label": "Limit capabilities",
+                "detail": "Give the feature only the access its task needs.",
+                "icon": "shield"
+              },
+              {
+                "label": "Validate results",
+                "detail": "Check structure and evidence before using the response.",
+                "icon": "search"
+              },
+              {
+                "label": "Approve effects",
+                "detail": "Require the appropriate person before an irreversible or external action.",
+                "icon": "users"
+              }
+            ]
+          },
+          "takeaway": "Keep validation, least-privilege tools and human approval outside the model’s say-so.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m6-t3-v5",
+          "section": "5. Prompt injection and misuse (introduction)"
+        },
+        {
+          "title": "Release is a reviewed decision, not a working demo",
+          "explanation": "A pilot begins only when the planned controls, support and measurement are actually ready for its audience.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Review evidence",
+                "detail": "Inspect tests, language quality and resolved exceptions.",
+                "icon": "search"
+              },
+              {
+                "label": "Check safeguards",
+                "detail": "Verify access, notice, monitoring and the kill switch.",
+                "icon": "shield"
+              },
+              {
+                "label": "Assign operations",
+                "detail": "Name support hours, review queue owner and feedback route.",
+                "icon": "users"
+              },
+              {
+                "label": "Run the bounded pilot",
+                "detail": "Use the agreed scope, measures and review date.",
+                "icon": "target"
+              }
+            ]
+          },
+          "takeaway": "An unchecked privacy or safety item is a reason to pause even if the core feature runs.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m6-t3-v6",
+          "section": "6. The launch checklist and the pilot",
+          "checkpoint": {
+            "question": "Is quoting external text inside delimiters enough to prevent prompt injection?",
+            "answer": "No. Delimiters help structure content but are not a security boundary. Enforce permissions, validate outputs and protect consequential actions with independent controls."
+          }
+        }
+      ]
+    },
+    "m6-t4": {
+      "introduction": "A second way to understand “User insights, growth planning & the pitch”: read the original explanation, follow the diagram and play or step through its focus points. All practice stays separate from your reading and quiz requirements.",
+      "sections": [
+        {
+          "title": "Pilot feedback combines behaviour and explanation",
+          "explanation": "Usage signals, conversations and observation answer different questions. Together they help distinguish activity from value.",
+          "diagram": {
+            "kind": "hub",
+            "items": [
+              {
+                "label": "In-product signal",
+                "detail": "Collect a low-effort response under a clear privacy rule.",
+                "icon": "cursor"
+              },
+              {
+                "label": "Short conversation",
+                "detail": "Ask what helped, confused or changed for the user.",
+                "icon": "message"
+              },
+              {
+                "label": "Observation",
+                "detail": "Watch what people actually do, with permission.",
+                "icon": "search"
+              },
+              {
+                "label": "Evidence log",
+                "detail": "Keep dates, provenance, themes and subsequent actions.",
+                "icon": "file"
+              }
+            ],
+            "center": "Pilot learning"
+          },
+          "takeaway": "Do not treat positive comments or repeated opens as proof of the intended outcome.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m6-t4-v1",
+          "section": "1. Feedback loops that fit a pilot"
+        },
+        {
+          "title": "Reach, engagement, outcome and quality differ",
+          "explanation": "An enrolled user, a repeated interaction and a changed real task are not the same unit of success.",
+          "diagram": {
+            "kind": "compare",
+            "items": [
+              {
+                "label": "Reach",
+                "detail": "Count who was eligible or enrolled and who left.",
+                "icon": "users"
+              },
+              {
+                "label": "Engagement",
+                "detail": "Define the actual use event over a stated period.",
+                "icon": "cursor"
+              },
+              {
+                "label": "Outcome",
+                "detail": "Measure the specific user task the product aims to improve.",
+                "icon": "target"
+              },
+              {
+                "label": "Quality",
+                "detail": "Track checked AI output and harmful or failed cases.",
+                "icon": "shield"
+              }
+            ]
+          },
+          "takeaway": "Show denominators and measurement limits; a small pilot is not a causal proof of business impact.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m6-t4-v2",
+          "section": "2. Simple analytics without code"
+        },
+        {
+          "title": "Ship a change you can evaluate",
+          "explanation": "Feedback themes should remain tied to actual records. A revision needs a hypothesis and a repeatable check.",
+          "diagram": {
+            "kind": "cycle",
+            "items": [
+              {
+                "label": "Group actual feedback",
+                "detail": "Keep counts and representative quotations traceable.",
+                "icon": "file"
+              },
+              {
+                "label": "Choose a problem",
+                "detail": "Prioritise a meaningful issue with manageable effort.",
+                "icon": "target"
+              },
+              {
+                "label": "Make one change",
+                "detail": "Record what changed and what should improve.",
+                "icon": "cursor"
+              },
+              {
+                "label": "Measure and review",
+                "detail": "Check the intended outcome and possible side effects.",
+                "icon": "check"
+              }
+            ],
+            "center": "Evidence-led change"
+          },
+          "takeaway": "Do not invent themes or treat a favourable before/after difference as proof of cause.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m6-t4-v3",
+          "section": "3. From feedback to iteration"
+        },
+        {
+          "title": "Persevere, pivot and stop are legitimate decisions",
+          "explanation": "The purpose of a pilot is to learn whether the proposed use deserves more effort. Continuing is not automatically the successful answer.",
+          "diagram": {
+            "kind": "compare",
+            "items": [
+              {
+                "label": "Persevere",
+                "detail": "Continue a supported direction with visible remaining risks.",
+                "icon": "check"
+              },
+              {
+                "label": "Pivot",
+                "detail": "Change the user, job or approach in response to evidence.",
+                "icon": "repeat"
+              },
+              {
+                "label": "Stop",
+                "detail": "Retire an unsupported or unsafe direction and preserve the learning.",
+                "icon": "shield"
+              }
+            ]
+          },
+          "takeaway": "State what evidence supports the decision and what would change it.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m6-t4-v4",
+          "section": "4. Persevere, pivot or stop"
+        },
+        {
+          "title": "A pitch is an evidence narrative",
+          "explanation": "The audience needs the user’s problem, a working demonstration, measured learning and a defensible next decision.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Problem and people",
+                "detail": "Show the specific need and its evidence.",
+                "icon": "users"
+              },
+              {
+                "label": "Product and demo",
+                "detail": "Explain the core flow and show it working or failing gracefully.",
+                "icon": "layers"
+              },
+              {
+                "label": "Pilot and responsibility",
+                "detail": "Trace results, safeguards and changes to records.",
+                "icon": "file"
+              },
+              {
+                "label": "Decision and ask",
+                "detail": "State what you learned and the appropriate next step.",
+                "icon": "target"
+              }
+            ]
+          },
+          "takeaway": "Keep the demonstration’s failure path and limitations visible rather than hiding them behind polished slides.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m6-t4-v5",
+          "section": "5. The five-minute pitch"
+        },
+        {
+          "title": "A case study should be reproducible after the pitch",
+          "explanation": "The report connects the problem, design, tests, results and individual contribution to an evidence pack.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Collect records",
+                "detail": "Use the build log, test log and measurement sheet.",
+                "icon": "file"
+              },
+              {
+                "label": "Trace each claim",
+                "detail": "Link the headline statement to the supporting artefact.",
+                "icon": "link"
+              },
+              {
+                "label": "Describe contribution",
+                "detail": "Separate your work, team work and AI assistance.",
+                "icon": "users"
+              },
+              {
+                "label": "Publish safely",
+                "detail": "Remove restricted data and retain limitations in the public version.",
+                "icon": "shield"
+              }
+            ]
+          },
+          "takeaway": "Keep all figures consistent across report, slides and portfolio; label simulated work honestly.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m6-t4-v6",
+          "section": "6. The capstone report and the portfolio",
+          "checkpoint": {
+            "question": "Is stopping a pilot necessarily a failed capstone decision?",
+            "answer": "No. An evidence-based stop or pivot can demonstrate good judgement. Explain the findings, safety limits and what you learned without inventing success."
+          }
+        }
+      ]
+    },
+    "m6-cap": {
+      "introduction": "A second way to understand “Capstone — AI Product Demo Day”: read the original explanation, follow the diagram and play or step through its focus points. All practice stays separate from your reading and quiz requirements.",
+      "sections": [
+        {
+          "title": "AI Product Sprint: from purpose to evidence",
+          "explanation": "A working AI-enabled solution, real authorised user evidence and an honest decision about the next step.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Purpose",
+                "detail": "A working AI-enabled solution, real authorised user evidence and an honest decision about the next step.",
+                "icon": "target"
+              },
+              {
+                "label": "Build an artefact",
+                "detail": "Create the required work for the stated audience and scope.",
+                "icon": "layers"
+              },
+              {
+                "label": "Verify and explain",
+                "detail": "Keep test evidence, permissions, limitations and your contribution.",
+                "icon": "check"
+              }
+            ]
+          },
+          "takeaway": "Use the full original brief for requirements, timing and marks; this diagram is a companion, not a replacement.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m6-cap-v1",
+          "section": "The brief"
+        },
+        {
+          "title": "Organise the ai product sprint evidence pack",
+          "explanation": "Group the required files so a reviewer can inspect the work and its checks. The detailed checklist above remains unchanged.",
+          "diagram": {
+            "kind": "hub",
+            "items": [
+              {
+                "label": "Two-page report",
+                "detail": "Cover the original required sections and trace each important claim to evidence.",
+                "icon": "file"
+              },
+              {
+                "label": "Working product and backup",
+                "detail": "Give approved jury access and a backup demo showing the core flow and a graceful failure.",
+                "icon": "cursor"
+              },
+              {
+                "label": "Five-minute pitch",
+                "detail": "Use the original slide and participation requirements and answer questions with evidence.",
+                "icon": "message"
+              },
+              {
+                "label": "Evidence pack",
+                "detail": "Keep charter, research, backlog, logs, tests, feedback, privacy and handover records.",
+                "icon": "layers"
+              },
+              {
+                "label": "Individual reflection",
+                "detail": "Explain your actual contribution and learning separately from the team’s work.",
+                "icon": "users"
+              },
+              {
+                "label": "AI-use disclosure",
+                "detail": "Document assistance and the tested product AI feature with named responsibility.",
+                "icon": "shield"
+              }
+            ],
+            "center": "Evidence pack"
+          },
+          "takeaway": "Reading the brief is not submission, external project marking or facilitator approval.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m6-cap-v2",
+          "section": "What to submit (by the showcase)"
+        },
+        {
+          "title": "Check the boundaries before the build or release",
+          "explanation": "A good-looking artefact cannot compensate for missing permission, invented evidence or an unsafe action.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Evidence and scope",
+                "detail": "Use the required real or clearly labelled practice evidence honestly.",
+                "icon": "file"
+              },
+              {
+                "label": "Permission and rights",
+                "detail": "Check relevant data, likeness, music and source permissions.",
+                "icon": "shield"
+              },
+              {
+                "label": "Human control",
+                "detail": "Keep the required review before consequential outward effects.",
+                "icon": "users"
+              },
+              {
+                "label": "Test and disclose",
+                "detail": "Record actual results, limitations and AI assistance.",
+                "icon": "check"
+              }
+            ]
+          },
+          "takeaway": "Follow the topic-specific constraints in full; a disclosure label does not override the rules.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m6-cap-v3",
+          "section": "Constraints"
+        },
+        {
+          "title": "The sprint’s milestones carry different evidence",
+          "explanation": "This groups the original milestone table into its four phases; it does not change the weeks, pilot conditions or review requirements.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Week 7 · validate",
+                "detail": "Prepare the charter, interviews, problem, canvas and MVP statement.",
+                "icon": "users"
+              },
+              {
+                "label": "Week 8 · build",
+                "detail": "Keep an executable core flow, AI test evidence and daily log.",
+                "icon": "layers"
+              },
+              {
+                "label": "Week 8 · launch review",
+                "detail": "Complete integration, privacy and failure checks before the pilot.",
+                "icon": "shield"
+              },
+              {
+                "label": "Week 9 · learn and defend",
+                "detail": "Use actual pilot or permitted alternative evidence, revise and present.",
+                "icon": "check"
+              }
+            ]
+          },
+          "takeaway": "A facilitator review or pilot must be real where required; do not label a plan as a completed event.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m6-cap-v4",
+          "section": "Timeline"
+        },
+        {
+          "title": "Make the published criteria inspectable",
+          "explanation": "The original rubric, weights, pass threshold and any caps remain authoritative. These panels point to the evidence behind its criteria.",
+          "diagram": {
+            "kind": "compare",
+            "items": [
+              {
+                "label": "Problem and validation",
+                "detail": "Support the specific user need with actual research.",
+                "icon": "users"
+              },
+              {
+                "label": "Working product",
+                "detail": "Show an end-to-end useful flow with tested fallback.",
+                "icon": "cursor"
+              },
+              {
+                "label": "Pilot and iteration",
+                "detail": "Trace observations, feedback and a genuine revision.",
+                "icon": "chart"
+              },
+              {
+                "label": "Responsible build",
+                "detail": "Demonstrate permissions, safeguards and the stop path.",
+                "icon": "shield"
+              },
+              {
+                "label": "Pitch and report",
+                "detail": "Keep the argument clear and every material number traceable.",
+                "icon": "file"
+              },
+              {
+                "label": "Team contribution",
+                "detail": "Match credited work to the build log and individual defence.",
+                "icon": "check"
+              }
+            ]
+          },
+          "takeaway": "The animation does not grade work, award marks or override a safety or integrity cap.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m6-cap-v5",
+          "section": "Rubric (30 marks)"
+        },
+        {
+          "title": "Prepare for evidence questions, not only a demo",
+          "explanation": "A reviewer needs to understand value, boundaries and recovery as well as what appears on screen.",
+          "diagram": {
+            "kind": "compare",
+            "items": [
+              {
+                "label": "Who is the user?",
+                "detail": "Identify the specific people and observed need.",
+                "icon": "users"
+              },
+              {
+                "label": "What changed?",
+                "detail": "Trace the reported benefit to actual evidence.",
+                "icon": "chart"
+              },
+              {
+                "label": "What is refused?",
+                "detail": "Explain scope, safeguards and actions the product must not take.",
+                "icon": "shield"
+              },
+              {
+                "label": "Who owns failure and data?",
+                "detail": "Show recovery, operational ownership and authorised handling.",
+                "icon": "file"
+              }
+            ]
+          },
+          "takeaway": "Bring the source evidence and explain unknowns rather than inventing a confident answer.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m6-cap-v6",
+          "section": "Jury guidance"
+        },
+        {
+          "title": "Use the review habits, not a success formula",
+          "explanation": "The original tips are practical prompts for reflection, not guarantees of a result or new assessment conditions.",
+          "diagram": {
+            "kind": "compare",
+            "items": [
+              {
+                "label": "Narrow or stop honestly",
+                "detail": "A changed idea can demonstrate learning when the evidence justifies it.",
+                "icon": "target"
+              },
+              {
+                "label": "Disclose manual steps",
+                "detail": "A permitted manual pilot is not a fully automated product.",
+                "icon": "layers"
+              },
+              {
+                "label": "Show graceful failure",
+                "detail": "Demonstrate how the actual build behaves when a dependency or input fails.",
+                "icon": "shield"
+              }
+            ]
+          },
+          "takeaway": "Choose the habit that addresses your actual weakness and keep evidence of the correction.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m6-cap-v7",
+          "section": "Tips from previous cohorts"
+        },
+        {
+          "title": "Separate tool help from your responsibility",
+          "explanation": "A useful statement tells the reviewer where assistance entered and what the learner independently checked.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Name the assistance",
+                "detail": "Identify tools and the tasks for which they were used.",
+                "icon": "message"
+              },
+              {
+                "label": "Trace the evidence",
+                "detail": "State which real sources, tests and outputs were checked.",
+                "icon": "file"
+              },
+              {
+                "label": "Own the judgement",
+                "detail": "Describe selection, revisions, decisions and individual or team contributions.",
+                "icon": "users"
+              },
+              {
+                "label": "Follow the policy",
+                "detail": "Keep assessment restrictions and rights boundaries intact.",
+                "icon": "shield"
+              }
+            ]
+          },
+          "takeaway": "Disclosure cannot legitimise fabricated evidence, prohibited tool use or missing permission.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m6-cap-v8",
+          "section": "AI-use statement template",
+          "checkpoint": {
+            "question": "If the pilot could not run, may you invent a plausible usage table?",
+            "answer": "No. Follow the original documented-reason and usability-test alternative, state what actually happened and preserve the limitation. Never fabricate a pilot or consent."
+          }
+        }
+      ]
+    }
+  }
+}

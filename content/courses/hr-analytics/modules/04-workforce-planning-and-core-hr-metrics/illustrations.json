@@ -1,0 +1,641 @@
+{
+  "moduleId": "m4",
+  "topics": {
+    "m4-t1": {
+      "introduction": "A second way to understand “Headcount, FTE and movement reconciliation”: read the original explanation, follow the diagram and play or step through its focus points. All practice stays separate from your reading and quiz requirements.",
+      "sections": [
+        {
+          "title": "People, contracted hours and FTE are different units",
+          "explanation": "The snapshot fixture has 24 full-time and six half-time contracts using a 40-hour weekly standard. It is separate from the period turnover example.",
+          "diagram": {
+            "kind": "compare",
+            "items": [
+              {
+                "label": "Headcount",
+                "detail": "30 people are active under the snapshot’s inclusion rule.",
+                "icon": "users"
+              },
+              {
+                "label": "Contracted hours",
+                "detail": "24 × 40 + 6 × 20 = 1,080 weekly hours.",
+                "icon": "clock"
+              },
+              {
+                "label": "Contracted FTE",
+                "detail": "1,080 ÷ 40 = 27 FTE under this specific standard.",
+                "icon": "chart"
+              }
+            ]
+          },
+          "takeaway": "FTE is a stated capacity convention, not a score of personal worth or productivity.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m4-t1-v1",
+          "section": "1. Headcount and FTE are different"
+        },
+        {
+          "title": "The movement bridge depends on the boundary",
+          "explanation": "Opening plus joiners minus leavers is complete only when other relevant movements are absent. Department transfers require extra terms.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Opening population",
+                "detail": "Fix the snapshot date and counting scope.",
+                "icon": "users"
+              },
+              {
+                "label": "Add entries",
+                "detail": "Include valid joins and department transfers in where relevant.",
+                "icon": "link"
+              },
+              {
+                "label": "Subtract exits",
+                "detail": "Include departures and department transfers out where relevant.",
+                "icon": "repeat"
+              },
+              {
+                "label": "Reconcile closing",
+                "detail": "Explain the difference between the expected and observed count.",
+                "icon": "check"
+              }
+            ]
+          },
+          "takeaway": "Use effective dates and defined employment spells; do not silently mix people and events.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m4-t1-v2",
+          "section": "2. Reconcile movements at the right boundary"
+        },
+        {
+          "title": "Stable headcount does not mean stable capacity",
+          "explanation": "Hours, skill coverage, availability and workload can change even when the number of people does not.",
+          "diagram": {
+            "kind": "hub",
+            "items": [
+              {
+                "label": "Contracted capacity",
+                "detail": "Use a declared hours basis and FTE standard.",
+                "icon": "clock"
+              },
+              {
+                "label": "Skills and access",
+                "detail": "Check whether the required work can actually be covered.",
+                "icon": "briefcase"
+              },
+              {
+                "label": "Availability",
+                "detail": "Consider appropriate leave, training and shift constraints.",
+                "icon": "users"
+              },
+              {
+                "label": "Service requirement",
+                "detail": "Match assumptions to workload and quality standards.",
+                "icon": "target"
+              }
+            ],
+            "center": "Capacity review"
+          },
+          "takeaway": "Do not treat overtime or every paid hour as permanently sustainable productive capacity.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m4-t1-v3",
+          "section": "3. Compare stock and capacity",
+          "checkpoint": {
+            "question": "Can 30 headcount and 27 FTE both be correct for the same snapshot?",
+            "answer": "Yes. Headcount counts people; FTE divides included hours by a stated full-time standard. The units and inclusion rules differ."
+          }
+        }
+      ]
+    },
+    "m4-t2": {
+      "introduction": "A second way to understand “Turnover, retention and absence”: read the original explanation, follow the diagram and play or step through its focus points. All practice stays separate from your reading and quiz requirements.",
+      "sections": [
+        {
+          "title": "Turnover and retention do not share a denominator",
+          "explanation": "The lesson’s 100 opening, 120 closing, 11 exits and 92 retained opening members are consistent with one illustrative breakdown: 31 joiners, eight opening-cohort exits and three joiner exits. Change a count to explore the definitions.",
+          "diagram": {
+            "kind": "workforce",
+            "items": [
+              {
+                "label": "Opening",
+                "detail": "The cohort present at the start of the stated period.",
+                "icon": "users"
+              },
+              {
+                "label": "Joiners",
+                "detail": "People entering during the same period, before any later exit.",
+                "icon": "link"
+              },
+              {
+                "label": "Leavers",
+                "detail": "Opening-cohort and new-joiner exits together.",
+                "icon": "repeat"
+              },
+              {
+                "label": "Closing",
+                "detail": "Opening plus joiners minus all included exits.",
+                "icon": "check"
+              }
+            ],
+            "scenario": {
+              "opening": 100,
+              "joiners": 31,
+              "openingLeavers": 8,
+              "joinerLeavers": 3
+            }
+          },
+          "takeaway": "Turnover uses all period exits over approximate average headcount; retention follows only the fixed opening cohort.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m4-t2-v1",
+          "section": "1. Define turnover and retention independently"
+        },
+        {
+          "title": "Absence requires scheduled exposure",
+          "explanation": "The synthetic example has 80 included absent scheduled hours out of 2,000 scheduled hours. The inclusion policy still needs to be stated.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Define inclusion",
+                "detail": "State which absence and approved-leave types count.",
+                "icon": "file"
+              },
+              {
+                "label": "Count absent exposure",
+                "detail": "Use included scheduled hours actually absent.",
+                "icon": "clock"
+              },
+              {
+                "label": "Count eligible exposure",
+                "detail": "Use total scheduled hours under the same population and period.",
+                "icon": "users"
+              },
+              {
+                "label": "Calculate and qualify",
+                "detail": "Show the rate, counts and policy limitations together.",
+                "icon": "check"
+              }
+            ]
+          },
+          "takeaway": "80 ÷ 2,000 = 4%; an aggregate absence rate is not a diagnosis or evidence of misconduct.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m4-t2-v2",
+          "section": "2. Use scheduled exposure for absence"
+        },
+        {
+          "title": "Small counts can make large-looking rate changes",
+          "explanation": "A rate needs counts, a denominator, comparable periods and a confidentiality review to be interpreted responsibly.",
+          "diagram": {
+            "kind": "compare",
+            "items": [
+              {
+                "label": "Size and uncertainty",
+                "detail": "One event can strongly change a small group’s percentage.",
+                "icon": "chart"
+              },
+              {
+                "label": "Comparable context",
+                "detail": "Check season, tenure mix and organisational change.",
+                "icon": "search"
+              },
+              {
+                "label": "Safe reporting",
+                "detail": "Review tiny groups and indirect identification before sharing.",
+                "icon": "shield"
+              },
+              {
+                "label": "Proportionate action",
+                "detail": "Consult qualified HR owners and test a supportive process response.",
+                "icon": "users"
+              }
+            ]
+          },
+          "takeaway": "Use aggregate signals to investigate systems, not to diagnose or publicly label individuals.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m4-t2-v3",
+          "section": "3. Interpret rates with counts and context",
+          "checkpoint": {
+            "question": "In the initial example, why is retention 92% rather than one minus the 10% turnover rate?",
+            "answer": "Retention follows the 92 remaining members of the original 100. Turnover divides all 11 exits by approximate average headcount 110. The populations and denominators differ."
+          }
+        }
+      ]
+    },
+    "m4-t3": {
+      "introduction": "A second way to understand “Demand, supply and workforce scenarios”: read the original explanation, follow the diagram and play or step through its focus points. All practice stays separate from your reading and quiz requirements.",
+      "sections": [
+        {
+          "title": "A demand assumption changes the required FTE",
+          "explanation": "The independent capacity fixture uses 800 cases per productive FTE. Workloads of 8,800, 9,600 and 10,400 imply three demand scenarios.",
+          "diagram": {
+            "kind": "bars",
+            "items": [
+              {
+                "label": "Lower workload",
+                "detail": "8,800 cases ÷ 800 cases per productive FTE.",
+                "value": 11,
+                "icon": "chart"
+              },
+              {
+                "label": "Base workload",
+                "detail": "9,600 cases ÷ 800 cases per productive FTE.",
+                "value": 12,
+                "icon": "chart"
+              },
+              {
+                "label": "Higher workload",
+                "detail": "10,400 cases ÷ 800 cases per productive FTE.",
+                "value": 13,
+                "icon": "chart"
+              }
+            ],
+            "unit": "FTE demanded"
+          },
+          "takeaway": "These are synthetic planning scenarios, not staffing promises or permission to intensify work. Check skills, service quality and sustainable capacity.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m4-t3-v1",
+          "section": "1. Translate workload into capacity carefully"
+        },
+        {
+          "title": "Supply is a dated set of assumptions",
+          "explanation": "Starting capacity, expected additions, departures, transfers and availability need distinct entries. An accepted offer is not guaranteed capacity.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Start with current capacity",
+                "detail": "Use the relevant skill and availability basis.",
+                "icon": "users"
+              },
+              {
+                "label": "Add confirmed changes",
+                "detail": "Record joins, transfers and changed hours with timing.",
+                "icon": "link"
+              },
+              {
+                "label": "Apply losses once",
+                "detail": "Account for departures or reduced availability explicitly.",
+                "icon": "clock"
+              },
+              {
+                "label": "Show uncertainty",
+                "detail": "Separate confirmed, proposed and delayed scenarios.",
+                "icon": "file"
+              }
+            ]
+          },
+          "takeaway": "Avoid subtracting an expected exit twice or counting an unapproved role as confirmed supply.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m4-t3-v2",
+          "section": "2. Project supply with distinct flows"
+        },
+        {
+          "title": "A workforce gap has more than one possible response",
+          "explanation": "Hiring, mobility, training and process changes have different lead times, costs and quality effects.",
+          "diagram": {
+            "kind": "compare",
+            "items": [
+              {
+                "label": "Recruit",
+                "detail": "Account for approval, time to join and onboarding.",
+                "icon": "briefcase"
+              },
+              {
+                "label": "Develop or move",
+                "detail": "Check skills, fair access and the effect on the sending team.",
+                "icon": "users"
+              },
+              {
+                "label": "Improve the process",
+                "detail": "Test work design, demand smoothing or avoidable rework.",
+                "icon": "repeat"
+              },
+              {
+                "label": "Review the plan",
+                "detail": "Update assumptions using observed workload and service quality.",
+                "icon": "check"
+              }
+            ]
+          },
+          "takeaway": "Choose a proportionate option with an owner, review trigger and employment-policy safeguards.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m4-t3-v3",
+          "section": "3. Compare actions, costs and risks",
+          "checkpoint": {
+            "question": "If a candidate accepts an offer, should the plan count their full productive capacity as available immediately?",
+            "answer": "No. Joining, onboarding, skill and availability assumptions must be explicit. Use confirmed changes and separate uncertain scenarios."
+          }
+        }
+      ]
+    },
+    "m4-pb3": {
+      "introduction": "A second way to understand “Project Block 3 — Workforce metrics and scenario plan”: read the original explanation, follow the diagram and play or step through its focus points. All practice stays separate from your reading and quiz requirements.",
+      "sections": [
+        {
+          "title": "Workforce metrics and scenario plan: connect the question to evidence",
+          "explanation": "A reconciled headcount/FTE bridge and capacity scenarios that keep turnover, retention and absence denominators distinct.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Question",
+                "detail": "A reconciled headcount/FTE bridge and capacity scenarios that keep turnover, retention and absence denominators distinct.",
+                "icon": "target"
+              },
+              {
+                "label": "Evidence",
+                "detail": "Use the original practice material with explicit provenance.",
+                "icon": "file"
+              },
+              {
+                "label": "Decision",
+                "detail": "Explain a bounded recommendation and the evidence that could change it.",
+                "icon": "check"
+              }
+            ]
+          },
+          "takeaway": "The app records reading and quizzes; external project submission, verification and marking remain with the institution.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m4-pb3-v1",
+          "section": "The brief"
+        },
+        {
+          "title": "Keep synthetic fixtures and authority boundaries separate",
+          "explanation": "The practice tables are independent examples, not linked real employee records. Use the original inputs and log every deliberate scenario change.",
+          "diagram": {
+            "kind": "compare",
+            "items": [
+              {
+                "label": "Provenance",
+                "detail": "Identify the fixture, grain, period and original source copy.",
+                "icon": "file"
+              },
+              {
+                "label": "Separation",
+                "detail": "Do not join independent populations as if they were one company dataset.",
+                "icon": "layers"
+              },
+              {
+                "label": "Permission",
+                "detail": "Use synthetic inputs and the institution-approved submission route.",
+                "icon": "shield"
+              },
+              {
+                "label": "Honest context",
+                "detail": "Do not report simulated interviews, approvals or outcomes as live events.",
+                "icon": "users"
+              }
+            ]
+          },
+          "takeaway": "No real personal dataset, paid tool or live organisational access is required or authorised by this project.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m4-pb3-v2",
+          "section": "Inputs and working boundaries"
+        },
+        {
+          "title": "Reserve time for correction, not only construction",
+          "explanation": "The original work-plan table supplies the timing. This map groups the work into a review loop without changing those allocations.",
+          "diagram": {
+            "kind": "cycle",
+            "items": [
+              {
+                "label": "Frame",
+                "detail": "Read the decision and inspect source boundaries.",
+                "icon": "target"
+              },
+              {
+                "label": "Build",
+                "detail": "Create the required artefacts with traceable formulas or decisions.",
+                "icon": "layers"
+              },
+              {
+                "label": "Check",
+                "detail": "Reproduce the headline and inspect assumptions and safeguards.",
+                "icon": "search"
+              },
+              {
+                "label": "Review and revise",
+                "detail": "Use peer or self-review and keep a change log.",
+                "icon": "repeat"
+              },
+              {
+                "label": "Explain and submit",
+                "detail": "Finish the recommendation, disclosure and evidence index.",
+                "icon": "file"
+              }
+            ],
+            "center": "Project work"
+          },
+          "takeaway": "A first draft is not a finished artefact; retain the comment and your response after review.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m4-pb3-v3",
+          "section": "Work plan"
+        },
+        {
+          "title": "Organise the workforce metrics and scenario plan submission",
+          "explanation": "These groups help you locate evidence; the full numbered submission checklist above still defines every required component.",
+          "diagram": {
+            "kind": "hub",
+            "items": [
+              {
+                "label": "Snapshot and FTE",
+                "detail": "Use the declared 40-hour standard and show department summaries.",
+                "icon": "users"
+              },
+              {
+                "label": "Movement bridge",
+                "detail": "Reconcile joins, exits and transfers at the correct boundary.",
+                "icon": "link"
+              },
+              {
+                "label": "Metric cards",
+                "detail": "Check turnover, opening-cohort retention and scheduled-hours absence separately.",
+                "icon": "chart"
+              },
+              {
+                "label": "Capacity scenarios",
+                "detail": "Keep base, low and high assumptions and recruitment lead time visible.",
+                "icon": "clock"
+              },
+              {
+                "label": "Proportionate recommendation",
+                "detail": "Compare hiring with a responsible process or mobility alternative.",
+                "icon": "shield"
+              }
+            ],
+            "center": "Evidence index"
+          },
+          "takeaway": "A public portfolio copy must be safe and clearly labelled; it is not a substitute for the editable institutional submission.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m4-pb3-v4",
+          "section": "What to submit"
+        },
+        {
+          "title": "Keep snapshot capacity and period rates separate",
+          "explanation": "The 30-person contract snapshot and the opening/closing workforce period are independent teaching fixtures. They are not records from one linked workforce.",
+          "diagram": {
+            "kind": "compare",
+            "items": [
+              {
+                "label": "Snapshot · 27 FTE",
+                "detail": "24 full-time plus six half-time contracts give 30 people and 27 FTE under the stated standard.",
+                "icon": "users"
+              },
+              {
+                "label": "Period · 10% turnover",
+                "detail": "Average headcount = (100 + 120) ÷ 2 = 110; all 11 exits ÷ 110 × 100 = 10% for this period.",
+                "icon": "chart"
+              },
+              {
+                "label": "Opening cohort · 92% retention",
+                "detail": "92 original members remain out of 100 opening members; joiners do not enter this denominator.",
+                "icon": "check"
+              }
+            ]
+          },
+          "takeaway": "People, contracted FTE and event rates have different units and boundaries. Turnover and fixed-cohort retention are not complements.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m4-pb3-v5",
+          "section": "Acceptance and self-check"
+        },
+        {
+          "title": "Follow the original rubric and its evidence standard",
+          "explanation": "The original block or capstone marks, performance anchors and institutional award conditions are unchanged.",
+          "diagram": {
+            "kind": "compare",
+            "items": [
+              {
+                "label": "Correctness and reproducibility",
+                "detail": "Trace the method and results to the declared source and definitions.",
+                "icon": "check"
+              },
+              {
+                "label": "Judgement and safeguards",
+                "detail": "Show uncertainty, appropriate authority and safe handling.",
+                "icon": "shield"
+              },
+              {
+                "label": "Clarity, evidence and reflection",
+                "detail": "Make claims inspectable and explain corrections.",
+                "icon": "file"
+              }
+            ]
+          },
+          "takeaway": "These panels and animations do not calculate marks, approve projects or award an external credential.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m4-pb3-v6",
+          "section": "Rubric"
+        },
+        {
+          "title": "Review the recommendation from a challenger’s view",
+          "explanation": "A reviewer should be able to trace a claim, test an assumption and understand which action needs another role’s approval.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Trace a headline",
+                "detail": "Find the calculation or artefact behind the main claim.",
+                "icon": "file"
+              },
+              {
+                "label": "Challenge an assumption",
+                "detail": "Ask what missing evidence could reverse the action.",
+                "icon": "search"
+              },
+              {
+                "label": "Check authority",
+                "detail": "Name who is permitted to approve a consequential decision.",
+                "icon": "users"
+              },
+              {
+                "label": "Inspect sharing",
+                "detail": "Choose evidence that can safely appear in the public version.",
+                "icon": "shield"
+              }
+            ]
+          },
+          "takeaway": "Keep the actual review comment and your correction or explanation instead of claiming a review that never happened.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m4-pb3-v7",
+          "section": "Review questions"
+        },
+        {
+          "title": "Explain assistance without outsourcing judgement",
+          "explanation": "Complete the original AI-use statement even when no AI was used. Tool help must not fabricate records, sources or experience.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Name tools or none",
+                "detail": "State the actual assistance and permitted synthetic inputs.",
+                "icon": "message"
+              },
+              {
+                "label": "Record your checks",
+                "detail": "Explain accepted, changed and rejected suggestions and independent verification.",
+                "icon": "check"
+              },
+              {
+                "label": "Own the work",
+                "detail": "Describe your contribution, judgement and responsibility for the final claims.",
+                "icon": "users"
+              }
+            ]
+          },
+          "takeaway": "Do not upload real employee, candidate, student or credential data to public AI tools; follow exam restrictions separately.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m4-pb3-v8",
+          "section": "AI-use statement"
+        },
+        {
+          "title": "An extension tests an assumption after the core is complete",
+          "explanation": "The optional extension is not required for full marks. Keep the original work and distinguish a changed scenario from an observation.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Complete the core",
+                "detail": "Finish the required evidence and safeguards first.",
+                "icon": "check"
+              },
+              {
+                "label": "A changed productive-capacity assumption",
+                "detail": "Explain the new gap while keeping people and FTE units distinct.",
+                "icon": "chart"
+              },
+              {
+                "label": "Compare and document",
+                "detail": "Show what changed, which conclusion depends on it and what remains unknown.",
+                "icon": "file"
+              }
+            ]
+          },
+          "takeaway": "More complexity does not improve a submission if the reasoning and safeguards cannot be reproduced.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m4-pb3-v9",
+          "section": "Optional extension",
+          "checkpoint": {
+            "question": "Can 10% turnover be subtracted from 100% to obtain the project’s retention rate?",
+            "answer": "No. The period turnover denominator is approximate average headcount 110 and includes all 11 exits. Retention follows 92 remaining members of the fixed opening cohort of 100, so it is 92%."
+          }
+        }
+      ]
+    }
+  }
+}

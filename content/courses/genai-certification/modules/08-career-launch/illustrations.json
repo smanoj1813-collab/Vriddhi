@@ -1,0 +1,791 @@
+{
+  "moduleId": "m8",
+  "topics": {
+    "m8-t1": {
+      "introduction": "A second way to understand “Resume & portfolio building with AI”: read the original explanation, follow the diagram and play or step through its focus points. All practice stays separate from your reading and quiz requirements.",
+      "sections": [
+        {
+          "title": "Make the résumé readable to people and parsers",
+          "explanation": "Clear text, meaningful headings and truthful role vocabulary help readers locate relevant evidence. Parser behaviour varies.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Read the role",
+                "detail": "Identify the tasks and evidence the employer requests.",
+                "icon": "search"
+              },
+              {
+                "label": "Choose relevant facts",
+                "detail": "Use skills and experience you can substantiate.",
+                "icon": "file"
+              },
+              {
+                "label": "Use a clear structure",
+                "detail": "Keep text and section headings easy to extract and read.",
+                "icon": "layers"
+              },
+              {
+                "label": "Inspect the export",
+                "detail": "Check parsing, links and the actual final document.",
+                "icon": "check"
+              }
+            ]
+          },
+          "takeaway": "Test the submitted file and follow the employer’s requested format rather than claiming a universal ATS guarantee.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m8-t1-v1",
+          "section": "1. How resumes are actually read"
+        },
+        {
+          "title": "An achievement is a claim with a source",
+          "explanation": "Action, task, result and evidence make a contribution concrete. Numbers should come from records rather than invented impact.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Action",
+                "detail": "Name what you actually did.",
+                "icon": "cursor"
+              },
+              {
+                "label": "Task",
+                "detail": "Describe the specific work and context.",
+                "icon": "briefcase"
+              },
+              {
+                "label": "Result",
+                "detail": "State only the outcome the evidence supports.",
+                "icon": "target"
+              },
+              {
+                "label": "Evidence",
+                "detail": "Link a safe artefact or record that substantiates the claim.",
+                "icon": "file"
+              }
+            ]
+          },
+          "takeaway": "A measured classroom output must not be presented as paid work or an unobserved business result.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m8-t1-v2",
+          "section": "2. Achievement statements"
+        },
+        {
+          "title": "Tailor by selecting and editing, not inventing",
+          "explanation": "AI can help compare a job description with existing evidence. It cannot create a missing qualification or experience.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Extract requirements",
+                "detail": "Read the actual job description’s priorities.",
+                "icon": "search"
+              },
+              {
+                "label": "Map evidence",
+                "detail": "Match your genuine projects and skills to those needs.",
+                "icon": "link"
+              },
+              {
+                "label": "Edit truthfully",
+                "detail": "Reorder or tighten wording without adding unsupported claims.",
+                "icon": "message"
+              },
+              {
+                "label": "Verify the final",
+                "detail": "Check every number, title, date and contribution.",
+                "icon": "check"
+              }
+            ]
+          },
+          "takeaway": "Leave an unsupported requirement as a gap and decide honestly whether or how to apply.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m8-t1-v3",
+          "section": "3. Tailoring with AI as an editor"
+        },
+        {
+          "title": "A portfolio connects the story to inspectable work",
+          "explanation": "A case study should make the problem, contribution, outcome and limitations easy to verify.",
+          "diagram": {
+            "kind": "hub",
+            "items": [
+              {
+                "label": "Problem",
+                "detail": "State the user need or practice question.",
+                "icon": "target"
+              },
+              {
+                "label": "Contribution",
+                "detail": "Distinguish your decisions and work from the team’s.",
+                "icon": "users"
+              },
+              {
+                "label": "Artefact",
+                "detail": "Link the permitted document, demo or analysis.",
+                "icon": "file"
+              },
+              {
+                "label": "Learning and limits",
+                "detail": "Explain corrections, unknowns and what you would change.",
+                "icon": "repeat"
+              }
+            ],
+            "center": "Evidence portfolio"
+          },
+          "takeaway": "Publish only a safe version of evidence and credit team work and AI assistance accurately.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m8-t1-v4",
+          "section": "4. The portfolio"
+        },
+        {
+          "title": "Integrity survives the editing tool",
+          "explanation": "Application claims belong to you regardless of who helped polish the wording. Employer policies can differ.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Check the rule",
+                "detail": "Read the specific application’s instructions.",
+                "icon": "file"
+              },
+              {
+                "label": "Use your facts",
+                "detail": "Keep content tied to your own evidence.",
+                "icon": "shield"
+              },
+              {
+                "label": "Review every claim",
+                "detail": "Remove invented achievements or exaggerated results.",
+                "icon": "search"
+              },
+              {
+                "label": "Answer honestly",
+                "detail": "Explain assistance and your responsibility for the submission.",
+                "icon": "message"
+              }
+            ]
+          },
+          "takeaway": "Disclose assistance when requested or required, and never upload other people’s confidential information to prepare an application.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m8-t1-v5",
+          "section": "5. AI-use in applications: disclosure and integrity",
+          "checkpoint": {
+            "question": "If an assistant adds a plausible percentage improvement to a résumé bullet, can you keep it?",
+            "answer": "Only if your own evidence supports it. Otherwise remove it; a persuasive number is not a measured result."
+          }
+        }
+      ]
+    },
+    "m8-t2": {
+      "introduction": "A second way to understand “LinkedIn & your professional brand”: read the original explanation, follow the diagram and play or step through its focus points. All practice stays separate from your reading and quiz requirements.",
+      "sections": [
+        {
+          "title": "Be findable, credible and specific",
+          "explanation": "A professional profile should help the right reader connect a truthful skill claim to evidence of work.",
+          "diagram": {
+            "kind": "hub",
+            "items": [
+              {
+                "label": "Findable",
+                "detail": "Use genuine role and skill terms relevant to your goal.",
+                "icon": "search"
+              },
+              {
+                "label": "Credible",
+                "detail": "Link real artefacts and consistent evidence.",
+                "icon": "file"
+              },
+              {
+                "label": "Specific",
+                "detail": "Describe actual tasks and contribution instead of vague superlatives.",
+                "icon": "target"
+              },
+              {
+                "label": "Appropriate",
+                "detail": "Respect privacy, rights and employer or institution rules.",
+                "icon": "shield"
+              }
+            ],
+            "center": "Professional trust"
+          },
+          "takeaway": "Visibility is useful only when the claims remain accurate and appropriate to share.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m8-t2-v1",
+          "section": "1. What LinkedIn is for (and what it is not)"
+        },
+        {
+          "title": "Each profile section has a communication job",
+          "explanation": "Identity, headline, summary and evidence should tell the same truthful story without implying qualifications you do not hold.",
+          "diagram": {
+            "kind": "compare",
+            "items": [
+              {
+                "label": "Identity",
+                "detail": "Use an accurate name and an appropriate image.",
+                "icon": "users"
+              },
+              {
+                "label": "Headline and summary",
+                "detail": "State your current focus and supported strengths.",
+                "icon": "message"
+              },
+              {
+                "label": "Experience and projects",
+                "detail": "Describe actual responsibilities and label simulations.",
+                "icon": "briefcase"
+              },
+              {
+                "label": "Featured evidence",
+                "detail": "Offer safe links to relevant work and current contact routes.",
+                "icon": "link"
+              }
+            ]
+          },
+          "takeaway": "A classroom project title is not an executive appointment or an external credential.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m8-t2-v2",
+          "section": "2. The profile, section by section"
+        },
+        {
+          "title": "Share a concrete learning story",
+          "explanation": "A useful post can explain an artefact, a correction or an evidence-based lesson instead of generating empty professional slogans.",
+          "diagram": {
+            "kind": "cycle",
+            "items": [
+              {
+                "label": "Choose real work",
+                "detail": "Pick a project or learning event you can substantiate.",
+                "icon": "file"
+              },
+              {
+                "label": "Explain a decision",
+                "detail": "Name the problem and what you actually changed.",
+                "icon": "message"
+              },
+              {
+                "label": "Show safe evidence",
+                "detail": "Use permitted excerpts and truthful context.",
+                "icon": "shield"
+              },
+              {
+                "label": "Listen and improve",
+                "detail": "Respond to questions and correct mistakes openly.",
+                "icon": "repeat"
+              }
+            ],
+            "center": "Credible content"
+          },
+          "takeaway": "Do not publish another person’s image, quotation or confidential work without appropriate permission.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m8-t2-v3",
+          "section": "3. Content that builds credibility"
+        },
+        {
+          "title": "Outreach should respect the recipient’s time",
+          "explanation": "A specific, truthful question gives someone a manageable way to help. It does not create an obligation to reply.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Find relevance",
+                "detail": "Identify a genuine shared context or role interest.",
+                "icon": "search"
+              },
+              {
+                "label": "Write a short note",
+                "detail": "Introduce yourself truthfully and ask a specific question.",
+                "icon": "message"
+              },
+              {
+                "label": "Offer context",
+                "detail": "Link relevant safe evidence only when useful.",
+                "icon": "file"
+              },
+              {
+                "label": "Follow up respectfully",
+                "detail": "Keep boundaries and record learning without pressuring the person.",
+                "icon": "users"
+              }
+            ]
+          },
+          "takeaway": "Avoid bulk pretending-to-be-personal messages and respect a refusal or silence.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m8-t2-v4",
+          "section": "4. Outreach that gets replies"
+        },
+        {
+          "title": "A professional brand is a consistency check",
+          "explanation": "The same result should mean the same thing across a résumé, profile and portfolio. Consistency cannot rescue an invented claim.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Compare the versions",
+                "detail": "Check dates, titles, figures and your role.",
+                "icon": "file"
+              },
+              {
+                "label": "Review permissions",
+                "detail": "Remove private or unapproved material.",
+                "icon": "shield"
+              },
+              {
+                "label": "Credit fairly",
+                "detail": "Distinguish personal, team and AI-assisted work.",
+                "icon": "users"
+              },
+              {
+                "label": "Correct the record",
+                "detail": "Update misleading or stale statements rather than repeating them.",
+                "icon": "check"
+              }
+            ]
+          },
+          "takeaway": "Keep identity, contribution, privacy and disclosure accurate in every public version.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m8-t2-v5",
+          "section": "5. Brand responsibility",
+          "checkpoint": {
+            "question": "Can you call yourself the CEO of a classroom prototype to make a profile sound stronger?",
+            "answer": "Do not imply a real appointment or business experience you do not have. Describe the course project and your actual contribution honestly."
+          }
+        }
+      ]
+    },
+    "m8-t3": {
+      "introduction": "A second way to understand “Professional writing & email with AI”: read the original explanation, follow the diagram and play or step through its focus points. All practice stays separate from your reading and quiz requirements.",
+      "sections": [
+        {
+          "title": "Put the reader’s next action first",
+          "explanation": "A workplace message should make its purpose and required action easy to find before adding background.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Bottom line",
+                "detail": "State the decision, status or request clearly.",
+                "icon": "target"
+              },
+              {
+                "label": "Relevant context",
+                "detail": "Include only what the reader needs to understand it.",
+                "icon": "file"
+              },
+              {
+                "label": "Required action",
+                "detail": "Name the owner, requested response and real deadline.",
+                "icon": "users"
+              },
+              {
+                "label": "Check the close",
+                "detail": "Confirm the next step and contact route.",
+                "icon": "check"
+              }
+            ]
+          },
+          "takeaway": "Do not make a commitment or state an approval beyond your authority.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m8-t3-v1",
+          "section": "1. Writing for the reader's next action"
+        },
+        {
+          "title": "Different emails need different opening information",
+          "explanation": "The message pattern should fit what the reader must do, rather than a generic formal introduction.",
+          "diagram": {
+            "kind": "compare",
+            "items": [
+              {
+                "label": "Request",
+                "detail": "Name what you need and the relevant response time.",
+                "icon": "message"
+              },
+              {
+                "label": "Update",
+                "detail": "State the current status and what changed.",
+                "icon": "clock"
+              },
+              {
+                "label": "Follow-up",
+                "detail": "Refer to the earlier request and make the next action clear.",
+                "icon": "repeat"
+              },
+              {
+                "label": "Bad news",
+                "detail": "State the fact, limits and recovery plan without invented blame.",
+                "icon": "shield"
+              }
+            ]
+          },
+          "takeaway": "Use verified dates and facts; do not let a template invent details.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m8-t3-v2",
+          "section": "2. Email patterns you will use weekly"
+        },
+        {
+          "title": "Documents should separate evidence from decisions",
+          "explanation": "Reports, proposals and minutes have different jobs and must retain the right source trail.",
+          "diagram": {
+            "kind": "compare",
+            "items": [
+              {
+                "label": "Report",
+                "detail": "Connect the question, findings, limitations and recommendation.",
+                "icon": "file"
+              },
+              {
+                "label": "Proposal",
+                "detail": "Describe a change, risks, test and requested authority.",
+                "icon": "target"
+              },
+              {
+                "label": "Minutes",
+                "detail": "Record actual decisions, actions, owners and unresolved points.",
+                "icon": "users"
+              }
+            ]
+          },
+          "takeaway": "A generated meeting summary cannot create an agreement that participants never made.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m8-t3-v3",
+          "section": "3. Documents: reports, proposals, minutes"
+        },
+        {
+          "title": "Use the assistant as an editor with boundaries",
+          "explanation": "Provide verified facts and a clear reader, then inspect whether the edit altered meaning or introduced promises.",
+          "diagram": {
+            "kind": "cycle",
+            "items": [
+              {
+                "label": "Supply a factual brief",
+                "detail": "Name the audience, purpose and authorised facts.",
+                "icon": "file"
+              },
+              {
+                "label": "Request a bounded draft",
+                "detail": "Specify style, length and prohibited inventions.",
+                "icon": "message"
+              },
+              {
+                "label": "Compare meaning",
+                "detail": "Check every added or changed claim against the brief.",
+                "icon": "search"
+              },
+              {
+                "label": "Approve your version",
+                "detail": "Make the final wording your responsibility.",
+                "icon": "check"
+              }
+            ],
+            "center": "Writing discipline"
+          },
+          "takeaway": "Keep sensitive material out of unapproved tools and retain your own judgement on consequential wording.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m8-t3-v4",
+          "section": "4. AI as a writing partner — the discipline"
+        },
+        {
+          "title": "A pre-send check is a final action gate",
+          "explanation": "Correct content can still harm when it reaches the wrong recipient or carries an unintended attachment.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Verify facts",
+                "detail": "Check names, amounts, dates and links.",
+                "icon": "search"
+              },
+              {
+                "label": "Verify authority",
+                "detail": "Confirm commitments and approvals are real.",
+                "icon": "shield"
+              },
+              {
+                "label": "Verify recipients",
+                "detail": "Check addresses, reply-all, sharing and attachments.",
+                "icon": "users"
+              },
+              {
+                "label": "Read for meaning",
+                "detail": "Inspect tone, next action and required disclosure.",
+                "icon": "check"
+              }
+            ]
+          },
+          "takeaway": "Review recipients, authority, sensitive content and the actual attachments—not only grammar.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m8-t3-v5",
+          "section": "5. Pre-send discipline"
+        },
+        {
+          "title": "You remain accountable for the signed message",
+          "explanation": "A personal style file can make assistance more consistent, but it does not transfer authorship or responsibility to the tool.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Keep useful patterns",
+                "detail": "Record appropriate openings, structures and voice examples.",
+                "icon": "file"
+              },
+              {
+                "label": "Adapt to the reader",
+                "detail": "Choose a register that fits the actual relationship.",
+                "icon": "users"
+              },
+              {
+                "label": "Own the final",
+                "detail": "Approve only claims and commitments you can defend.",
+                "icon": "shield"
+              },
+              {
+                "label": "Learn from corrections",
+                "detail": "Update the template when a repeated problem appears.",
+                "icon": "repeat"
+              }
+            ]
+          },
+          "takeaway": "If a message is wrong, correct it and improve the checking workflow.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m8-t3-v6",
+          "section": "6. Accountability and voice",
+          "checkpoint": {
+            "question": "If AI drafted the email, who is responsible for an invented deadline in the sent message?",
+            "answer": "The sender remains responsible. Verify dates, commitments, recipients and attachments before sending and correct an error promptly."
+          }
+        }
+      ]
+    },
+    "m8-t4": {
+      "introduction": "A second way to understand “Interview & communication practice; the AI-era job map”: read the original explanation, follow the diagram and play or step through its focus points. All practice stays separate from your reading and quiz requirements.",
+      "sections": [
+        {
+          "title": "A STAR story needs your action and evidence",
+          "explanation": "Use a real course, work or volunteer example and explain your personal responsibility. A simulation should stay labelled as one.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Situation",
+                "detail": "Give enough real context to understand the problem.",
+                "icon": "file"
+              },
+              {
+                "label": "Task",
+                "detail": "State what you were responsible for.",
+                "icon": "target"
+              },
+              {
+                "label": "Action",
+                "detail": "Describe your actual decisions and contribution.",
+                "icon": "cursor"
+              },
+              {
+                "label": "Result and learning",
+                "detail": "Show supported outcomes and what you changed or learned.",
+                "icon": "check"
+              }
+            ]
+          },
+          "takeaway": "Do not invent experience to fill a story structure.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m8-t4-v1",
+          "section": "1. The STAR story bank"
+        },
+        {
+          "title": "Explain your AI use with a concrete boundary",
+          "explanation": "An employer learns more from a specific checked workflow than a list of tools or a claim to use AI for everything.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Where it helps",
+                "detail": "Name a task and the assistance you actually used.",
+                "icon": "briefcase"
+              },
+              {
+                "label": "How you check",
+                "detail": "Explain evidence, calculations or review that kept it honest.",
+                "icon": "search"
+              },
+              {
+                "label": "Where you stop",
+                "detail": "Describe privacy, authority and judgement boundaries.",
+                "icon": "shield"
+              },
+              {
+                "label": "What you built",
+                "detail": "Show a safe artefact and your contribution.",
+                "icon": "file"
+              }
+            ]
+          },
+          "takeaway": "Include a real correction or refusal to delegate work you could not safely verify.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m8-t4-v2",
+          "section": "2. The \"how do you use AI\" answer"
+        },
+        {
+          "title": "A mock interview is rehearsal, not a hiring verdict",
+          "explanation": "Practice can improve clarity and evidence, but a model’s feedback is not an employer’s validated assessment.",
+          "diagram": {
+            "kind": "cycle",
+            "items": [
+              {
+                "label": "Use the real role",
+                "detail": "Provide an appropriate public job description.",
+                "icon": "target"
+              },
+              {
+                "label": "Answer one question",
+                "detail": "Practise with your own evidence and voice.",
+                "icon": "message"
+              },
+              {
+                "label": "Review feedback",
+                "detail": "Check relevance and challenge unsupported scoring.",
+                "icon": "search"
+              },
+              {
+                "label": "Revise and test",
+                "detail": "Try again and include human feedback where possible.",
+                "icon": "users"
+              }
+            ],
+            "center": "Practice loop"
+          },
+          "takeaway": "Do not let rehearsal rewrite your history or claim a predicted hiring outcome.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m8-t4-v3",
+          "section": "3. Mock interviews with AI"
+        },
+        {
+          "title": "Communication practice includes listening and permission",
+          "explanation": "A presentation or discussion needs clear contributions, respectful response and appropriate handling of recordings.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Frame the issue",
+                "detail": "Define scope and the question before arguing.",
+                "icon": "target"
+              },
+              {
+                "label": "Add evidence",
+                "detail": "Make one supported point and connect to others.",
+                "icon": "file"
+              },
+              {
+                "label": "Listen and respond",
+                "detail": "Build on or challenge an idea with reasons.",
+                "icon": "users"
+              },
+              {
+                "label": "Review safely",
+                "detail": "Record only with permission and use feedback constructively.",
+                "icon": "check"
+              }
+            ]
+          },
+          "takeaway": "Do not equate speaking volume or a model’s score with contribution quality.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m8-t4-v4",
+          "section": "4. Group discussions and presentations"
+        },
+        {
+          "title": "Search by tasks and evidence, not a fashionable title",
+          "explanation": "Roles vary across employers. Match the job description’s tasks to the work you can demonstrate.",
+          "diagram": {
+            "kind": "hub",
+            "items": [
+              {
+                "label": "Commerce tasks",
+                "detail": "Show checked calculations, reports or reconciliation workflows.",
+                "icon": "chart"
+              },
+              {
+                "label": "Management tasks",
+                "detail": "Show process, project and communication evidence.",
+                "icon": "briefcase"
+              },
+              {
+                "label": "Arts and communication",
+                "detail": "Show verified research, writing or multilingual content.",
+                "icon": "message"
+              },
+              {
+                "label": "Science tasks",
+                "detail": "Show reproducible methods, units and evidence review.",
+                "icon": "search"
+              }
+            ],
+            "center": "Role evidence"
+          },
+          "takeaway": "Course completion does not guarantee a job, regulated authority or an external professional credential.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m8-t4-v5",
+          "section": "5. The AI-era job map for non-technical graduates"
+        },
+        {
+          "title": "A career plan is a reviewable learning loop",
+          "explanation": "Preparation, applications and interview learning should inform the next block of work rather than produce an activity count alone.",
+          "diagram": {
+            "kind": "cycle",
+            "items": [
+              {
+                "label": "Prepare evidence",
+                "detail": "Finish a truthful résumé, portfolio and relevant practice.",
+                "icon": "file"
+              },
+              {
+                "label": "Apply deliberately",
+                "detail": "Choose roles and outreach that fit your actual capabilities.",
+                "icon": "target"
+              },
+              {
+                "label": "Track feedback",
+                "detail": "Record responses, gaps and interview learning.",
+                "icon": "search"
+              },
+              {
+                "label": "Revise the plan",
+                "detail": "Improve one skill or artefact and review the next step.",
+                "icon": "repeat"
+              }
+            ],
+            "center": "Career practice"
+          },
+          "takeaway": "Use honest targeted applications and revise from evidence; no plan guarantees an offer.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m8-t4-v6",
+          "section": "6. Your ninety-day plan",
+          "checkpoint": {
+            "question": "Does a mock interview score predict whether an employer will hire you?",
+            "answer": "No. It is practice feedback. Use it critically, keep your examples truthful and seek human review rather than treating a model score as a hiring verdict."
+          }
+        }
+      ]
+    }
+  }
+}

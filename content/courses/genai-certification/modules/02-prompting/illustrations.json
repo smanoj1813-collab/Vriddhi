@@ -1,0 +1,1489 @@
+{
+  "moduleId": "m2",
+  "topics": {
+    "m2-t1": {
+      "introduction": "A second way to understand “Working with chat assistants: getting real work done”: read the original explanation, follow the diagram and play or step through its focus points. All practice stays separate from your reading and quiz requirements.",
+      "sections": [
+        {
+          "title": "Treat the chat as a workbench with a boundary",
+          "explanation": "Messages, files and optional tools supply different inputs. Not every assistant has the same features or permissions.",
+          "diagram": {
+            "kind": "hub",
+            "items": [
+              {
+                "label": "Instructions",
+                "detail": "State the task, reader and expected response.",
+                "icon": "message"
+              },
+              {
+                "label": "Source material",
+                "detail": "Supply only authorised files or excerpts needed for the task.",
+                "icon": "file"
+              },
+              {
+                "label": "Available tools",
+                "detail": "Check search, analysis and action permissions before relying on them.",
+                "icon": "globe"
+              },
+              {
+                "label": "Review surface",
+                "detail": "Inspect the answer and any real sources or generated artefacts.",
+                "icon": "check"
+              }
+            ],
+            "center": "Task context"
+          },
+          "takeaway": "Inspect what is actually enabled rather than assuming the chat can see your files or access live information.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m2-t1-v1",
+          "section": "1. The chat window is more than a text box"
+        },
+        {
+          "title": "Keep a conversation coherent",
+          "explanation": "A clean task thread makes assumptions easier to inspect. A long conversation is not a reliable permanent knowledge store.",
+          "diagram": {
+            "kind": "cycle",
+            "items": [
+              {
+                "label": "Set a scope",
+                "detail": "Give one task a clear purpose and evidence boundary.",
+                "icon": "target"
+              },
+              {
+                "label": "Watch drift",
+                "detail": "Notice conflicting instructions or irrelevant earlier material.",
+                "icon": "search"
+              },
+              {
+                "label": "Summarise verified facts",
+                "detail": "Keep a short working brief with sources and unresolved questions.",
+                "icon": "file"
+              },
+              {
+                "label": "Restart deliberately",
+                "detail": "Use a fresh thread when the task changes substantially.",
+                "icon": "repeat"
+              }
+            ],
+            "center": "Clear context"
+          },
+          "takeaway": "Carry forward an explicit verified brief when you restart, rather than relying on implied memory.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m2-t1-v2",
+          "section": "2. Conversation hygiene"
+        },
+        {
+          "title": "Supply what the assistant cannot know",
+          "explanation": "Local requirements must come from authorised material or an identified person, not the model’s confidence.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Name the gap",
+                "detail": "Identify the local fact or constraint the task needs.",
+                "icon": "search"
+              },
+              {
+                "label": "Provide evidence",
+                "detail": "Attach a permitted excerpt with its date and provenance.",
+                "icon": "file"
+              },
+              {
+                "label": "Set a boundary",
+                "detail": "Ask for answers only from that material and allow “not stated”.",
+                "icon": "shield"
+              },
+              {
+                "label": "Verify a citation",
+                "detail": "Check that the quoted passage supports the exact claim.",
+                "icon": "check"
+              }
+            ]
+          },
+          "takeaway": "If the source does not state an answer, leave it unknown rather than invent a plausible detail.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m2-t1-v3",
+          "section": "3. Giving the assistant what it cannot know"
+        },
+        {
+          "title": "Use an evidence log, not a brand contest",
+          "explanation": "The same evaluation rule makes assistant comparisons reproducible. Tool settings and availability can still differ.",
+          "diagram": {
+            "kind": "compare",
+            "items": [
+              {
+                "label": "Controlled input",
+                "detail": "Use the same task and authorised source package.",
+                "icon": "target"
+              },
+              {
+                "label": "Scored output",
+                "detail": "Check the result using the same requirements and examples.",
+                "icon": "check"
+              },
+              {
+                "label": "Recorded limitations",
+                "detail": "Note missing features, failures and the conditions of the test.",
+                "icon": "file"
+              }
+            ]
+          },
+          "takeaway": "Keep both successful and failed attempts so the comparison does not become cherry-picked marketing.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m2-t1-v4",
+          "section": "4. Comparing assistants honestly"
+        },
+        {
+          "title": "Replace weak habits with explicit decisions",
+          "explanation": "Repeatedly asking for “better” gives little information about what is wrong. Diagnosis makes revision more useful.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Find the failure",
+                "detail": "Name the missing fact, wrong audience or broken constraint.",
+                "icon": "search"
+              },
+              {
+                "label": "Give a focused fix",
+                "detail": "Specify one change and keep the useful parts.",
+                "icon": "message"
+              },
+              {
+                "label": "Recheck affected parts",
+                "detail": "A revision can introduce a new error elsewhere.",
+                "icon": "check"
+              },
+              {
+                "label": "Save the learning",
+                "detail": "Record the improved brief and the check it still needs.",
+                "icon": "file"
+              }
+            ]
+          },
+          "takeaway": "Do not paste more sensitive material or add grander role claims as a substitute for a clear brief.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m2-t1-v5",
+          "section": "5. Five habits that make output worse",
+          "checkpoint": {
+            "question": "What makes a comparison between two assistants defensible?",
+            "answer": "Use the same task and authorised inputs, apply the same checks, and record failures and settings as well as the preferred result."
+          }
+        }
+      ]
+    },
+    "m2-t2": {
+      "introduction": "A second way to understand “Prompt anatomy: RTF and CO-STAR”: read the original explanation, follow the diagram and play or step through its focus points. All practice stays separate from your reading and quiz requirements.",
+      "sections": [
+        {
+          "title": "A brief is a set of choices, not a magic phrase",
+          "explanation": "The six building blocks answer different questions. Select the ones the task needs instead of making every prompt longer.",
+          "diagram": {
+            "kind": "hub",
+            "items": [
+              {
+                "label": "Role",
+                "detail": "Describe a useful perspective without treating the model as a licensed professional.",
+                "icon": "briefcase"
+              },
+              {
+                "label": "Context",
+                "detail": "Provide the relevant situation and authorised background.",
+                "icon": "file"
+              },
+              {
+                "label": "Task",
+                "detail": "Name the exact work to be done.",
+                "icon": "target"
+              },
+              {
+                "label": "Constraints",
+                "detail": "Set evidence, length, safety and scope boundaries.",
+                "icon": "shield"
+              },
+              {
+                "label": "Format",
+                "detail": "Specify the output structure the reader can use.",
+                "icon": "layers"
+              },
+              {
+                "label": "Examples",
+                "detail": "Show a permitted example of the expected result.",
+                "icon": "check"
+              }
+            ],
+            "center": "The brief"
+          },
+          "takeaway": "A role description cannot supply missing facts, permission or verification.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m2-t2-v1",
+          "section": "1. The six building blocks"
+        },
+        {
+          "title": "RTF is a compact starting point",
+          "explanation": "Role, Task and Format are enough to structure many small, easy-to-check requests.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Role",
+                "detail": "A careful editor for Indian college writing is a useful perspective.",
+                "icon": "briefcase"
+              },
+              {
+                "label": "Task",
+                "detail": "Tighten grammar without changing the author’s meaning or voice.",
+                "icon": "target"
+              },
+              {
+                "label": "Format",
+                "detail": "Ask for the revised paragraph and a short change list.",
+                "icon": "file"
+              }
+            ]
+          },
+          "takeaway": "Use an appropriately small brief, then still inspect whether meaning changed.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m2-t2-v2",
+          "section": "2. RTF — for quick, everyday prompts"
+        },
+        {
+          "title": "Make the CO-STAR components visible",
+          "explanation": "Switch a component off and inspect what disappears. This assembles instructions; it does not generate an answer or score a model.",
+          "diagram": {
+            "kind": "prompt",
+            "items": [
+              {
+                "label": "Context",
+                "detail": "Give the situation the assistant cannot know.",
+                "icon": "file",
+                "example": "Fictional practice: a Mysuru college placement team is planning an alumni mentoring session. The date and venue are not yet approved."
+              },
+              {
+                "label": "Objective",
+                "detail": "Describe the reader’s intended next action.",
+                "icon": "target",
+                "example": "Draft an invitation asking alumni to indicate interest through [RSVP LINK]. Do not imply the event is confirmed."
+              },
+              {
+                "label": "Style",
+                "detail": "Choose the form of writing, not the emotional register.",
+                "icon": "layers",
+                "example": "Use clear Indian English, short paragraphs and a meaningful subject line. Avoid promotional jargon."
+              },
+              {
+                "label": "Tone",
+                "detail": "Set the emotional register for the relationship.",
+                "icon": "heart",
+                "example": "Warm, respectful and concise. Do not use pressure or exaggerated promises."
+              },
+              {
+                "label": "Audience",
+                "detail": "Name the reader and relevant knowledge.",
+                "icon": "users",
+                "example": "Alumni who may volunteer as mentors; assume no prior knowledge of this proposed session."
+              },
+              {
+                "label": "Response",
+                "detail": "Specify format and include an evidence boundary.",
+                "icon": "message",
+                "example": "Return a subject line and an email under 160 words. Use [DATE TO CONFIRM] and [VENUE TO CONFIRM]; never invent event details."
+              }
+            ]
+          },
+          "takeaway": "Even all six components do not guarantee a factual or safe response. Verify the result against the real evidence.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m2-t2-v3",
+          "section": "3. CO-STAR — for professional deliverables"
+        },
+        {
+          "title": "Diagnose before asking for another draft",
+          "explanation": "A revision should target a named weakness while protecting parts already checked.",
+          "diagram": {
+            "kind": "cycle",
+            "items": [
+              {
+                "label": "Inspect",
+                "detail": "Name the factual, structural or audience mismatch.",
+                "icon": "search"
+              },
+              {
+                "label": "Direct a fix",
+                "detail": "Request a concrete change rather than “make it better”.",
+                "icon": "message"
+              },
+              {
+                "label": "Lock what works",
+                "detail": "Protect verified sections that do not need revision.",
+                "icon": "shield"
+              },
+              {
+                "label": "Test and save",
+                "detail": "Recheck the response and keep the final reusable brief.",
+                "icon": "check"
+              }
+            ],
+            "center": "Refine"
+          },
+          "takeaway": "A changed prompt is a hypothesis about improvement, not evidence that the new output is correct.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m2-t2-v4",
+          "section": "4. The iterate-and-diagnose loop"
+        },
+        {
+          "title": "Small boundaries prevent large misunderstandings",
+          "explanation": "Delimiters, placeholders and precise output instructions help separate the task from the material being analysed.",
+          "diagram": {
+            "kind": "compare",
+            "items": [
+              {
+                "label": "Mark source material",
+                "detail": "Use clear headings to distinguish evidence from instructions.",
+                "icon": "file"
+              },
+              {
+                "label": "Permit uncertainty",
+                "detail": "Request a visible placeholder when a necessary fact is missing.",
+                "icon": "shield"
+              },
+              {
+                "label": "Specify the result",
+                "detail": "Name the reader, length and output structure explicitly.",
+                "icon": "target"
+              },
+              {
+                "label": "Review meaning",
+                "detail": "Check that the response follows the evidence as well as the format.",
+                "icon": "check"
+              }
+            ]
+          },
+          "takeaway": "A delimiter is a formatting aid, not a security boundary against malicious source instructions.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m2-t2-v5",
+          "section": "5. Small techniques with big effects",
+          "checkpoint": {
+            "question": "Does “6 of 6 brief parts included” mean that the answer will be correct?",
+            "answer": "No. It reports which instructions are present. It is not a quality score, an AI evaluation or a substitute for checking facts."
+          }
+        }
+      ]
+    },
+    "m2-t3": {
+      "introduction": "A second way to understand “Advanced prompting patterns”: read the original explanation, follow the diagram and play or step through its focus points. All practice stays separate from your reading and quiz requirements.",
+      "sections": [
+        {
+          "title": "Examples teach a pattern, including its mistakes",
+          "explanation": "Few-shot prompting supplies examples of the desired mapping. The examples must be permitted, consistent and relevant.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Choose examples",
+                "detail": "Use representative, safe input/output pairs.",
+                "icon": "file"
+              },
+              {
+                "label": "Show the rule",
+                "detail": "Keep labels and formatting consistent across pairs.",
+                "icon": "layers"
+              },
+              {
+                "label": "Add a new case",
+                "detail": "Test a case that is different enough to expose overfitting.",
+                "icon": "search"
+              },
+              {
+                "label": "Verify the mapping",
+                "detail": "Check the answer independently against the intended rule.",
+                "icon": "check"
+              }
+            ]
+          },
+          "takeaway": "Do not use private records or misleading examples to teach a convenient but wrong pattern.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m2-t3-v1",
+          "section": "Pattern 1 — Few-shot examples"
+        },
+        {
+          "title": "Request inspectable working, then check it",
+          "explanation": "For a calculation or classification, ask for the relevant assumptions, method and checkable result. A generated explanation is not proof of internal reasoning.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "State the inputs",
+                "detail": "Provide a clearly bounded problem and known values.",
+                "icon": "file"
+              },
+              {
+                "label": "Request a method",
+                "detail": "Ask for concise, checkable steps or a calculation table.",
+                "icon": "layers"
+              },
+              {
+                "label": "Test a step",
+                "detail": "Independently reproduce a material intermediate result.",
+                "icon": "search"
+              },
+              {
+                "label": "Check the conclusion",
+                "detail": "Verify that the final claim follows from the stated inputs.",
+                "icon": "check"
+              }
+            ]
+          },
+          "takeaway": "Do not treat verbose reasoning as verification; reproduce the crucial calculation or consult evidence yourself.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m2-t3-v2",
+          "section": "Pattern 2 — Step-by-step reasoning (\"think before you answer\")"
+        },
+        {
+          "title": "Step back to the principle before the case",
+          "explanation": "A broad principle can organise a messy request, but the principle must fit the actual case.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Name the case",
+                "detail": "Describe the real problem without extra assumptions.",
+                "icon": "target"
+              },
+              {
+                "label": "Identify the principle",
+                "detail": "Ask which concept or framework is relevant.",
+                "icon": "layers"
+              },
+              {
+                "label": "Apply cautiously",
+                "detail": "Map the principle onto the supplied facts.",
+                "icon": "link"
+              },
+              {
+                "label": "Check the fit",
+                "detail": "Look for exceptions or facts the abstraction leaves out.",
+                "icon": "check"
+              }
+            ]
+          },
+          "takeaway": "Return to the specific evidence before recommending action.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m2-t3-v3",
+          "section": "Pattern 3 — Step-back prompting"
+        },
+        {
+          "title": "A persona panel is a rehearsal, not research",
+          "explanation": "Simulated perspectives can reveal questions to investigate. They are not interviews with customers or affected people.",
+          "diagram": {
+            "kind": "compare",
+            "items": [
+              {
+                "label": "Different concerns",
+                "detail": "Ask fictional perspectives to raise different objections.",
+                "icon": "users"
+              },
+              {
+                "label": "Shared evidence",
+                "detail": "Give every perspective the same known facts and limitations.",
+                "icon": "file"
+              },
+              {
+                "label": "Real follow-up",
+                "detail": "Turn objections into questions for actual users or reviewers.",
+                "icon": "search"
+              }
+            ]
+          },
+          "takeaway": "Label synthetic voices and validate important assumptions with real authorised evidence.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m2-t3-v4",
+          "section": "Pattern 4 — Persona panel"
+        },
+        {
+          "title": "Critique needs an external standard",
+          "explanation": "Self-critique can improve a draft when there is an explicit rubric, but one model can repeat or defend its own error.",
+          "diagram": {
+            "kind": "cycle",
+            "items": [
+              {
+                "label": "Set criteria",
+                "detail": "Define what correctness, completeness and clarity mean.",
+                "icon": "target"
+              },
+              {
+                "label": "Inspect the draft",
+                "detail": "Ask for specific mismatches with those criteria.",
+                "icon": "search"
+              },
+              {
+                "label": "Revise selectively",
+                "detail": "Change the affected parts without inventing evidence.",
+                "icon": "message"
+              },
+              {
+                "label": "Check independently",
+                "detail": "Reproduce a calculation or open an authoritative source.",
+                "icon": "check"
+              }
+            ],
+            "center": "Critique loop"
+          },
+          "takeaway": "Verify important factual claims independently, including in the revised answer.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m2-t3-v5",
+          "section": "Pattern 5 — Self-critique and revision"
+        },
+        {
+          "title": "A template constrains shape, not truth",
+          "explanation": "An output template helps another person or workflow consume the answer. It cannot guarantee valid content.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Specify fields",
+                "detail": "Name required labels and allowed values.",
+                "icon": "file"
+              },
+              {
+                "label": "Allow unknowns",
+                "detail": "Provide an honest representation for missing information.",
+                "icon": "shield"
+              },
+              {
+                "label": "Validate shape",
+                "detail": "Check required fields and formatting rules.",
+                "icon": "layers"
+              },
+              {
+                "label": "Validate meaning",
+                "detail": "Check that every value is supported by the source.",
+                "icon": "check"
+              }
+            ]
+          },
+          "takeaway": "Validate both the structure and the meaning before accepting a formatted result.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m2-t3-v6",
+          "section": "Pattern 6 — Output templating"
+        },
+        {
+          "title": "A chain needs checks between links",
+          "explanation": "Breaking a task into stages exposes intermediate artefacts. An unchecked early mistake can otherwise flow into every later stage.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Gather evidence",
+                "detail": "Collect permitted material with provenance.",
+                "icon": "search"
+              },
+              {
+                "label": "Produce an intermediate",
+                "detail": "Create a summary or outline tied to that material.",
+                "icon": "file"
+              },
+              {
+                "label": "Review the hand-off",
+                "detail": "Check accuracy and approval before the next step.",
+                "icon": "shield"
+              },
+              {
+                "label": "Build the final",
+                "detail": "Use the verified intermediate and check the final result.",
+                "icon": "check"
+              }
+            ]
+          },
+          "takeaway": "Keep source references through the chain and pause before an external or irreversible action.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m2-t3-v7",
+          "section": "Pattern 7 — Prompt chaining"
+        },
+        {
+          "title": "Match the pattern to the failure",
+          "explanation": "Different patterns solve different communication problems. Use the simplest one that addresses the observed weakness.",
+          "diagram": {
+            "kind": "compare",
+            "items": [
+              {
+                "label": "Wrong shape",
+                "detail": "Use a small template or relevant example.",
+                "icon": "layers"
+              },
+              {
+                "label": "Weak structure",
+                "detail": "Try an outline or a staged workflow.",
+                "icon": "file"
+              },
+              {
+                "label": "Missing perspectives",
+                "detail": "Use a clearly labelled rehearsal panel to generate questions.",
+                "icon": "users"
+              },
+              {
+                "label": "Wrong facts",
+                "detail": "Supply better evidence and verify; prompt decoration cannot create truth.",
+                "icon": "shield"
+              }
+            ]
+          },
+          "takeaway": "More patterns and longer prompts do not automatically improve a response.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m2-t3-v8",
+          "section": "Choosing a pattern"
+        },
+        {
+          "title": "Stop when complexity hides the task",
+          "explanation": "A complicated prompt can introduce contradictions, cost and unnecessary context. Compare the result against a simpler baseline.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Keep a baseline",
+                "detail": "Save the simplest workable brief and output.",
+                "icon": "file"
+              },
+              {
+                "label": "Change one thing",
+                "detail": "Add a pattern to address one diagnosed weakness.",
+                "icon": "target"
+              },
+              {
+                "label": "Compare fairly",
+                "detail": "Use the same criteria and test cases.",
+                "icon": "search"
+              },
+              {
+                "label": "Keep or remove",
+                "detail": "Retain the change only when the evidence supports it.",
+                "icon": "check"
+              }
+            ]
+          },
+          "takeaway": "Discard a pattern that does not improve a relevant, independently checked outcome.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m2-t3-v9",
+          "section": "When patterns hurt",
+          "checkpoint": {
+            "question": "Does a simulated customer panel count as real customer validation?",
+            "answer": "No. It can generate questions, but it must be labelled synthetic and followed by real, authorised user evidence when validation is required."
+          }
+        }
+      ]
+    },
+    "m2-t4": {
+      "introduction": "A second way to understand “Prompting for your discipline”: read the original explanation, follow the diagram and play or step through its focus points. All practice stays separate from your reading and quiz requirements.",
+      "sections": [
+        {
+          "title": "Commerce prompts need source and calculation checks",
+          "explanation": "Use AI to structure an explanation or a working table, not as the authority for a tax, legal or accounting conclusion.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Define the case",
+                "detail": "Use synthetic or authorised figures and state the accounting question.",
+                "icon": "file"
+              },
+              {
+                "label": "Specify a method",
+                "detail": "Request assumptions, units and checkable workings.",
+                "icon": "layers"
+              },
+              {
+                "label": "Reproduce results",
+                "detail": "Recalculate totals and inspect the applicable rule source.",
+                "icon": "check"
+              },
+              {
+                "label": "Review before use",
+                "detail": "Keep specialist decisions with an authorised qualified person.",
+                "icon": "shield"
+              }
+            ]
+          },
+          "takeaway": "Verify applicable rules with current authoritative material and seek qualified review where needed.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m2-t4-v1",
+          "section": "1. Commerce & accounting (B.Com)"
+        },
+        {
+          "title": "Management drafts need a real audience and evidence",
+          "explanation": "A proposed campaign or HR message is useful only when it fits its audience, permissions and actual inputs.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Set the decision",
+                "detail": "State which action the reader will consider.",
+                "icon": "target"
+              },
+              {
+                "label": "Supply evidence",
+                "detail": "Use approved research, product facts or synthetic cases.",
+                "icon": "file"
+              },
+              {
+                "label": "Draft options",
+                "detail": "Ask for alternatives and explicit assumptions.",
+                "icon": "message"
+              },
+              {
+                "label": "Check consequences",
+                "detail": "Review claims, fairness, rights and practical constraints.",
+                "icon": "shield"
+              }
+            ]
+          },
+          "takeaway": "Do not turn invented market research, employee claims or forecast results into business evidence.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m2-t4-v2",
+          "section": "2. Management & marketing (BBA)"
+        },
+        {
+          "title": "Use an arts assistant without losing the source",
+          "explanation": "A writing or humanities task needs a visible boundary between source, interpretation and your own argument.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Read the source",
+                "detail": "Know the passage or evidence before asking for help.",
+                "icon": "file"
+              },
+              {
+                "label": "Ask a bounded question",
+                "detail": "Request comparison, structure or critique tied to the passage.",
+                "icon": "search"
+              },
+              {
+                "label": "Check quotations",
+                "detail": "Find each quotation and citation in the original.",
+                "icon": "check"
+              },
+              {
+                "label": "Write your argument",
+                "detail": "Credit assistance without outsourcing the judgement.",
+                "icon": "message"
+              }
+            ]
+          },
+          "takeaway": "An invented quote or reference remains false even when its prose is elegant.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m2-t4-v3",
+          "section": "3. Arts, humanities & social sciences (BA)"
+        },
+        {
+          "title": "Science prompts need units, method and uncertainty",
+          "explanation": "A scientific explanation or calculation must remain reproducible and consistent with the supplied evidence.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "State inputs",
+                "detail": "Name quantities, units and experimental conditions.",
+                "icon": "file"
+              },
+              {
+                "label": "Ask for a method",
+                "detail": "Request a checkable calculation or explanation.",
+                "icon": "layers"
+              },
+              {
+                "label": "Test independently",
+                "detail": "Check units, plausibility and a calculation by hand.",
+                "icon": "search"
+              },
+              {
+                "label": "Report limits",
+                "detail": "Separate measured values from hypotheses and unknowns.",
+                "icon": "shield"
+              }
+            ]
+          },
+          "takeaway": "Never invent observations or lab results to complete an attractive report.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m2-t4-v4",
+          "section": "4. Science (B.Sc)"
+        },
+        {
+          "title": "Bilingual quality needs a meaning check",
+          "explanation": "Translation quality depends on meaning, terminology and the audience—not merely whether the output is in another script.",
+          "diagram": {
+            "kind": "cycle",
+            "items": [
+              {
+                "label": "Define the reader",
+                "detail": "State language, reading level and desired register.",
+                "icon": "users"
+              },
+              {
+                "label": "Keep terminology",
+                "detail": "Supply a short approved glossary for key terms.",
+                "icon": "file"
+              },
+              {
+                "label": "Compare meanings",
+                "detail": "Review omissions, numbers, names and tone across languages.",
+                "icon": "search"
+              },
+              {
+                "label": "Revise and approve",
+                "detail": "Have an appropriate speaker check the final message.",
+                "icon": "check"
+              }
+            ],
+            "center": "Meaning first"
+          },
+          "takeaway": "Use a fluent reviewer for important communication and retain the original meaning through revisions.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m2-t4-v5",
+          "section": "5. Bilingual prompting for all disciplines",
+          "checkpoint": {
+            "question": "What must a science learner do if an assistant supplies plausible experimental results that were never observed?",
+            "answer": "Reject them as fabricated evidence. Use actual authorised observations or clearly labelled synthetic practice data, and document what is unknown."
+          }
+        }
+      ]
+    },
+    "m2-t5": {
+      "introduction": "A second way to understand “Research & writing assistants”: read the original explanation, follow the diagram and play or step through its focus points. All practice stays separate from your reading and quiz requirements.",
+      "sections": [
+        {
+          "title": "Research tools have different evidence boundaries",
+          "explanation": "A general assistant, a source-search tool and a notebook can all help with research, but none removes your responsibility to inspect sources.",
+          "diagram": {
+            "kind": "compare",
+            "items": [
+              {
+                "label": "General chat",
+                "detail": "Useful for questions and structure; it can invent references.",
+                "icon": "message"
+              },
+              {
+                "label": "Search-oriented tool",
+                "detail": "Can retrieve sources, whose relevance and authority still need review.",
+                "icon": "search"
+              },
+              {
+                "label": "Source notebook",
+                "detail": "Works with a chosen document set; its summaries and quotations still need checking.",
+                "icon": "file"
+              }
+            ]
+          },
+          "takeaway": "A citation icon is a starting point for verification, not a guarantee that the claim is supported.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m2-t5-v1",
+          "section": "1. Three kinds of research tool"
+        },
+        {
+          "title": "Keep a research trail from question to claim",
+          "explanation": "A defensible summary lets a reader trace each important claim back to the underlying material.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Frame the question",
+                "detail": "Set scope, time period and evidence needs.",
+                "icon": "target"
+              },
+              {
+                "label": "Find and open",
+                "detail": "Inspect primary material rather than only search snippets.",
+                "icon": "search"
+              },
+              {
+                "label": "Extract with provenance",
+                "detail": "Record the passage, source and relevant limitation.",
+                "icon": "file"
+              },
+              {
+                "label": "Synthesize and check",
+                "detail": "Write the conclusion and verify every material claim.",
+                "icon": "check"
+              }
+            ]
+          },
+          "takeaway": "Record missing or conflicting evidence rather than smoothing it into a single confident conclusion.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m2-t5-v2",
+          "section": "2. A research workflow that survives scrutiny"
+        },
+        {
+          "title": "Grounded notebooks still need source inspection",
+          "explanation": "A notebook reduces the evidence scope, but extraction and interpretation can still go wrong.",
+          "diagram": {
+            "kind": "cycle",
+            "items": [
+              {
+                "label": "Curate sources",
+                "detail": "Use relevant authorised documents and identify their versions.",
+                "icon": "file"
+              },
+              {
+                "label": "Ask a bounded question",
+                "detail": "State that answers must stay within the source set.",
+                "icon": "message"
+              },
+              {
+                "label": "Open the passage",
+                "detail": "Check the cited location and the surrounding context.",
+                "icon": "search"
+              },
+              {
+                "label": "Correct the summary",
+                "detail": "Fix unsupported statements and preserve uncertainty.",
+                "icon": "check"
+              }
+            ],
+            "center": "Source-grounded"
+          },
+          "takeaway": "If the source does not contain the answer, “not stated” is preferable to a plausible completion.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m2-t5-v3",
+          "section": "3. Getting the most from a notebook tool"
+        },
+        {
+          "title": "A long research report can scale an error",
+          "explanation": "Automated research can collect more material quickly, which increases the need for sampling and claim checks.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Set a brief",
+                "detail": "Define the question and acceptable source types.",
+                "icon": "target"
+              },
+              {
+                "label": "Review the plan",
+                "detail": "Check whether the search is likely to answer the right question.",
+                "icon": "search"
+              },
+              {
+                "label": "Audit findings",
+                "detail": "Open consequential and surprising claims in their sources.",
+                "icon": "file"
+              },
+              {
+                "label": "Keep a limitations note",
+                "detail": "State what was not covered and what remains unresolved.",
+                "icon": "shield"
+              }
+            ]
+          },
+          "takeaway": "Length and number of links do not establish source quality or factual completeness.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m2-t5-v4",
+          "section": "4. Deep-research modes"
+        },
+        {
+          "title": "Cite the material you actually used",
+          "explanation": "Citation is a traceability practice. It should identify a real source that you opened and that supports the specific claim.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Open the original",
+                "detail": "Confirm the source exists and inspect the relevant passage.",
+                "icon": "search"
+              },
+              {
+                "label": "Check metadata",
+                "detail": "Verify author, title, date and location rather than copying a generated citation.",
+                "icon": "file"
+              },
+              {
+                "label": "Link the claim",
+                "detail": "Make sure the source supports that sentence, not only the topic.",
+                "icon": "link"
+              },
+              {
+                "label": "Credit assistance",
+                "detail": "Follow the task’s AI-use and referencing policy.",
+                "icon": "shield"
+              }
+            ]
+          },
+          "takeaway": "Disclose AI assistance separately from crediting the underlying evidence.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m2-t5-v5",
+          "section": "5. Citing honestly",
+          "checkpoint": {
+            "question": "Can you cite a paper you have only seen as an assistant-generated reference?",
+            "answer": "No. Locate and open the actual source, verify its metadata and supporting passage, then cite the material you really used."
+          }
+        }
+      ]
+    },
+    "m2-t6": {
+      "introduction": "A second way to understand “Evaluating & refining GenAI outputs”: read the original explanation, follow the diagram and play or step through its focus points. All practice stays separate from your reading and quiz requirements.",
+      "sections": [
+        {
+          "title": "A short fact check should prioritise consequence",
+          "explanation": "Check the claims that would materially change the reader’s decision. A quick routine is a triage method, not certification of every sentence.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Extract claims",
+                "detail": "Identify names, dates, figures, quotations and recommendations.",
+                "icon": "search"
+              },
+              {
+                "label": "Rank consequence",
+                "detail": "Prioritise what would cause harm or change a decision if wrong.",
+                "icon": "target"
+              },
+              {
+                "label": "Verify independently",
+                "detail": "Use an authoritative source or reproduce the calculation.",
+                "icon": "check"
+              },
+              {
+                "label": "Document uncertainty",
+                "detail": "Record the unsupported point and the effect on the conclusion.",
+                "icon": "file"
+              }
+            ]
+          },
+          "takeaway": "If an important claim cannot be checked, qualify or remove it rather than rely on confident wording.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m2-t6-v1",
+          "section": "1. The five-minute fact-check routine"
+        },
+        {
+          "title": "Use the same rubric on every candidate",
+          "explanation": "The five criteria make an output easier to inspect, but a high average must not conceal a material falsehood.",
+          "diagram": {
+            "kind": "hub",
+            "items": [
+              {
+                "label": "Correct",
+                "detail": "Facts and calculations match evidence.",
+                "icon": "check"
+              },
+              {
+                "label": "Complete",
+                "detail": "The required parts of the task are present.",
+                "icon": "layers"
+              },
+              {
+                "label": "Constraint-compliant",
+                "detail": "Scope, length, format and safety limits are followed.",
+                "icon": "shield"
+              },
+              {
+                "label": "Clear",
+                "detail": "The intended reader can understand and use it.",
+                "icon": "message"
+              },
+              {
+                "label": "Credible",
+                "detail": "Claims are traceable and uncertainty is explicit.",
+                "icon": "file"
+              }
+            ],
+            "center": "Review criteria"
+          },
+          "takeaway": "Treat a serious correctness or safety failure as a reason to stop, not a score to average away.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m2-t6-v2",
+          "section": "2. A rubric you can use on anything"
+        },
+        {
+          "title": "Writing style is not an AI detector",
+          "explanation": "Generic phrasing can be a reason to improve writing. It is not reliable evidence of authorship or factual error on its own.",
+          "diagram": {
+            "kind": "compare",
+            "items": [
+              {
+                "label": "Stylistic signal",
+                "detail": "Repetition or vague language can weaken a piece.",
+                "icon": "message"
+              },
+              {
+                "label": "Substantive check",
+                "detail": "Inspect evidence, correctness and concrete meaning.",
+                "icon": "search"
+              },
+              {
+                "label": "Revision goal",
+                "detail": "Make the writing specific and useful without fabricating details.",
+                "icon": "check"
+              }
+            ]
+          },
+          "takeaway": "Evaluate substance and provenance; do not accuse someone based only on style.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m2-t6-v3",
+          "section": "3. Spotting AI tells"
+        },
+        {
+          "title": "A/B testing needs a fixed question",
+          "explanation": "Changing one prompt element helps attribute a difference in the tested outputs. Multiple runs and a fixed rubric reduce cherry-picking.",
+          "diagram": {
+            "kind": "cycle",
+            "items": [
+              {
+                "label": "Keep a baseline",
+                "detail": "Use a known task, evidence package and evaluation rule.",
+                "icon": "file"
+              },
+              {
+                "label": "Change one factor",
+                "detail": "Alter the specific instruction you want to test.",
+                "icon": "target"
+              },
+              {
+                "label": "Run and compare",
+                "detail": "Record successes and failures under consistent conditions.",
+                "icon": "search"
+              },
+              {
+                "label": "Retest a choice",
+                "detail": "Try different relevant cases before saving the change.",
+                "icon": "repeat"
+              }
+            ],
+            "center": "Prompt test"
+          },
+          "takeaway": "A favourable small test does not prove that the prompt always works.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m2-t6-v4",
+          "section": "4. A/B testing prompts"
+        },
+        {
+          "title": "A prompt library is an evidence library",
+          "explanation": "A reusable prompt should carry its purpose, limits and checks rather than only its wording.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Name the trigger",
+                "detail": "State when the prompt is useful and when it is not.",
+                "icon": "target"
+              },
+              {
+                "label": "Store the brief",
+                "detail": "Keep a clear input template without private data.",
+                "icon": "file"
+              },
+              {
+                "label": "Attach evidence",
+                "detail": "Link example results, failed cases and review notes.",
+                "icon": "link"
+              },
+              {
+                "label": "Version the entry",
+                "detail": "Record a change and its required verification step.",
+                "icon": "repeat"
+              }
+            ]
+          },
+          "takeaway": "Revalidate stored prompts when the task, tool or source requirements change.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m2-t6-v5",
+          "section": "5. Your prompt library",
+          "checkpoint": {
+            "question": "Can a strong average rubric score outweigh a fabricated source in the answer?",
+            "answer": "No. A material falsehood or safety failure needs correction or rejection; it must not be averaged away by good formatting or clarity."
+          }
+        }
+      ]
+    },
+    "m2-pb1": {
+      "introduction": "A second way to understand “Project Block 1 — Personal Prompt Playbook”: read the original explanation, follow the diagram and play or step through its focus points. All practice stays separate from your reading and quiz requirements.",
+      "sections": [
+        {
+          "title": "Personal Prompt Playbook: from purpose to evidence",
+          "explanation": "Ten reusable prompts for actual degree or career tasks, each tested and independently checked.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Purpose",
+                "detail": "Ten reusable prompts for actual degree or career tasks, each tested and independently checked.",
+                "icon": "target"
+              },
+              {
+                "label": "Build an artefact",
+                "detail": "Create the required work for the stated audience and scope.",
+                "icon": "layers"
+              },
+              {
+                "label": "Verify and explain",
+                "detail": "Keep test evidence, permissions, limitations and your contribution.",
+                "icon": "check"
+              }
+            ]
+          },
+          "takeaway": "Use the full original brief for requirements, timing and marks; this diagram is a companion, not a replacement.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m2-pb1-v1",
+          "section": "The brief"
+        },
+        {
+          "title": "Organise the personal prompt playbook evidence pack",
+          "explanation": "Group the required files so a reviewer can inspect the work and its checks. The detailed checklist above remains unchanged.",
+          "diagram": {
+            "kind": "hub",
+            "items": [
+              {
+                "label": "Ten tested entries",
+                "detail": "Include each trigger, final brief, patterns, tool choice, example and version note.",
+                "icon": "file"
+              },
+              {
+                "label": "Prompt chain",
+                "detail": "Show one substantial chain; it counts as at most three of the ten entries.",
+                "icon": "link"
+              },
+              {
+                "label": "Bilingual example",
+                "detail": "Include at least one appropriate Indian-language and English prompt.",
+                "icon": "message"
+              },
+              {
+                "label": "Evidence log",
+                "detail": "Keep at least eight comparison rows and the specific checks performed.",
+                "icon": "search"
+              },
+              {
+                "label": "Reflection",
+                "detail": "Explain failures, useful patterns and a task you will not delegate.",
+                "icon": "repeat"
+              },
+              {
+                "label": "Cover and disclosure",
+                "detail": "Identify the learner, programme, goal and AI assistance honestly.",
+                "icon": "shield"
+              }
+            ],
+            "center": "Evidence pack"
+          },
+          "takeaway": "Reading the brief is not submission, external project marking or facilitator approval.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m2-pb1-v2",
+          "section": "What to submit"
+        },
+        {
+          "title": "Ten prompts need breadth as well as polish",
+          "explanation": "The original coverage allocates ten prompt purposes. Keep the task choice tied to your degree and goal.",
+          "diagram": {
+            "kind": "compare",
+            "items": [
+              {
+                "label": "Produce · 3",
+                "detail": "Draft useful material and show the relevant output check.",
+                "icon": "file"
+              },
+              {
+                "label": "Analyse · 2",
+                "detail": "Compare or calculate with independently checkable evidence.",
+                "icon": "chart"
+              },
+              {
+                "label": "Learn · 2",
+                "detail": "Use explanations or practice that you can assess.",
+                "icon": "search"
+              },
+              {
+                "label": "Communicate · 1",
+                "detail": "Serve a non-expert or community audience.",
+                "icon": "message"
+              },
+              {
+                "label": "Critique · 1",
+                "detail": "Apply a relevant panel or rubric with verification.",
+                "icon": "users"
+              },
+              {
+                "label": "Your goal · 1",
+                "detail": "Choose a prompt that supports your stated course goal.",
+                "icon": "target"
+              }
+            ]
+          },
+          "takeaway": "A prompt chain can count as up to three entries, not ten additional entries; retain the original counting rules.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m2-pb1-v3",
+          "section": "Coverage requirements"
+        },
+        {
+          "title": "Plan, build, check and revise",
+          "explanation": "Use the original suggested schedule to reserve time for review rather than doing all the checking after the final export.",
+          "diagram": {
+            "kind": "cycle",
+            "items": [
+              {
+                "label": "Plan the scope",
+                "detail": "Start from the actual brief, required outputs and permitted inputs.",
+                "icon": "target"
+              },
+              {
+                "label": "Build deliberately",
+                "detail": "Work in small versions and retain intermediate artefacts.",
+                "icon": "layers"
+              },
+              {
+                "label": "Review evidence",
+                "detail": "Run the relevant source, language, functionality and safety checks.",
+                "icon": "search"
+              },
+              {
+                "label": "Revise and submit",
+                "detail": "Record the change and organise the complete evidence package.",
+                "icon": "file"
+              }
+            ],
+            "center": "Project workflow"
+          },
+          "takeaway": "Keep the process log while working; do not reconstruct fictitious experiments or approvals afterwards.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m2-pb1-v4",
+          "section": "Process (suggested)"
+        },
+        {
+          "title": "Make the published criteria inspectable",
+          "explanation": "The original rubric, weights, pass threshold and any caps remain authoritative. These panels point to the evidence behind its criteria.",
+          "diagram": {
+            "kind": "compare",
+            "items": [
+              {
+                "label": "Prompt quality",
+                "detail": "Make the brief precise enough for someone else to use.",
+                "icon": "message"
+              },
+              {
+                "label": "Evidence and verification",
+                "detail": "Show real tests, checks and a caught or examined failure.",
+                "icon": "search"
+              },
+              {
+                "label": "Coverage and usefulness",
+                "detail": "Meet the full original coverage and your actual task needs.",
+                "icon": "target"
+              },
+              {
+                "label": "Reflection and disclosure",
+                "detail": "Explain your learning and AI assistance specifically.",
+                "icon": "file"
+              }
+            ]
+          },
+          "takeaway": "The animation does not grade work, award marks or override a safety or integrity cap.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m2-pb1-v5",
+          "section": "Rubric (7 marks)"
+        },
+        {
+          "title": "Use the review habits, not a success formula",
+          "explanation": "The original tips are practical prompts for reflection, not guarantees of a result or new assessment conditions.",
+          "diagram": {
+            "kind": "compare",
+            "items": [
+              {
+                "label": "Use a real task",
+                "detail": "Choose work you genuinely need rather than an invented showcase.",
+                "icon": "target"
+              },
+              {
+                "label": "Name the exact check",
+                "detail": "Describe the source or calculation you will inspect afterwards.",
+                "icon": "search"
+              },
+              {
+                "label": "Let a peer run it",
+                "detail": "Record where someone else cannot reproduce the intended result.",
+                "icon": "users"
+              }
+            ]
+          },
+          "takeaway": "Choose the habit that addresses your actual weakness and keep evidence of the correction.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m2-pb1-v6",
+          "section": "Tips from previous cohorts"
+        },
+        {
+          "title": "Separate tool help from your responsibility",
+          "explanation": "A useful statement tells the reviewer where assistance entered and what the learner independently checked.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Name the assistance",
+                "detail": "Identify tools and the tasks for which they were used.",
+                "icon": "message"
+              },
+              {
+                "label": "Trace the evidence",
+                "detail": "State which real sources, tests and outputs were checked.",
+                "icon": "file"
+              },
+              {
+                "label": "Own the judgement",
+                "detail": "Describe selection, revisions, decisions and individual or team contributions.",
+                "icon": "users"
+              },
+              {
+                "label": "Follow the policy",
+                "detail": "Keep assessment restrictions and rights boundaries intact.",
+                "icon": "shield"
+              }
+            ]
+          },
+          "takeaway": "Disclosure cannot legitimise fabricated evidence, prohibited tool use or missing permission.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m2-pb1-v7",
+          "section": "AI-use statement template",
+          "checkpoint": {
+            "question": "Can ten unchanged prompts copied from the lessons demonstrate your own playbook quality?",
+            "answer": "No. Adapt them to your actual tasks, test them, record checks and explain the changes. Follow the complete original submission and coverage rules."
+          }
+        }
+      ]
+    }
+  }
+}

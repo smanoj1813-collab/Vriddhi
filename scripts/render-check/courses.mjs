@@ -403,6 +403,49 @@ for (const illustratedPack of illustratedPacks) {
           await v.click(v.el('[role="switch"]'));
           check(`${courseId}: visual layer can be restored without navigating`, v.all('.course-illustration').length === companion.sections.length, v.text());
         }
+        if (['genai-certification', 'hr-analytics'].includes(courseId) && topic.id === 'm1-t1') {
+          const diagram = v.el('.course-animated-diagram');
+          const count = companion.sections[0].diagram.items.length;
+          const before = JSON.stringify({ ...localStorage });
+          check(`${courseId}: walkthrough is opt-in and exposes all static focus points`,
+            !diagram.hasAttribute('data-playing') && diagram.querySelectorAll('.course-diagram-item').length === count
+              && diagram.querySelectorAll('[aria-label="Diagram focus steps"] button').length === count, diagram.textContent);
+          await v.click(diagram.querySelector('[aria-label="Next diagram step"]'));
+          check(`${courseId}: manual focus moves the highlight without hiding the explanation`,
+            diagram.querySelector('[data-walkthrough-status]').textContent.includes(`Focus 2 of ${count}`)
+              && diagram.querySelectorAll('.course-diagram-item[data-active="true"]').length === 1
+              && diagram.querySelectorAll('.course-diagram-item').length === count, diagram.textContent);
+          check(`${courseId}: manual walkthrough does not write completion or other storage`, JSON.stringify({ ...localStorage }) === before);
+        }
+        if (courseId === 'genai-certification' && topic.id === 'm2-t2') {
+          const lab = v.el('.course-prompt-lab');
+          const before = JSON.stringify({ ...localStorage });
+          const prompt = () => lab.querySelector('textarea').value;
+          check('prompt lab: six-part brief retains unconfirmed facts as placeholders',
+            /6 of 6/.test(lab.querySelector('output').textContent) && prompt().includes('[DATE TO CONFIRM]') && lab.querySelector('textarea').readOnly, prompt());
+          await v.click(lab.querySelector('input[type="checkbox"]'));
+          check('prompt lab: toggling a part removes only its example from the assembled brief',
+            /5 of 6/.test(lab.querySelector('output').textContent) && !prompt().includes('Fictional practice: a Mysuru college') && prompt().includes('[DATE TO CONFIRM]'), prompt());
+          await v.click(v.byText('Reset prompt'));
+          check('prompt lab: reset restores the six parts without a progress side effect',
+            /6 of 6/.test(lab.querySelector('output').textContent) && JSON.stringify({ ...localStorage }) === before, lab.textContent);
+        }
+        if (courseId === 'hr-analytics' && topic.id === 'm4-t2') {
+          const lab = v.el('.course-workforce-lab');
+          const before = JSON.stringify({ ...localStorage });
+          const output = () => lab.querySelector('output').textContent;
+          const sliders = lab.querySelectorAll('input[type="range"]');
+          check('workforce lab: the separate synthetic breakdown reproduces the original headline rates', /turnover: 10%.*retention: 92%/.test(output()), output());
+          await v.change(sliders[3], '4');
+          check('workforce lab: joiner exits change turnover without changing fixed-cohort retention', /turnover: 10.96%.*retention: 92%/.test(output()), output());
+          await v.change(sliders[0], '0');
+          await v.change(sliders[1], '0');
+          check('workforce lab: reducing cohorts caps their exits and preserves honest undefined rates',
+            sliders[2].value === '0' && sliders[3].value === '0' && (output().match(/Not defined/g) ?? []).length === 2, output());
+          await v.click(v.byText('Reset workforce'));
+          check('workforce lab: reset restores the scenario without a progress side effect',
+            /turnover: 10%.*retention: 92%/.test(output()) && JSON.stringify({ ...localStorage }) === before, output());
+        }
         if (courseId === 'digital-marketing' && topic.id === 'm1-t2') {
           check('funnel lab: initial forecast uses chained rates and media CPA', /3 expected customers.*1,000/.test(v.el('output')?.textContent ?? ''), v.text());
           await v.change(v.el('input[type="range"]'), '6');

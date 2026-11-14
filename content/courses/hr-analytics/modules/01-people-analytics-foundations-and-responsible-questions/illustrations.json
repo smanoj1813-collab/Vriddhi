@@ -1,0 +1,340 @@
+{
+  "moduleId": "m1",
+  "topics": {
+    "m1-t1": {
+      "introduction": "A second way to understand “From HR activity to a decision question”: read the original explanation, follow the diagram and play or step through its focus points. All practice stays separate from your reading and quiz requirements.",
+      "sections": [
+        {
+          "title": "Start with the decision, not the chart",
+          "explanation": "A useful HR question connects a defined population and period to an action someone is authorised to consider.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Decision owner",
+                "detail": "Name who needs to decide and what authority they have.",
+                "icon": "users"
+              },
+              {
+                "label": "Question and boundary",
+                "detail": "Specify the population, period and operational concern.",
+                "icon": "target"
+              },
+              {
+                "label": "Relevant evidence",
+                "detail": "Choose data that can answer that question safely.",
+                "icon": "file"
+              },
+              {
+                "label": "Proportionate action",
+                "detail": "Recommend a next check or bounded process change.",
+                "icon": "check"
+              }
+            ]
+          },
+          "takeaway": "A count of activity does not prove that the activity improved hiring or workforce outcomes.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m1-t1-v1",
+          "section": "1. Start with the decision and stakeholder"
+        },
+        {
+          "title": "Four analysis types are different questions",
+          "explanation": "Description, diagnosis, prediction and action evaluation are not a mandatory maturity ladder. A careful count may be enough.",
+          "diagram": {
+            "kind": "compare",
+            "items": [
+              {
+                "label": "Describe",
+                "detail": "What happened under an explicit counting rule?",
+                "icon": "file"
+              },
+              {
+                "label": "Investigate",
+                "detail": "Which explanations should be checked next?",
+                "icon": "search"
+              },
+              {
+                "label": "Predict",
+                "detail": "What might occur under stated modelling assumptions?",
+                "icon": "chart"
+              },
+              {
+                "label": "Evaluate action",
+                "detail": "Which options deserve an authorised, proportionate test?",
+                "icon": "shield"
+              }
+            ]
+          },
+          "takeaway": "An association is not a cause, and a prediction is not permission for an employment decision.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m1-t1-v2",
+          "section": "2. Separate levels of analysis"
+        },
+        {
+          "title": "Define what one row and one count mean",
+          "explanation": "An application, a person, a requisition and an employment event are different analytical units.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Name the grain",
+                "detail": "State what one record represents.",
+                "icon": "file"
+              },
+              {
+                "label": "Choose the key",
+                "detail": "Identify the field or combination that should be unique.",
+                "icon": "link"
+              },
+              {
+                "label": "Set inclusion rules",
+                "detail": "Declare periods, statuses and exclusions.",
+                "icon": "filter"
+              },
+              {
+                "label": "Record a dictionary",
+                "detail": "Make the definition reproducible for another analyst.",
+                "icon": "check"
+              }
+            ]
+          },
+          "takeaway": "Keep the definition stable during a comparison rather than changing it to improve the result.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m1-t1-v3",
+          "section": "3. Use operational definitions",
+          "checkpoint": {
+            "question": "Does a higher interview count prove that hiring improved?",
+            "answer": "No. It describes activity under a counting rule. The decision needs suitable outcome evidence, a defined population and context."
+          }
+        }
+      ]
+    },
+    "m1-t2": {
+      "introduction": "A second way to understand “Employee lifecycle and a useful metric dictionary”: read the original explanation, follow the diagram and play or step through its focus points. All practice stays separate from your reading and quiz requirements.",
+      "sections": [
+        {
+          "title": "Follow the event and the responsible owner",
+          "explanation": "A candidate moves through distinct lifecycle events. Acceptance, joining, development and exit are not interchangeable states.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Plan and attract",
+                "detail": "Define the approved need and the recruitment owner.",
+                "icon": "target"
+              },
+              {
+                "label": "Select and offer",
+                "detail": "Use job-related evidence and record the actual decision events.",
+                "icon": "file"
+              },
+              {
+                "label": "Join and develop",
+                "detail": "Confirm entry, onboarding and later changes with the relevant owner.",
+                "icon": "users"
+              },
+              {
+                "label": "Move or exit",
+                "detail": "Record effective dates and distinguish transfers from organisation exits.",
+                "icon": "clock"
+              }
+            ]
+          },
+          "takeaway": "Do not count an accepted offer as a confirmed join or a payroll row as proof of active employment.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m1-t2-v1",
+          "section": "1. Map stages and owners"
+        },
+        {
+          "title": "A metric dictionary is an agreement about meaning",
+          "explanation": "The label on a dashboard must connect to an inspectable formula, source and business use.",
+          "diagram": {
+            "kind": "hub",
+            "items": [
+              {
+                "label": "Question",
+                "detail": "Which decision will the metric support?",
+                "icon": "target"
+              },
+              {
+                "label": "Formula",
+                "detail": "What are the numerator and eligible denominator?",
+                "icon": "chart"
+              },
+              {
+                "label": "Boundary",
+                "detail": "Which period, population and exclusions apply?",
+                "icon": "filter"
+              },
+              {
+                "label": "Source and owner",
+                "detail": "Who maintains the input and definition?",
+                "icon": "users"
+              },
+              {
+                "label": "Limitations",
+                "detail": "What would make the result incomplete or misleading?",
+                "icon": "shield"
+              }
+            ],
+            "center": "Metric dictionary"
+          },
+          "takeaway": "Do not average metrics whose populations or time conventions are incompatible.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m1-t2-v2",
+          "section": "2. Build a metric dictionary before a dashboard"
+        },
+        {
+          "title": "A stock is a state; a flow is an event count",
+          "explanation": "Snapshots and interval events reconcile only when dates, population and movement rules agree.",
+          "diagram": {
+            "kind": "compare",
+            "items": [
+              {
+                "label": "Snapshot",
+                "detail": "Count active people at a stated point in time.",
+                "icon": "clock"
+              },
+              {
+                "label": "Period flow",
+                "detail": "Count included joins, exits and movements during an interval.",
+                "icon": "repeat"
+              },
+              {
+                "label": "Boundary check",
+                "detail": "Apply the correct organisation or department rules before reconciling.",
+                "icon": "check"
+              }
+            ]
+          },
+          "takeaway": "Internal transfers cancel at organisation level but change department totals.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m1-t2-v3",
+          "section": "3. Snapshots and flows answer different questions",
+          "checkpoint": {
+            "question": "Should a transfer between two departments reduce total organisation headcount?",
+            "answer": "Not if the person remains in the organisation under the same counting scope. It changes department movements, which must be reconciled separately."
+          }
+        }
+      ]
+    },
+    "m1-t3": {
+      "introduction": "A second way to understand “Privacy, access and safe people-data practice”: read the original explanation, follow the diagram and play or step through its focus points. All practice stays separate from your reading and quiz requirements.",
+      "sections": [
+        {
+          "title": "A field needs a purpose before it needs a formula",
+          "explanation": "Minimising data reduces exposure and often makes the analysis clearer. The course uses synthetic records, not real employee data.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Define the question",
+                "detail": "Identify the minimum evidence needed.",
+                "icon": "target"
+              },
+              {
+                "label": "Remove unnecessary fields",
+                "detail": "Prefer aggregates or synthetic examples for practice.",
+                "icon": "filter"
+              },
+              {
+                "label": "Confirm access",
+                "detail": "Use authorised storage, processing and recipients.",
+                "icon": "shield"
+              },
+              {
+                "label": "Review sharing",
+                "detail": "Send only the layer the recipient actually needs.",
+                "icon": "check"
+              }
+            ]
+          },
+          "takeaway": "Do not upload identifiable candidate or employee records to public AI tools or personal accounts.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m1-t3-v1",
+          "section": "1. Purpose and minimum necessary data"
+        },
+        {
+          "title": "Replacing a name does not guarantee anonymity",
+          "explanation": "A re-identification key, a rare role or a combination of filters can reveal a person behind a pseudonym.",
+          "diagram": {
+            "kind": "hub",
+            "items": [
+              {
+                "label": "Direct key",
+                "detail": "An ID can still link to an identifiable source.",
+                "icon": "link"
+              },
+              {
+                "label": "Rare combination",
+                "detail": "Role, location and tenure may narrow to one person.",
+                "icon": "users"
+              },
+              {
+                "label": "Small cell",
+                "detail": "A tiny group can reveal individual outcomes.",
+                "icon": "search"
+              },
+              {
+                "label": "Complementary inference",
+                "detail": "Totals or adjacent views can expose a suppressed value.",
+                "icon": "layers"
+              }
+            ],
+            "center": "Disclosure review"
+          },
+          "takeaway": "Review indirect disclosure and complementary totals; a classroom small-cell threshold is not a legal anonymity guarantee.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m1-t3-v2",
+          "section": "2. Pseudonymisation is not anonymity"
+        },
+        {
+          "title": "Governance is more than a checkbox",
+          "explanation": "Purpose, authority, access, retention and remedies must match the actual processing arrangement.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Establish authority",
+                "detail": "Confirm the permitted purpose and applicable process.",
+                "icon": "shield"
+              },
+              {
+                "label": "Apply safeguards",
+                "detail": "Limit fields, access and retention appropriately.",
+                "icon": "filter"
+              },
+              {
+                "label": "Support review",
+                "detail": "Provide the required correction, concern and rights routes.",
+                "icon": "users"
+              },
+              {
+                "label": "Check the actual workflow",
+                "detail": "Verify controls and update them when the use changes.",
+                "icon": "check"
+              }
+            ]
+          },
+          "takeaway": "Check current official requirements through qualified institutional owners; a classroom diagram is not legal advice.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m1-t3-v3",
+          "section": "3. Governance is broader than a consent checkbox",
+          "checkpoint": {
+            "question": "If names are replaced with IDs, is a workforce spreadsheet automatically anonymous?",
+            "answer": "No. IDs, rare combinations, small groups and totals can still enable re-identification. Review the actual sharing and disclosure risks."
+          }
+        }
+      ]
+    }
+  }
+}

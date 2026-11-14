@@ -50,7 +50,16 @@ export interface CourseRaciRow extends CourseDiagramItem {
   assignments: CourseRaciCode[]
 }
 
+export interface CourseWorkforceScenario {
+  opening: number
+  joiners: number
+  openingLeavers: number
+  joinerLeavers: number
+}
+
 export type CourseDiagram =
+  | { kind: 'prompt'; items: (CourseDiagramItem & { example: string })[] }
+  | { kind: 'workforce'; items: CourseDiagramItem[]; scenario: CourseWorkforceScenario }
   | CourseScheduleDiagram
   | { kind: 'board'; items: CourseBoardColumn[] }
   | { kind: 'raci'; roles: string[]; items: CourseRaciRow[] }
@@ -77,6 +86,8 @@ export interface CourseIllustration {
   /** A visible source/scale note; numeric examples must be labelled synthetic. */
   caption: string
   takeaway: string
+  /** Optional, user-started focus animation. Never hides the reading or gates progress. */
+  walkthrough?: boolean
   checkpoint?: { question: string; answer: string }
 }
 

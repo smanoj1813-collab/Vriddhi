@@ -1,0 +1,646 @@
+{
+  "moduleId": "m2",
+  "topics": {
+    "m2-t1": {
+      "introduction": "A second way to understand “Data structure, quality and cleaning”: read the original explanation, follow the diagram and play or step through its focus points. All practice stays separate from your reading and quiz requirements.",
+      "sections": [
+        {
+          "title": "A duplicate depends on the grain",
+          "explanation": "A person can submit valid applications for more than one role. Deduplicating by the wrong key can delete legitimate records.",
+          "diagram": {
+            "kind": "compare",
+            "items": [
+              {
+                "label": "Person",
+                "detail": "One individual may appear in more than one application.",
+                "icon": "users"
+              },
+              {
+                "label": "Application",
+                "detail": "One application needs its own appropriate identifier.",
+                "icon": "file"
+              },
+              {
+                "label": "Event",
+                "detail": "Several interviews or updates can belong to that application.",
+                "icon": "repeat"
+              },
+              {
+                "label": "Duplicate candidate",
+                "detail": "A repeated application key needs inspection against the defined grain.",
+                "icon": "search"
+              }
+            ]
+          },
+          "takeaway": "Investigate repeated keys and conflicting versions; do not silently delete rows just to get a tidy table.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m2-t1-v1",
+          "section": "1. Understand the grain and key"
+        },
+        {
+          "title": "Cleaning should leave an audit trail",
+          "explanation": "Keep raw data unchanged and make transformations explicit so someone else can reproduce them.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Preserve raw input",
+                "detail": "Keep a read-only source copy and its provenance.",
+                "icon": "file"
+              },
+              {
+                "label": "Transform a working copy",
+                "detail": "Use declared mappings and date conventions.",
+                "icon": "layers"
+              },
+              {
+                "label": "Log each rule",
+                "detail": "Record what changed, why and how many rows were affected.",
+                "icon": "message"
+              },
+              {
+                "label": "Quarantine uncertainty",
+                "detail": "Keep impossible or unresolved records visible for review.",
+                "icon": "shield"
+              }
+            ]
+          },
+          "takeaway": "A blank, zero and not-applicable value mean different things; do not invent a convenient replacement.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m2-t1-v2",
+          "section": "2. Preserve source and make changes traceable"
+        },
+        {
+          "title": "Quality is several checks, not a blank-free sheet",
+          "explanation": "Keys, validity, completeness, chronology and reconciliation test different failure modes.",
+          "diagram": {
+            "kind": "cycle",
+            "items": [
+              {
+                "label": "Check keys and fields",
+                "detail": "Inspect uniqueness and required input coverage.",
+                "icon": "search"
+              },
+              {
+                "label": "Check values and order",
+                "detail": "Test allowed categories and plausible event dates.",
+                "icon": "clock"
+              },
+              {
+                "label": "Reconcile counts",
+                "detail": "Explain changes to rows and distinct entities.",
+                "icon": "chart"
+              },
+              {
+                "label": "Document unresolved cases",
+                "detail": "Preserve exclusions and their analytical effect.",
+                "icon": "file"
+              }
+            ],
+            "center": "Data quality"
+          },
+          "takeaway": "A clean-looking dataset may still have incomplete coverage; report what remains unknown.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m2-t1-v3",
+          "section": "3. Check validity, completeness and reconciliation",
+          "checkpoint": {
+            "question": "Should all rows sharing a candidate ID be deleted except one?",
+            "answer": "Not automatically. Define the grain first: the same candidate may legitimately have multiple applications or events with different keys."
+          }
+        }
+      ]
+    },
+    "m2-t2": {
+      "introduction": "A second way to understand “Spreadsheet formulas and reconciliation”: read the original explanation, follow the diagram and play or step through its focus points. All practice stays separate from your reading and quiz requirements.",
+      "sections": [
+        {
+          "title": "Choose the operation that answers the question",
+          "explanation": "Counting records, adding quantities and joining reference fields are different spreadsheet operations.",
+          "diagram": {
+            "kind": "compare",
+            "items": [
+              {
+                "label": "COUNTIFS",
+                "detail": "Count records satisfying the stated conditions.",
+                "icon": "filter"
+              },
+              {
+                "label": "SUMIFS",
+                "detail": "Add an appropriate numeric field for those conditions.",
+                "icon": "chart"
+              },
+              {
+                "label": "Exact lookup",
+                "detail": "Attach reference information using the correct identifier.",
+                "icon": "link"
+              },
+              {
+                "label": "Manual check",
+                "detail": "Reproduce a small result to verify the operation and ranges.",
+                "icon": "check"
+              }
+            ]
+          },
+          "takeaway": "Check exact keys and unmatched lookups; a successful formula can still answer the wrong question.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m2-t2-v1",
+          "section": "1. Use formulas appropriate to the question"
+        },
+        {
+          "title": "A zero denominator is not a zero rate",
+          "explanation": "A percentage requires an eligible denominator in the same period or cohort. Missing references are another problem, not a reason to return zero.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Identify the population",
+                "detail": "Apply the relevant cohort and period filters.",
+                "icon": "users"
+              },
+              {
+                "label": "Count the denominator",
+                "detail": "Check that eligible exposure exists.",
+                "icon": "search"
+              },
+              {
+                "label": "Calculate if valid",
+                "detail": "Divide compatible counts only when the denominator is positive.",
+                "icon": "chart"
+              },
+              {
+                "label": "Explain the exception",
+                "detail": "Keep zero-denominator and missing-input states distinct.",
+                "icon": "shield"
+              }
+            ]
+          },
+          "takeaway": "Use an explicit undefined or not-applicable label and preserve the underlying counts.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m2-t2-v2",
+          "section": "2. Guard denominators explicitly"
+        },
+        {
+          "title": "The summary must reconcile to its detail",
+          "explanation": "A pivot can aggregate duplicates or omitted categories as efficiently as valid data. Aggregation is not a cleaning step.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Fix the filter",
+                "detail": "Use a documented population and period.",
+                "icon": "filter"
+              },
+              {
+                "label": "Include all categories",
+                "detail": "Keep unknown classifications visible.",
+                "icon": "layers"
+              },
+              {
+                "label": "Compare total and detail",
+                "detail": "Inspect counts as well as formula outputs.",
+                "icon": "search"
+              },
+              {
+                "label": "Change a test input",
+                "detail": "Confirm that the summary updates as expected.",
+                "icon": "check"
+              }
+            ]
+          },
+          "takeaway": "Check that mutually exclusive, exhaustive groups add to the same filtered total, including Unknown where appropriate.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m2-t2-v3",
+          "section": "3. Reconcile detail to summary",
+          "checkpoint": {
+            "question": "If no offers were issued, is the offer-acceptance rate 0%?",
+            "answer": "No. It is not defined for that group because the denominator is zero. Keep the counts visible and use a clear not-applicable label."
+          }
+        }
+      ]
+    },
+    "m2-t3": {
+      "introduction": "A second way to understand “Pivots, distributions and analytical notes”: read the original explanation, follow the diagram and play or step through its focus points. All practice stays separate from your reading and quiz requirements.",
+      "sections": [
+        {
+          "title": "Mean and median describe different features",
+          "explanation": "A mean responds to every value; a median locates the middle ordered observation. Neither is automatically the right summary.",
+          "diagram": {
+            "kind": "compare",
+            "items": [
+              {
+                "label": "Mean",
+                "detail": "Useful for an arithmetic average, but sensitive to extreme values.",
+                "icon": "chart"
+              },
+              {
+                "label": "Median",
+                "detail": "Describes the central ordered case and can suit a skewed distribution.",
+                "icon": "filter"
+              },
+              {
+                "label": "Distribution",
+                "detail": "Range and shape reveal what one summary can conceal.",
+                "icon": "layers"
+              },
+              {
+                "label": "Operational context",
+                "detail": "A difficult genuine vacancy may be important rather than erroneous.",
+                "icon": "search"
+              }
+            ]
+          },
+          "takeaway": "Investigate an extreme case before deleting it, and report sample size and context.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m2-t3-v1",
+          "section": "1. Mean and median answer different questions"
+        },
+        {
+          "title": "Segmentation can reveal or manufacture a story",
+          "explanation": "A group comparison needs consistent definitions, adequate coverage and a disclosure review.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Name the decision",
+                "detail": "Choose the relevant group comparison.",
+                "icon": "target"
+              },
+              {
+                "label": "Check comparability",
+                "detail": "Align definitions, periods and role mix.",
+                "icon": "search"
+              },
+              {
+                "label": "Inspect stability and privacy",
+                "detail": "Avoid tiny cells and misleading percentage swings.",
+                "icon": "shield"
+              },
+              {
+                "label": "Keep the limitation",
+                "detail": "Explain what the grouping cannot establish.",
+                "icon": "file"
+              }
+            ]
+          },
+          "takeaway": "An overall change can reflect a different role mix rather than worse performance within each role.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m2-t3-v2",
+          "section": "2. Segment with a purpose"
+        },
+        {
+          "title": "An analytical note separates fact from interpretation",
+          "explanation": "Start with the observed count or rate, then state possible explanations and the evidence needed to test them.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Observation",
+                "detail": "State the result, period, sample and definition.",
+                "icon": "file"
+              },
+              {
+                "label": "Hypotheses",
+                "detail": "List plausible explanations without presenting them as facts.",
+                "icon": "search"
+              },
+              {
+                "label": "Needed checks",
+                "detail": "Identify missing records or process-owner questions.",
+                "icon": "users"
+              },
+              {
+                "label": "Proportionate recommendation",
+                "detail": "Propose a bounded next step with an owner.",
+                "icon": "target"
+              }
+            ]
+          },
+          "takeaway": "A descriptive result does not justify blaming a recruiter or employee.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m2-t3-v3",
+          "section": "3. Write observations before explanations",
+          "checkpoint": {
+            "question": "If overall time-to-fill rises, must every recruiter have become slower?",
+            "answer": "No. Role mix, difficult vacancies, timing and other factors can change the overall result. Compare like groups and investigate before attributing blame."
+          }
+        }
+      ]
+    },
+    "m2-pb1": {
+      "introduction": "A second way to understand “Project Block 1 — HR data quality and definitions”: read the original explanation, follow the diagram and play or step through its focus points. All practice stays separate from your reading and quiz requirements.",
+      "sections": [
+        {
+          "title": "HR data quality and definitions: connect the question to evidence",
+          "explanation": "A reproducible synthetic workbook with preserved sources, definitions, cleaning decisions and reconciled summaries.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Question",
+                "detail": "A reproducible synthetic workbook with preserved sources, definitions, cleaning decisions and reconciled summaries.",
+                "icon": "target"
+              },
+              {
+                "label": "Evidence",
+                "detail": "Use the original practice material with explicit provenance.",
+                "icon": "file"
+              },
+              {
+                "label": "Decision",
+                "detail": "Explain a bounded recommendation and the evidence that could change it.",
+                "icon": "check"
+              }
+            ]
+          },
+          "takeaway": "The app records reading and quizzes; external project submission, verification and marking remain with the institution.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m2-pb1-v1",
+          "section": "The brief"
+        },
+        {
+          "title": "Keep synthetic fixtures and authority boundaries separate",
+          "explanation": "The practice tables are independent examples, not linked real employee records. Use the original inputs and log every deliberate scenario change.",
+          "diagram": {
+            "kind": "compare",
+            "items": [
+              {
+                "label": "Provenance",
+                "detail": "Identify the fixture, grain, period and original source copy.",
+                "icon": "file"
+              },
+              {
+                "label": "Separation",
+                "detail": "Do not join independent populations as if they were one company dataset.",
+                "icon": "layers"
+              },
+              {
+                "label": "Permission",
+                "detail": "Use synthetic inputs and the institution-approved submission route.",
+                "icon": "shield"
+              },
+              {
+                "label": "Honest context",
+                "detail": "Do not report simulated interviews, approvals or outcomes as live events.",
+                "icon": "users"
+              }
+            ]
+          },
+          "takeaway": "No real personal dataset, paid tool or live organisational access is required or authorised by this project.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m2-pb1-v2",
+          "section": "Inputs and working boundaries"
+        },
+        {
+          "title": "Reserve time for correction, not only construction",
+          "explanation": "The original work-plan table supplies the timing. This map groups the work into a review loop without changing those allocations.",
+          "diagram": {
+            "kind": "cycle",
+            "items": [
+              {
+                "label": "Frame",
+                "detail": "Read the decision and inspect source boundaries.",
+                "icon": "target"
+              },
+              {
+                "label": "Build",
+                "detail": "Create the required artefacts with traceable formulas or decisions.",
+                "icon": "layers"
+              },
+              {
+                "label": "Check",
+                "detail": "Reproduce the headline and inspect assumptions and safeguards.",
+                "icon": "search"
+              },
+              {
+                "label": "Review and revise",
+                "detail": "Use peer or self-review and keep a change log.",
+                "icon": "repeat"
+              },
+              {
+                "label": "Explain and submit",
+                "detail": "Finish the recommendation, disclosure and evidence index.",
+                "icon": "file"
+              }
+            ],
+            "center": "Project work"
+          },
+          "takeaway": "A first draft is not a finished artefact; retain the comment and your response after review.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m2-pb1-v3",
+          "section": "Work plan"
+        },
+        {
+          "title": "Organise the hr data quality and definitions submission",
+          "explanation": "These groups help you locate evidence; the full numbered submission checklist above still defines every required component.",
+          "diagram": {
+            "kind": "hub",
+            "items": [
+              {
+                "label": "Raw and cleaned layers",
+                "detail": "Declare row grain, keys and provenance.",
+                "icon": "file"
+              },
+              {
+                "label": "Dictionary",
+                "detail": "Keep at least eight fields and four metrics with boundaries and rules.",
+                "icon": "layers"
+              },
+              {
+                "label": "Quality log",
+                "detail": "Record duplicates, missing values and impossible-date decisions.",
+                "icon": "search"
+              },
+              {
+                "label": "Checked summaries",
+                "detail": "Show formulas or pivots, two hand checks and reconciled totals.",
+                "icon": "chart"
+              },
+              {
+                "label": "Privacy and limitations",
+                "detail": "Explain access, safe sharing and what remains unresolved.",
+                "icon": "shield"
+              }
+            ],
+            "center": "Evidence index"
+          },
+          "takeaway": "A public portfolio copy must be safe and clearly labelled; it is not a substitute for the editable institutional submission.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m2-pb1-v4",
+          "section": "What to submit"
+        },
+        {
+          "title": "Reconcile the declared application cohort",
+          "explanation": "The base fixture is a mature synthetic cohort of 24 distinct applications, split evenly across two sources. Keep counts traceable through cleaning and summary layers.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "24 applications",
+                "detail": "Twelve per source under the declared application-level grain.",
+                "icon": "file"
+              },
+              {
+                "label": "12 offers",
+                "detail": "Count offers within that same mature cohort.",
+                "icon": "users"
+              },
+              {
+                "label": "9 acceptances",
+                "detail": "Keep acceptances separate from offers and joins.",
+                "icon": "check"
+              },
+              {
+                "label": "7 joins",
+                "detail": "Joining is a later event, not a synonym for accepting.",
+                "icon": "clock"
+              }
+            ]
+          },
+          "takeaway": "A correct-looking pivot is not enough: preserve the raw data, define the application key and reconcile transformations before using the headline.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m2-pb1-v5",
+          "section": "Acceptance and self-check"
+        },
+        {
+          "title": "Follow the original rubric and its evidence standard",
+          "explanation": "The original block or capstone marks, performance anchors and institutional award conditions are unchanged.",
+          "diagram": {
+            "kind": "compare",
+            "items": [
+              {
+                "label": "Correctness and reproducibility",
+                "detail": "Trace the method and results to the declared source and definitions.",
+                "icon": "check"
+              },
+              {
+                "label": "Judgement and safeguards",
+                "detail": "Show uncertainty, appropriate authority and safe handling.",
+                "icon": "shield"
+              },
+              {
+                "label": "Clarity, evidence and reflection",
+                "detail": "Make claims inspectable and explain corrections.",
+                "icon": "file"
+              }
+            ]
+          },
+          "takeaway": "These panels and animations do not calculate marks, approve projects or award an external credential.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m2-pb1-v6",
+          "section": "Rubric"
+        },
+        {
+          "title": "Review the recommendation from a challenger’s view",
+          "explanation": "A reviewer should be able to trace a claim, test an assumption and understand which action needs another role’s approval.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Trace a headline",
+                "detail": "Find the calculation or artefact behind the main claim.",
+                "icon": "file"
+              },
+              {
+                "label": "Challenge an assumption",
+                "detail": "Ask what missing evidence could reverse the action.",
+                "icon": "search"
+              },
+              {
+                "label": "Check authority",
+                "detail": "Name who is permitted to approve a consequential decision.",
+                "icon": "users"
+              },
+              {
+                "label": "Inspect sharing",
+                "detail": "Choose evidence that can safely appear in the public version.",
+                "icon": "shield"
+              }
+            ]
+          },
+          "takeaway": "Keep the actual review comment and your correction or explanation instead of claiming a review that never happened.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m2-pb1-v7",
+          "section": "Review questions"
+        },
+        {
+          "title": "Explain assistance without outsourcing judgement",
+          "explanation": "Complete the original AI-use statement even when no AI was used. Tool help must not fabricate records, sources or experience.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Name tools or none",
+                "detail": "State the actual assistance and permitted synthetic inputs.",
+                "icon": "message"
+              },
+              {
+                "label": "Record your checks",
+                "detail": "Explain accepted, changed and rejected suggestions and independent verification.",
+                "icon": "check"
+              },
+              {
+                "label": "Own the work",
+                "detail": "Describe your contribution, judgement and responsibility for the final claims.",
+                "icon": "users"
+              }
+            ]
+          },
+          "takeaway": "Do not upload real employee, candidate, student or credential data to public AI tools; follow exam restrictions separately.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m2-pb1-v8",
+          "section": "AI-use statement"
+        },
+        {
+          "title": "An extension tests an assumption after the core is complete",
+          "explanation": "The optional extension is not required for full marks. Keep the original work and distinguish a changed scenario from an observation.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Complete the core",
+                "detail": "Finish the required evidence and safeguards first.",
+                "icon": "check"
+              },
+              {
+                "label": "A deliberately unmatched key",
+                "detail": "Show the failed lookup and keep it distinct from a genuine zero.",
+                "icon": "search"
+              },
+              {
+                "label": "Compare and document",
+                "detail": "Show what changed, which conclusion depends on it and what remains unknown.",
+                "icon": "file"
+              }
+            ]
+          },
+          "takeaway": "More complexity does not improve a submission if the reasoning and safeguards cannot be reproduced.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m2-pb1-v9",
+          "section": "Optional extension",
+          "checkpoint": {
+            "question": "Can repeated rows be counted as new applications just because the pivot total increases?",
+            "answer": "No. Preserve raw inputs, define the application-level grain and inspect repeated keys. The published base cohort has 24 distinct applications; log any correction and reconcile summaries to the cleaned detail."
+          }
+        }
+      ]
+    }
+  }
+}

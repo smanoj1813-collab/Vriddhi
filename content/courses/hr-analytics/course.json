@@ -5,8 +5,8 @@
   "title": "HR Analytics — Certificate Program",
   "shortTitle": "HR Analytics",
   "tagline": "Turn recruitment and workforce data into clear metrics, trustworthy dashboards and responsible people decisions.",
-  "version": "1.0.0",
-  "lastReviewed": "2026-09-28",
+  "version": "1.1.0",
+  "lastReviewed": "2026-11-13",
   "owner": "Vriddhi Academic Cloud — Learning Content",
   "audience": "Beginner undergraduate learners (B.Com, BBA, BA, B.Sc) preparing for HR Executive, HR Analyst, Talent Acquisition Associate roles. No coding or prior industry experience required.",
   "level": "Beginner → applied workplace practice",
@@ -560,5 +560,9 @@
     "requireAllTopicsRead": true,
     "requireAllLessonQuizzes": true
   },
-  "lessonQuizQuestionCount": 5
+  "lessonQuizQuestionCount": 5,
+  "illustrations": {
+    "title": "See the people behind the numbers.",
+    "description": "Keep every original explanation and follow cohort funnels, worked metric charts and privacy-aware decision maps. Explore workforce denominators in a local practice lab, with optional animations or manual steps."
+  }
 }

@@ -5,8 +5,8 @@
   "title": "GenAI for Career Impact — Certificate Program",
   "shortTitle": "GenAI Certification",
   "tagline": "Go from AI-curious to AI-capable: prompt, create, automate, build and launch — responsibly.",
-  "version": "1.1.0",
-  "lastReviewed": "2026-09-26",
+  "version": "1.2.0",
+  "lastReviewed": "2026-11-13",
   "owner": "Vriddhi Academic Cloud — Learning Content",
   "audience": "Non-technical undergraduate students (B.Com, BBA, BA, B.Sc) in affiliated colleges. No coding required.",
   "level": "Beginner → job-ready practitioner",
@@ -751,5 +751,9 @@
     "requireAllTopicsRead": true,
     "requireAllLessonQuizzes": true
   },
-  "lessonQuizQuestionCount": 15
+  "lessonQuizQuestionCount": 15,
+  "illustrations": {
+    "title": "Make AI useful. Keep human judgement.",
+    "description": "Keep every original explanation and explore a second way to learn: prompt-building, generation and retrieval maps, responsible-AI diagrams and optional, learner-controlled animations. Try the local prompt lab without sending an AI request."
+  }
 }

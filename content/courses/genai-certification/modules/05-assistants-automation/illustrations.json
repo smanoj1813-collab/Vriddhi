@@ -1,0 +1,1381 @@
+{
+  "moduleId": "m5",
+  "topics": {
+    "m5-t1": {
+      "introduction": "A second way to understand “Custom GPTs, Gems & Projects: purpose-built assistants”: read the original explanation, follow the diagram and play or step through its focus points. All practice stays separate from your reading and quiz requirements.",
+      "sections": [
+        {
+          "title": "An assistant is a configured system, not a new authority",
+          "explanation": "Persistent instructions, selected sources and permitted tools shape the experience. They do not make an answer official or reliable by default.",
+          "diagram": {
+            "kind": "hub",
+            "items": [
+              {
+                "label": "Instructions",
+                "detail": "Define purpose, audience, behaviour and limits.",
+                "icon": "message"
+              },
+              {
+                "label": "Knowledge",
+                "detail": "Provide an authorised, maintained source set.",
+                "icon": "file"
+              },
+              {
+                "label": "Capabilities",
+                "detail": "Enable only the tools the use case requires.",
+                "icon": "layers"
+              },
+              {
+                "label": "Entry points",
+                "detail": "Write starters that make the intended scope clear.",
+                "icon": "cursor"
+              },
+              {
+                "label": "Sharing",
+                "detail": "Choose who can use it and who owns maintenance.",
+                "icon": "users"
+              }
+            ],
+            "center": "Configuration"
+          },
+          "takeaway": "Review configuration and actual behaviour; a friendly name is not a safety control.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m5-t1-v1",
+          "section": "1. What a custom assistant is"
+        },
+        {
+          "title": "Write the assistant’s operating brief",
+          "explanation": "An instruction set should explain what the system does, what evidence it uses and how it handles uncertainty.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Identity and audience",
+                "detail": "Name a narrow purpose and the people it serves.",
+                "icon": "target"
+              },
+              {
+                "label": "Evidence and behaviour",
+                "detail": "Specify source priority, language and response style.",
+                "icon": "file"
+              },
+              {
+                "label": "Limits and refusal",
+                "detail": "Explain what is outside scope and how to report missing evidence.",
+                "icon": "shield"
+              },
+              {
+                "label": "Reviewable output",
+                "detail": "Ask for sources or checkable structure and test the result.",
+                "icon": "check"
+              }
+            ]
+          },
+          "takeaway": "Instructions alone do not enforce permissions or make unsupported answers true.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m5-t1-v2",
+          "section": "2. Anatomy of a good instruction set"
+        },
+        {
+          "title": "A knowledge file is both evidence and exposure",
+          "explanation": "File quality affects retrieval, while the system’s access rules determine who may receive its content.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Authorise material",
+                "detail": "Confirm that the tool and audience may process the document.",
+                "icon": "shield"
+              },
+              {
+                "label": "Prepare and version",
+                "detail": "Use readable text, clear headings and current sources.",
+                "icon": "file"
+              },
+              {
+                "label": "Test retrieval",
+                "detail": "Ask questions whose answers and locations you know.",
+                "icon": "search"
+              },
+              {
+                "label": "Test the boundary",
+                "detail": "Check unknown questions and inappropriate extraction requests.",
+                "icon": "check"
+              }
+            ]
+          },
+          "takeaway": "Do not rely on a “do not reveal” prompt to protect a confidential document.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m5-t1-v3",
+          "section": "3. Knowledge files"
+        },
+        {
+          "title": "The first minute should establish scope",
+          "explanation": "A short description and useful starters help a learner understand what an assistant can and cannot do.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Describe the purpose",
+                "detail": "Say who it helps and what it is not.",
+                "icon": "message"
+              },
+              {
+                "label": "Offer concrete starters",
+                "detail": "Use a few representative tasks rather than broad promises.",
+                "icon": "layers"
+              },
+              {
+                "label": "Ask an orienting question",
+                "detail": "Get the unit, goal or context needed for the task.",
+                "icon": "users"
+              },
+              {
+                "label": "Show a source route",
+                "detail": "Make it easy to check the answer or reach a human.",
+                "icon": "link"
+              }
+            ]
+          },
+          "takeaway": "Do not imply college endorsement or official policy authority that the build does not have.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m5-t1-v4",
+          "section": "4. Conversation starters and the first minute"
+        },
+        {
+          "title": "Test more than the happy path",
+          "explanation": "Typical requests, legitimate edge cases, absent knowledge and misuse attempts reveal different weaknesses.",
+          "diagram": {
+            "kind": "compare",
+            "items": [
+              {
+                "label": "Normal tasks",
+                "detail": "Check expected questions with known answers.",
+                "icon": "check"
+              },
+              {
+                "label": "Edge cases",
+                "detail": "Try long, multilingual or unusual but permitted inputs.",
+                "icon": "layers"
+              },
+              {
+                "label": "Knowledge boundaries",
+                "detail": "Ask about facts that are missing or conflicted.",
+                "icon": "search"
+              },
+              {
+                "label": "Misuse attempts",
+                "detail": "Test whether scope and tool permissions remain enforced.",
+                "icon": "shield"
+              }
+            ]
+          },
+          "takeaway": "A single successful chat is not a test plan or deployment clearance.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m5-t1-v5",
+          "section": "5. Testing like a product person"
+        },
+        {
+          "title": "Sharing starts a maintenance obligation",
+          "explanation": "An assistant needs an owner, feedback path and a way to withdraw unsafe or stale behaviour.",
+          "diagram": {
+            "kind": "cycle",
+            "items": [
+              {
+                "label": "Review before release",
+                "detail": "Complete content, capability and access checks.",
+                "icon": "search"
+              },
+              {
+                "label": "Disclose limitations",
+                "detail": "Explain that this is a fallible student-built assistant.",
+                "icon": "message"
+              },
+              {
+                "label": "Assign ownership",
+                "detail": "Name a source updater and a feedback channel.",
+                "icon": "users"
+              },
+              {
+                "label": "Retest or withdraw",
+                "detail": "Review changed sources and disable unsafe behaviour.",
+                "icon": "repeat"
+              }
+            ],
+            "center": "Maintain trust"
+          },
+          "takeaway": "Private or link-only sharing is not a substitute for data permissions and access testing.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m5-t1-v6",
+          "section": "6. Sharing responsibly",
+          "checkpoint": {
+            "question": "Can a prompt saying “never reveal this file” make a confidential knowledge file safe to upload?",
+            "answer": "No. Enforce actual data and access permissions, use an approved processing arrangement and test the boundary. Prompt wording is not access control."
+          }
+        }
+      ]
+    },
+    "m5-t2": {
+      "introduction": "A second way to understand “Giving AI your knowledge: RAG without code”: read the original explanation, follow the diagram and play or step through its focus points. All practice stays separate from your reading and quiz requirements.",
+      "sections": [
+        {
+          "title": "Retrieval adds evidence at answer time",
+          "explanation": "RAG retrieves relevant material for a question instead of assuming the general model knows local policy or current facts.",
+          "diagram": {
+            "kind": "compare",
+            "items": [
+              {
+                "label": "General model",
+                "detail": "Has learned patterns but may lack your organisation’s current facts.",
+                "icon": "layers"
+              },
+              {
+                "label": "Authorised source set",
+                "detail": "Contains the local documents the system is allowed to use.",
+                "icon": "file"
+              },
+              {
+                "label": "Question-time retrieval",
+                "detail": "Selects passages to include with this particular request.",
+                "icon": "search"
+              },
+              {
+                "label": "Checked answer",
+                "detail": "Still requires source support and appropriate permissions.",
+                "icon": "check"
+              }
+            ]
+          },
+          "takeaway": "Retrieval augments context; it does not automatically retrain the model or verify the answer.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m5-t2-v1",
+          "section": "1. Why models need your documents"
+        },
+        {
+          "title": "Follow the RAG pipeline and its failure points",
+          "explanation": "This six-panel map groups embedding and storage together; the original seven-operation table remains above. Every hand-off can lose context or introduce a mistake.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Ingest",
+                "detail": "Convert authorised documents to readable text; check OCR and table structure.",
+                "icon": "file"
+              },
+              {
+                "label": "Chunk",
+                "detail": "Keep useful passages and their headings together.",
+                "icon": "layers"
+              },
+              {
+                "label": "Embed and store",
+                "detail": "Index representations and retain provenance, versions and access boundaries.",
+                "icon": "link"
+              },
+              {
+                "label": "Retrieve",
+                "detail": "Find permitted passages relevant to the question; important evidence can be missed.",
+                "icon": "search"
+              },
+              {
+                "label": "Ground and generate",
+                "detail": "Provide the question, passages and instructions; allow an honest “not stated”.",
+                "icon": "message"
+              },
+              {
+                "label": "Show and verify sources",
+                "detail": "Open the cited passages and check that they support the actual claims.",
+                "icon": "check"
+              }
+            ]
+          },
+          "takeaway": "A retrieved or cited passage is not automatically relevant, current or supportive of the generated sentence.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m5-t2-v2",
+          "section": "2. The pipeline, step by step"
+        },
+        {
+          "title": "Document preparation is part of model quality",
+          "explanation": "Bad extraction, unclear headings and mixed versions make relevant evidence harder to retrieve correctly.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Make text readable",
+                "detail": "Check OCR, headings and tables against the original.",
+                "icon": "file"
+              },
+              {
+                "label": "Keep context together",
+                "detail": "Use coherent sections and define local terminology.",
+                "icon": "layers"
+              },
+              {
+                "label": "Record provenance",
+                "detail": "Identify date, version and source ownership.",
+                "icon": "clock"
+              },
+              {
+                "label": "Minimise and test",
+                "detail": "Remove unnecessary personal data and test language-specific questions.",
+                "icon": "shield"
+              }
+            ]
+          },
+          "takeaway": "Remove superseded material deliberately and keep a source owner; an index is not self-maintaining.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m5-t2-v3",
+          "section": "3. Preparing documents for retrieval"
+        },
+        {
+          "title": "A notebook is a source-grounding practice space",
+          "explanation": "Use a bounded, authorised source collection to inspect how answers relate to passages.",
+          "diagram": {
+            "kind": "cycle",
+            "items": [
+              {
+                "label": "Curate a set",
+                "detail": "Choose relevant permitted documents for one purpose.",
+                "icon": "file"
+              },
+              {
+                "label": "Ask a question",
+                "detail": "Include source boundaries and allow uncertainty.",
+                "icon": "message"
+              },
+              {
+                "label": "Open citations",
+                "detail": "Compare the answer with the full relevant passage.",
+                "icon": "search"
+              },
+              {
+                "label": "Probe missing evidence",
+                "detail": "Ask absent, conflicting and cross-source questions.",
+                "icon": "repeat"
+              }
+            ],
+            "center": "Grounding lab"
+          },
+          "takeaway": "Do not treat a source-grounded tool as permission to upload restricted documents.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m5-t2-v4",
+          "section": "4. NotebookLM as a RAG lab"
+        },
+        {
+          "title": "Grounding tests include honest non-answers",
+          "explanation": "An answer can fail by citing the wrong source or inventing a rule that the documents do not contain.",
+          "diagram": {
+            "kind": "compare",
+            "items": [
+              {
+                "label": "Direct and combined facts",
+                "detail": "Check both single-passage answers and cross-source synthesis.",
+                "icon": "file"
+              },
+              {
+                "label": "Absent answers",
+                "detail": "Expect the system to acknowledge missing evidence.",
+                "icon": "shield"
+              },
+              {
+                "label": "Misleading premises",
+                "detail": "Check that a false assumption is challenged.",
+                "icon": "search"
+              },
+              {
+                "label": "Conflicting versions",
+                "detail": "Require a conflict notice or a clarification request.",
+                "icon": "check"
+              }
+            ]
+          },
+          "takeaway": "Assess correctness, citation support and boundary behaviour separately; a small score is not broad safety certification.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m5-t2-v5",
+          "section": "5. The grounding test"
+        },
+        {
+          "title": "RAG has limits beyond a better prompt",
+          "explanation": "Retrieval scope, access, document freshness and the kind of question constrain what a grounded assistant can do.",
+          "diagram": {
+            "kind": "hub",
+            "items": [
+              {
+                "label": "Coverage",
+                "detail": "Relevant evidence can exist but fail to retrieve.",
+                "icon": "search"
+              },
+              {
+                "label": "Freshness",
+                "detail": "An unchanged index can contain obsolete documents.",
+                "icon": "clock"
+              },
+              {
+                "label": "Calculation",
+                "detail": "Dataset-wide totals need explicit complete data and reproducible computation.",
+                "icon": "chart"
+              },
+              {
+                "label": "Security",
+                "detail": "Actual permissions must limit who can retrieve what.",
+                "icon": "shield"
+              },
+              {
+                "label": "Support",
+                "detail": "Citations must be checked against each material claim.",
+                "icon": "check"
+              }
+            ],
+            "center": "Know the limits"
+          },
+          "takeaway": "Use a validated calculation workflow for whole-table arithmetic; do not mistake a few retrieved rows for the dataset.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m5-t2-v6",
+          "section": "6. Limits of RAG",
+          "checkpoint": {
+            "question": "A RAG answer cites a real policy document. Is the answer necessarily correct?",
+            "answer": "No. Open the cited passage and check relevance, version, access and whether it supports that exact claim. The system can retrieve or cite the wrong material."
+          }
+        }
+      ]
+    },
+    "m5-t3": {
+      "introduction": "A second way to understand “Low-code automation with AI steps”: read the original explanation, follow the diagram and play or step through its focus points. All practice stays separate from your reading and quiz requirements.",
+      "sections": [
+        {
+          "title": "An automation is a controlled event-to-action path",
+          "explanation": "Triggers, conditions and actions describe how work moves. AI is one possible step, not the authority for every action.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Trigger",
+                "detail": "A specific event starts a run.",
+                "icon": "clock"
+              },
+              {
+                "label": "Validate and route",
+                "detail": "Check required inputs and select an allowed path.",
+                "icon": "filter"
+              },
+              {
+                "label": "Perform a bounded action",
+                "detail": "Use only the necessary connected capability.",
+                "icon": "cursor"
+              },
+              {
+                "label": "Log and recover",
+                "detail": "Record outcomes and route failures to an owner.",
+                "icon": "file"
+              }
+            ]
+          },
+          "takeaway": "Define what starts a run, what may continue and what stops it.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m5-t3-v1",
+          "section": "1. The vocabulary of automation"
+        },
+        {
+          "title": "Platform choice includes operational responsibility",
+          "explanation": "A fast setup, a visual workflow and self-hosting make different trade-offs. Tool pricing and limits change.",
+          "diagram": {
+            "kind": "compare",
+            "items": [
+              {
+                "label": "Workflow fit",
+                "detail": "Check branching, connectors and the required actions.",
+                "icon": "link"
+              },
+              {
+                "label": "Data and authority",
+                "detail": "Inspect processing locations, access and permitted material.",
+                "icon": "shield"
+              },
+              {
+                "label": "Operating effort",
+                "detail": "Account for quotas, maintenance and someone owning failures.",
+                "icon": "clock"
+              },
+              {
+                "label": "Exit path",
+                "detail": "Know how to pause, export or replace the workflow.",
+                "icon": "repeat"
+              }
+            ]
+          },
+          "takeaway": "Choose an authorised platform with maintainable credentials, data handling and a realistic failure plan.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m5-t3-v2",
+          "section": "2. Choosing a platform"
+        },
+        {
+          "title": "Paper design exposes the missing control",
+          "explanation": "A design card should show inputs, decisions, outward effects and failure paths before the platform is connected.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Map inputs",
+                "detail": "List fields, sources and sensitivity.",
+                "icon": "file"
+              },
+              {
+                "label": "Draw the route",
+                "detail": "Name validations, branches and the narrow AI job.",
+                "icon": "layers"
+              },
+              {
+                "label": "Place approval",
+                "detail": "Identify the person before an external or consequential action.",
+                "icon": "users"
+              },
+              {
+                "label": "Plan failure",
+                "detail": "Set a review queue, bounded retry and a kill switch.",
+                "icon": "shield"
+              }
+            ]
+          },
+          "takeaway": "Keep test destinations under your control; do not send unreviewed test messages to real recipients.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m5-t3-v3",
+          "section": "3. Design on paper first"
+        },
+        {
+          "title": "AI output is untrusted input to the next step",
+          "explanation": "A structured result still needs validation. Self-reported confidence is not a calibrated probability of correctness.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Limit the job",
+                "detail": "Ask for one classification, extraction or draft at a time.",
+                "icon": "target"
+              },
+              {
+                "label": "Constrain the shape",
+                "detail": "Specify allowed fields, values and an explicit unknown state.",
+                "icon": "layers"
+              },
+              {
+                "label": "Validate independently",
+                "detail": "Check schema, source support and content rules outside the model.",
+                "icon": "search"
+              },
+              {
+                "label": "Approve or review",
+                "detail": "Use an authorised checkpoint before outward effects.",
+                "icon": "shield"
+              }
+            ]
+          },
+          "takeaway": "Unknown labels, malformed fields and unsupported content should go to review, not to a guessed default.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m5-t3-v4",
+          "section": "4. AI steps done right"
+        },
+        {
+          "title": "Starter flows share the same control pattern",
+          "explanation": "Triage, form response and content drafting differ in their business purpose but still require bounded inputs and human oversight.",
+          "diagram": {
+            "kind": "compare",
+            "items": [
+              {
+                "label": "Inbox triage",
+                "detail": "Classify permitted messages and route ambiguous cases.",
+                "icon": "mail"
+              },
+              {
+                "label": "Form response",
+                "detail": "Use verified fields in an approved reply template.",
+                "icon": "message"
+              },
+              {
+                "label": "Content pipeline",
+                "detail": "Create a draft, review it and publish only after permission.",
+                "icon": "file"
+              }
+            ]
+          },
+          "takeaway": "A “Draft” status should not imply publication authority.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m5-t3-v5",
+          "section": "5. Three starter automations"
+        },
+        {
+          "title": "Contain errors before they become repeated actions",
+          "explanation": "A wrong action can scale through a loop, retry or broad connector permission. Recovery needs to be designed, tested and owned.",
+          "diagram": {
+            "kind": "cycle",
+            "items": [
+              {
+                "label": "Limit scope",
+                "detail": "Use least-privilege accounts and test-only recipients.",
+                "icon": "shield"
+              },
+              {
+                "label": "Detect failures",
+                "detail": "Validate outputs and surface errors rather than dropping them.",
+                "icon": "search"
+              },
+              {
+                "label": "Pause or recover",
+                "detail": "Stop unsafe sends and send unresolved cases to an owner.",
+                "icon": "users"
+              },
+              {
+                "label": "Review the log",
+                "detail": "Inspect repeated runs and revoke obsolete credentials.",
+                "icon": "repeat"
+              }
+            ],
+            "center": "Safe recovery"
+          },
+          "takeaway": "Use bounded retries and idempotent actions where possible; a retry must not multiply outward effects.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m5-t3-v6",
+          "section": "6. Risks and how to contain them",
+          "checkpoint": {
+            "question": "Can a model’s “0.95 confidence” replace validation before an automation sends a message?",
+            "answer": "No. A self-reported score is not calibrated correctness. Validate source fields and output shape, and keep the appropriate human approval gate."
+          }
+        }
+      ]
+    },
+    "m5-t4": {
+      "introduction": "A second way to understand “Business process design: finding what to automate”: read the original explanation, follow the diagram and play or step through its focus points. All practice stays separate from your reading and quiz requirements.",
+      "sections": [
+        {
+          "title": "Map the work before changing it",
+          "explanation": "A process map makes role changes, waiting and error-prone hand-offs visible. Observed work is more reliable than an idealised procedure.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Observe",
+                "detail": "Record what people actually do and where work waits.",
+                "icon": "search"
+              },
+              {
+                "label": "Name roles",
+                "detail": "Identify who owns each step or decision.",
+                "icon": "users"
+              },
+              {
+                "label": "Trace hand-offs",
+                "detail": "Mark where information or authority changes hands.",
+                "icon": "link"
+              },
+              {
+                "label": "Check the map",
+                "detail": "Review it with the people who do the work.",
+                "icon": "check"
+              }
+            ]
+          },
+          "takeaway": "Keep processing time, waiting time and responsibility distinct.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m5-t4-v1",
+          "section": "1. Mapping a process"
+        },
+        {
+          "title": "A scorecard supports judgement, not permission",
+          "explanation": "Frequency, clarity, time, errors, data readiness and harm help compare candidates. A high score cannot override an unacceptable risk.",
+          "diagram": {
+            "kind": "hub",
+            "items": [
+              {
+                "label": "Frequency and effort",
+                "detail": "Check how often work occurs and the real time involved.",
+                "icon": "clock"
+              },
+              {
+                "label": "Rule clarity",
+                "detail": "Ask whether inputs and acceptable results are explicit.",
+                "icon": "file"
+              },
+              {
+                "label": "Error consequences",
+                "detail": "Consider both current failures and new automation harms.",
+                "icon": "shield"
+              },
+              {
+                "label": "Data readiness",
+                "detail": "Inspect completeness, structure and permitted access.",
+                "icon": "layers"
+              },
+              {
+                "label": "Human fit",
+                "detail": "Keep the needed judgement and ownership visible.",
+                "icon": "users"
+              }
+            ],
+            "center": "Candidate review"
+          },
+          "takeaway": "Treat high-consequence or unauthorised work as a reason to stop or redesign, not an average to offset.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m5-t4-v2",
+          "section": "2. The automation scorecard"
+        },
+        {
+          "title": "Estimate return with the review cost included",
+          "explanation": "A forecast should include human checking, implementation, usage and maintenance rather than only the seconds saved by a model.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Set a baseline",
+                "detail": "Record volume, handling time and current error work.",
+                "icon": "file"
+              },
+              {
+                "label": "Estimate the new work",
+                "detail": "Include validation, exceptions and human approval.",
+                "icon": "clock"
+              },
+              {
+                "label": "Count all costs",
+                "detail": "Add platform, usage, build and maintenance assumptions.",
+                "icon": "chart"
+              },
+              {
+                "label": "Test the forecast",
+                "detail": "Use a bounded pilot and compare with actual observations.",
+                "icon": "check"
+              }
+            ]
+          },
+          "takeaway": "Separate estimated savings from measured pilot results and avoid counting the same benefit twice.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m5-t4-v3",
+          "section": "3. Return on automation"
+        },
+        {
+          "title": "Choose where a human sits",
+          "explanation": "Approval before action, exception review, after-the-fact audit and continuous assistance fit different risks.",
+          "diagram": {
+            "kind": "compare",
+            "items": [
+              {
+                "label": "Before",
+                "detail": "A person checks the specific output before it acts.",
+                "icon": "shield"
+              },
+              {
+                "label": "On exception",
+                "detail": "Ambiguous or invalid low-risk cases go to a person.",
+                "icon": "filter"
+              },
+              {
+                "label": "After",
+                "detail": "A person audits completed low-risk reversible work.",
+                "icon": "search"
+              },
+              {
+                "label": "Alongside",
+                "detail": "AI supports the work while a person decides each case.",
+                "icon": "users"
+              }
+            ]
+          },
+          "takeaway": "A high-impact irreversible action generally needs meaningful review before it happens, not only a later sample audit.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m5-t4-v4",
+          "section": "4. Human-in-the-loop by design"
+        },
+        {
+          "title": "A proposal needs a decision-ready ask",
+          "explanation": "A useful proposal connects the observed problem to an option, a test and the authority needed to proceed.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Explain current work",
+                "detail": "Show the problem and baseline evidence.",
+                "icon": "file"
+              },
+              {
+                "label": "Describe the change",
+                "detail": "State what stays human and what is automated.",
+                "icon": "layers"
+              },
+              {
+                "label": "Propose a pilot",
+                "detail": "Name scope, owner, measures and review date.",
+                "icon": "target"
+              },
+              {
+                "label": "Ask for authority",
+                "detail": "Specify the access, time or budget required.",
+                "icon": "check"
+              }
+            ]
+          },
+          "takeaway": "Keep assumptions, risks and a stop condition visible beside the return estimate.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m5-t4-v5",
+          "section": "5. The one-page proposal"
+        },
+        {
+          "title": "Improvement must work for the people doing the job",
+          "explanation": "A process can shift effort and risk rather than remove them. Involving operators helps expose that displacement.",
+          "diagram": {
+            "kind": "cycle",
+            "items": [
+              {
+                "label": "Listen to operators",
+                "detail": "Find the actual pain points and workarounds.",
+                "icon": "users"
+              },
+              {
+                "label": "Co-design the control",
+                "detail": "Keep people involved in the proposed checkpoint.",
+                "icon": "link"
+              },
+              {
+                "label": "Pilot with feedback",
+                "detail": "Check both benefit and added work.",
+                "icon": "search"
+              },
+              {
+                "label": "Revise together",
+                "detail": "Share findings and change the process deliberately.",
+                "icon": "repeat"
+              }
+            ],
+            "center": "Change with people"
+          },
+          "takeaway": "Measure burdens and unintended effects, not only a manager’s time saved.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m5-t4-v6",
+          "section": "6. Change management in one paragraph",
+          "checkpoint": {
+            "question": "Can a high automation score compensate for an unauthorised high-impact action?",
+            "answer": "No. Permission and unacceptable harm are constraints, not benefits to average away. Redesign or do not automate that action."
+          }
+        }
+      ]
+    },
+    "m5-t5": {
+      "introduction": "A second way to understand “Building a no-code AI app: idea to working MVP”: read the original explanation, follow the diagram and play or step through its focus points. All practice stays separate from your reading and quiz requirements.",
+      "sections": [
+        {
+          "title": "Choose the smallest useful system type",
+          "explanation": "A chat interface, event-driven integration and record-based app solve different user needs.",
+          "diagram": {
+            "kind": "compare",
+            "items": [
+              {
+                "label": "Assistant",
+                "detail": "Use conversation for bounded answers or drafts.",
+                "icon": "message"
+              },
+              {
+                "label": "Automation",
+                "detail": "Move permitted work between systems when a defined event occurs.",
+                "icon": "repeat"
+              },
+              {
+                "label": "Record-based app",
+                "detail": "Support structured entry, views, edits and role-specific actions.",
+                "icon": "layers"
+              },
+              {
+                "label": "Prototype",
+                "detail": "Test an interaction while clearly disclosing manual or incomplete parts.",
+                "icon": "sparkles"
+              }
+            ]
+          },
+          "takeaway": "Do not build an app merely because a generator can produce screens quickly.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m5-t5-v1",
+          "section": "1. Which kind of thing should you build?"
+        },
+        {
+          "title": "Evaluate a builder through the app’s needs",
+          "explanation": "The relevant questions are data, roles, workflow, access and maintenance. Product plans and publication limits change.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Define requirements",
+                "detail": "List records, users and necessary actions.",
+                "icon": "file"
+              },
+              {
+                "label": "Inspect the platform",
+                "detail": "Check ownership, permissions, exports and required features.",
+                "icon": "search"
+              },
+              {
+                "label": "Test a narrow build",
+                "detail": "Verify one end-to-end flow with synthetic data.",
+                "icon": "layers"
+              },
+              {
+                "label": "Plan maintenance",
+                "detail": "Name an owner and a way to exit or retire it.",
+                "icon": "shield"
+              }
+            ]
+          },
+          "takeaway": "Check the actual publishing and permission model before committing personal or institutional data.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m5-t5-v2",
+          "section": "2. The no-code builders"
+        },
+        {
+          "title": "Data and permission design come before screens",
+          "explanation": "A record needs a clear identity, valid fields and rules about who may read or change it.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Name entities",
+                "detail": "Decide what one record represents and give it an identifier.",
+                "icon": "file"
+              },
+              {
+                "label": "Define fields",
+                "detail": "Choose types and permitted values for each fact.",
+                "icon": "layers"
+              },
+              {
+                "label": "Specify relationships",
+                "detail": "Record how entities connect without duplicating unclear facts.",
+                "icon": "link"
+              },
+              {
+                "label": "Enforce access",
+                "detail": "Test read and write rules for each actual role.",
+                "icon": "shield"
+              }
+            ]
+          },
+          "takeaway": "Hiding a button is not row-level access control.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m5-t5-v3",
+          "section": "3. Design before building: data first"
+        },
+        {
+          "title": "A user flow is a task plus its failure states",
+          "explanation": "A list, detail screen and form are useful only if a user can complete the intended task and understand the result.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Start the task",
+                "detail": "Make the intended action discoverable.",
+                "icon": "cursor"
+              },
+              {
+                "label": "Enter or inspect",
+                "detail": "Show only necessary information and clear input rules.",
+                "icon": "file"
+              },
+              {
+                "label": "Confirm the state",
+                "detail": "Explain success, pending work or a recoverable error.",
+                "icon": "message"
+              },
+              {
+                "label": "Check the role",
+                "detail": "Verify another user cannot read or change forbidden records.",
+                "icon": "shield"
+              }
+            ]
+          },
+          "takeaway": "Test permissions directly, not only by looking at what the interface happens to show.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m5-t5-v4",
+          "section": "4. Screens and flows"
+        },
+        {
+          "title": "The AI feature should stay bounded and correctable",
+          "explanation": "A suggestion can help a user classify or summarise without silently deciding a consequential status change.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Minimise inputs",
+                "detail": "Send only the authorised fields needed for the feature.",
+                "icon": "filter"
+              },
+              {
+                "label": "Request one result",
+                "detail": "Use a narrow prompt and explicit allowed structure.",
+                "icon": "target"
+              },
+              {
+                "label": "Validate and label",
+                "detail": "Check the output and show that it is AI-suggested.",
+                "icon": "search"
+              },
+              {
+                "label": "Let a person decide",
+                "detail": "Keep override and an appropriate approval path.",
+                "icon": "users"
+              }
+            ]
+          },
+          "takeaway": "Label AI suggestions and provide a sensible unknown or failure state.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m5-t5-v5",
+          "section": "5. Adding the AI feature well"
+        },
+        {
+          "title": "Watch a task, not a guided demonstration",
+          "explanation": "A user test reveals hesitation and misunderstanding when the researcher does not continually explain the interface.",
+          "diagram": {
+            "kind": "cycle",
+            "items": [
+              {
+                "label": "Set realistic tasks",
+                "detail": "Use permitted scenarios and a clear success definition.",
+                "icon": "target"
+              },
+              {
+                "label": "Observe quietly",
+                "detail": "Note what people do rather than coaching every action.",
+                "icon": "search"
+              },
+              {
+                "label": "Ask about confusion",
+                "detail": "Collect specific problems and what was expected.",
+                "icon": "users"
+              },
+              {
+                "label": "Fix and retest",
+                "detail": "Prioritise important issues and record the revision.",
+                "icon": "repeat"
+              }
+            ],
+            "center": "Usability learning"
+          },
+          "takeaway": "A few participants reveal useful issues but do not prove all users will succeed.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m5-t5-v6",
+          "section": "6. Testing with real users"
+        },
+        {
+          "title": "A handover transfers responsibility, not just a link",
+          "explanation": "The receiving owner needs enough information and access to maintain, pause and retire the app safely.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Document the system",
+                "detail": "Explain data, roles, prompts, flows and limitations.",
+                "icon": "file"
+              },
+              {
+                "label": "Transfer authorised access",
+                "detail": "Use the institution’s approved ownership process.",
+                "icon": "shield"
+              },
+              {
+                "label": "Explain recovery",
+                "detail": "Show how to pause, correct or export the workflow.",
+                "icon": "repeat"
+              },
+              {
+                "label": "Agree a review",
+                "detail": "Name an owner, retention rule and retirement decision.",
+                "icon": "users"
+              }
+            ]
+          },
+          "takeaway": "Do not leave an institutional workflow dependent on an unowned student account.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m5-t5-v7",
+          "section": "7. Handing over responsibly",
+          "checkpoint": {
+            "question": "If a student cannot see an edit button, does that prove they cannot edit someone else’s record?",
+            "answer": "No. Actual data-layer permissions must enforce the rule and be tested with the relevant user roles."
+          }
+        }
+      ]
+    },
+    "m5-pb4": {
+      "introduction": "A second way to understand “Project Block 4 — Automation or Mini-App”: read the original explanation, follow the diagram and play or step through its focus points. All practice stays separate from your reading and quiz requirements.",
+      "sections": [
+        {
+          "title": "Working Automation or Mini-App: from purpose to evidence",
+          "explanation": "A justified small solution with a real permitted stakeholder, a narrow AI step, human checkpoint and demonstrated failure handling.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Purpose",
+                "detail": "A justified small solution with a real permitted stakeholder, a narrow AI step, human checkpoint and demonstrated failure handling.",
+                "icon": "target"
+              },
+              {
+                "label": "Build an artefact",
+                "detail": "Create the required work for the stated audience and scope.",
+                "icon": "layers"
+              },
+              {
+                "label": "Verify and explain",
+                "detail": "Keep test evidence, permissions, limitations and your contribution.",
+                "icon": "check"
+              }
+            ]
+          },
+          "takeaway": "Use the full original brief for requirements, timing and marks; this diagram is a companion, not a replacement.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m5-pb4-v1",
+          "section": "The brief"
+        },
+        {
+          "title": "Organise the working automation or mini-app evidence pack",
+          "explanation": "Group the required files so a reviewer can inspect the work and its checks. The detailed checklist above remains unchanged.",
+          "diagram": {
+            "kind": "hub",
+            "items": [
+              {
+                "label": "Problem and process evidence",
+                "detail": "Keep observation or interview notes, map, scorecard and selection rationale.",
+                "icon": "target"
+              },
+              {
+                "label": "Design and data flow",
+                "detail": "Document inputs, roles, AI specification, fallback and information destinations.",
+                "icon": "layers"
+              },
+              {
+                "label": "Working build",
+                "detail": "Provide approved access and test only against destinations under your control.",
+                "icon": "cursor"
+              },
+              {
+                "label": "Test log",
+                "detail": "Keep at least eight normal, edge and failure cases with results and fixes.",
+                "icon": "search"
+              },
+              {
+                "label": "Return and handover",
+                "detail": "State conservative assumptions, ownership, pause controls and retirement rules.",
+                "icon": "file"
+              },
+              {
+                "label": "Demo and reflection",
+                "detail": "Show the real build and a handled failure; credit pair and AI contributions.",
+                "icon": "users"
+              }
+            ],
+            "center": "Evidence pack"
+          },
+          "takeaway": "Reading the brief is not submission, external project marking or facilitator approval.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m5-pb4-v2",
+          "section": "What to submit"
+        },
+        {
+          "title": "Check the boundaries before the build or release",
+          "explanation": "A good-looking artefact cannot compensate for missing permission, invented evidence or an unsafe action.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Evidence and scope",
+                "detail": "Use the required real or clearly labelled practice evidence honestly.",
+                "icon": "file"
+              },
+              {
+                "label": "Permission and rights",
+                "detail": "Check relevant data, likeness, music and source permissions.",
+                "icon": "shield"
+              },
+              {
+                "label": "Human control",
+                "detail": "Keep the required review before consequential outward effects.",
+                "icon": "users"
+              },
+              {
+                "label": "Test and disclose",
+                "detail": "Record actual results, limitations and AI assistance.",
+                "icon": "check"
+              }
+            ]
+          },
+          "takeaway": "Follow the topic-specific constraints in full; a disclosure label does not override the rules.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m5-pb4-v3",
+          "section": "Constraints"
+        },
+        {
+          "title": "Plan, build, check and revise",
+          "explanation": "Use the original suggested schedule to reserve time for review rather than doing all the checking after the final export.",
+          "diagram": {
+            "kind": "cycle",
+            "items": [
+              {
+                "label": "Plan the scope",
+                "detail": "Start from the actual brief, required outputs and permitted inputs.",
+                "icon": "target"
+              },
+              {
+                "label": "Build deliberately",
+                "detail": "Work in small versions and retain intermediate artefacts.",
+                "icon": "layers"
+              },
+              {
+                "label": "Review evidence",
+                "detail": "Run the relevant source, language, functionality and safety checks.",
+                "icon": "search"
+              },
+              {
+                "label": "Revise and submit",
+                "detail": "Record the change and organise the complete evidence package.",
+                "icon": "file"
+              }
+            ],
+            "center": "Project workflow"
+          },
+          "takeaway": "Keep the process log while working; do not reconstruct fictitious experiments or approvals afterwards.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m5-pb4-v4",
+          "section": "Process (suggested)"
+        },
+        {
+          "title": "Make the published criteria inspectable",
+          "explanation": "The original rubric, weights, pass threshold and any caps remain authoritative. These panels point to the evidence behind its criteria.",
+          "diagram": {
+            "kind": "compare",
+            "items": [
+              {
+                "label": "Works and is safe",
+                "detail": "Demonstrate the core flow, checkpoint, recovery and minimised data.",
+                "icon": "shield"
+              },
+              {
+                "label": "Problem fit",
+                "detail": "Support the choice with observed work and conservative estimates.",
+                "icon": "target"
+              },
+              {
+                "label": "Testing and handover",
+                "detail": "Make the checks and future ownership reproducible.",
+                "icon": "file"
+              },
+              {
+                "label": "Demo and reflection",
+                "detail": "Show a genuine run, a failure and what you learned.",
+                "icon": "message"
+              }
+            ]
+          },
+          "takeaway": "The animation does not grade work, award marks or override a safety or integrity cap.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m5-pb4-v5",
+          "section": "Rubric (7 marks)"
+        },
+        {
+          "title": "Use the review habits, not a success formula",
+          "explanation": "The original tips are practical prompts for reflection, not guarantees of a result or new assessment conditions.",
+          "diagram": {
+            "kind": "compare",
+            "items": [
+              {
+                "label": "Observe before building",
+                "detail": "Choose a stakeholder problem grounded in actual work.",
+                "icon": "search"
+              },
+              {
+                "label": "Build recovery early",
+                "detail": "Test the error handler and stop path before outward messages.",
+                "icon": "shield"
+              },
+              {
+                "label": "Credit actual contributions",
+                "detail": "Explain who built, tested and documented each part.",
+                "icon": "users"
+              }
+            ]
+          },
+          "takeaway": "Choose the habit that addresses your actual weakness and keep evidence of the correction.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m5-pb4-v6",
+          "section": "Tips from previous cohorts"
+        },
+        {
+          "title": "Separate tool help from your responsibility",
+          "explanation": "A useful statement tells the reviewer where assistance entered and what the learner independently checked.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Name the assistance",
+                "detail": "Identify tools and the tasks for which they were used.",
+                "icon": "message"
+              },
+              {
+                "label": "Trace the evidence",
+                "detail": "State which real sources, tests and outputs were checked.",
+                "icon": "file"
+              },
+              {
+                "label": "Own the judgement",
+                "detail": "Describe selection, revisions, decisions and individual or team contributions.",
+                "icon": "users"
+              },
+              {
+                "label": "Follow the policy",
+                "detail": "Keep assessment restrictions and rights boundaries intact.",
+                "icon": "shield"
+              }
+            ]
+          },
+          "takeaway": "Disclosure cannot legitimise fabricated evidence, prohibited tool use or missing permission.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m5-pb4-v7",
+          "section": "AI-use statement template",
+          "checkpoint": {
+            "question": "Can test messages be sent to real recipients before the human checkpoint is proven?",
+            "answer": "No. Test with destinations you control and demonstrate the checkpoint and failure path before any authorised external use."
+          }
+        }
+      ]
+    }
+  }
+}

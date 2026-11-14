@@ -1,0 +1,656 @@
+{
+  "moduleId": "m8",
+  "topics": {
+    "m8-t1": {
+      "introduction": "A second way to understand “Build a credible HR analytics portfolio”: read the original explanation, follow the diagram and play or step through its focus points. All practice stays separate from your reading and quiz requirements.",
+      "sections": [
+        {
+          "title": "A portfolio is an honest decision story",
+          "explanation": "Explain the question, population, evidence, method, recommendation and limits so another person can inspect your judgement.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Question and population",
+                "detail": "Define what the analysis was meant to support.",
+                "icon": "target"
+              },
+              {
+                "label": "Data and method",
+                "detail": "Show sources, cleaning, formulas and checks.",
+                "icon": "file"
+              },
+              {
+                "label": "Finding and limitation",
+                "detail": "Explain what is supported and what remains uncertain.",
+                "icon": "search"
+              },
+              {
+                "label": "Recommendation",
+                "detail": "State a proportionate next step with an owner.",
+                "icon": "users"
+              }
+            ]
+          },
+          "takeaway": "Label simulations as classroom work and do not invent paid clients, employer experience or business savings.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m8-t1-v1",
+          "section": "1. Tell the decision story"
+        },
+        {
+          "title": "A reviewer should be able to reproduce the headline",
+          "explanation": "An evidence index is useful only when sources, transformations and final versions remain aligned.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Preserve inputs",
+                "detail": "Retain raw synthetic data and a dictionary.",
+                "icon": "file"
+              },
+              {
+                "label": "Record transformations",
+                "detail": "Keep the cleaning log and formula or pivot notes.",
+                "icon": "layers"
+              },
+              {
+                "label": "Run QA",
+                "detail": "Reproduce headline values and check filters.",
+                "icon": "check"
+              },
+              {
+                "label": "Align versions",
+                "detail": "Keep the memo, dashboard and evidence index consistent.",
+                "icon": "link"
+              }
+            ]
+          },
+          "takeaway": "Keep editable working evidence in the approved submission area and publish only safe aggregates.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m8-t1-v2",
+          "section": "2. Make the analysis reproducible"
+        },
+        {
+          "title": "Match the evidence to the job’s actual tasks",
+          "explanation": "Different entry-level HR roles emphasise different work. Titles vary, so use the real job description.",
+          "diagram": {
+            "kind": "compare",
+            "items": [
+              {
+                "label": "HR Executive",
+                "detail": "Show accurate records, coordination and responsible handling.",
+                "icon": "briefcase"
+              },
+              {
+                "label": "HR Analyst",
+                "detail": "Show definitions, reproducibility and cautious interpretation.",
+                "icon": "chart"
+              },
+              {
+                "label": "Talent Acquisition",
+                "detail": "Show matched funnels, communication and structured selection support.",
+                "icon": "users"
+              }
+            ]
+          },
+          "takeaway": "Distinguish your contribution from team work and avoid claiming authority the course did not confer.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m8-t1-v3",
+          "section": "3. Match evidence to the role",
+          "checkpoint": {
+            "question": "Can you present the Namma People Services practice analysis as paid consulting experience?",
+            "answer": "No. It is legitimate portfolio evidence when labelled as synthetic classroom work with your actual contribution and limitations."
+          }
+        }
+      ]
+    },
+    "m8-t2": {
+      "introduction": "A second way to understand “HR interviews and stakeholder conversations”: read the original explanation, follow the diagram and play or step through its focus points. All practice stays separate from your reading and quiz requirements.",
+      "sections": [
+        {
+          "title": "Clarify the definition before the arithmetic",
+          "explanation": "An ambiguous metric question needs a population, period, unit and denominator before a meaningful number can be calculated.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Clarify the question",
+                "detail": "Name the decision and the requested metric.",
+                "icon": "target"
+              },
+              {
+                "label": "Set the boundary",
+                "detail": "Confirm period, population and counting rules.",
+                "icon": "filter"
+              },
+              {
+                "label": "Show the calculation",
+                "detail": "Use a small reproducible example with units.",
+                "icon": "chart"
+              },
+              {
+                "label": "Explain limits",
+                "detail": "State assumptions and what must be verified.",
+                "icon": "shield"
+              }
+            ]
+          },
+          "takeaway": "If an employer’s convention is unknown, say so and ask for its dictionary.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m8-t2-v1",
+          "section": "1. Explain definitions before numbers"
+        },
+        {
+          "title": "Use STAR without inventing a past event",
+          "explanation": "A course artefact can demonstrate a real decision or correction if its simulated setting is clear.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Situation and task",
+                "detail": "Give the honest context and your responsibility.",
+                "icon": "file"
+              },
+              {
+                "label": "Action",
+                "detail": "Explain your own method and correction.",
+                "icon": "cursor"
+              },
+              {
+                "label": "Result",
+                "detail": "State only outcomes supported by the practice evidence.",
+                "icon": "check"
+              },
+              {
+                "label": "Learning",
+                "detail": "Describe how the experience changed your checking habit.",
+                "icon": "repeat"
+              }
+            ]
+          },
+          "takeaway": "For a hypothetical question, describe what you would do rather than claiming it already happened.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m8-t2-v2",
+          "section": "2. Use evidence-led interview structure"
+        },
+        {
+          "title": "Urgency does not grant raw-data access",
+          "explanation": "An analyst can support a request while preserving the institution’s access and escalation boundaries.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Confirm purpose",
+                "detail": "Ask what the requester needs to decide.",
+                "icon": "target"
+              },
+              {
+                "label": "Check recipient authority",
+                "detail": "Verify actual access rather than relying on urgency.",
+                "icon": "shield"
+              },
+              {
+                "label": "Minimise the response",
+                "detail": "Use a safe aggregate when it answers the question.",
+                "icon": "filter"
+              },
+              {
+                "label": "Escalate the decision",
+                "detail": "Identify the appropriate qualified owner when the request exceeds your role.",
+                "icon": "users"
+              }
+            ]
+          },
+          "takeaway": "Escalate legal, health, discrimination and employment decisions to qualified authorised roles.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m8-t2-v3",
+          "section": "3. Respect access and escalation boundaries",
+          "checkpoint": {
+            "question": "A manager says a raw employee export is urgent. Does that alone authorise sharing it?",
+            "answer": "No. Confirm purpose, recipient access and the minimum necessary layer, then follow the institution’s approved sharing or escalation process."
+          }
+        }
+      ]
+    },
+    "m8-t3": {
+      "introduction": "A second way to understand “Capstone presentation and analytical development”: read the original explanation, follow the diagram and play or step through its focus points. All practice stays separate from your reading and quiz requirements.",
+      "sections": [
+        {
+          "title": "Present the decision path, not a software tour",
+          "explanation": "A clear presentation connects the question to evidence and a proportionate action. The dashboard is supporting material, not the argument itself.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Question and audience",
+                "detail": "Name the decision and authorised viewer.",
+                "icon": "users"
+              },
+              {
+                "label": "Data and checks",
+                "detail": "Explain sources, definitions, quality and safeguards.",
+                "icon": "file"
+              },
+              {
+                "label": "Findings and limits",
+                "detail": "Show a few truthful visuals with uncertainty.",
+                "icon": "chart"
+              },
+              {
+                "label": "Action and evaluation",
+                "detail": "Name the owner, test and review trigger.",
+                "icon": "target"
+              }
+            ]
+          },
+          "takeaway": "Do not imply an external professional or software-vendor credential from this course’s completion.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m8-t3-v1",
+          "section": "1. Present the decision path"
+        },
+        {
+          "title": "A correction should propagate to dependent claims",
+          "explanation": "When an error is found, identify what uses that value rather than changing a single visible number.",
+          "diagram": {
+            "kind": "cycle",
+            "items": [
+              {
+                "label": "Reproduce the issue",
+                "detail": "Find the faulty input, formula or definition.",
+                "icon": "search"
+              },
+              {
+                "label": "Trace dependencies",
+                "detail": "Identify affected rates, charts and conclusions.",
+                "icon": "link"
+              },
+              {
+                "label": "Correct and retest",
+                "detail": "Recalculate and rerun the relevant QA.",
+                "icon": "check"
+              },
+              {
+                "label": "Update the recommendation",
+                "detail": "Revise the memo and evidence index consistently.",
+                "icon": "repeat"
+              }
+            ],
+            "center": "Analytical repair"
+          },
+          "takeaway": "A transparent correction is stronger analytical practice than defending a result you know is wrong.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m8-t3-v2",
+          "section": "2. Prepare to reproduce and revise"
+        },
+        {
+          "title": "Build the next skill through a bounded practice task",
+          "explanation": "A development plan should name a useful task, evidence, reviewer and date linked to the target role.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Choose a role skill",
+                "detail": "Pick a specific gap such as joins, cohort tracking or filter QA.",
+                "icon": "briefcase"
+              },
+              {
+                "label": "Define a practice case",
+                "detail": "Use synthetic or explicitly authorised material.",
+                "icon": "file"
+              },
+              {
+                "label": "Arrange review",
+                "detail": "Name an appropriate reviewer and date.",
+                "icon": "users"
+              },
+              {
+                "label": "Keep evidence of progress",
+                "detail": "Store the correction, result and next learning question.",
+                "icon": "check"
+              }
+            ]
+          },
+          "takeaway": "Seek supervised authorised practice; do not collect real employee records independently for a portfolio.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m8-t3-v3",
+          "section": "3. Plan growth through bounded practice",
+          "checkpoint": {
+            "question": "If the jury finds a wrong denominator, is changing only the dashboard label enough?",
+            "answer": "No. Trace every dependent rate, chart and recommendation, correct the calculation, retest it and update the aligned evidence and memo."
+          }
+        }
+      ]
+    },
+    "m8-cap": {
+      "introduction": "A second way to understand “Capstone — Responsible recruitment and workforce insight”: read the original explanation, follow the diagram and play or step through its focus points. All practice stays separate from your reading and quiz requirements.",
+      "sections": [
+        {
+          "title": "Responsible recruitment and workforce insight: connect the question to evidence",
+          "explanation": "An integrated, reproducible synthetic portfolio connecting data quality, recruitment, workforce capacity and a bounded authorised recommendation.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Question",
+                "detail": "An integrated, reproducible synthetic portfolio connecting data quality, recruitment, workforce capacity and a bounded authorised recommendation.",
+                "icon": "target"
+              },
+              {
+                "label": "Evidence",
+                "detail": "Use the original practice material with explicit provenance.",
+                "icon": "file"
+              },
+              {
+                "label": "Decision",
+                "detail": "Explain a bounded recommendation and the evidence that could change it.",
+                "icon": "check"
+              }
+            ]
+          },
+          "takeaway": "The app records reading and quizzes; external project submission, verification and marking remain with the institution.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m8-cap-v1",
+          "section": "The brief"
+        },
+        {
+          "title": "Keep synthetic fixtures and authority boundaries separate",
+          "explanation": "The practice tables are independent examples, not linked real employee records. Use the original inputs and log every deliberate scenario change.",
+          "diagram": {
+            "kind": "compare",
+            "items": [
+              {
+                "label": "Provenance",
+                "detail": "Identify the fixture, grain, period and original source copy.",
+                "icon": "file"
+              },
+              {
+                "label": "Separation",
+                "detail": "Do not join independent populations as if they were one company dataset.",
+                "icon": "layers"
+              },
+              {
+                "label": "Permission",
+                "detail": "Use synthetic inputs and the institution-approved submission route.",
+                "icon": "shield"
+              },
+              {
+                "label": "Honest context",
+                "detail": "Do not report simulated interviews, approvals or outcomes as live events.",
+                "icon": "users"
+              }
+            ]
+          },
+          "takeaway": "No real personal dataset, paid tool or live organisational access is required or authorised by this project.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m8-cap-v2",
+          "section": "Inputs and working boundaries"
+        },
+        {
+          "title": "Reserve time for correction, not only construction",
+          "explanation": "The original work-plan table supplies the timing. This map groups the work into a review loop without changing those allocations.",
+          "diagram": {
+            "kind": "cycle",
+            "items": [
+              {
+                "label": "Frame",
+                "detail": "Read the decision and inspect source boundaries.",
+                "icon": "target"
+              },
+              {
+                "label": "Build",
+                "detail": "Create the required artefacts with traceable formulas or decisions.",
+                "icon": "layers"
+              },
+              {
+                "label": "Check",
+                "detail": "Reproduce the headline and inspect assumptions and safeguards.",
+                "icon": "search"
+              },
+              {
+                "label": "Review and revise",
+                "detail": "Use peer or self-review and keep a change log.",
+                "icon": "repeat"
+              },
+              {
+                "label": "Explain and submit",
+                "detail": "Finish the recommendation, disclosure and evidence index.",
+                "icon": "file"
+              }
+            ],
+            "center": "Project work"
+          },
+          "takeaway": "A first draft is not a finished artefact; retain the comment and your response after review.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m8-cap-v3",
+          "section": "Work plan"
+        },
+        {
+          "title": "Organise the responsible recruitment and workforce insight submission",
+          "explanation": "These groups help you locate evidence; the full numbered submission checklist above still defines every required component.",
+          "diagram": {
+            "kind": "hub",
+            "items": [
+              {
+                "label": "Decision and source package",
+                "detail": "Keep the brief, source inventory, dictionary, raw data and cleaning log.",
+                "icon": "file"
+              },
+              {
+                "label": "Reconciled analyses",
+                "detail": "Show exact populations, formulas and independent checks.",
+                "icon": "chart"
+              },
+              {
+                "label": "Safe dashboard",
+                "detail": "Include accessible charts, filter QA and disclosure review.",
+                "icon": "shield"
+              },
+              {
+                "label": "Decision memo",
+                "detail": "Compare options with an owner, uncertainty and a balancing measure.",
+                "icon": "target"
+              },
+              {
+                "label": "Responsible-analytics review",
+                "detail": "Discuss causal limits, model claims, fairness signals and accountability.",
+                "icon": "search"
+              },
+              {
+                "label": "Individual defence",
+                "detail": "Provide the five-minute presentation and original contribution/reflection requirements.",
+                "icon": "users"
+              }
+            ],
+            "center": "Evidence index"
+          },
+          "takeaway": "A public portfolio copy must be safe and clearly labelled; it is not a substitute for the editable institutional submission.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m8-cap-v4",
+          "section": "What to submit"
+        },
+        {
+          "title": "Let evidence and safeguards constrain the capstone",
+          "explanation": "An integrated portfolio is credible when the sources, calculations, sharing choices and recommendation can all withstand an individual defence.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Declare the inputs",
+                "detail": "Use synthetic fixtures and preserve their separate populations and periods.",
+                "icon": "file"
+              },
+              {
+                "label": "Reproduce the headline",
+                "detail": "Show definitions, transformations and independently checked calculations.",
+                "icon": "check"
+              },
+              {
+                "label": "Share safely",
+                "detail": "Use aggregate accessible views with filter and indirect-disclosure QA.",
+                "icon": "shield"
+              },
+              {
+                "label": "Bound the recommendation",
+                "detail": "State uncertainty, an authorised owner, an evaluation plan and your actual contribution.",
+                "icon": "users"
+              }
+            ]
+          },
+          "takeaway": "Do not infer demographic attributes, create individual leaver-risk lists or automate employment decisions. The project does not confer an external HR or software-vendor certification.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m8-cap-v5",
+          "section": "Acceptance and self-check"
+        },
+        {
+          "title": "Follow the original rubric and its evidence standard",
+          "explanation": "The original block or capstone marks, performance anchors and institutional award conditions are unchanged.",
+          "diagram": {
+            "kind": "compare",
+            "items": [
+              {
+                "label": "Problem and scope",
+                "detail": "Define the decision, population and permitted use clearly.",
+                "icon": "target"
+              },
+              {
+                "label": "Technical reproducibility",
+                "detail": "Provide checked calculations, definitions and an inspectable method.",
+                "icon": "chart"
+              },
+              {
+                "label": "Judgement and safeguards",
+                "detail": "Let privacy, fairness and causal limitations constrain claims.",
+                "icon": "shield"
+              },
+              {
+                "label": "Decision quality",
+                "detail": "Recommend a practical, proportionate and reviewable action.",
+                "icon": "users"
+              },
+              {
+                "label": "Presentation and defence",
+                "detail": "Explain your contribution and reproduce key evidence.",
+                "icon": "file"
+              }
+            ]
+          },
+          "takeaway": "These panels and animations do not calculate marks, approve projects or award an external credential.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m8-cap-v6",
+          "section": "Rubric"
+        },
+        {
+          "title": "Review the recommendation from a challenger’s view",
+          "explanation": "A reviewer should be able to trace a claim, test an assumption and understand which action needs another role’s approval.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Trace a headline",
+                "detail": "Find the calculation or artefact behind the main claim.",
+                "icon": "file"
+              },
+              {
+                "label": "Challenge an assumption",
+                "detail": "Ask what missing evidence could reverse the action.",
+                "icon": "search"
+              },
+              {
+                "label": "Check authority",
+                "detail": "Name who is permitted to approve a consequential decision.",
+                "icon": "users"
+              },
+              {
+                "label": "Inspect sharing",
+                "detail": "Choose evidence that can safely appear in the public version.",
+                "icon": "shield"
+              }
+            ]
+          },
+          "takeaway": "Keep the actual review comment and your correction or explanation instead of claiming a review that never happened.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m8-cap-v7",
+          "section": "Review questions"
+        },
+        {
+          "title": "Explain assistance without outsourcing judgement",
+          "explanation": "Complete the original AI-use statement even when no AI was used. Tool help must not fabricate records, sources or experience.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Name tools or none",
+                "detail": "State the actual assistance and permitted synthetic inputs.",
+                "icon": "message"
+              },
+              {
+                "label": "Record your checks",
+                "detail": "Explain accepted, changed and rejected suggestions and independent verification.",
+                "icon": "check"
+              },
+              {
+                "label": "Own the work",
+                "detail": "Describe your contribution, judgement and responsibility for the final claims.",
+                "icon": "users"
+              }
+            ]
+          },
+          "takeaway": "Do not upload real employee, candidate, student or credential data to public AI tools; follow exam restrictions separately.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m8-cap-v8",
+          "section": "AI-use statement"
+        },
+        {
+          "title": "An extension tests an assumption after the core is complete",
+          "explanation": "The optional extension is not required for full marks. Keep the original work and distinguish a changed scenario from an observation.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Complete the core",
+                "detail": "Finish the required evidence and safeguards first.",
+                "icon": "check"
+              },
+              {
+                "label": "A phased evaluation",
+                "detail": "Define the comparison and assumptions needed for a causal interpretation.",
+                "icon": "repeat"
+              },
+              {
+                "label": "Compare and document",
+                "detail": "Show what changed, which conclusion depends on it and what remains unknown.",
+                "icon": "file"
+              }
+            ]
+          },
+          "takeaway": "More complexity does not improve a submission if the reasoning and safeguards cannot be reproduced.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m8-cap-v9",
+          "section": "Optional extension",
+          "checkpoint": {
+            "question": "Would a high aggregate accuracy score authorise an individual employee leaver-risk list in this capstone?",
+            "answer": "No. Individual leaver-risk lists, real employee or candidate data, inferred demographic attributes and automated employment decisions are prohibited in this project. Use synthetic aggregate literacy and a proportionate, human-accountable recommendation."
+          }
+        }
+      ]
+    }
+  }
+}

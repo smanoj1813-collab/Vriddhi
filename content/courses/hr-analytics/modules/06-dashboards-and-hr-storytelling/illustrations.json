@@ -1,0 +1,634 @@
+{
+  "moduleId": "m6",
+  "topics": {
+    "m6-t1": {
+      "introduction": "A second way to understand “Design an HR dashboard for its audience”: read the original explanation, follow the diagram and play or step through its focus points. All practice stays separate from your reading and quiz requirements.",
+      "sections": [
+        {
+          "title": "Design for a recurring decision",
+          "explanation": "A dashboard should serve a known audience, action and cadence rather than accumulate every available chart.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Audience",
+                "detail": "Name who needs the view and their authority.",
+                "icon": "users"
+              },
+              {
+                "label": "Question",
+                "detail": "Identify the recurring decision or operational concern.",
+                "icon": "target"
+              },
+              {
+                "label": "Metric set",
+                "detail": "Choose a small defined set with owners.",
+                "icon": "chart"
+              },
+              {
+                "label": "Action route",
+                "detail": "Explain what to inspect or do when a signal changes.",
+                "icon": "check"
+              }
+            ]
+          },
+          "takeaway": "Keep sensitive drill-down access separate from broadly shared summaries.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m6-t1-v1",
+          "section": "1. Use a small decision-led metric set"
+        },
+        {
+          "title": "Choose the visual form for the question",
+          "explanation": "Bars, lines and tables encode different relationships. The source, denominator and period must remain visible.",
+          "diagram": {
+            "kind": "compare",
+            "items": [
+              {
+                "label": "Category comparison",
+                "detail": "Use labelled bars on a suitable common scale.",
+                "icon": "chart"
+              },
+              {
+                "label": "Time trend",
+                "detail": "Use ordered comparable periods with missing data visible.",
+                "icon": "clock"
+              },
+              {
+                "label": "Exact value or action",
+                "detail": "Use a table with units, definitions and an owner.",
+                "icon": "file"
+              },
+              {
+                "label": "Disclosure check",
+                "detail": "Ensure filtering cannot reveal a tiny or identifiable group.",
+                "icon": "shield"
+              }
+            ]
+          },
+          "takeaway": "Use zero-based bar lengths and labels; colour alone must not carry the meaning.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m6-t1-v2",
+          "section": "2. Choose appropriate visual forms"
+        },
+        {
+          "title": "A red signal needs context and an owner",
+          "explanation": "Refresh time, source, definitions, filters and limitations explain what a viewer is actually seeing.",
+          "diagram": {
+            "kind": "hub",
+            "items": [
+              {
+                "label": "Period and refresh",
+                "detail": "State when observations occurred and when data last updated.",
+                "icon": "clock"
+              },
+              {
+                "label": "Definition and source",
+                "detail": "Link the counting rules and provenance.",
+                "icon": "file"
+              },
+              {
+                "label": "Filter scope",
+                "detail": "Show the selected population and compatible denominator.",
+                "icon": "filter"
+              },
+              {
+                "label": "Action and limitation",
+                "detail": "Name the owner, next check and remaining uncertainty.",
+                "icon": "users"
+              }
+            ],
+            "center": "Context card"
+          },
+          "takeaway": "A threshold is a reviewed decision rule, not an explanation of why a result changed.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m6-t1-v3",
+          "section": "3. Pair every signal with context",
+          "checkpoint": {
+            "question": "Does a red dashboard tile explain the cause of an HR problem?",
+            "answer": "No. It indicates a threshold under a rule. Show definitions, source, scope and limitations, then give the owner a proportionate next investigation."
+          }
+        }
+      ]
+    },
+    "m6-t2": {
+      "introduction": "A second way to understand “Build and quality-check a dashboard”: read the original explanation, follow the diagram and play or step through its focus points. All practice stays separate from your reading and quiz requirements.",
+      "sections": [
+        {
+          "title": "Separate evidence from calculations and presentation",
+          "explanation": "A layered workbook makes transformations and refresh behaviour inspectable. Typed chart labels can drift away from the actual data.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Raw",
+                "detail": "Preserve the unchanged source and its provenance.",
+                "icon": "file"
+              },
+              {
+                "label": "Cleaned",
+                "detail": "Apply documented rules and log unresolved cases.",
+                "icon": "filter"
+              },
+              {
+                "label": "Metrics",
+                "detail": "Calculate from the declared population and definitions.",
+                "icon": "chart"
+              },
+              {
+                "label": "Dashboard",
+                "detail": "Display linked values with context and safe access.",
+                "icon": "layers"
+              }
+            ]
+          },
+          "takeaway": "Keep Unknown categories and definition changes visible rather than hiding incomplete records.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m6-t2-v1",
+          "section": "1. Separate data, calculations and presentation"
+        },
+        {
+          "title": "A filter must change both sides of a rate",
+          "explanation": "The synthetic acceptance fixture has whole-cohort 9/12, Source A 5/6 and Source B 4/6. Numerator and denominator must follow the same selection.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "All data",
+                "detail": "Check 9 acceptances ÷ 12 offers = 75%.",
+                "icon": "users"
+              },
+              {
+                "label": "One group",
+                "detail": "Source A uses five acceptances and six offers.",
+                "icon": "filter"
+              },
+              {
+                "label": "Empty selection",
+                "detail": "Show a clear undefined state rather than a false zero rate.",
+                "icon": "shield"
+              },
+              {
+                "label": "Combined filters",
+                "detail": "Reconcile both counts to the same eligible filtered records.",
+                "icon": "check"
+              }
+            ]
+          },
+          "takeaway": "Source A is 5/6, not 5/12. A professional-looking chart with mismatched filters is still wrong.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m6-t2-v2",
+          "section": "2. Test filters and totals deliberately"
+        },
+        {
+          "title": "A hidden tab is not an access boundary",
+          "explanation": "An export or viewer may expose data that the visual interface conceals. Test sharing from the intended recipient’s role.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Choose the sharing layer",
+                "detail": "Use synthetic or safe aggregate output.",
+                "icon": "filter"
+              },
+              {
+                "label": "Remove restricted material",
+                "detail": "Inspect raw tabs, identifiers and comments.",
+                "icon": "shield"
+              },
+              {
+                "label": "Test recipient access",
+                "detail": "Check downloads, links and actual viewer permissions.",
+                "icon": "users"
+              },
+              {
+                "label": "Review disclosure",
+                "detail": "Consider tiny groups and complementary inference.",
+                "icon": "search"
+              }
+            ]
+          },
+          "takeaway": "Publish only the necessary aggregate layer; do not rely on hiding columns or tabs to protect personal information.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m6-t2-v3",
+          "section": "3. Share only the necessary layer",
+          "checkpoint": {
+            "question": "What is wrong with filtering Source A’s five acceptances while keeping all twelve offers as the denominator?",
+            "answer": "The populations no longer match. Source A’s denominator is its six offers, so its acceptance rate is 5/6, not 5/12."
+          }
+        }
+      ]
+    },
+    "m6-t3": {
+      "introduction": "A second way to understand “Write an insight memo and recommend action”: read the original explanation, follow the diagram and play or step through its focus points. All practice stays separate from your reading and quiz requirements.",
+      "sections": [
+        {
+          "title": "Write the observation before the explanation",
+          "explanation": "A memo becomes reviewable when the measured result is separated from possible reasons and recommended action.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Observed result",
+                "detail": "State the population, period, measure and comparison.",
+                "icon": "file"
+              },
+              {
+                "label": "Possible explanations",
+                "detail": "List hypotheses with their current support.",
+                "icon": "search"
+              },
+              {
+                "label": "Missing evidence",
+                "detail": "Name the check that could distinguish those explanations.",
+                "icon": "layers"
+              },
+              {
+                "label": "Proposed next step",
+                "detail": "Recommend a proportionate action under an authorised owner.",
+                "icon": "users"
+              }
+            ]
+          },
+          "takeaway": "Do not imply that an individual caused an aggregate change without evidence and appropriate authority.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m6-t3-v1",
+          "section": "1. Separate observation from interpretation"
+        },
+        {
+          "title": "Percentage points and relative change are different",
+          "explanation": "In the lesson’s hypothetical example, a rate rises from 2% to 4%. The difference is two percentage points; the relative increase is 100%.",
+          "diagram": {
+            "kind": "bars",
+            "items": [
+              {
+                "label": "Earlier rate",
+                "detail": "The comparison starts at 2%; its population must be defined.",
+                "value": 2,
+                "icon": "chart"
+              },
+              {
+                "label": "Later rate",
+                "detail": "4% is twice 2%, but the absolute rate gap is two percentage points.",
+                "value": 4,
+                "icon": "chart"
+              }
+            ],
+            "unit": "% rate"
+          },
+          "takeaway": "Neither description tells you the practical impact without counts, denominators and comparable periods.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m6-t3-v2",
+          "section": "2. Quantify the practical difference"
+        },
+        {
+          "title": "A recommendation needs a review and a stop rule",
+          "explanation": "A bounded pilot is often more defensible than an immediate broad policy change when evidence is preliminary.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Compare options",
+                "detail": "Show expected benefit, risk and assumptions.",
+                "icon": "layers"
+              },
+              {
+                "label": "Name an owner",
+                "detail": "Assign the authorised decision and delivery roles.",
+                "icon": "users"
+              },
+              {
+                "label": "Define evaluation",
+                "detail": "Set timeframe, success and balancing measures.",
+                "icon": "chart"
+              },
+              {
+                "label": "State a review trigger",
+                "detail": "Identify evidence that would stop or revise the action.",
+                "icon": "shield"
+              }
+            ]
+          },
+          "takeaway": "Pair a speed or cost measure with a balancing measure such as quality, access or candidate experience.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m6-t3-v3",
+          "section": "3. Make the recommendation reviewable",
+          "checkpoint": {
+            "question": "If a rate moves from 2% to 4%, is that a two-percent relative increase?",
+            "answer": "No. It is a two-percentage-point increase and a 100% relative increase. Show counts and context before interpreting practical importance."
+          }
+        }
+      ]
+    },
+    "m6-pb4": {
+      "introduction": "A second way to understand “Project Block 4 — Privacy-safe HR dashboard”: read the original explanation, follow the diagram and play or step through its focus points. All practice stays separate from your reading and quiz requirements.",
+      "sections": [
+        {
+          "title": "Privacy-safe HR dashboard: connect the question to evidence",
+          "explanation": "An accessible aggregate dashboard and memo whose filters, definitions and disclosure controls have been tested.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Question",
+                "detail": "An accessible aggregate dashboard and memo whose filters, definitions and disclosure controls have been tested.",
+                "icon": "target"
+              },
+              {
+                "label": "Evidence",
+                "detail": "Use the original practice material with explicit provenance.",
+                "icon": "file"
+              },
+              {
+                "label": "Decision",
+                "detail": "Explain a bounded recommendation and the evidence that could change it.",
+                "icon": "check"
+              }
+            ]
+          },
+          "takeaway": "The app records reading and quizzes; external project submission, verification and marking remain with the institution.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m6-pb4-v1",
+          "section": "The brief"
+        },
+        {
+          "title": "Keep synthetic fixtures and authority boundaries separate",
+          "explanation": "The practice tables are independent examples, not linked real employee records. Use the original inputs and log every deliberate scenario change.",
+          "diagram": {
+            "kind": "compare",
+            "items": [
+              {
+                "label": "Provenance",
+                "detail": "Identify the fixture, grain, period and original source copy.",
+                "icon": "file"
+              },
+              {
+                "label": "Separation",
+                "detail": "Do not join independent populations as if they were one company dataset.",
+                "icon": "layers"
+              },
+              {
+                "label": "Permission",
+                "detail": "Use synthetic inputs and the institution-approved submission route.",
+                "icon": "shield"
+              },
+              {
+                "label": "Honest context",
+                "detail": "Do not report simulated interviews, approvals or outcomes as live events.",
+                "icon": "users"
+              }
+            ]
+          },
+          "takeaway": "No real personal dataset, paid tool or live organisational access is required or authorised by this project.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m6-pb4-v2",
+          "section": "Inputs and working boundaries"
+        },
+        {
+          "title": "Reserve time for correction, not only construction",
+          "explanation": "The original work-plan table supplies the timing. This map groups the work into a review loop without changing those allocations.",
+          "diagram": {
+            "kind": "cycle",
+            "items": [
+              {
+                "label": "Frame",
+                "detail": "Read the decision and inspect source boundaries.",
+                "icon": "target"
+              },
+              {
+                "label": "Build",
+                "detail": "Create the required artefacts with traceable formulas or decisions.",
+                "icon": "layers"
+              },
+              {
+                "label": "Check",
+                "detail": "Reproduce the headline and inspect assumptions and safeguards.",
+                "icon": "search"
+              },
+              {
+                "label": "Review and revise",
+                "detail": "Use peer or self-review and keep a change log.",
+                "icon": "repeat"
+              },
+              {
+                "label": "Explain and submit",
+                "detail": "Finish the recommendation, disclosure and evidence index.",
+                "icon": "file"
+              }
+            ],
+            "center": "Project work"
+          },
+          "takeaway": "A first draft is not a finished artefact; retain the comment and your response after review.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m6-pb4-v3",
+          "section": "Work plan"
+        },
+        {
+          "title": "Organise the privacy-safe hr dashboard submission",
+          "explanation": "These groups help you locate evidence; the full numbered submission checklist above still defines every required component.",
+          "diagram": {
+            "kind": "hub",
+            "items": [
+              {
+                "label": "Wireframe",
+                "detail": "Map each measure to an audience question and action owner.",
+                "icon": "layers"
+              },
+              {
+                "label": "Working dashboard",
+                "detail": "Keep period, denominator, refresh, definitions and labels visible.",
+                "icon": "chart"
+              },
+              {
+                "label": "Filter QA",
+                "detail": "Test all-data, one-group, empty and combined selections.",
+                "icon": "search"
+              },
+              {
+                "label": "Safe export",
+                "detail": "Review small cells, indirect inference and actual recipient access.",
+                "icon": "shield"
+              },
+              {
+                "label": "Insight memo",
+                "detail": "Separate observation, hypotheses, action and evaluation.",
+                "icon": "file"
+              }
+            ],
+            "center": "Evidence index"
+          },
+          "takeaway": "A public portfolio copy must be safe and clearly labelled; it is not a substitute for the editable institutional submission.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m6-pb4-v4",
+          "section": "What to submit"
+        },
+        {
+          "title": "Test whether filters preserve the denominator",
+          "explanation": "The same synthetic offer cohort supports an all-data view and two source-filtered views. Both sides of each fraction must follow the same selection.",
+          "diagram": {
+            "kind": "compare",
+            "items": [
+              {
+                "label": "All data · 75%",
+                "detail": "Nine acceptances ÷ twelve offers.",
+                "icon": "users"
+              },
+              {
+                "label": "Source A · about 83.3%",
+                "detail": "Five acceptances ÷ six Source A offers, not all twelve.",
+                "icon": "filter"
+              },
+              {
+                "label": "Source B · about 66.7%",
+                "detail": "Four acceptances ÷ six Source B offers, not all twelve.",
+                "icon": "check"
+              }
+            ]
+          },
+          "takeaway": "A filtered numerator must not keep the unfiltered denominator. Also test empty and combined filters and review disclosure before sharing.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m6-pb4-v5",
+          "section": "Acceptance and self-check"
+        },
+        {
+          "title": "Follow the original rubric and its evidence standard",
+          "explanation": "The original block or capstone marks, performance anchors and institutional award conditions are unchanged.",
+          "diagram": {
+            "kind": "compare",
+            "items": [
+              {
+                "label": "Correctness and reproducibility",
+                "detail": "Trace the method and results to the declared source and definitions.",
+                "icon": "check"
+              },
+              {
+                "label": "Judgement and safeguards",
+                "detail": "Show uncertainty, appropriate authority and safe handling.",
+                "icon": "shield"
+              },
+              {
+                "label": "Clarity, evidence and reflection",
+                "detail": "Make claims inspectable and explain corrections.",
+                "icon": "file"
+              }
+            ]
+          },
+          "takeaway": "These panels and animations do not calculate marks, approve projects or award an external credential.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m6-pb4-v6",
+          "section": "Rubric"
+        },
+        {
+          "title": "Review the recommendation from a challenger’s view",
+          "explanation": "A reviewer should be able to trace a claim, test an assumption and understand which action needs another role’s approval.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Trace a headline",
+                "detail": "Find the calculation or artefact behind the main claim.",
+                "icon": "file"
+              },
+              {
+                "label": "Challenge an assumption",
+                "detail": "Ask what missing evidence could reverse the action.",
+                "icon": "search"
+              },
+              {
+                "label": "Check authority",
+                "detail": "Name who is permitted to approve a consequential decision.",
+                "icon": "users"
+              },
+              {
+                "label": "Inspect sharing",
+                "detail": "Choose evidence that can safely appear in the public version.",
+                "icon": "shield"
+              }
+            ]
+          },
+          "takeaway": "Keep the actual review comment and your correction or explanation instead of claiming a review that never happened.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m6-pb4-v7",
+          "section": "Review questions"
+        },
+        {
+          "title": "Explain assistance without outsourcing judgement",
+          "explanation": "Complete the original AI-use statement even when no AI was used. Tool help must not fabricate records, sources or experience.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Name tools or none",
+                "detail": "State the actual assistance and permitted synthetic inputs.",
+                "icon": "message"
+              },
+              {
+                "label": "Record your checks",
+                "detail": "Explain accepted, changed and rejected suggestions and independent verification.",
+                "icon": "check"
+              },
+              {
+                "label": "Own the work",
+                "detail": "Describe your contribution, judgement and responsibility for the final claims.",
+                "icon": "users"
+              }
+            ]
+          },
+          "takeaway": "Do not upload real employee, candidate, student or credential data to public AI tools; follow exam restrictions separately.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m6-pb4-v8",
+          "section": "AI-use statement"
+        },
+        {
+          "title": "An extension tests an assumption after the core is complete",
+          "explanation": "The optional extension is not required for full marks. Keep the original work and distinguish a changed scenario from an observation.",
+          "diagram": {
+            "kind": "flow",
+            "items": [
+              {
+                "label": "Complete the core",
+                "detail": "Finish the required evidence and safeguards first.",
+                "icon": "check"
+              },
+              {
+                "label": "A deliberately failing filter",
+                "detail": "Demonstrate detection and correction without silently changing the metric definition.",
+                "icon": "filter"
+              },
+              {
+                "label": "Compare and document",
+                "detail": "Show what changed, which conclusion depends on it and what remains unknown.",
+                "icon": "file"
+              }
+            ]
+          },
+          "takeaway": "More complexity does not improve a submission if the reasoning and safeguards cannot be reproduced.",
+          "walkthrough": true,
+          "caption": "Illustrative teaching model, not live results, a tool screenshot or an additional assessment requirement.",
+          "id": "m6-pb4-v9",
+          "section": "Optional extension",
+          "checkpoint": {
+            "question": "For Source B, should four acceptances be divided by all twelve offers?",
+            "answer": "No. Use Source B’s six offers: 4/6 is about 66.7%. Filtering only the numerator produces a different, misleading rate; retain the exact counts and definition in the dashboard QA sheet."
+          }
+        }
+      ]
+    }
+  }
+}
