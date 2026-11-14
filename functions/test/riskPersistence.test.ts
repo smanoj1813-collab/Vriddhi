@@ -42,7 +42,7 @@ function seed() {
 beforeEach(seed)
 const entries = (collection: string) => [...store.data.entries()].filter(([p]) => p.startsWith(`${collection}/`)).map(([, data]) => data)
 const selfAlert = (category: string) => entries('riskAlerts').find(r => r.category === category && r.recipientUid === 'faculty-uid')!
-// Persistence fixtures use the same internal service as the monthly worker,
+// Persistence fixtures use the same internal service as the scheduled worker,
 // never the retired client callable. The scheduled create-trigger path also
 // has its own end-to-end handler/continuation coverage below and in riskSweep.
 async function reviewSubject(uid = 'faculty-uid') {
@@ -50,7 +50,7 @@ async function reviewSubject(uid = 'faculty-uid') {
   return service.refreshRiskSubject(person, await service.loadCollegeRiskEvidence(person.collegeId))
 }
 
-describe('monthly risk materialization and authenticated inbox handlers', () => {
+describe('scheduled risk materialization and authenticated inbox handlers', () => {
   it('refuses anonymous reads, settings and device registration', async () => {
     for (const callable of [api.getMyAcademicRiskAlerts, api.refreshMyAcademicRiskAlerts, api.getAcademicRiskConfiguration, api.registerMyAcademicRiskDevice]) await assert.rejects(callable.run(request(null)), { code: 'unauthenticated' })
   })
@@ -175,7 +175,7 @@ describe('monthly risk materialization and authenticated inbox handlers', () => 
       assert.ok(store.reads.every(p => ['faculty', 'mentors', 'hods', 'riskAlerts', 'riskSubjectRuns'].includes(p.split('/')[0])), 'only identity, saved alerts and run summaries may be loaded')
     })
   }
-  it('serializes duplicated monthly subject work using a subject lease', async () => {
+  it('serializes duplicated scheduled subject work using a subject lease', async () => {
     store.data.set(`riskSubjectLocks/${service.riskHash('college-a', 'faculty-uid')}`, { lease: 'other-run', leaseUntil: NOW + 1000 })
     await assert.rejects(reviewSubject(), { code: 'resource-exhausted' })
     assert.equal(entries('riskAlerts').length, 0)
@@ -257,7 +257,7 @@ describe('Principal-only settings and explicit staff working schedules', () => {
     await api.saveFacultyRiskWorkSchedule.run(request('principal-a', { facultyUid: 'faculty-uid', remove: true, force: true }))
     assert.ok(store.reads.slice(reads).every(p => ['academicRiskSettings', 'riskStaffSchedules', 'users'].includes(p.split('/')[0])), 'configuration changes cannot load academic evidence')
     assert.ok(store.writes.slice(writes).every(w => ['academicRiskSettings', 'riskStaffSchedules', 'riskConfigurationAudit'].includes(w.path.split('/')[0])), 'only configuration and audit writes are allowed')
-    assert.deepEqual(entries('riskAlerts'), alerts, 'saved alerts wait for the monthly review')
+    assert.deepEqual(entries('riskAlerts'), alerts, 'saved alerts wait for the scheduled review')
     assert.equal(entries('riskSweepRequests').length, 0)
     assert.equal(entries('riskJobs').length, 0)
   })
@@ -368,7 +368,7 @@ describe('registered-device ownership, FCM privacy and delivery deduplication', 
     assert.equal(store.pushes.length, 0); assert.equal(store.data.get(item[0])!.status, 'skipped')
     assert.equal(store.data.get(item[0])!.reason, 'delivery-window-expired')
   })
-  it('monthly push recovery ignores an expired backlog so fresh messages are not crowded out', async () => {
+  it('scheduled push recovery ignores an expired backlog so fresh messages are not crowded out', async () => {
     for (let i = 0; i < 101; i++) store.data.set(`riskPushOutbox/expired-${i}`, { status: 'pending', createdAt: NOW - 25 * 3_600_000, attempts: 0 })
     await reviewSubject()
     const start = store.writes.length
@@ -407,11 +407,11 @@ describe('safety caps and resumable background checks', () => {
     const result = await service.readRiskRows(ctx, 'submissions', { limit: (n: number) => ({ get: async () => ({ size: 3, docs: [1, 2, 3].slice(0, n).map(id => ({ id: String(id), data: () => ({}) })) }) }) } as any, 2)
     assert.equal(result.length, 2); assert.equal(ctx.complete.submissions, false); assert.match(ctx.coverage.join(' '), /safety read limit/)
   })
-  it('the monthly starter queues a bounded worker that validates discovered accounts', async () => {
+  it('the scheduled starter queues a bounded worker that validates discovered accounts', async () => {
     await api.sweepAcademicRiskAlerts.run({ scheduleTime: new Date(NOW).toISOString() } as any)
     assert.equal(store.data.get('riskJobs/academic-sweep')!.cycleComplete, false)
     assert.equal(entries('riskAlerts').length, 0)
-    await api.continueAcademicRiskSweep.run({ params: { requestId: '2026-11__0' } } as any)
+    await api.continueAcademicRiskSweep.run({ params: { requestId: 'daily_2026-11-13__0' } } as any)
     assert.equal(store.data.get('riskJobs/academic-sweep')!.cycleComplete, true)
     assert.equal(store.data.get('riskJobs/academic-sweep')!.cursor, '')
     assert.ok(entries('riskAlerts').some(a => a.subjectUid === 'faculty-uid'))

@@ -24,6 +24,7 @@ export interface AcademicRiskInbox {
   checkedAt: number | null;
   truncated: boolean;
   canConfigure: boolean;
+  reviewCadence?: 'daily' | 'weekly' | 'monthly';
 }
 export interface FacultyRiskWorkSchedule {
   facultyUid: string;

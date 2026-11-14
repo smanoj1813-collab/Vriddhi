@@ -84,6 +84,8 @@ export async function updateDoc(...a: any[]) {
 }
 export async function deleteDoc(..._a: any[]) { calls.push('deleteDoc'); }
 export async function runTransaction(_db: any, fn: (t: any) => Promise<any>) {
+  const boundary = (globalThis as any).__RC_TRANSACTION;
+  if (boundary) return boundary(fn);
   return fn({ set: async () => {}, update: async () => {}, get: async () => ({ exists: () => false, data: () => undefined }) });
 }
 export function onSnapshot(..._a: any[]) { calls.push('onSnapshot'); return () => {}; }

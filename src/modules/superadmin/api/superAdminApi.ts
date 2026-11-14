@@ -1844,15 +1844,19 @@ async function probeCollection(name: string, label: string): Promise<ServiceHeal
   }
 }
 
-export async function getSystemHealth(): Promise<SystemHealthStatus> {
-  const [services, metrics, alerts, recentErrors] = await Promise.all([
+export async function getSystemHealth(shared?: {
+  metrics: Promise<PerformanceMetric[]>;
+  errors: Promise<PaginatedResult<ErrorLog>>;
+  slowQueries: Promise<SlowQuery[]>;
+}): Promise<SystemHealthStatus> {
+  const [services, metrics, alerts, recentErrors, slowQueries] = await Promise.all([
     Promise.all([
       probeCollection('colleges', 'Firestore · institutions'),
       probeCollection('users', 'Firestore · identity profiles'),
       probeCollection('systemConfig', 'Firestore · system config'),
       probeCollection('systemAuditLogs', 'Firestore · audit trail'),
     ]),
-    getPerformanceMetrics(24),
+    shared?.metrics ?? getPerformanceMetrics(24),
     readHealthCollection<HealthAlert>('alerts', (id, data) => ({
       id,
       message: String(data.message || 'System alert'),
@@ -1861,18 +1865,8 @@ export async function getSystemHealth(): Promise<SystemHealthStatus> {
       timestamp: healthDate(data.timestamp || data.createdAt),
       acknowledged: Boolean(data.acknowledged),
     })),
-    readHealthCollection<ErrorLog>('errors', (id, data) => ({
-      id,
-      message: String(data.message || 'Unknown error'),
-      endpoint: String(data.endpoint || data.path || '—'),
-      method: String(data.method || '—'),
-      statusCode: Number(data.statusCode || 500),
-      count: Number(data.count || 1),
-      firstSeen: healthDate(data.firstSeen || data.createdAt),
-      lastSeen: healthDate(data.lastSeen || data.updatedAt || data.createdAt),
-      stack: data.stack ? String(data.stack) : undefined,
-      resolved: Boolean(data.resolved),
-    })),
+    shared ? shared.errors.then(result => result.items.slice(0, 20)) : getErrorLogs({ limit: 20 }).then(result => result.items),
+    shared?.slowQueries ?? getSlowQueries(20),
   ]);
 
   const failed = services.filter(service => service.status === 'down').length;
@@ -1893,7 +1887,7 @@ export async function getSystemHealth(): Promise<SystemHealthStatus> {
     avgResponseTime,
     totalRequests24h,
     services,
-    slowQueries: await getSlowQueries(20),
+    slowQueries,
     recentErrors,
     alerts: alerts.filter(alert => !alert.acknowledged),
   };

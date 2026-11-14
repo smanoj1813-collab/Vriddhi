@@ -23,14 +23,14 @@ export default function RiskAlertsSummary() {
           Open alerts <ArrowUpRight size={16} aria-hidden="true" className="portal-interactive-icon" />
         </Link>
       </div>
-      <p className="mt-2 text-xs text-slate-600 dark:text-slate-400">Monthly snapshot — not live monitoring. Opening or refreshing the inbox does not start a check.</p>
+      <p className="mt-2 text-xs text-slate-600 dark:text-slate-400">Scheduled snapshot — not live monitoring. Opening or refreshing the inbox does not start a check.</p>
       {!isError && !isPending && <div className="mt-3 flex flex-col gap-2 text-xs text-slate-600 dark:text-slate-300">
         {active.slice(0, 2).map(alert => <Link key={alert.id} to={riskInboxPath(user?.role)} className="portal-motion-target flex gap-2 rounded-xl bg-slate-50 dark:bg-slate-800/60 px-3 py-2 hover:bg-slate-100 dark:hover:bg-slate-800">
           <BellRing size={14} aria-hidden="true" className="portal-interactive-icon mt-0.5 shrink-0 text-amber-800 dark:text-amber-200" />
           <span className="min-w-0 break-words">{alert.subjectUid !== (user?.uid || user?.id) && <strong>{alert.subjectName} · </strong>}{alert.title}{alert.state === 'unverified' ? ' · recheck needed' : ''}</span>
         </Link>)}
         {coverage.length > 0 && <p className="flex items-start gap-2"><Info size={14} aria-hidden="true" className="shrink-0 mt-0.5" /><span>{coverage.length} coverage warning{coverage.length === 1 ? '' : 's'} — incomplete data, not confirmed risks.</span></p>}
-        {!active.length && !coverage.length && <p>{last ? 'No active alerts from the completed checks. This is not a final eligibility or compliance decision.' : 'Your first automatic monthly review is pending. Supervisors receive faculty alerts after the scheduled review.'}</p>}
+        {!active.length && !coverage.length && <p>{last ? 'No active alerts from the completed checks. This is not a final eligibility or compliance decision.' : 'Your first automatic scheduled review is pending. Supervisors receive faculty alerts after the scheduled review.'}</p>}
         {data?.truncated && <p>Showing the most recent 300 inbox entries; older items may not be included.</p>}
       </div>}
     </section>

@@ -1,7 +1,8 @@
 import { db } from '@/Firebase/data';
+import { sameAttendancePayload } from '../utils/attendanceWritePlan';
 import {
   collection, query, where, getDocs, addDoc, updateDoc, doc,
-  getDoc, Timestamp, orderBy, limit, startAfter, writeBatch,
+  getDoc, Timestamp, orderBy, limit, startAfter, writeBatch, runTransaction,
   Query, QuerySnapshot, QueryDocumentSnapshot, DocumentData,
 } from 'firebase/firestore';
 import { fetchFacultyWeeklySchedule } from '../../admin/api/scheduleApi';
@@ -407,7 +408,8 @@ export async function saveAttendance(
   records: FacultyAttendanceRecord[],
   facultyId: string,
   facultyName: string,
-  collegeId: string
+  collegeId: string,
+  previousDocumentId?: string
 ): Promise<string> {
   const presentCount = records.filter(r => r.status === 'Present').length;
   const absentCount = records.filter(r => r.status === 'Absent').length;
@@ -592,12 +594,7 @@ export async function saveAttendance(
         source: session.source === 'weekly' ? 'weekly-schedule' : 'adhoc',
       };
 
-  // First batch: the authoritative trio (attendance + summary + session update)
-  // plus as many per-student records as fit under the 500-write cap.
-  const firstBatch = writeBatch(db);
-  firstBatch.set(attendanceRef, attendanceData, { merge: true });
-  firstBatch.set(summaryRef, summaryWrite, { merge: true });
-  firstBatch.set(sessionRef, {
+  const sessionData = {
     ...sessionWrite,
     collegeId,
     attendanceMarked: true,
@@ -606,7 +603,44 @@ export async function saveAttendance(
     markedAt: timestamp,
     markedBy: facultyId,
     updatedAt: timestamp,
-  }, { merge: true });
+  };
+
+  // Optimize only an already-loaded, same-id register that fits atomically.
+  // Read fresh server state, not the page's stale snapshot: concurrent edits,
+  // missing reporting rows and changed notes must never be silently skipped.
+  // Large/first/legacy saves retain the original chunked repair-compatible path.
+  if (previousDocumentId === documentId && recordWrites.length <= RECORDS_PER_BATCH) {
+    try {
+      await runTransaction(db, async (transaction) => {
+        const [oldAttendance, oldSummary, oldSession, ...oldRows] = await Promise.all([
+          transaction.get(attendanceRef), transaction.get(summaryRef), transaction.get(sessionRef),
+          ...recordWrites.map(({ ref }) => transaction.get(ref)),
+        ]);
+        const changed = recordWrites.filter(({ data }, index) => !sameAttendancePayload(oldRows[index].data(), data));
+        const headersChanged = !sameAttendancePayload(oldAttendance.data(), attendanceData)
+          || !sameAttendancePayload(oldSummary.data(), summaryWrite)
+          || !sameAttendancePayload(oldSession.data(), sessionData);
+        if (!headersChanged && changed.length === 0) return;
+        transaction.set(attendanceRef, attendanceData, { merge: true });
+        transaction.set(summaryRef, summaryWrite, { merge: true });
+        transaction.set(sessionRef, sessionData, { merge: true });
+        changed.forEach(({ ref, data }) => transaction.set(ref, data, { merge: true }));
+      });
+      return documentId;
+    } catch (err) {
+      // Some legacy/missing raw rows are writable but not get-readable under
+      // deployed rules. Do not widen permissions just for a cost optimization.
+      // Fall back to the original full upsert; real network failures surface.
+      const code = (err as { code?: string })?.code || '';
+      if (!code.endsWith('permission-denied')) throw err;
+      console.warn('[FacultyApi] Differential attendance read unavailable; using full repair save.');
+    }
+  }
+
+  const firstBatch = writeBatch(db);
+  firstBatch.set(attendanceRef, attendanceData, { merge: true });
+  firstBatch.set(summaryRef, summaryWrite, { merge: true });
+  firstBatch.set(sessionRef, sessionData, { merge: true });
   recordWrites.slice(0, RECORDS_PER_BATCH).forEach(({ ref, data }) => {
     firstBatch.set(ref, data, { merge: true });
   });

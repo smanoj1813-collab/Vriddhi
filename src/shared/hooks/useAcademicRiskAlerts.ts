@@ -10,7 +10,7 @@ export function useAcademicRiskAlerts() {
   const uid = user?.uid || user?.id || '';
   const key = ['academic-risk-alerts', uid, user?.collegeId, user?.role];
   const eligible = !!uid && ['faculty', 'mentor', 'student', 'hod', 'admin', 'principal'].includes(user?.role || '');
-  // Monthly reviews do not need a running poller. Fetch on entry/explicit
+  // Scheduled reviews do not need a running poller. Fetch on entry/explicit
   // refresh, successful mutations, or an actual foreground push message.
   const query = useQuery({ queryKey: key, queryFn: getMyAcademicRiskAlerts, enabled: eligible,
     staleTime: 5 * 60_000, refetchInterval: false, refetchOnWindowFocus: false, refetchOnReconnect: false, retry: 1 });

@@ -260,7 +260,8 @@ export function useFacultyAttendance() {
             records,
             facultyId,
             facultyName,
-            collegeId
+            collegeId,
+            existingAttendance?.id
           );
         } catch (err) {
           // A tenant-scoped write is exactly where a stale collegeId claim
@@ -274,7 +275,8 @@ export function useFacultyAttendance() {
                 records,
                 facultyId,
                 facultyName,
-                collegeId
+                collegeId,
+                existingAttendance?.id
               );
             }
           }
@@ -341,7 +343,7 @@ export function useFacultyAttendance() {
     } finally {
       setSaving(false);
     }
-  }, [selectedClass, facultyId, facultyName, collegeId, students, attendance, selfHealOnce]);
+  }, [selectedClass, facultyId, facultyName, collegeId, students, attendance, existingAttendance?.id, selfHealOnce]);
 
   return {
     facultyId,

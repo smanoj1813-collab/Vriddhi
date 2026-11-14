@@ -4,7 +4,7 @@ import { onDocumentCreated } from 'firebase-functions/v2/firestore'
 import * as admin from 'firebase-admin'
 import * as logger from 'firebase-functions/logger'
 import { DEFAULT_RISK_SETTINGS, validateRiskSettings, text, type RiskRow } from './riskCore'
-import { MONTHLY_RISK_SCHEDULE, MONTHLY_RISK_PUSH_RECOVERY_SCHEDULE, RISK_SWEEP_REQUESTS, queueMonthlyRiskSweep, processMonthlyRiskSweepRequest } from './riskSweep'
+import { RISK_REVIEW_POLICY, RISK_REVIEW_SCHEDULE, RISK_PUSH_RECOVERY_SCHEDULE, RISK_SWEEP_REQUESTS, queueScheduledRiskSweep, processScheduledRiskSweepRequest } from './riskSweep'
 import {
   filterReadableRiskAlerts, personFromAuth,
   requireRiskPerson, riskHash, validateStaffRiskSchedule,
@@ -33,7 +33,7 @@ export const getMyAcademicRiskAlerts = onCall(OPTIONS, async request => {
     ? { ...a, checkedAt: Math.max(Number(a.checkedAt) || 0, checked.get(text(a.subjectUid)) || 0) } : a)
   return { alerts, truncated: snap.size > 300, checkedAt: Math.max(0, ...checked.values()) || null,
     // Compatibility for cached clients: never offer the retired scan action.
-    canRefresh: false, canConfigure: person.role === 'principal' }
+    reviewCadence: RISK_REVIEW_POLICY.cadence, canRefresh: false, canConfigure: person.role === 'principal' }
 })
 export const markMyAcademicRiskAlertRead = onCall(OPTIONS, async request => {
   const person = await requireRiskPerson(request.auth?.uid)
@@ -106,14 +106,14 @@ export const saveFacultyRiskWorkSchedule = onCall(OPTIONS, async request => {
   return { success: true }
 })
 
-/** Monthly snapshot, not continuous early-warning monitoring. The starter
+/** Bounded scheduled snapshot, not continuous early-warning monitoring. The starter
  * only queues one cycle; bounded create-triggered chunks finish large rosters
- * in the same month instead of waiting another month after the first 1,000. */
-export const sweepAcademicRiskAlerts = onSchedule({ region: 'asia-south1', schedule: MONTHLY_RISK_SCHEDULE, timeZone: 'Asia/Kolkata', memory: '256MiB', timeoutSeconds: 60, maxInstances: 1, retryCount: 3, minBackoffSeconds: 300, maxBackoffSeconds: 600 }, async event => {
-  await queueMonthlyRiskSweep(event.scheduleTime)
+ * in the same review period instead of dropping the roster after the first 1,000. */
+export const sweepAcademicRiskAlerts = onSchedule({ region: 'asia-south1', schedule: RISK_REVIEW_SCHEDULE, timeZone: 'Asia/Kolkata', memory: '256MiB', timeoutSeconds: 60, maxInstances: 1, retryCount: 3, minBackoffSeconds: 300, maxBackoffSeconds: 600 }, async event => {
+  await queueScheduledRiskSweep(event.scheduleTime)
 })
 export const continueAcademicRiskSweep = onDocumentCreated({ region: 'asia-south1', document: `${RISK_SWEEP_REQUESTS}/{requestId}`, memory: '1GiB', timeoutSeconds: 540, concurrency: 1, maxInstances: 1, retry: true }, async event => {
-  await processMonthlyRiskSweepRequest(event.params.requestId)
+  await processScheduledRiskSweepRequest(event.params.requestId)
 })
 
 const TOKEN_PATTERN = /^[A-Za-z0-9_:.-]{50,4096}$/
@@ -186,10 +186,10 @@ export async function deliverAcademicRiskPush(outboxId: string) {
 export const sendAcademicRiskPush = onDocumentCreated({ region: 'asia-south1', document: 'riskPushOutbox/{outboxId}', memory: '256MiB', timeoutSeconds: 120, retry: true, maxInstances: 10 }, async event => {
   await deliverAcademicRiskPush(event.params.outboxId)
 })
-/** Monthly recovery after the review, not a permanent 15-minute poller.
+/** Daily bounded push recovery, independent of the full review schedule.
  * Transient sends still use the create trigger's retries and 24-hour budget. */
-export const retryAcademicRiskPush = onSchedule({ region: 'asia-south1', schedule: MONTHLY_RISK_PUSH_RECOVERY_SCHEDULE, timeZone: 'Asia/Kolkata', timeoutSeconds: 180, maxInstances: 1 }, async () => {
-  // An old undeliverable backlog must not crowd this month's fresh messages
+export const retryAcademicRiskPush = onSchedule({ region: 'asia-south1', schedule: RISK_PUSH_RECOVERY_SCHEDULE, timeZone: 'Asia/Kolkata', timeoutSeconds: 180, maxInstances: 1 }, async () => {
+  // An old undeliverable backlog must not crowd today's fresh messages
   // out of the bounded recovery query. Retention is a separate operator task.
   const snap = await firestore().collection('riskPushOutbox').where('status', '==', 'pending')
     .where('createdAt', '>=', Date.now() - 24 * 3_600_000).orderBy('createdAt', 'asc').limit(100).get()

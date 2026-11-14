@@ -592,6 +592,8 @@ export interface AssessmentTestReportSummary {
 }
 
 export interface AssessmentTestReport {
+  /** Opaque server-side test/attempt change token; optional for old backends. */
+  reportRevision?: string
   test: AssessmentTestReportTest
   summary: AssessmentTestReportSummary
   students: AssessmentTestReportStudent[]
