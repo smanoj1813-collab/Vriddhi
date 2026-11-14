@@ -2066,6 +2066,7 @@ service cloud.firestore {
     match /riskPushDevices/{id} { allow read, write: if false; }
     match /riskPushOutbox/{id} { allow read, write: if false; }
     match /riskJobs/{id} { allow read, write: if false; }
+    match /riskSweepRequests/{id} { allow read, write: if false; }
     match /riskRefreshLocks/{id} { allow read, write: if false; }
     match /riskSubjectLocks/{id} { allow read, write: if false; }
     match /riskConfigurationAudit/{id} { allow read, write: if false; }

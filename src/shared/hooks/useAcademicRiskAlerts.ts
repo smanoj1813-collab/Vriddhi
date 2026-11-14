@@ -10,8 +10,10 @@ export function useAcademicRiskAlerts() {
   const uid = user?.uid || user?.id || '';
   const key = ['academic-risk-alerts', uid, user?.collegeId, user?.role];
   const eligible = !!uid && ['faculty', 'mentor', 'student', 'hod', 'admin', 'principal'].includes(user?.role || '');
+  // Monthly reviews do not need a running poller. Fetch on entry/explicit
+  // refresh, successful mutations, or an actual foreground push message.
   const query = useQuery({ queryKey: key, queryFn: getMyAcademicRiskAlerts, enabled: eligible,
-    staleTime: 30_000, refetchInterval: 120_000, refetchIntervalInBackground: false, retry: 1 });
+    staleTime: 5 * 60_000, refetchInterval: false, refetchOnWindowFocus: false, refetchOnReconnect: false, retry: 1 });
   const invalidate = () => client.invalidateQueries({ queryKey: ['academic-risk-alerts', uid] });
   const refresh = useMutation({ mutationFn: refreshMyAcademicRiskAlerts, onSuccess: invalidate });
   const markRead = useMutation({ mutationFn: markMyAcademicRiskAlertRead, onSuccess: invalidate });

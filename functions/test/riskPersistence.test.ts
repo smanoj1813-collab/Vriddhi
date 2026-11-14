@@ -82,6 +82,59 @@ describe('academic risk: actual authenticated callable handlers', () => {
     assert.equal(entries('riskAlerts').length, count); assert.equal(entries('riskPushOutbox').length, 3)
     assert.equal(store.data.get(`riskAlerts/${a.id}`)?.read, true)
   })
+  it('an identical later check commits zero alert/outbox writes and retains read acknowledgements', async () => {
+    await api.refreshMyAcademicRiskAlerts.run(request())
+    const a = selfAlert('class-register')
+    await api.markMyAcademicRiskAlertRead.run(request('faculty-uid', { id: a.id }))
+    const before = structuredClone(entries('riskAlerts'))
+    const start = store.writes.length
+    Date.now = () => NOW + 120_000
+    await api.refreshMyAcademicRiskAlerts.run(request())
+    assert.deepEqual(entries('riskAlerts'), before)
+    assert.deepEqual(store.writes.slice(start).filter(w => /^(riskAlerts|riskPushOutbox)\//.test(w.path)), [])
+    assert.equal(store.data.get(`riskAlerts/${a.id}`)!.readAt, NOW)
+    assert.equal(store.data.get(`riskSubjectRuns/${service.riskHash('college-a', 'faculty-uid')}`)!.checkedAt, NOW + 120_000)
+    const own = await api.getMyAcademicRiskAlerts.run(request())
+    const principal = await api.getMyAcademicRiskAlerts.run(request('principal-a'))
+    assert.equal(own.checkedAt, NOW + 120_000)
+    assert.equal(principal.checkedAt, NOW + 120_000)
+    assert.equal(principal.alerts.find((v: any) => v.category === 'class-register').checkedAt, NOW + 120_000)
+    assert.equal(store.data.get(`riskAlerts/${a.id}`)!.checkedAt, NOW, 'freshness does not rewrite stored alert copies')
+  })
+  it('a changed finding updates its recipient copies without sending an unchanged-severity push', async () => {
+    await api.refreshMyAcademicRiskAlerts.run(request())
+    const a = selfAlert('class-register')
+    await api.markMyAcademicRiskAlertRead.run(request('faculty-uid', { id: a.id }))
+    store.data.get('weeklySchedules/WS1')!.subject = 'Algorithms'
+    const start = store.writes.length
+    Date.now = () => NOW + 120_000
+    await api.refreshMyAcademicRiskAlerts.run(request())
+    assert.equal(store.writes.slice(start).filter(w => w.path.startsWith('riskAlerts/') && w.value.category === 'class-register').length, 3)
+    assert.equal(store.writes.slice(start).filter(w => w.path.startsWith('riskPushOutbox/')).length, 0)
+    const next = store.data.get(`riskAlerts/${a.id}`)!
+    assert.match(next.message, /Algorithms/)
+    assert.equal(next.updatedAt, NOW + 120_000)
+    assert.equal(next.read, true)
+    assert.equal(next.readAt, NOW)
+  })
+  it('repeated incomplete checks do not rewrite an already-unverified alert or unchanged coverage', async () => {
+    await api.refreshMyAcademicRiskAlerts.run(request())
+    store.failedCollections.add('attendance')
+    resetCooldown(); await api.refreshMyAcademicRiskAlerts.run(request())
+    const start = store.writes.length
+    Date.now = () => NOW + 120_000
+    await api.refreshMyAcademicRiskAlerts.run(request())
+    assert.equal(selfAlert('class-register').state, 'unverified')
+    assert.equal(selfAlert('class-register').stale, true)
+    assert.deepEqual(store.writes.slice(start).filter(w => /^(riskAlerts|riskPushOutbox)\//.test(w.path)), [])
+  })
+  it('ignores a run timestamp with invalid tenant/subject linkage', async () => {
+    await api.refreshMyAcademicRiskAlerts.run(request())
+    store.data.get(`riskSubjectRuns/${service.riskHash('college-a', 'faculty-uid')}`)!.collegeId = 'college-b'
+    const inbox = await api.getMyAcademicRiskAlerts.run(request())
+    assert.equal(inbox.checkedAt, null)
+    assert.ok(inbox.alerts.every((a: any) => a.checkedAt === NOW))
+  })
   it('rate-limits self-service scans and refuses supervisor-selected subjects', async () => {
     await api.refreshMyAcademicRiskAlerts.run(request())
     await assert.rejects(api.refreshMyAcademicRiskAlerts.run(request()), { code: 'resource-exhausted' })
@@ -263,6 +316,16 @@ describe('registered-device ownership, FCM privacy and delivery deduplication', 
     assert.equal(store.pushes.length, 0); assert.equal(store.data.get(item[0])!.status, 'skipped')
     assert.equal(store.data.get(item[0])!.reason, 'delivery-window-expired')
   })
+  it('monthly push recovery ignores an expired backlog so fresh messages are not crowded out', async () => {
+    for (let i = 0; i < 101; i++) store.data.set(`riskPushOutbox/expired-${i}`, { status: 'pending', createdAt: NOW - 25 * 3_600_000, attempts: 0 })
+    await api.refreshMyAcademicRiskAlerts.run(request())
+    const start = store.writes.length
+    await api.retryAcademicRiskPush.run({} as any)
+    assert.ok(store.writes.slice(start).filter(w => w.path.startsWith('riskPushOutbox/')).length > 0)
+    assert.ok(store.writes.slice(start).every(w => !w.path.startsWith('riskPushOutbox/expired-')))
+    assert.ok(entries('riskPushOutbox').filter(v => v.createdAt === NOW).every(v => v.status === 'skipped'))
+    assert.equal(store.data.get('riskPushOutbox/expired-0')!.status, 'pending')
+  })
   it('keeps transient failures retryable without creating duplicate outbox generations', async () => {
     await api.registerMyAcademicRiskDevice.run(request('faculty-uid', { token })); await api.refreshMyAcademicRiskAlerts.run(request())
     const item = [...store.data.entries()].find(([p, v]) => p.startsWith('riskPushOutbox/') && v.recipientUid === 'faculty-uid')!
@@ -292,8 +355,11 @@ describe('safety caps and resumable background checks', () => {
     const result = await service.readRiskRows(ctx, 'submissions', { limit: (n: number) => ({ get: async () => ({ size: 3, docs: [1, 2, 3].slice(0, n).map(id => ({ id: String(id), data: () => ({}) })) }) }) } as any, 2)
     assert.equal(result.length, 2); assert.equal(ctx.complete.submissions, false); assert.match(ctx.coverage.join(' '), /safety read limit/)
   })
-  it('the scheduled function validates discovered accounts and completes a small cursor cycle', async () => {
-    await api.sweepAcademicRiskAlerts.run({} as any)
+  it('the monthly starter queues a bounded worker that validates discovered accounts', async () => {
+    await api.sweepAcademicRiskAlerts.run({ scheduleTime: new Date(NOW).toISOString() } as any)
+    assert.equal(store.data.get('riskJobs/academic-sweep')!.cycleComplete, false)
+    assert.equal(entries('riskAlerts').length, 0)
+    await api.continueAcademicRiskSweep.run({ params: { requestId: '2026-11__0' } } as any)
     assert.equal(store.data.get('riskJobs/academic-sweep')!.cycleComplete, true)
     assert.equal(store.data.get('riskJobs/academic-sweep')!.cursor, '')
     assert.ok(entries('riskAlerts').some(a => a.subjectUid === 'faculty-uid'))

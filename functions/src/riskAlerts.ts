@@ -4,9 +4,10 @@ import { onDocumentCreated } from 'firebase-functions/v2/firestore'
 import * as admin from 'firebase-admin'
 import * as logger from 'firebase-functions/logger'
 import { DEFAULT_RISK_SETTINGS, validateRiskSettings, text, type RiskRow } from './riskCore'
+import { MONTHLY_RISK_SCHEDULE, MONTHLY_RISK_PUSH_RECOVERY_SCHEDULE, RISK_SWEEP_REQUESTS, queueMonthlyRiskSweep, processMonthlyRiskSweepRequest } from './riskSweep'
 import {
   filterReadableRiskAlerts, loadCollegeRiskEvidence, personFromAuth, refreshRiskSubject,
-  requireRiskPerson, resolveRiskPerson, riskHash, validateStaffRiskSchedule,
+  requireRiskPerson, riskHash, validateStaffRiskSchedule,
 } from './riskService'
 
 const OPTIONS = { region: 'asia-south1', memory: '512MiB' as const, timeoutSeconds: 180, maxInstances: 20 }
@@ -18,9 +19,19 @@ export const getMyAcademicRiskAlerts = onCall(OPTIONS, async request => {
   const person = await requireRiskPerson(request.auth?.uid)
   const snap = await firestore().collection('riskAlerts').where('recipientUid', '==', person.uid).where('collegeId', '==', person.collegeId)
     .orderBy('updatedAt', 'desc').limit(301).get()
-  const alerts = await filterReadableRiskAlerts(person, snap.docs.slice(0, 300).map(row))
-  const run = await firestore().collection('riskSubjectRuns').doc(riskHash(person.collegeId, person.uid)).get()
-  return { alerts, truncated: snap.size > 300, checkedAt: run.data()?.checkedAt || null,
+  const readable = await filterReadableRiskAlerts(person, snap.docs.slice(0, 300).map(row))
+  // Freshness belongs to one subject run, not to timestamp-only rewrites of
+  // every alert/recipient copy. Only already-authorized subjects are exposed.
+  const subjects = [...new Set([person.uid, ...readable.map(a => text(a.subjectUid)).filter(Boolean)])]
+  const runs = await firestore().getAll(...subjects.map(uid => firestore().collection('riskSubjectRuns').doc(riskHash(person.collegeId, uid))))
+  const checked = new Map<string, number>()
+  runs.forEach((run, index) => {
+    const data = run.data()
+    if (data?.collegeId === person.collegeId && data.subjectUid === subjects[index] && Number.isFinite(data.checkedAt)) checked.set(subjects[index], data.checkedAt)
+  })
+  const alerts = readable.map(a => ['active', 'unverified'].includes(a.state)
+    ? { ...a, checkedAt: Math.max(Number(a.checkedAt) || 0, checked.get(text(a.subjectUid)) || 0) } : a)
+  return { alerts, truncated: snap.size > 300, checkedAt: Math.max(0, ...checked.values()) || null,
     canRefresh: ['faculty', 'mentor', 'student'].includes(person.role), canConfigure: person.role === 'principal' }
 })
 export const markMyAcademicRiskAlertRead = onCall(OPTIONS, async request => {
@@ -99,52 +110,14 @@ export const saveFacultyRiskWorkSchedule = onCall(OPTIONS, async request => {
   return { success: true }
 })
 
-/** Bounded, resumable rotation. It does not silently drop a college/user when
- * the time budget is reached; the next tick resumes from the last full page.
- * Self-service checks provide an immediate refresh independently of this sweep. */
-export const sweepAcademicRiskAlerts = onSchedule({ region: 'asia-south1', schedule: 'every 15 minutes', timeZone: 'Asia/Kolkata', memory: '1GiB', timeoutSeconds: 540, maxInstances: 1 }, async () => {
-  const job = firestore().collection('riskJobs').doc('academic-sweep'), started = Date.now()
-  const lease = riskHash(String(started), String(Math.random()))
-  let cursor = ''
-  const acquired = await firestore().runTransaction(async tx => {
-    const old = (await tx.get(job)).data()
-    if (Number(old?.leaseUntil) > started) return false
-    cursor = text(old?.cursor)
-    tx.set(job, { lease, leaseUntil: started + 9 * 60_000, startedAt: started }, { merge: true })
-    return true
-  })
-  if (!acquired) return
-  const colleges = new Map<string, ReturnType<typeof loadCollegeRiskEvidence>>()
-  let processed = 0, errors = 0
-  try {
-    while (Date.now() - started < 7 * 60_000 && processed < 1000) {
-      let query = firestore().collection('users').where('role', 'in', ['student', 'faculty', 'mentor']).orderBy(admin.firestore.FieldPath.documentId()).limit(25)
-      if (cursor) query = query.startAfter(cursor)
-      const page = await query.get()
-      if (page.empty) { cursor = ''; break }
-      const auth = await admin.auth().getUsers(page.docs.map(d => ({ uid: d.id })))
-      for (let offset = 0; offset < auth.users.length; offset += 3) {
-        await Promise.all(auth.users.slice(offset, offset + 3).map(async record => {
-          try {
-            const person = await resolveRiskPerson(record)
-            if (!person || !['student', 'faculty', 'mentor'].includes(person.role)) return
-            let college = colleges.get(person.collegeId)
-            if (!college) { college = loadCollegeRiskEvidence(person.collegeId); colleges.set(person.collegeId, college) }
-            await refreshRiskSubject(person, await college)
-            processed++
-          } catch (error) { errors++; logger.error('[academicRisk] subject check failed', { uid: record.uid, error: String(error) }) }
-        }))
-      }
-      cursor = page.docs[page.docs.length - 1].id
-      await job.set({ cursor, processed, errors, checkpointAt: Date.now() }, { merge: true })
-      if (page.size < 25) { cursor = ''; break }
-    }
-  } finally {
-    await firestore().runTransaction(async tx => {
-      const current = await tx.get(job)
-      if (current.data()?.lease === lease) tx.set(job, { cursor, leaseUntil: 0, finishedAt: Date.now(), processed, errors, cycleComplete: !cursor }, { merge: true })
-    })
-  }
+/** Monthly snapshot, not continuous early-warning monitoring. The starter
+ * only queues one cycle; bounded create-triggered chunks finish large rosters
+ * in the same month instead of waiting another month after the first 1,000. */
+export const sweepAcademicRiskAlerts = onSchedule({ region: 'asia-south1', schedule: MONTHLY_RISK_SCHEDULE, timeZone: 'Asia/Kolkata', memory: '256MiB', timeoutSeconds: 60, maxInstances: 1, retryCount: 3, minBackoffSeconds: 300, maxBackoffSeconds: 600 }, async event => {
+  await queueMonthlyRiskSweep(event.scheduleTime)
+})
+export const continueAcademicRiskSweep = onDocumentCreated({ region: 'asia-south1', document: `${RISK_SWEEP_REQUESTS}/{requestId}`, memory: '1GiB', timeoutSeconds: 540, concurrency: 1, maxInstances: 1, retry: true }, async event => {
+  await processMonthlyRiskSweepRequest(event.params.requestId)
 })
 
 const TOKEN_PATTERN = /^[A-Za-z0-9_:.-]{50,4096}$/
@@ -217,10 +190,13 @@ export async function deliverAcademicRiskPush(outboxId: string) {
 export const sendAcademicRiskPush = onDocumentCreated({ region: 'asia-south1', document: 'riskPushOutbox/{outboxId}', memory: '256MiB', timeoutSeconds: 120, retry: true, maxInstances: 10 }, async event => {
   await deliverAcademicRiskPush(event.params.outboxId)
 })
-/** Recovers sends interrupted after acquiring the delivery lease. A stable
- * notification tag makes retries replace the same notice, not stack copies. */
-export const retryAcademicRiskPush = onSchedule({ region: 'asia-south1', schedule: 'every 15 minutes', timeoutSeconds: 180, maxInstances: 1 }, async () => {
-  const snap = await firestore().collection('riskPushOutbox').where('status', '==', 'pending').orderBy('createdAt', 'asc').limit(100).get()
+/** Monthly recovery after the review, not a permanent 15-minute poller.
+ * Transient sends still use the create trigger's retries and 24-hour budget. */
+export const retryAcademicRiskPush = onSchedule({ region: 'asia-south1', schedule: MONTHLY_RISK_PUSH_RECOVERY_SCHEDULE, timeZone: 'Asia/Kolkata', timeoutSeconds: 180, maxInstances: 1 }, async () => {
+  // An old undeliverable backlog must not crowd this month's fresh messages
+  // out of the bounded recovery query. Retention is a separate operator task.
+  const snap = await firestore().collection('riskPushOutbox').where('status', '==', 'pending')
+    .where('createdAt', '>=', Date.now() - 24 * 3_600_000).orderBy('createdAt', 'asc').limit(100).get()
   for (const doc of snap.docs) {
     if (Number(doc.data().createdAt) < Date.now() - 24 * 3_600_000 || Number(doc.data().attempts) >= 8) { await doc.ref.update({ status: 'skipped', reason: 'delivery-window-expired', leaseUntil: 0 }); continue }
     try { await deliverAcademicRiskPush(doc.id) } catch (error) { logger.warn('[academicRisk] push retry failed', { outboxId: doc.id, error: String(error) }) }

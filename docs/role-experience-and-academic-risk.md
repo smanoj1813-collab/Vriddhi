@@ -6,7 +6,7 @@
 - Staff navigation and dashboard action icons use finite hover/keyboard-focus greetings. Decorative illustrations stop within five seconds, have unique SVG resource IDs, are hidden from assistive technology and respect `prefers-reduced-motion`. No image requests or animation library was added.
 - Students, faculty/mentors, HODs and Principals have a **Risk Alerts** inbox. Faculty/student dashboards and supervisor overviews include a compact entry card. Student phone navigation exposes the inbox in **More → Account**; existing thumb tabs are unchanged.
 
-This is an early-warning tool, not a final exam-eligibility, compliance, disciplinary or university-policy decision. It does not change attendance, grades, deadlines or academic policies.
+Automatic checks are now a **monthly review**, not live early-warning monitoring. This is not a final exam-eligibility, compliance, disciplinary or university-policy decision. It does not change attendance, grades, deadlines or academic policies. See the [monthly cost-control revision and rollout](academic-risk-monthly-cost-controls.md) before deploying.
 
 ## Evidence and scope
 
@@ -74,9 +74,13 @@ Staff check-in/out monitoring additionally requires choosing a verified faculty 
 
 ## Background checking and bounded reads
 
-`sweepAcademicRiskAlerts` runs every 15 minutes in `asia-south1`, with IST scheduling. It scans discovered student/faculty/mentor accounts in deterministic pages of 25, validates them against Auth, processes at most three subjects concurrently and resumes its cursor when its seven-minute/1,000-successful-check budget is reached (checked between completed pages; failed/ineligible accounts do not count as successes). One leased sweep runs at a time. Inspect `riskJobs/academic-sweep` for cursor, checkpoint, processed/error counts and cycle completion.
+**Cost-control revision: automatic checking is a monthly snapshot, not continuous early-warning monitoring.** `sweepAcademicRiskAlerts` now starts one cycle on the **1st of each month at 03:00 IST** (`0 3 1 * *`, `asia-south1`). A persisted IST-month guard prevents scheduler retries or leftover 15-minute deliveries from starting another cycle in the same month. The starter only creates a server-owned `riskSweepRequests` document; it does not scan academic evidence.
 
-This is **not a promise that every account is checked every 15 minutes**. Large institutions may need several ticks. The inbox shows evidence timestamps and warns when received checks are over four hours old. Students/faculty can request **Check my records now** once every two minutes; inbox refresh alone only reloads materialized results.
+`continueAcademicRiskSweep` handles create-triggered continuations only while that cycle has remaining work. It discovers student/faculty/mentor accounts in deterministic pages of 25, validates Auth, and checks at most three subjects concurrently. Each chunk stops between completed pages after seven minutes or 1,000 **discovered** accounts (including orphan/invalid hints), checkpoints its cursor, and atomically queues the next chunk. Large rosters therefore finish within the same monthly cycle rather than waiting a month after the first 1,000 accounts. Leases serialize chunks; completed deliveries are idempotent; claimed chunk attempts are capped at three, with at most 200 chunks per month. Failure budgets stop visibly instead of triggering unbounded scans. Inspect `riskJobs/academic-sweep` and `riskSweepRequests` for period, cursor, counts, status, errors and completion; discovery completion is not an academic “all clear.”
+
+Unchanged findings and unchanged unverified states no longer rewrite alert copies just to advance timestamps. `riskSubjectRuns` stores check freshness once per subject; authorized inbox responses derive current check times from those runs. Read acknowledgements and their timestamps are preserved. The inbox has **no interval/focus/reconnect polling**: it loads on entry, explicit refresh, successful user actions, or a real foreground push. Students/faculty can still request **Check my records now** once every two minutes. Monthly checks can miss intervening attendance/deadline changes; the UI explicitly states that it is not live monitoring. Inbox refresh only reloads saved results.
+
+See [monthly cost controls and safe rollout](academic-risk-monthly-cost-controls.md), especially the deployment ordering and the fact that a Hosting-only deploy does not stop an already-deployed 15-minute scheduler.
 
 Caps are explicit, checked with `limit + 1` and reported as incomplete coverage:
 
@@ -99,7 +103,7 @@ Push is implemented, but **no deployment, browser opt-in or live FCM delivery is
 
 `riskPushDevices` is server-only, token-hashed, owner-bound and bounded to ten devices per account. Re-registering a shared-browser token replaces the previous binding, and one user cannot unregister another user's token. Unused devices older than 90 days are not used for sends; invalid/unregistered tokens are removed when FCM reports them. Plan retention/cleanup of old alert, device and audit records under the institution's policy.
 
-Delivery revalidates current recipient/subject scope and active alert generation. Outbox sends are leased, transient failures retry (at most eight attempts/24 hours), and a scheduled recovery catches interrupted deliveries. Web Push TTL is 15 minutes. Delivery is best-effort/at-least-once: a stable browser notification tag replaces a retry of the same alert rather than stacking duplicates; it is not an exactly-once guarantee.
+Delivery revalidates current recipient/subject scope and active alert generation. Outbox sends are leased and transient failures use the create trigger's retries (at most eight claimed send attempts/24 hours). The recovery scheduler now runs **monthly at 06:00 IST on the 1st**, not every 15 minutes; it queries only pending messages created within the delivery window so expired backlog cannot crowd out fresh messages. Recovery remains bounded to 100 messages and best-effort; old outbox retention is an operator task. On-demand checks still create their own immediate push events, but no permanent recovery poller is kept alive for them. Web Push TTL is 15 minutes. Delivery is best-effort/at-least-once: a stable browser notification tag replaces a retry of the same alert rather than stacking duplicates; it is not an exactly-once guarantee.
 
 FCM messages contain only routing/account identifiers, **not faculty/student names, marks, attendance percentages or issue text**. The worker checks a persisted active-account + explicit-enrollment binding before showing a generic private-inbox reminder. Sign-out/account switching clears the binding and closes old notices locally even if server token cleanup is offline. Foreground messages invalidate the signed-in inbox cache. Notification clicks only open the same-origin role inbox.
 
@@ -107,8 +111,8 @@ FCM messages contain only routing/account identifiers, **not faculty/student nam
 
 1. In the normal deployment checkout, **pull merged `main` first**; do not deploy a stale checkout. Keep this Arena working branch unchanged during implementation.
 2. Install locked root and Functions dependencies, run tests, build root and Functions with the public VAPID setting if push is wanted.
-3. Deploy the checked-in Firestore indexes and wait for them to be ready, then Functions, rules and Hosting to `vriddhi-academic`. New compound risk queries need the included indexes. A missing index is surfaced as coverage failure, not an empty successful check.
-4. Have the Principal review warning defaults, explicit working schedules, existing assigned academic packs and faculty/HOD/Principal provisioning links. Run self-service checks on sample real accounts before relying on the rotating sweep.
+3. Deploy the checked-in Firestore indexes and wait for them to be ready, then follow the [monthly revision's safe rollout order](academic-risk-monthly-cost-controls.md#safe-rollout--only-after-approval): pause legacy 15-minute jobs, wait for active work, deploy the continuation trigger **before** its starter, then the changed Functions, rules and Hosting to `vriddhi-academic`. New compound risk queries need the included indexes. A missing index is surfaced as coverage failure, not an empty successful check.
+4. Have the Principal review warning defaults, explicit working schedules, existing assigned academic packs and faculty/HOD/Principal provisioning links. Run self-service checks on sample real accounts before relying on the monthly review.
 5. Check `riskJobs`, `riskSubjectRuns`, coverage warnings, Functions logs and outbox delivery state. Perform the real-device acceptance cases above. No data migration, default university activation, production configuration or deployment was executed here.
 
 ## Validation commands
