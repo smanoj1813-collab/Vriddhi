@@ -6,7 +6,7 @@ import * as logger from 'firebase-functions/logger'
 import { DEFAULT_RISK_SETTINGS, validateRiskSettings, text, type RiskRow } from './riskCore'
 import { MONTHLY_RISK_SCHEDULE, MONTHLY_RISK_PUSH_RECOVERY_SCHEDULE, RISK_SWEEP_REQUESTS, queueMonthlyRiskSweep, processMonthlyRiskSweepRequest } from './riskSweep'
 import {
-  filterReadableRiskAlerts, loadCollegeRiskEvidence, personFromAuth, refreshRiskSubject,
+  filterReadableRiskAlerts, personFromAuth,
   requireRiskPerson, riskHash, validateStaffRiskSchedule,
 } from './riskService'
 
@@ -32,7 +32,8 @@ export const getMyAcademicRiskAlerts = onCall(OPTIONS, async request => {
   const alerts = readable.map(a => ['active', 'unverified'].includes(a.state)
     ? { ...a, checkedAt: Math.max(Number(a.checkedAt) || 0, checked.get(text(a.subjectUid)) || 0) } : a)
   return { alerts, truncated: snap.size > 300, checkedAt: Math.max(0, ...checked.values()) || null,
-    canRefresh: ['faculty', 'mentor', 'student'].includes(person.role), canConfigure: person.role === 'principal' }
+    // Compatibility for cached clients: never offer the retired scan action.
+    canRefresh: false, canConfigure: person.role === 'principal' }
 })
 export const markMyAcademicRiskAlertRead = onCall(OPTIONS, async request => {
   const person = await requireRiskPerson(request.auth?.uid)
@@ -43,17 +44,12 @@ export const markMyAcademicRiskAlertRead = onCall(OPTIONS, async request => {
   await ref.update({ read: true, readAt: Date.now() })
   return { success: true }
 })
-export const refreshMyAcademicRiskAlerts = onCall(OPTIONS, async request => {
-  const person = await requireRiskPerson(request.auth?.uid)
-  if (!['student', 'faculty', 'mentor'].includes(person.role)) throw new HttpsError('permission-denied', 'Supervisors receive the scheduled faculty checks; they cannot select another person to scan')
-  // No college/subject/recipient from the payload is ever accepted.
-  const lock = firestore().collection('riskRefreshLocks').doc(riskHash(person.collegeId, person.uid)), now = Date.now()
-  await firestore().runTransaction(async tx => {
-    const previous = await tx.get(lock)
-    if (Number(previous.data()?.nextAllowedAt) > now) throw new HttpsError('resource-exhausted', 'Checks were requested recently. Please wait two minutes and refresh the inbox.')
-    tx.set(lock, { nextAllowedAt: now + 120_000 })
-  })
-  return refreshRiskSubject(person, await loadCollegeRiskEvidence(person.collegeId), now)
+/** Retired callable kept as a deny-only compatibility endpoint. Removing the
+ * export alone can leave an older deployed scanner reachable. No role, payload
+ * or college can trigger a check here; reject before Auth-admin/Firestore I/O. */
+export const refreshMyAcademicRiskAlerts = onCall({ ...OPTIONS, memory: '128MiB', timeoutSeconds: 10, maxInstances: 2 }, async request => {
+  if (!request.auth?.uid) throw new HttpsError('unauthenticated', 'Sign in to view academic alerts')
+  throw new HttpsError('permission-denied', 'Manual academic risk checks are disabled. Reviews run automatically once per month.')
 })
 export const getAcademicRiskConfiguration = onCall(OPTIONS, async request => {
   const person = await requireRiskPerson(request.auth?.uid)

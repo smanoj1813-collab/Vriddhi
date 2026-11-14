@@ -23,7 +23,6 @@ export interface AcademicRiskInbox {
   alerts: AcademicRiskAlert[];
   checkedAt: number | null;
   truncated: boolean;
-  canRefresh: boolean;
   canConfigure: boolean;
 }
 export interface FacultyRiskWorkSchedule {
@@ -46,7 +45,6 @@ async function call<T>(name: string, payload: unknown = {}): Promise<T> {
   return (await httpsCallable<unknown, T>(functions, name)(payload)).data;
 }
 export const getMyAcademicRiskAlerts = () => call<AcademicRiskInbox>('getMyAcademicRiskAlerts');
-export const refreshMyAcademicRiskAlerts = () => call<{ checkedAt: number }>('refreshMyAcademicRiskAlerts');
 export const markMyAcademicRiskAlertRead = (id: string) => call('markMyAcademicRiskAlertRead', { id });
 export const getAcademicRiskConfiguration = () => call<AcademicRiskConfiguration>('getAcademicRiskConfiguration');
 export const saveAcademicRiskConfiguration = (settings: RiskSettings, expectedRevision: number) => call('saveAcademicRiskConfiguration', { settings, expectedRevision });

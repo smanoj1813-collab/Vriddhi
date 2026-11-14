@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/modules/auth/context/AuthContext';
-import { getMyAcademicRiskAlerts, markMyAcademicRiskAlertRead, refreshMyAcademicRiskAlerts } from '../services/riskAlertsApi';
+import { getMyAcademicRiskAlerts, markMyAcademicRiskAlertRead } from '../services/riskAlertsApi';
 
 /** Used by LAZY authenticated pages only. Do not import into Layout/login. */
 export function useAcademicRiskAlerts() {
@@ -15,7 +15,6 @@ export function useAcademicRiskAlerts() {
   const query = useQuery({ queryKey: key, queryFn: getMyAcademicRiskAlerts, enabled: eligible,
     staleTime: 5 * 60_000, refetchInterval: false, refetchOnWindowFocus: false, refetchOnReconnect: false, retry: 1 });
   const invalidate = () => client.invalidateQueries({ queryKey: ['academic-risk-alerts', uid] });
-  const refresh = useMutation({ mutationFn: refreshMyAcademicRiskAlerts, onSuccess: invalidate });
   const markRead = useMutation({ mutationFn: markMyAcademicRiskAlertRead, onSuccess: invalidate });
   useEffect(() => {
     if (!eligible || !('serviceWorker' in navigator)) return;
@@ -25,5 +24,5 @@ export function useAcademicRiskAlerts() {
     navigator.serviceWorker.addEventListener('message', onMessage);
     return () => navigator.serviceWorker.removeEventListener('message', onMessage);
   }, [eligible, uid, client]);
-  return { ...query, refresh, markRead, eligible, uid, user };
+  return { ...query, markRead, eligible, uid, user };
 }

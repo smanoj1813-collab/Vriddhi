@@ -40,7 +40,7 @@ export async function readRiskRows(ctx: RiskReadContext, source: string, query: 
   } catch (error) {
     logger.error('[academicRisk] source unavailable', { source, error: error instanceof Error ? error.message : String(error) })
     ctx.complete[source] = false
-    ctx.coverage.push(`${SOURCE_LABELS[source] || source} could not be read. Related checks are incomplete; retry later.`)
+    ctx.coverage.push(`${SOURCE_LABELS[source] || source} could not be read. Related checks are incomplete and will be revisited at the next monthly review.`)
     return []
   }
 }

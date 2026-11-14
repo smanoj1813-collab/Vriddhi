@@ -1,6 +1,6 @@
 import { lazy, Suspense, useId, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { BellRing, Check, CircleAlert, Clock3, Info, RefreshCw, Settings2, ShieldAlert } from 'lucide-react';
+import { Check, CircleAlert, Clock3, Info, RefreshCw, Settings2, ShieldAlert } from 'lucide-react';
 import RoleWelcomeBanner from '../components/RoleWelcomeBanner';
 import RiskPushControl from '../components/RiskPushControl';
 import { useAcademicRiskAlerts } from '../hooks/useAcademicRiskAlerts';
@@ -31,7 +31,7 @@ function AlertCard({ alert, role, ownUid, marking, markRead }: { alert: Academic
   </article>;
 }
 export default function AcademicRiskAlertsPage() {
-  const { data, isPending, isError, error, refetch, isFetching, refresh, markRead, uid, user, eligible } = useAcademicRiskAlerts();
+  const { data, isPending, isError, error, refetch, isFetching, markRead, uid, user, eligible } = useAcademicRiskAlerts();
   const id = useId();
   const [category, setCategory] = useState('all');
   const [mode, setMode] = useState<'active' | 'history'>('active');
@@ -49,16 +49,15 @@ export default function AcademicRiskAlertsPage() {
       <div className="flex flex-wrap items-center gap-2">
         <p className="mr-auto flex items-center gap-2 text-sm font-bold text-slate-900 dark:text-white"><ShieldAlert size={19} aria-hidden="true" className="text-amber-800 dark:text-amber-200" />{active.length} attention item{active.length === 1 ? '' : 's'}</p>
         <button type="button" onClick={() => void refetch()} disabled={isFetching} className={control}><RefreshCw size={14} aria-hidden="true" className="portal-interactive-icon" />{isFetching ? 'Loading…' : 'Refresh inbox'}</button>
-        {data?.canRefresh && <button type="button" onClick={() => refresh.mutate()} disabled={refresh.isPending} className={control}><BellRing size={14} aria-hidden="true" className="portal-interactive-icon" />{refresh.isPending ? 'Checking records…' : 'Check my records now'}</button>}
         {data?.canConfigure && <button type="button" aria-expanded={showSettings} aria-controls={`${id}-settings`} onClick={() => setShowSettings(v => !v)} className={control}><Settings2 size={14} aria-hidden="true" className="portal-interactive-icon" />Warning settings</button>}
       </div>
-      <p className="mt-3 flex items-start gap-1.5 text-xs leading-relaxed text-slate-600 dark:text-slate-400"><Clock3 size={14} aria-hidden="true" className="mt-0.5 shrink-0" /><span>{supervisor ? 'Most recent received faculty check' : 'Last completed check'}: {riskCheckedLabel(latest)}. Automatic reviews start on the 1st of each month at 3:00 AM IST; large rosters finish in batches. Refresh inbox only reloads saved results. {supervisor ? 'Missing department or recipient links appear as coverage warnings, not college-wide HOD broadcasts.' : 'You can still check your own records on demand, at most once every two minutes.'}</span></p>
-      <p role="note" className="mt-2 text-xs leading-relaxed text-amber-900 dark:text-amber-200">Monthly snapshot — not live monitoring. Attendance changes and deadlines between reviews may not appear. Review evidence dates and request a new check before taking action.</p>
+      <p className="mt-3 flex items-start gap-1.5 text-xs leading-relaxed text-slate-600 dark:text-slate-400"><Clock3 size={14} aria-hidden="true" className="mt-0.5 shrink-0" /><span>{supervisor ? 'Most recent received faculty check' : 'Last completed check'}: {riskCheckedLabel(latest)}. Automatic reviews start on the 1st of each month at 3:00 AM IST; large rosters finish in batches. Refresh inbox only reloads saved results; it cannot start a review. College accounts cannot run checks manually. {supervisor && 'Missing department or recipient links appear as coverage warnings, not college-wide HOD broadcasts.'}</span></p>
+      <p role="note" className="mt-2 text-xs leading-relaxed text-amber-900 dark:text-amber-200">Monthly snapshot — not live monitoring. Attendance changes and deadlines between reviews may not appear. Review the original records for recent changes; alerts update at the next scheduled monthly review.</p>
       {data?.truncated && <p role="status" className="mt-2 text-xs text-amber-900 dark:text-amber-200">Only the most recent 300 inbox entries are shown. Older items are not necessarily resolved.</p>}
     </section>
     {showSettings && data?.canConfigure && <div id={`${id}-settings`}><Suspense fallback={<p role="status">Loading warning settings…</p>}><AcademicRiskSettings /></Suspense></div>}
     <RiskPushControl key={uid} uid={uid} />
-    {(isError || refresh.error || markRead.error) && <div role="alert" className="rounded-2xl border border-rose-200 dark:border-rose-900 bg-rose-50 dark:bg-rose-950/30 p-4 text-sm text-rose-900 dark:text-rose-200">{riskErrorMessage(error || refresh.error || markRead.error)}{isError && <button type="button" onClick={() => void refetch()} className="ml-2 underline font-bold">Retry alerts</button>}</div>}
+    {(isError || markRead.error) && <div role="alert" className="rounded-2xl border border-rose-200 dark:border-rose-900 bg-rose-50 dark:bg-rose-950/30 p-4 text-sm text-rose-900 dark:text-rose-200">{riskErrorMessage(error || markRead.error)}{isError && <button type="button" onClick={() => void refetch()} className="ml-2 underline font-bold">Retry alerts</button>}</div>}
     {isPending ? <p role="status" className="py-8 text-center text-sm text-slate-600 dark:text-slate-400">Loading private academic alerts…</p> : <>
       {coverage.length > 0 && <section aria-labelledby={`${id}-coverage`} className="rounded-2xl border border-sky-200 dark:border-sky-900/70 bg-sky-50/60 dark:bg-sky-950/20 p-4 sm:p-5">
         <h2 id={`${id}-coverage`} className="flex gap-2 items-center text-sm font-bold text-sky-900 dark:text-sky-200"><Info size={18} aria-hidden="true" />Coverage warnings — not confirmed risks</h2>
@@ -72,6 +71,6 @@ export default function AcademicRiskAlertsPage() {
         {!list.length && !isError && <div className="rounded-2xl border border-dashed border-slate-300 dark:border-slate-700 p-8 text-center"><CircleAlert size={25} aria-hidden="true" className="mx-auto text-teal-700 dark:text-teal-300" /><h2 className="mt-3 font-bold text-slate-900 dark:text-white">{mode === 'history' ? 'No history in this view' : latest ? 'No attention items in this view' : 'Your first check is still pending'}</h2><p className="mt-2 text-xs leading-relaxed text-slate-600 dark:text-slate-400">{mode === 'history' ? 'Resolved means a complete recheck cleared the item. Archived means it aged outside the observation window.' : 'Only confirmed, scoped evidence creates a risk. Review coverage warnings too; an empty inbox is not a final eligibility or compliance decision.'}</p></div>}
       </div>
     </>}
-    <p className="pb-4 text-xs leading-relaxed text-slate-600 dark:text-slate-400">Marking an alert read only acknowledges it. Fix the underlying record, then run a new check; incomplete rechecks retain the previous alert as unverified rather than declaring it resolved. Attendance requirements come from the explicitly assigned scheme, never a default university.</p>
+    <p className="pb-4 text-xs leading-relaxed text-slate-600 dark:text-slate-400">Marking an alert read only acknowledges it. Fix the underlying record; changes are evaluated at the next monthly review. Incomplete checks retain the previous alert as unverified rather than declaring it resolved. Attendance requirements come from the explicitly assigned scheme, never a default university.</p>
   </div>;
 }

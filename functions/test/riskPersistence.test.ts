@@ -42,9 +42,15 @@ function seed() {
 beforeEach(seed)
 const entries = (collection: string) => [...store.data.entries()].filter(([p]) => p.startsWith(`${collection}/`)).map(([, data]) => data)
 const selfAlert = (category: string) => entries('riskAlerts').find(r => r.category === category && r.recipientUid === 'faculty-uid')!
-const resetCooldown = () => { for (const [p, v] of store.data) if (p.startsWith('riskRefreshLocks/')) v.nextAllowedAt = 0 }
+// Persistence fixtures use the same internal service as the monthly worker,
+// never the retired client callable. The scheduled create-trigger path also
+// has its own end-to-end handler/continuation coverage below and in riskSweep.
+async function reviewSubject(uid = 'faculty-uid') {
+  const person = await service.requireRiskPerson(uid)
+  return service.refreshRiskSubject(person, await service.loadCollegeRiskEvidence(person.collegeId))
+}
 
-describe('academic risk: actual authenticated callable handlers', () => {
+describe('monthly risk materialization and authenticated inbox handlers', () => {
   it('refuses anonymous reads, settings and device registration', async () => {
     for (const callable of [api.getMyAcademicRiskAlerts, api.refreshMyAcademicRiskAlerts, api.getAcademicRiskConfiguration, api.registerMyAcademicRiskDevice]) await assert.rejects(callable.run(request(null)), { code: 'unauthenticated' })
   })
@@ -53,43 +59,43 @@ describe('academic risk: actual authenticated callable handlers', () => {
     assert.equal(entries('academicRiskSettings').length, 0)
   })
   it('computes faculty aliases and sends to self, matching HOD and Principal, never every HOD', async () => {
-    await api.refreshMyAcademicRiskAlerts.run(request('faculty-uid', { subjectUid: 'student-uid', collegeId: 'college-b', recipientUid: 'attacker' }))
+    await reviewSubject()
     const recipients = entries('riskAlerts').filter(a => a.category === 'class-register').map(a => a.recipientUid).sort()
     assert.deepEqual(recipients, ['faculty-uid', 'hod-science', 'principal-a'])
     assert.ok(entries('riskAlerts').every(a => a.collegeId === 'college-a' && a.subjectUid === 'faculty-uid'))
     assert.equal(entries('riskPushOutbox').length, 3)
   })
   it('does not leak a colleague’s records to faculty or a different-department HOD', async () => {
-    await api.refreshMyAcademicRiskAlerts.run(request())
+    await reviewSubject()
     assert.equal((await api.getMyAcademicRiskAlerts.run(request('hod-commerce'))).alerts.length, 0)
     assert.equal((await api.getMyAcademicRiskAlerts.run(request('attacker'))).alerts.length, 0)
     const principal = await api.getMyAcademicRiskAlerts.run(request('principal-a'))
     assert.ok(principal.alerts.some((a: any) => a.category === 'class-register' && a.path === '/admin/attendance'))
   })
   it('rejects cross-recipient mark-read and does not accept client state changes', async () => {
-    await api.refreshMyAcademicRiskAlerts.run(request())
+    await reviewSubject()
     const a = selfAlert('class-register')
     await assert.rejects(api.markMyAcademicRiskAlertRead.run(request('student-uid', { id: a.id })), { code: 'not-found' })
     await api.markMyAcademicRiskAlertRead.run(request('faculty-uid', { id: a.id, state: 'resolved', recipientUid: 'attacker' }))
     assert.equal(store.data.get(`riskAlerts/${a.id}`)?.read, true)
     assert.equal(store.data.get(`riskAlerts/${a.id}`)?.state, 'active')
   })
-  it('deduplicates alerts/outbox across refreshes and preserves acknowledgements', async () => {
-    await api.refreshMyAcademicRiskAlerts.run(request())
+  it('deduplicates alerts/outbox across repeated server work and preserves acknowledgements', async () => {
+    await reviewSubject()
     const a = selfAlert('class-register'), count = entries('riskAlerts').length
     await api.markMyAcademicRiskAlertRead.run(request('faculty-uid', { id: a.id }))
-    resetCooldown(); await api.refreshMyAcademicRiskAlerts.run(request())
+    await reviewSubject()
     assert.equal(entries('riskAlerts').length, count); assert.equal(entries('riskPushOutbox').length, 3)
     assert.equal(store.data.get(`riskAlerts/${a.id}`)?.read, true)
   })
   it('an identical later check commits zero alert/outbox writes and retains read acknowledgements', async () => {
-    await api.refreshMyAcademicRiskAlerts.run(request())
+    await reviewSubject()
     const a = selfAlert('class-register')
     await api.markMyAcademicRiskAlertRead.run(request('faculty-uid', { id: a.id }))
     const before = structuredClone(entries('riskAlerts'))
     const start = store.writes.length
     Date.now = () => NOW + 120_000
-    await api.refreshMyAcademicRiskAlerts.run(request())
+    await reviewSubject()
     assert.deepEqual(entries('riskAlerts'), before)
     assert.deepEqual(store.writes.slice(start).filter(w => /^(riskAlerts|riskPushOutbox)\//.test(w.path)), [])
     assert.equal(store.data.get(`riskAlerts/${a.id}`)!.readAt, NOW)
@@ -102,13 +108,13 @@ describe('academic risk: actual authenticated callable handlers', () => {
     assert.equal(store.data.get(`riskAlerts/${a.id}`)!.checkedAt, NOW, 'freshness does not rewrite stored alert copies')
   })
   it('a changed finding updates its recipient copies without sending an unchanged-severity push', async () => {
-    await api.refreshMyAcademicRiskAlerts.run(request())
+    await reviewSubject()
     const a = selfAlert('class-register')
     await api.markMyAcademicRiskAlertRead.run(request('faculty-uid', { id: a.id }))
     store.data.get('weeklySchedules/WS1')!.subject = 'Algorithms'
     const start = store.writes.length
     Date.now = () => NOW + 120_000
-    await api.refreshMyAcademicRiskAlerts.run(request())
+    await reviewSubject()
     assert.equal(store.writes.slice(start).filter(w => w.path.startsWith('riskAlerts/') && w.value.category === 'class-register').length, 3)
     assert.equal(store.writes.slice(start).filter(w => w.path.startsWith('riskPushOutbox/')).length, 0)
     const next = store.data.get(`riskAlerts/${a.id}`)!
@@ -118,56 +124,85 @@ describe('academic risk: actual authenticated callable handlers', () => {
     assert.equal(next.readAt, NOW)
   })
   it('repeated incomplete checks do not rewrite an already-unverified alert or unchanged coverage', async () => {
-    await api.refreshMyAcademicRiskAlerts.run(request())
+    await reviewSubject()
     store.failedCollections.add('attendance')
-    resetCooldown(); await api.refreshMyAcademicRiskAlerts.run(request())
+    await reviewSubject()
     const start = store.writes.length
     Date.now = () => NOW + 120_000
-    await api.refreshMyAcademicRiskAlerts.run(request())
+    await reviewSubject()
     assert.equal(selfAlert('class-register').state, 'unverified')
     assert.equal(selfAlert('class-register').stale, true)
     assert.deepEqual(store.writes.slice(start).filter(w => /^(riskAlerts|riskPushOutbox)\//.test(w.path)), [])
   })
   it('ignores a run timestamp with invalid tenant/subject linkage', async () => {
-    await api.refreshMyAcademicRiskAlerts.run(request())
+    await reviewSubject()
     store.data.get(`riskSubjectRuns/${service.riskHash('college-a', 'faculty-uid')}`)!.collegeId = 'college-b'
     const inbox = await api.getMyAcademicRiskAlerts.run(request())
     assert.equal(inbox.checkedAt, null)
     assert.ok(inbox.alerts.every((a: any) => a.checkedAt === NOW))
   })
-  it('rate-limits self-service scans and refuses supervisor-selected subjects', async () => {
-    await api.refreshMyAcademicRiskAlerts.run(request())
-    await assert.rejects(api.refreshMyAcademicRiskAlerts.run(request()), { code: 'resource-exhausted' })
-    await assert.rejects(api.refreshMyAcademicRiskAlerts.run(request('hod-science', { subjectUid: 'faculty-uid' })), { code: 'permission-denied' })
+  for (const role of ['student', 'faculty', 'mentor', 'hod', 'admin', 'principal', 'superadmin', 'accounts', 'operations', 'employee']) {
+    it(`${role} cannot trigger a manual scan, even using the retired endpoint and forged override payload`, async t => {
+      const uid = `manual-${role}`
+      account(uid, role)
+      const authLookup = t.mock.method(store.auth, 'getUser')
+      const batchLookup = t.mock.method(store.auth, 'getUsers')
+      const reads = store.reads.length, writes = store.writes.length
+      await assert.rejects(api.refreshMyAcademicRiskAlerts.run(request(uid, {
+        collegeId: 'college-b', subjectUid: 'student-uid', recipientUid: 'attacker',
+        force: true, canRefresh: true, period: '2026-11',
+      }, { role: 'superadmin' })), { code: 'permission-denied' })
+      assert.deepEqual(store.reads.slice(reads), [], 'retired endpoint must not scan or even read a cooldown lock')
+      assert.deepEqual(store.writes.slice(writes), [], 'retired endpoint must not acquire locks or persist a run')
+      assert.equal(entries('riskAlerts').length, 0)
+      assert.equal(entries('riskSubjectRuns').length, 0)
+      assert.equal(entries('riskSweepRequests').length, 0)
+      assert.equal(store.pushes.length, 0)
+      assert.equal(authLookup.mock.callCount(), 0, 'deny before any Admin Auth lookup')
+      assert.equal(batchLookup.mock.callCount(), 0)
+    })
+  }
+  it('anonymous callers cannot use the retired endpoint or cause database work', async () => {
+    await assert.rejects(api.refreshMyAcademicRiskAlerts.run(request(null, { force: true, subjectUid: 'faculty-uid' })), { code: 'unauthenticated' })
+    assert.deepEqual(store.reads, [])
+    assert.deepEqual(store.writes, [])
   })
-  it('serializes scheduler/manual runs using a subject lease', async () => {
+  for (const uid of ['student-uid', 'faculty-uid', 'hod-science', 'principal-a']) {
+    it(`${uid} receives no manual-scan capability; inbox reload only reads saved results`, async () => {
+      const inbox = await api.getMyAcademicRiskAlerts.run(request(uid, { canRefresh: true, force: true }))
+      assert.equal(inbox.canRefresh, false, 'cached clients must hide their old button')
+      assert.equal(store.writes.length, 0)
+      assert.ok(store.reads.every(p => ['faculty', 'mentors', 'hods', 'riskAlerts', 'riskSubjectRuns'].includes(p.split('/')[0])), 'only identity, saved alerts and run summaries may be loaded')
+    })
+  }
+  it('serializes duplicated monthly subject work using a subject lease', async () => {
     store.data.set(`riskSubjectLocks/${service.riskHash('college-a', 'faculty-uid')}`, { lease: 'other-run', leaseUntil: NOW + 1000 })
-    await assert.rejects(api.refreshMyAcademicRiskAlerts.run(request()), { code: 'resource-exhausted' })
+    await assert.rejects(reviewSubject(), { code: 'resource-exhausted' })
     assert.equal(entries('riskAlerts').length, 0)
   })
   it('an incomplete register read retains earlier alerts as unverified, not resolved', async () => {
-    await api.refreshMyAcademicRiskAlerts.run(request()); resetCooldown()
+    await reviewSubject()
     const id = selfAlert('class-register').id
     store.failedCollections.add('attendance')
-    await api.refreshMyAcademicRiskAlerts.run(request())
+    await reviewSubject()
     const a = store.data.get(`riskAlerts/${id}`)!
     assert.equal(a.state, 'unverified'); assert.equal(a.stale, true)
     assert.match(selfAlert('coverage').message, /could not be read/)
     assert.equal(entries('riskPushOutbox').length, 3)
   })
   it('a fixed class register resolves the same alert for all recipients after complete reads', async () => {
-    await api.refreshMyAcademicRiskAlerts.run(request()); resetCooldown()
+    await reviewSubject()
     store.data.set('classSessions/WS1_2026-11-13', { collegeId: 'college-a', facultyId: 'FAC001', subject: 'DBMS', date: '2026-11-13', startTime: '09:00', endTime: '10:00', status: 'completed', attendanceMarked: true, attendanceCount: 0 })
-    await api.refreshMyAcademicRiskAlerts.run(request())
+    await reviewSubject()
     assert.ok(entries('riskAlerts').filter(a => a.category === 'class-register').every(a => a.state === 'resolved'))
   })
   it('pending timetable proposals cannot manufacture missing-register alerts', async () => {
     store.data.get('weeklySchedules/WS1')!.approvalStatus = 'pending_hod'
-    await api.refreshMyAcademicRiskAlerts.run(request())
+    await reviewSubject()
     assert.equal(entries('riskAlerts').filter(a => a.category === 'class-register').length, 0)
   })
   it('immediately rechecks current recipient department and subject department on inbox reads', async () => {
-    await api.refreshMyAcademicRiskAlerts.run(request())
+    await reviewSubject()
     assert.ok((await api.getMyAcademicRiskAlerts.run(request('hod-science'))).alerts.length > 0)
     store.accounts.get('hod-science').customClaims.department = 'Commerce'
     assert.equal((await api.getMyAcademicRiskAlerts.run(request('hod-science'))).alerts.length, 0)
@@ -177,11 +212,11 @@ describe('academic risk: actual authenticated callable handlers', () => {
   })
   it('does not trust department in a self-editable users profile when HOD claim is absent', async () => {
     store.data.get('users/hod-unknown')!.department = 'Science'
-    await api.refreshMyAcademicRiskAlerts.run(request())
+    await reviewSubject()
     assert.equal((await api.getMyAcademicRiskAlerts.run(request('hod-unknown'))).alerts.length, 0)
   })
   it('a demoted/disabled or college-moved recipient loses access to old alerts', async () => {
-    await api.refreshMyAcademicRiskAlerts.run(request())
+    await reviewSubject()
     store.accounts.get('hod-science').customClaims.role = 'student'
     assert.equal((await api.getMyAcademicRiskAlerts.run(request('hod-science'))).alerts.length, 0)
     store.accounts.get('principal-a').customClaims.collegeId = 'college-b'
@@ -190,25 +225,42 @@ describe('academic risk: actual authenticated callable handlers', () => {
     await assert.rejects(api.getMyAcademicRiskAlerts.run(request('principal-a')), { code: 'permission-denied' })
   })
   it('checks only the uniquely linked student and does not escalate student records to faculty supervisors', async () => {
-    await api.refreshMyAcademicRiskAlerts.run(request('student-uid', { studentId: 'another-student', collegeId: 'college-b' }))
+    await reviewSubject('student-uid')
     const alerts = entries('riskAlerts').filter(a => a.category === 'attendance')
     assert.ok(alerts.length > 0); assert.ok(alerts.every(a => a.subjectUid === 'student-uid' && a.recipientUid === 'student-uid'))
     assert.match(alerts.find(a => a.title.includes('requirement'))!.message, /TEST_POLICY/)
   })
   it('refuses duplicate or wrong-tenant student linkage instead of selecting a profile arbitrarily', async () => {
     store.data.set('students/duplicate', { ...store.data.get('students/student-1'), userId: 'student-uid' })
-    await assert.rejects(api.refreshMyAcademicRiskAlerts.run(request('student-uid')), { code: 'failed-precondition' })
+    await assert.rejects(reviewSubject('student-uid'), { code: 'failed-precondition' })
     assert.equal(entries('riskAlerts').length, 0)
   })
   it('surfaces scheme configuration gaps rather than a silent BCU/75% fallback', async () => {
     store.data.set('colleges/college-a', { name: 'No assigned policy' })
-    await api.refreshMyAcademicRiskAlerts.run(request('student-uid'))
+    await reviewSubject('student-uid')
     const alerts = entries('riskAlerts')
     assert.ok(!alerts.some(a => a.title.includes('requirement')))
     assert.match(alerts.find(a => a.category === 'coverage')!.message, /No default university or 75%/)
   })
 })
 describe('Principal-only settings and explicit staff working schedules', () => {
+  it('configuration reads, enable/disable saves and schedule saves/removal never start a review', async () => {
+    await reviewSubject()
+    const alerts = structuredClone(entries('riskAlerts'))
+    const writes = store.writes.length, reads = store.reads.length
+    await api.getAcademicRiskConfiguration.run(request('principal-a'))
+    for (const [expectedRevision, enabled] of [false, true].entries()) {
+      await api.saveAcademicRiskConfiguration.run(request('principal-a', { settings: { ...DEFAULT_RISK_SETTINGS, enabled }, expectedRevision, force: true }))
+    }
+    const schedule = { days: [5], startTime: '09:00', endTime: '17:00', effectiveFrom: '2026-11-01', effectiveTo: '', excludedDates: [] }
+    await api.saveFacultyRiskWorkSchedule.run(request('principal-a', { facultyUid: 'faculty-uid', schedule, force: true }))
+    await api.saveFacultyRiskWorkSchedule.run(request('principal-a', { facultyUid: 'faculty-uid', remove: true, force: true }))
+    assert.ok(store.reads.slice(reads).every(p => ['academicRiskSettings', 'riskStaffSchedules', 'users'].includes(p.split('/')[0])), 'configuration changes cannot load academic evidence')
+    assert.ok(store.writes.slice(writes).every(w => ['academicRiskSettings', 'riskStaffSchedules', 'riskConfigurationAudit'].includes(w.path.split('/')[0])), 'only configuration and audit writes are allowed')
+    assert.deepEqual(entries('riskAlerts'), alerts, 'saved alerts wait for the monthly review')
+    assert.equal(entries('riskSweepRequests').length, 0)
+    assert.equal(entries('riskJobs').length, 0)
+  })
   it('stores settings in the verified college and audits changes atomically', async () => {
     await api.saveAcademicRiskConfiguration.run(request('principal-a', { settings: { ...DEFAULT_RISK_SETTINGS, registerGraceHours: 4 }, expectedRevision: 0, collegeId: 'college-b' }))
     assert.equal(store.data.get('academicRiskSettings/college-a')!.settings.registerGraceHours, 4)
@@ -243,25 +295,25 @@ describe('Principal-only settings and explicit staff working schedules', () => {
   it('an incorrectly linked schedule is incomplete coverage, never proof an earlier staff risk cleared', async () => {
     const schedule = { days: [5], startTime: '09:00', endTime: '17:00', effectiveFrom: '2026-11-01', effectiveTo: '', excludedDates: [] }
     await api.saveFacultyRiskWorkSchedule.run(request('principal-a', { facultyUid: 'faculty-uid', schedule }))
-    await api.refreshMyAcademicRiskAlerts.run(request()); assert.equal(selfAlert('staff-attendance').state, 'active')
+    await reviewSubject(); assert.equal(selfAlert('staff-attendance').state, 'active')
     store.data.get(`riskStaffSchedules/${service.riskHash('college-a', 'faculty-uid')}`)!.collegeId = 'college-b'
-    resetCooldown(); await api.refreshMyAcademicRiskAlerts.run(request())
+    await reviewSubject()
     assert.equal(selfAlert('staff-attendance').state, 'unverified')
     assert.match(selfAlert('coverage').message, /invalid faculty\/college linkage/)
   })
   it('adds explicit missing check-in/out alerts and respects leave/exclusions', async () => {
     const schedule = { days: [5], startTime: '09:00', endTime: '17:00', effectiveFrom: '2026-11-01', effectiveTo: '', excludedDates: [] }
     await api.saveFacultyRiskWorkSchedule.run(request('principal-a', { facultyUid: 'faculty-uid', schedule }))
-    await api.refreshMyAcademicRiskAlerts.run(request())
+    await reviewSubject()
     assert.match(selfAlert('staff-attendance').message, /check-in and check-out/)
-    resetCooldown(); store.data.set('staffAttendance/work-record', { collegeId: 'college-a', facultyId: 'faculty-uid', date: '2026-11-13', status: 'leave' })
-    await api.refreshMyAcademicRiskAlerts.run(request())
+    store.data.set('staffAttendance/work-record', { collegeId: 'college-a', facultyId: 'faculty-uid', date: '2026-11-13', status: 'leave' })
+    await reviewSubject()
     assert.equal(selfAlert('staff-attendance').state, 'resolved')
   })
   it('removing/pausing schedule coverage does not claim earlier staff issues were fixed', async () => {
     const schedule = { days: [5], startTime: '09:00', endTime: '17:00', effectiveFrom: '2026-11-01', effectiveTo: '', excludedDates: [] }
-    await api.saveFacultyRiskWorkSchedule.run(request('principal-a', { facultyUid: 'faculty-uid', schedule })); await api.refreshMyAcademicRiskAlerts.run(request())
-    await api.saveFacultyRiskWorkSchedule.run(request('principal-a', { facultyUid: 'faculty-uid', remove: true })); resetCooldown(); await api.refreshMyAcademicRiskAlerts.run(request())
+    await api.saveFacultyRiskWorkSchedule.run(request('principal-a', { facultyUid: 'faculty-uid', schedule })); await reviewSubject()
+    await api.saveFacultyRiskWorkSchedule.run(request('principal-a', { facultyUid: 'faculty-uid', remove: true })); await reviewSubject()
     assert.equal(selfAlert('staff-attendance').state, 'unverified')
   })
 })
@@ -284,7 +336,7 @@ describe('registered-device ownership, FCM privacy and delivery deduplication', 
     assert.equal(entries('riskPushDevices').length, 10)
   })
   it('sends a data-only generic inbox reminder, not academic names, marks or attendance details', async () => {
-    await api.registerMyAcademicRiskDevice.run(request('faculty-uid', { token })); await api.refreshMyAcademicRiskAlerts.run(request())
+    await api.registerMyAcademicRiskDevice.run(request('faculty-uid', { token })); await reviewSubject()
     const item = [...store.data.entries()].find(([p, v]) => p.startsWith('riskPushOutbox/') && v.recipientUid === 'faculty-uid')!
     await api.deliverAcademicRiskPush(item[0].split('/')[1])
     assert.equal(store.pushes.length, 1)
@@ -296,20 +348,20 @@ describe('registered-device ownership, FCM privacy and delivery deduplication', 
     await api.deliverAcademicRiskPush(item[0].split('/')[1]); assert.equal(store.pushes.length, 1)
   })
   it('rechecks HOD department at send time, even for already-queued alerts', async () => {
-    await api.registerMyAcademicRiskDevice.run(request('hod-science', { token })); await api.refreshMyAcademicRiskAlerts.run(request())
+    await api.registerMyAcademicRiskDevice.run(request('hod-science', { token })); await reviewSubject()
     const item = [...store.data.entries()].find(([p, v]) => p.startsWith('riskPushOutbox/') && v.recipientUid === 'hod-science')!
     store.accounts.get('hod-science').customClaims.department = 'Commerce'
     await api.deliverAcademicRiskPush(item[0].split('/')[1])
     assert.equal(store.pushes.length, 0); assert.equal(store.data.get(item[0])!.status, 'skipped')
   })
   it('does not send a queued risk after the underlying issue was resolved', async () => {
-    await api.registerMyAcademicRiskDevice.run(request('faculty-uid', { token })); await api.refreshMyAcademicRiskAlerts.run(request())
+    await api.registerMyAcademicRiskDevice.run(request('faculty-uid', { token })); await reviewSubject()
     const item = [...store.data.entries()].find(([p, v]) => p.startsWith('riskPushOutbox/') && v.recipientUid === 'faculty-uid')!
     store.data.get(`riskAlerts/${item[1].alertId}`)!.state = 'resolved'
     await api.deliverAcademicRiskPush(item[0].split('/')[1]); assert.equal(store.pushes.length, 0)
   })
   for (const expired of ['age', 'attempts']) it(`direct trigger delivery respects the ${expired} retry budget, not only the retry sweep`, async () => {
-    await api.registerMyAcademicRiskDevice.run(request('faculty-uid', { token })); await api.refreshMyAcademicRiskAlerts.run(request())
+    await api.registerMyAcademicRiskDevice.run(request('faculty-uid', { token })); await reviewSubject()
     const item = [...store.data.entries()].find(([p, v]) => p.startsWith('riskPushOutbox/') && v.recipientUid === 'faculty-uid')!
     Object.assign(store.data.get(item[0])!, expired === 'age' ? { createdAt: NOW - 25 * 3_600_000 } : { attempts: 8 })
     await api.deliverAcademicRiskPush(item[0].split('/')[1])
@@ -318,7 +370,7 @@ describe('registered-device ownership, FCM privacy and delivery deduplication', 
   })
   it('monthly push recovery ignores an expired backlog so fresh messages are not crowded out', async () => {
     for (let i = 0; i < 101; i++) store.data.set(`riskPushOutbox/expired-${i}`, { status: 'pending', createdAt: NOW - 25 * 3_600_000, attempts: 0 })
-    await api.refreshMyAcademicRiskAlerts.run(request())
+    await reviewSubject()
     const start = store.writes.length
     await api.retryAcademicRiskPush.run({} as any)
     assert.ok(store.writes.slice(start).filter(w => w.path.startsWith('riskPushOutbox/')).length > 0)
@@ -327,7 +379,7 @@ describe('registered-device ownership, FCM privacy and delivery deduplication', 
     assert.equal(store.data.get('riskPushOutbox/expired-0')!.status, 'pending')
   })
   it('keeps transient failures retryable without creating duplicate outbox generations', async () => {
-    await api.registerMyAcademicRiskDevice.run(request('faculty-uid', { token })); await api.refreshMyAcademicRiskAlerts.run(request())
+    await api.registerMyAcademicRiskDevice.run(request('faculty-uid', { token })); await reviewSubject()
     const item = [...store.data.entries()].find(([p, v]) => p.startsWith('riskPushOutbox/') && v.recipientUid === 'faculty-uid')!
     store.setFailPush(true); await assert.rejects(api.deliverAcademicRiskPush(item[0].split('/')[1]), /transient/)
     assert.equal(store.data.get(item[0])!.status, 'pending'); assert.equal(store.data.get(item[0])!.leaseUntil, 0)
@@ -339,14 +391,14 @@ describe('safety caps and resumable background checks', () => {
   it('pausing risk checks never loads absent class/work-schedule evidence', async () => {
     store.data.set('academicRiskSettings/college-a', { settings: { ...DEFAULT_RISK_SETTINGS, enabled: false }, revision: 1 })
     store.failedCollections.add('riskStaffSchedules')
-    await api.refreshMyAcademicRiskAlerts.run(request())
+    await reviewSubject()
     assert.equal(store.reads.some(p => p === 'classSessions' || p.startsWith('riskStaffSchedules/')), false)
     assert.equal(entries('riskAlerts').filter(a => a.category !== 'coverage').length, 0)
     assert.match(entries('riskAlerts')[0].message, /paused/)
   })
   it('reconciles more than two full write chunks without reusing a committed batch', async () => {
     for (let i = 0; i < 805; i++) store.data.set(`riskAlerts/history-${i}`, { key: `class-register:old-${i}`, category: 'class-register', state: 'active', subjectUid: 'faculty-uid', recipientUid: 'faculty-uid', collegeId: 'college-a', dependencies: ['sessions', 'registers', 'weekly', 'holidays'] })
-    await api.refreshMyAcademicRiskAlerts.run(request())
+    await reviewSubject()
     assert.equal(entries('riskAlerts').filter(a => a.key.startsWith('class-register:old-') && a.state === 'resolved').length, 805)
     assert.equal(entries('riskSubjectLocks').length, 0)
   })
