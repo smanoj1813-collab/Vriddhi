@@ -141,6 +141,16 @@ describe('scheduled risk materialization and authenticated inbox handlers', () =
     assert.equal(inbox.checkedAt, null)
     assert.ok(inbox.alerts.every((a: any) => a.checkedAt === NOW))
   })
+  it('retired callable keeps shared Node.js bootstrap memory while bounding denied requests', () => {
+    const endpoint = api.refreshMyAcademicRiskAlerts.__endpoint
+    assert.equal(endpoint.platform, 'gcfv2')
+    assert.deepEqual(endpoint.region, ['asia-south1'])
+    // Production startup exceeded 128 MiB before the deny-only handler ran.
+    // Guard the actual deployment metadata, not just the handler's small body.
+    assert.equal(endpoint.availableMemoryMb, 512)
+    assert.equal(endpoint.timeoutSeconds, 10)
+    assert.equal(endpoint.maxInstances, 2)
+  })
   for (const role of ['student', 'faculty', 'mentor', 'hod', 'admin', 'principal', 'superadmin', 'accounts', 'operations', 'employee']) {
     it(`${role} cannot trigger a manual scan, even using the retired endpoint and forged override payload`, async t => {
       const uid = `manual-${role}`
@@ -151,7 +161,10 @@ describe('scheduled risk materialization and authenticated inbox handlers', () =
       await assert.rejects(api.refreshMyAcademicRiskAlerts.run(request(uid, {
         collegeId: 'college-b', subjectUid: 'student-uid', recipientUid: 'attacker',
         force: true, canRefresh: true, period: '2026-11',
-      }, { role: 'superadmin' })), { code: 'permission-denied' })
+      }, { role: 'superadmin' })), {
+        code: 'permission-denied',
+        message: 'Manual academic risk checks are disabled. Reviews run automatically on the server schedule.',
+      })
       assert.deepEqual(store.reads.slice(reads), [], 'retired endpoint must not scan or even read a cooldown lock')
       assert.deepEqual(store.writes.slice(writes), [], 'retired endpoint must not acquire locks or persist a run')
       assert.equal(entries('riskAlerts').length, 0)

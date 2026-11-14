@@ -112,7 +112,28 @@ Inbox refresh, acknowledgements, push enrollment and Principal configuration sav
 
 A frontend-only deployment does not update schedulers or server query behavior. Do not remove protective jobs or delete the new indexes during rollback; the original compatibility paths remain available, and existing data/queue state should be preserved.
 
-## Local validation — 13 November 2026
+## Follow-up: retired callable startup memory
+
+Operator-provided rollout logs showed `refreshMyAcademicRiskAlerts` exceeding its **128 MiB** startup limit with **129 MiB** used, before the HTTP startup probe could succeed. The older 512 MiB revision had started successfully. This was a startup out-of-memory failure, not evidence of a bad port or a request timeout.
+
+The compatibility callable now inherits the shared **512 MiB** allocation. It retains its **10-second timeout**, **two-instance limit**, and deny-only behavior before Admin Auth/Firestore work. No scanner, scheduled review, query, write, or permission is added. Its rejection message now refers to the server schedule rather than incorrectly promising a monthly-only review. Other Function resource settings and the daily-default review policy are unchanged.
+
+Validation for this correction:
+
+- A deployment-metadata regression test failed against the 128 MiB configuration and passes with 512 MiB, while checking the region, timeout and instance limit.
+- **1,571 / 1,571 Functions unit tests passed**, including anonymous denial and all ten client roles being denied without Admin Auth lookups, Firestore reads/writes, push messages or queued work.
+- The Functions TypeScript build passed. A local smoke test loaded the full compiled shared entry point, bound an HTTP listener, returned the expected anonymous callable rejection, and checked the authenticated deny-only handler and deployment metadata.
+- The local smoke test does **not** emulate a Cloud Run memory limit. A successful deployed revision and startup probe remain required; there is no claim of live deployment acceptance here.
+
+After pulling the approved fix into the deployment checkout, retry **only** the failed Function first:
+
+```powershell
+firebase deploy --only "functions:refreshMyAcademicRiskAlerts" --project vriddhi-academic
+```
+
+Do not assume a failed update installed the manual-scan block: an older revision may still be serving. Verify a successful update/healthy revision without invoking the old scanner as a test. The two inbox Functions that already updated successfully need not be redeployed for this correction. Continue the staged rollout above only after this update succeeds; do not change the port, weaken the denial, delete the Function, or merely raise the startup timeout to mask the memory failure.
+
+## Initial optimization validation — 13 November 2026
 
 | Check | Result |
 | --- | --- |
