@@ -1,13 +1,11 @@
 import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
 import { sendPasswordResetEmail } from 'firebase/auth';
-import { School, Eye, EyeOff, Lock, Mail, ArrowRight, BookOpen, Users } from 'lucide-react';
+import { Eye, EyeOff, Lock, Mail, ArrowRight } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { auth } from '../../../Firebase/config';
 import { useAuth } from '../hooks/useAuth';
 import { useTranslation } from '../../../shared/contexts/LanguageProvider';
-import LanguageSwitcher from '../../../shared/components/LanguageSwitcher';
-import { useThemeMode } from '../../../shared/contexts/ThemeProvider';
+import AuthPageLayout from '../components/AuthPageLayout';
 import { IDLE_SIGNOUT_FLAG } from '../../../shared/utils/idleTimeout';
 
 export default function StudentLogin() {
@@ -39,7 +37,6 @@ export default function StudentLogin() {
   // return URL. All course access checks still run after authentication.
   const wantsCourses = new URLSearchParams(location.search).get('next') === 'courses';
   const { t } = useTranslation();
-  const { resolvedMode } = useThemeMode();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -96,184 +93,129 @@ export default function StudentLogin() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-[#0b0f19] flex items-center justify-center p-4 transition-colors duration-200">
-      <div className="absolute top-4 right-4">
-        <LanguageSwitcher compact showLabel={false} />
-      </div>
-      <div className="w-full max-w-md">
-        {/* Brand Header */}
-        <motion.div
-          initial={{ opacity: 0, y: -16 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-8"
-        >
-                    <div className="mx-auto mb-4 w-36 h-36 rounded-3xl overflow-hidden bg-white ring-1 ring-slate-200/80 dark:ring-white/10 shadow-lg shadow-teal-500/10 flex items-center justify-center">
-            <img
-              src="/brand/hero/vriddhi-mark-hero-light@600.png"
-              alt="Vriddhi Institutions"
-              width={144}
-              height={144}
-              className="w-[92%] h-[92%] object-contain"
+    <AuthPageLayout portal="student">
+      {wantsCourses && (
+        <div className="mb-5 rounded-xl border border-teal-200 bg-teal-50 px-3.5 py-3 dark:border-teal-800 dark:bg-teal-950/30">
+          <strong className="block text-xs font-bold text-teal-800 dark:text-teal-200">Your next skill starts here.</strong>
+          <p className="mt-1 text-xs leading-relaxed text-teal-700 dark:text-teal-300">Sign in to explore the upskill courses assigned to your college.</p>
+        </div>
+      )}
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div>
+          <label htmlFor="student-login-email" className="text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5 block">
+            {t('auth.studentEmail')}
+          </label>
+          <div className="relative">
+            <Mail size={18} aria-hidden="true" className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+            <input
+              id="student-login-email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="student@vriddhi.edu"
+              autoComplete="email"
+              required
+              className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 text-sm font-medium transition-all"
             />
           </div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
-            {t('auth.studentPortal')}
-          </h1>
-          <p className="text-slate-500 dark:text-slate-400 mt-1 text-sm font-medium">
-            {t('auth.studentSubtitle')}
-          </p>
-        </motion.div>
+        </div>
 
-        {/* Login Card */}
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.08 }}
-          className="bg-white dark:bg-[#131b2e] rounded-3xl border border-slate-200 dark:border-slate-800 p-7 sm:p-8 shadow-xl shadow-slate-200/50 dark:shadow-none"
-        >
-          {wantsCourses && (
-            <div className="mb-5 rounded-xl border border-teal-200 bg-teal-50 px-3.5 py-3 dark:border-teal-800 dark:bg-teal-950/30">
-              <strong className="block text-xs font-bold text-teal-800 dark:text-teal-200">Your next skill starts here.</strong>
-              <p className="mt-1 text-xs leading-relaxed text-teal-700 dark:text-teal-300">Sign in to explore the upskill courses assigned to your college.</p>
-            </div>
-          )}
-          {/* Portal Switcher Tabs */}
-          <div className="flex rounded-2xl bg-slate-100 dark:bg-slate-900/60 p-1 mb-6 border border-slate-200/80 dark:border-slate-800">
-            <Link
-              to="/login"
-              className="flex-1 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:text-slate-900 dark:text-white transition-all flex items-center justify-center gap-1.5"
-            >
-              <Users size={14} />
-              {t('auth.staffFaculty')}
-            </Link>
+        <div>
+          <div className="flex items-center justify-between mb-1.5">
+            <label htmlFor="student-login-password" className="text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300">
+              {t('auth.password')}
+            </label>
             <button
               type="button"
-              className="flex-1 py-2 rounded-xl text-xs font-bold transition-all bg-white dark:bg-slate-800 text-teal-700 dark:text-teal-400 shadow-sm flex items-center justify-center gap-1.5"
+              onClick={handleForgotPassword}
+              disabled={forgotSending}
+              className="text-xs text-teal-600 dark:text-teal-400 hover:underline font-medium disabled:opacity-60"
             >
-              <BookOpen size={14} />
-              {t('auth.studentPortal')}
+              {t('auth.forgot')}
             </button>
           </div>
-
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label htmlFor="student-login-email" className="text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5 block">
-                {t('auth.studentEmail')}
-              </label>
-              <div className="relative">
-                <Mail size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
-                <input
-                  id="student-login-email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="student@vriddhi.edu"
-                  autoComplete="email"
-                  required
-                  className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 text-sm font-medium transition-all"
-                />
-              </div>
-            </div>
-
-            <div>
-              <div className="flex items-center justify-between mb-1.5">
-                <label htmlFor="student-login-password" className="text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300">
-                  {t('auth.password')}
-                </label>
-                <button
-                  type="button"
-                  onClick={handleForgotPassword}
-                  disabled={forgotSending}
-                  className="text-xs text-teal-600 dark:text-teal-400 hover:underline font-medium disabled:opacity-60"
-                >
-                  {t('auth.forgot')}
-                </button>
-              </div>
-              <div className="relative">
-                <Lock size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
-                <input
-                  id="student-login-password"
-                  type={showPassword ? 'text' : 'password'}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Enter your student password"
-                  autoComplete="current-password"
-                  required
-                  className="w-full pl-10 pr-12 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 text-sm font-medium transition-all"
-                />
-                <button
-                  type="button"
-                  aria-label={showPassword ? t('auth.hidePassword') : t('auth.showPassword')}
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-600 dark:text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-0.5"
-                >
-                  {showPassword ? <EyeOff size={17} /> : <Eye size={17} />}
-                </button>
-              </div>
-            </div>
-
-            {forgotMsg && (
-              <motion.div
-                initial={{ opacity: 0, y: -4 }}
-                animate={{ opacity: 1, y: 0 }}
-                className={`p-3 rounded-xl border text-xs font-medium ${
-                  forgotMsg.kind === 'ok'
-                    ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300'
-                    : forgotMsg.kind === 'err'
-                      ? 'bg-rose-50 dark:bg-rose-950/40 border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300'
-                      : 'bg-sky-50 dark:bg-sky-950/40 border-sky-200 dark:border-sky-800 text-sky-700 dark:text-sky-300'
-                }`}
-              >
-                {forgotMsg.text}
-              </motion.div>
-            )}
-
-            {idleSignOut && !localError && (
-              <div className="p-3 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 text-xs font-medium text-amber-800 dark:text-amber-200">
-                Signed out for inactivity — your session ended automatically after a period without
-                activity. Please sign in again.
-              </div>
-            )}
-
-            {localError && (
-              <motion.div
-                initial={{ opacity: 0, y: -4 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="p-3 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 text-xs font-medium text-rose-700 dark:text-rose-300"
-              >
-                {localError}
-              </motion.div>
-            )}
-
+          <div className="relative">
+            <Lock size={18} aria-hidden="true" className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+            <input
+              id="student-login-password"
+              type={showPassword ? 'text' : 'password'}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Enter your student password"
+              autoComplete="current-password"
+              required
+              className="w-full pl-10 pr-12 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 text-sm font-medium transition-all"
+            />
             <button
-              type="submit"
-              disabled={isLoading}
-              className="w-full py-3 rounded-xl bg-teal-600 hover:bg-teal-700 disabled:bg-slate-300 dark:disabled:bg-slate-800 text-slate-900 dark:text-white font-bold text-sm shadow-md shadow-teal-600/20 transition-all flex items-center justify-center gap-2 active:scale-[0.99]"
+              type="button"
+              aria-label={showPassword ? t('auth.hidePassword') : t('auth.showPassword')}
+              aria-pressed={showPassword}
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-600 dark:text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-0.5"
             >
-              {isLoading ? (
-                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-              ) : (
-                <>
-                  Sign In as Student <ArrowRight size={17} />
-                </>
-              )}
+              {showPassword ? <EyeOff size={17} aria-hidden="true" /> : <Eye size={17} aria-hidden="true" />}
             </button>
-          </form>
-
-          {/* Bottom link */}
-          <div className="mt-6 pt-5 border-t border-slate-100 dark:border-slate-800 text-center">
-            <p className="text-xs text-slate-500 dark:text-slate-400">
-              {t('auth.staffHint')}{' '}
-              <Link to="/login" className="text-teal-600 dark:text-teal-400 font-bold hover:underline">
-                {t('auth.staffLoginLink')}
-              </Link>
-            </p>
           </div>
-        </motion.div>
-        <div className="mt-5 text-center">
-          <Link to="/" className="text-xs font-medium text-slate-500 hover:text-teal-700 dark:text-slate-400 dark:hover:text-teal-300">← Back to homepage</Link>
         </div>
+
+        {forgotMsg && (
+          <div
+            role="status"
+            className={`auth-message p-3 rounded-xl border text-xs font-medium ${
+              forgotMsg.kind === 'ok'
+                ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300'
+                : forgotMsg.kind === 'err'
+                  ? 'bg-rose-50 dark:bg-rose-950/40 border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300'
+                  : 'bg-sky-50 dark:bg-sky-950/40 border-sky-200 dark:border-sky-800 text-sky-700 dark:text-sky-300'
+            }`}
+          >
+            {forgotMsg.text}
+          </div>
+        )}
+
+        {idleSignOut && !localError && (
+          <div className="p-3 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 text-xs font-medium text-amber-800 dark:text-amber-200">
+            Signed out for inactivity — your session ended automatically after a period without
+            activity. Please sign in again.
+          </div>
+        )}
+
+        {localError && (
+          <div
+            role="alert"
+            className="auth-message p-3 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 text-xs font-medium text-rose-700 dark:text-rose-300"
+          >
+            {localError}
+          </div>
+        )}
+
+        <button
+          type="submit"
+          disabled={isLoading}
+          className="auth-submit w-full py-3 rounded-xl bg-teal-600 hover:bg-teal-700 disabled:bg-slate-300 dark:disabled:bg-slate-800 text-slate-900 dark:text-white font-bold text-sm shadow-md shadow-teal-600/20 transition-all flex items-center justify-center gap-2 active:scale-[0.99]"
+        >
+          {isLoading ? (
+            <>
+              <span className="sr-only" role="status">{t('common.loading')}</span>
+              <span aria-hidden="true" className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+            </>
+          ) : (
+            <>
+              {t('auth.signInStudent')} <ArrowRight size={17} aria-hidden="true" />
+            </>
+          )}
+        </button>
+      </form>
+
+      {/* Bottom link */}
+      <div className="auth-other-portal mt-6 pt-5 border-t border-slate-100 dark:border-slate-800 text-center">
+        <p className="text-xs text-slate-500 dark:text-slate-400">
+          {t('auth.staffHint')}{' '}
+          <Link to="/login" className="text-teal-600 dark:text-teal-400 font-bold hover:underline">
+            {t('auth.staffLoginLink')}
+          </Link>
+        </p>
       </div>
-    </div>
+    </AuthPageLayout>
   );
 }
