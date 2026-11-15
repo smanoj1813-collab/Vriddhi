@@ -365,6 +365,24 @@ service cloud.firestore {
         && !request.resource.data.diff(resource.data).affectedKeys()
             .hasAny(['role', 'collegeId', 'uid', 'permissions', 'createdBy']);
       allow delete: if isSuperadmin();
+
+      // Personal cosmetics are NOT identity/academic profile edits. Keeping
+      // this private subdocument separate lets faculty, students and platform
+      // accounts save appearance without granting writes to protected profiles
+      // or requiring a college/parent user document. No collection/list access.
+      match /preferences/appearance {
+        function validAppearance() {
+          let d = request.resource.data;
+          return d.keys().hasAll(['accentColor', 'fontSize', 'compactMode', 'animationsEnabled', 'updatedAt'])
+            && d.keys().hasOnly(['accentColor', 'fontSize', 'compactMode', 'animationsEnabled', 'updatedAt'])
+            && d.accentColor is string && d.accentColor.matches('^#[0-9a-fA-F]{6}$')
+            && d.fontSize in ['small', 'medium', 'large']
+            && d.compactMode is bool && d.animationsEnabled is bool
+            && d.updatedAt == request.time;
+        }
+        allow get: if isOwner(userId);
+        allow create, update: if isOwner(userId) && validAppearance();
+      }
     }
 
     match /students/{id} {

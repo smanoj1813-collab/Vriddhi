@@ -19,6 +19,7 @@ import {
   orderBy,
   query,
   setDoc,
+  serverTimestamp,
   Timestamp,
   updateDoc,
   where,
@@ -447,6 +448,80 @@ describe('student identity and profile isolation', () => {
   it('requires server code for profile mutations', async () => {
     const db = studentContext().firestore()
     await assertFails(updateDoc(doc(db, 'students', STUDENT_ID), { name: 'Changed in browser' }))
+  })
+})
+
+describe('private account appearance preferences', () => {
+  const valid = () => ({
+    accentColor: '#6366f1', fontSize: 'medium', compactMode: false,
+    animationsEnabled: true, updatedAt: serverTimestamp(),
+  })
+  const preference = (db: ReturnType<ReturnType<RulesTestEnvironment['authenticatedContext']>['firestore']>, uid: string) =>
+    doc(db, 'users', uid, 'preferences', 'appearance')
+
+  for (const [uid, claims] of [
+    [STUDENT_UID, { role: 'student', collegeId: COLLEGE_A }],
+    ['faculty-a', { role: 'faculty', collegeId: COLLEGE_A }],
+    ['appearance-superadmin', { role: 'superadmin' }],
+    ['legacy-faculty-a', {}],
+    ['appearance-admin', { role: 'admin', collegeId: COLLEGE_A }],
+  ] as const) {
+    it(`lets ${uid} save and reload only their cosmetics, without requiring a parent user document`, async () => {
+      const db = testEnv.authenticatedContext(uid, claims).firestore()
+      const ref = preference(db, uid)
+      assert.equal((await assertSucceeds(getDoc(ref))).exists(), false)
+      await assertSucceeds(setDoc(ref, valid()))
+      await assertSucceeds(updateDoc(ref, { accentColor: '#06b6d4', updatedAt: serverTimestamp() }))
+      const stored = await assertSucceeds(getDoc(ref))
+      assert.equal(stored.data()?.accentColor, '#06b6d4')
+      if (uid === 'appearance-superadmin' || uid === 'legacy-faculty-a') {
+        assert.equal((await assertSucceeds(getDoc(doc(db, 'users', uid)))).exists(), false)
+      }
+    })
+  }
+
+  it('denies read/write access to someone else’s preferences, even for a superadmin', async () => {
+    for (const [uid, role] of [['other-student', 'student'], ['other-faculty', 'faculty'], ['platform-admin', 'superadmin']]) {
+      const db = testEnv.authenticatedContext(uid, { role, collegeId: COLLEGE_A }).firestore()
+      await assertFails(getDoc(preference(db, STUDENT_UID)))
+      await assertFails(setDoc(preference(db, STUDENT_UID), valid()))
+    }
+  })
+
+  it('denies anonymous reads and writes', async () => {
+    const db = testEnv.unauthenticatedContext().firestore()
+    await assertFails(getDoc(preference(db, STUDENT_UID)))
+    await assertFails(setDoc(preference(db, STUDENT_UID), valid()))
+  })
+
+  it('does not grant list access, other preference paths, or writes to protected faculty profiles', async () => {
+    const db = testEnv.authenticatedContext('legacy-faculty-a', { role: 'faculty', collegeId: COLLEGE_A }).firestore()
+    await assertFails(getDocs(collection(db, 'users', 'legacy-faculty-a', 'preferences')))
+    await assertFails(setDoc(doc(db, 'users', 'legacy-faculty-a', 'preferences', 'permissions'), valid()))
+    await assertFails(updateDoc(doc(db, 'faculty', 'legacy-faculty-a'), { appearance: { accentColor: '#6366f1' } }))
+  })
+
+  it('rejects extra identity, college, permission, security and arbitrary fields', async () => {
+    const db = studentContext().firestore()
+    for (const field of ['role', 'collegeId', 'uid', 'permissions', 'twoFAEnabled', 'password', 'extra']) {
+      await assertFails(setDoc(preference(db, STUDENT_UID), { ...valid(), [field]: 'forged' }))
+    }
+    await assertSucceeds(setDoc(preference(db, STUDENT_UID), valid()))
+    await assertFails(updateDoc(preference(db, STUDENT_UID), { role: 'superadmin', updatedAt: serverTimestamp() }))
+    const identity = await assertSucceeds(getDoc(doc(db, 'users', STUDENT_UID)))
+    assert.equal(identity.data()?.role, 'student')
+    assert.equal(identity.data()?.collegeId, COLLEGE_A)
+  })
+
+  it('requires bounded colour, font enum, booleans, all known fields and a server timestamp', async () => {
+    const db = studentContext().firestore()
+    const ref = preference(db, STUDENT_UID)
+    for (const patch of [
+      { accentColor: 'javascript:red' }, { accentColor: '#fff' }, { accentColor: 123 },
+      { fontSize: '100px' }, { compactMode: 'true' }, { animationsEnabled: 1 },
+      { updatedAt: 'client-time' }, { updatedAt: Timestamp.fromMillis(0) },
+    ]) await assertFails(setDoc(ref, { ...valid(), ...patch }))
+    await assertFails(setDoc(ref, { accentColor: '#6366f1', updatedAt: serverTimestamp() }))
   })
 })
 

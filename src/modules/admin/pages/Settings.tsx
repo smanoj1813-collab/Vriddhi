@@ -1,11 +1,7 @@
 import React, { useState, useEffect } from 'react'
-import {
-  appearanceKey,
-  getStoredAccent,
-  readAppearancePref,
-  setAccent,
-  writeAppearancePref,
-} from '@/shared/theme/accent'
+import AppearanceSettings from '@/shared/components/AppearanceSettings'
+import { applyLocalAppearance, DEFAULT_APPEARANCE } from '@/shared/theme/appearance'
+import { saveAppearancePreferences } from '@/shared/services/appearancePreferences'
 import { useSearchParams } from 'react-router-dom'
 import { useThemeMode } from '../../../shared/contexts/ThemeProvider'
 import { useAuth } from '../../auth/context/AuthContext'
@@ -16,11 +12,10 @@ import { updateProfile as updateFirebaseProfile } from 'firebase/auth'
 import ChangePasswordForm from '../../../shared/components/ChangePasswordForm'
 import {
   Save, User, Building2, Bell, Shield, Palette, Database, Download,
-  Sun, Moon, Monitor, Check, Upload, Trash2, AlertTriangle,
+  Sun, Moon, Check, Upload, Trash2, AlertTriangle,
   Lock, Eye, EyeOff, Smartphone, Mail, FileText, Calendar, Loader2, Info, Sparkles
 } from 'lucide-react'
 import { useNotification } from '../../../shared/providers/NotificationProvider'
-import LanguageSettingsBlock from '../../../shared/components/LanguageSettingsBlock'
 import { useTranslation } from '../../../shared/contexts/LanguageProvider'
 import AiStudyContentTab from './AiStudyContentTab'
 import CompanyPrepVisibilityPanel from '@/shared/components/prep/CompanyPrepVisibilityPanel'
@@ -123,13 +118,14 @@ function Message({ type, text }: { type: 'ok' | 'err' | 'info'; text: string }) 
 }
 
 export default function Settings() {
-  const [activeTab, setActiveTab] = useState('general')
+  const { user } = useAuth()
+  // Platform accounts have no college settings to load/save by default.
+  const [activeTab, setActiveTab] = useState(() => user?.role === 'superadmin' ? 'appearance' : 'general')
   // Deep-link support: /admin/settings?tab=ai-content lands the superadmin
   // straight on the "AI Content & Cost" tab (which hosts Prep Content Studio).
   const [searchParams] = useSearchParams()
-  const { mode, resolvedMode, setMode } = useThemeMode()
+  const { resolvedMode, setMode } = useThemeMode()
   const { t } = useTranslation()
-  const { user } = useAuth()
   const { showSuccess, showWarning, showError } = useNotification()
 
   // Loading states
@@ -174,29 +170,11 @@ export default function Settings() {
   const [twoFAEnabled, setTwoFAEnabled] = useState(false)
   const [saving2FA, setSaving2FA] = useState(false)
 
-  // Appearance state — prefs are per-account (uid-scoped), so one account's
-  // colours never follow the operator into another account on the same browser.
-  const [accentColor, setAccentColor] = useState(() => getStoredAccent(user?.uid))
-  // Apply the accent app-wide as soon as it changes (swatch click, profile load, reset).
-  useEffect(() => { setAccent(accentColor, true, user?.uid) }, [accentColor, user?.uid])
-  const [fontSize, setFontSize] = useState('medium')
-  const [compactMode, setCompactMode] = useState(false)
-  const [animationsEnabled, setAnimationsEnabled] = useState(true)
-  const [savingAppearance, setSavingAppearance] = useState(false)
-  const [appearanceMsg, setAppearanceMsg] = useState<{ type: 'ok' | 'err'; text: string } | null>(null)
-
+  // Existing profile preferences are read-only migration fallbacks; all new
+  // appearance writes use the signed-in owner's private preference document.
+  const [legacyAppearance, setLegacyAppearance] = useState<{ uid: string; value: unknown } | null>(null)
+  const [resettingAppearance, setResettingAppearance] = useState(false)
   const [autoBackup, setAutoBackup] = useState('weekly')
-
-  const accentColors = [
-    { color: '#14b8a6', name: 'Teal' },
-    { color: '#6366f1', name: 'Indigo' },
-    { color: '#f59e0b', name: 'Amber' },
-    { color: '#ef4444', name: 'Red' },
-    { color: '#8b5cf6', name: 'Violet' },
-    { color: '#06b6d4', name: 'Cyan' },
-    { color: '#ec4899', name: 'Pink' },
-    { color: '#84cc16', name: 'Lime' },
-  ]
 
   const tabs = [
     { id: 'general', label: 'General', icon: Building2 },
@@ -266,12 +244,7 @@ export default function Settings() {
               setNotifications(prev => ({ ...prev, ...data.notificationPrefs }))
             }
             if (typeof data.twoFAEnabled === 'boolean') setTwoFAEnabled(data.twoFAEnabled)
-            if (data.appearance) {
-              if (data.appearance.accentColor) setAccentColor(data.appearance.accentColor)
-              if (data.appearance.fontSize) setFontSize(data.appearance.fontSize)
-              if (typeof data.appearance.compactMode === 'boolean') setCompactMode(data.appearance.compactMode)
-              if (typeof data.appearance.animationsEnabled === 'boolean') setAnimationsEnabled(data.appearance.animationsEnabled)
-            }
+            if (data.appearance) setLegacyAppearance({ uid: user.uid, value: data.appearance })
           } else {
             // fallback to auth user
             setFullName(user.name || '')
@@ -290,14 +263,6 @@ export default function Settings() {
         try {
           const localNotif = localStorage.getItem('vriddhi_admin_notifications')
           if (localNotif) setNotifications(prev => ({ ...prev, ...JSON.parse(localNotif) }))
-          const localAccent = readAppearancePref('vriddhi_accent_color', user?.uid)
-          if (localAccent) setAccentColor(localAccent)
-          const localFont = readAppearancePref('vriddhi_font_size', user?.uid)
-          if (localFont) setFontSize(localFont)
-          const localCompact = readAppearancePref('vriddhi_compact_mode', user?.uid)
-          if (localCompact) setCompactMode(localCompact === 'true')
-          const localAnim = readAppearancePref('vriddhi_animations', user?.uid)
-          if (localAnim) setAnimationsEnabled(localAnim === 'true')
           const local2FA = localStorage.getItem('vriddhi_2fa_enabled')
           if (local2FA) setTwoFAEnabled(local2FA === 'true')
           const localBackup = localStorage.getItem('vriddhi_auto_backup')
@@ -433,38 +398,6 @@ export default function Settings() {
       console.warn('Failed to save 2FA:', e)
     } finally {
       setSaving2FA(false)
-    }
-  }
-
-  const handleSaveAppearance = async () => {
-    setSavingAppearance(true)
-    setAppearanceMsg(null)
-    try {
-      writeAppearancePref('vriddhi_accent_color', user?.uid, accentColor)
-      writeAppearancePref('vriddhi_font_size', user?.uid, fontSize)
-      writeAppearancePref('vriddhi_compact_mode', user?.uid, String(compactMode))
-      writeAppearancePref('vriddhi_animations', user?.uid, String(animationsEnabled))
-      localStorage.setItem('vriddhi_auto_backup', autoBackup)
-
-      // Apply font size to root
-      const root = document.documentElement
-      if (fontSize === 'small') root.style.fontSize = '14px'
-      else if (fontSize === 'large') root.style.fontSize = '18px'
-      else root.style.fontSize = '16px'
-
-      // Save to Firestore
-      if (user?.uid) {
-        await setDoc(doc(db, 'admins', user.uid), {
-          appearance: { accentColor, fontSize, compactMode, animationsEnabled },
-          updatedAt: new Date().toISOString(),
-        }, { merge: true })
-      }
-      setAppearanceMsg({ type: 'ok', text: 'Appearance preferences saved!' })
-      setTimeout(() => setAppearanceMsg(null), 3000)
-    } catch (e: any) {
-      setAppearanceMsg({ type: 'err', text: e.message || 'Failed to save appearance' })
-    } finally {
-      setSavingAppearance(false)
     }
   }
 
@@ -930,110 +863,11 @@ export default function Settings() {
           {/* ===== APPEARANCE ===== */}
           {activeTab === 'appearance' && (
             <SettingsCard className="p-6 md:p-8">
-              <SectionTitle>{t('settings.appearance')}</SectionTitle>
-              <SectionDesc>{t('settings.appearanceDesc')}</SectionDesc>
-
-              <div className="space-y-6">
-                <LanguageSettingsBlock />
-
-                <div>
-                  <Label>{t('settings.themeMode')}</Label>
-                  <div className="grid grid-cols-3 gap-3">
-                    {[
-                      { id: 'light', label: 'Light', icon: Sun, desc: 'Always light' },
-                      { id: 'dark', label: 'Dark', icon: Moon, desc: 'Always dark' },
-                      { id: 'system', label: 'System', icon: Monitor, desc: 'Follow OS' },
-                    ].map((theme) => {
-                      const isActive = mode === theme.id
-                      const Icon = theme.icon
-                      return (
-                        <button
-                          key={theme.id}
-                          onClick={() => setMode(theme.id as 'light' | 'dark' | 'system')}
-                          className={`flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all duration-200
-                            ${isActive
-                              ? 'border-teal-500 bg-teal-50 dark:bg-teal-500/10'
-                              : 'border-slate-200 dark:border-slate-700/50 bg-white dark:bg-slate-800/40 hover:border-slate-300 dark:hover:border-slate-600'
-                            }`}
-                        >
-                          <Icon className={`w-6 h-6 ${isActive ? 'text-teal-500' : 'text-slate-400'}`} />
-                          <span className={`text-sm font-medium ${isActive ? 'text-teal-700 dark:text-teal-400' : 'text-slate-600 dark:text-slate-300'}`}>
-                            {theme.label}
-                          </span>
-                          <span className="text-xs text-slate-500">{theme.desc}</span>
-                        </button>
-                      )
-                    })}
-                  </div>
-                </div>
-
-                <div>
-                  <Label>Accent Color</Label>
-                  <div className="flex flex-wrap gap-3">
-                    {accentColors.map((item) => (
-                      <button
-                        key={item.color}
-                        onClick={() => setAccentColor(item.color)}
-                        className={`group relative w-12 h-12 rounded-xl transition-all duration-200
-                          ${accentColor === item.color
-                            ? 'ring-2 ring-offset-2 ring-teal-500 ring-offset-white dark:ring-offset-slate-800 scale-110'
-                            : 'hover:scale-105'
-                          }`}
-                        style={{ backgroundColor: item.color }}
-                        title={item.name}
-                      >
-                        {accentColor === item.color && (
-                          <Check className="w-5 h-5 text-white absolute inset-0 m-auto drop-shadow-md" />
-                        )}
-                      </button>
-                    ))}
-                  </div>
-                  <p className="text-[11px] text-slate-400 mt-2">Selected: {accentColors.find(c => c.color === accentColor)?.name} ({accentColor})</p>
-                </div>
-
-                <div>
-                  <Label>Font Size</Label>
-                  <SettingsSelect
-                    value={fontSize}
-                    onChange={(e) => setFontSize(e.target.value)}
-                  >
-                    <option value="small">Small (14px)</option>
-                    <option value="medium">Medium (16px)</option>
-                    <option value="large">Large (18px)</option>
-                  </SettingsSelect>
-                </div>
-
-                <div className="space-y-3 pt-2">
-                  <div className="flex items-center justify-between p-4 rounded-xl bg-slate-50 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-700/30">
-                    <div>
-                      <p className="text-sm font-medium text-slate-700 dark:text-slate-200">Compact Mode</p>
-                      <p className="text-xs text-slate-500">Reduce spacing for denser layout</p>
-                    </div>
-                    <ToggleSwitch checked={compactMode} onChange={setCompactMode} />
-                  </div>
-
-                  <div className="flex items-center justify-between p-4 rounded-xl bg-slate-50 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-700/30">
-                    <div>
-                      <p className="text-sm font-medium text-slate-700 dark:text-slate-200">Animations</p>
-                      <p className="text-xs text-slate-500">Enable smooth transitions and animations</p>
-                    </div>
-                    <ToggleSwitch checked={animationsEnabled} onChange={setAnimationsEnabled} />
-                  </div>
-                </div>
-
-                {appearanceMsg && <Message type={appearanceMsg.type} text={appearanceMsg.text} />}
-
-                <div className="pt-4 border-t border-slate-200 dark:border-slate-700/50">
-                  <button
-                    onClick={handleSaveAppearance}
-                    disabled={savingAppearance}
-                    className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-teal-500 hover:bg-teal-600 disabled:opacity-60 text-white font-medium text-sm transition-all duration-200 shadow-md shadow-teal-500/20"
-                  >
-                    {savingAppearance ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-                    Save Preferences
-                  </button>
-                </div>
-              </div>
+              <AppearanceSettings
+                legacyAppearance={legacyAppearance?.uid === user?.uid ? legacyAppearance?.value : undefined}
+                showCompactMode
+                showAnimations
+              />
             </SettingsCard>
           )}
 
@@ -1131,21 +965,20 @@ export default function Settings() {
                           <Trash2 className="w-4 h-4" />
                           Clear Local Cache
                         </button>
-                        <button onClick={() => {
-                          if (confirm('Reset appearance to defaults?')) {
-                            setAccentColor('#14b8a6')
-                            setFontSize('medium')
-                            setCompactMode(false)
-                            setAnimationsEnabled(true)
-                            setMode('light')
-                            for (const base of ['vriddhi_accent_color', 'vriddhi_font_size', 'vriddhi_compact_mode', 'vriddhi_animations']) {
-                              localStorage.removeItem(appearanceKey(base, user?.uid))
-                              localStorage.removeItem(base)
-                            }
-                            document.documentElement.style.fontSize = '16px'
+                        <button disabled={resettingAppearance} onClick={async () => {
+                          if (!user?.uid || resettingAppearance || !confirm('Reset appearance to defaults?')) return
+                          setResettingAppearance(true)
+                          applyLocalAppearance(user.uid, { ...DEFAULT_APPEARANCE })
+                          setMode('light')
+                          try {
+                            await saveAppearancePreferences(user.uid, { ...DEFAULT_APPEARANCE })
                             showSuccess('Appearance reset to defaults')
+                          } catch {
+                            showError('Appearance was reset on this device, but could not be synced. Try again.')
+                          } finally {
+                            setResettingAppearance(false)
                           }
-                        }} className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white dark:bg-slate-800 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 text-sm font-medium hover:bg-red-50 transition-colors">
+                        }} className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white dark:bg-slate-800 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 text-sm font-medium hover:bg-red-50 transition-colors disabled:opacity-60">
                           Reset Appearance
                         </button>
                       </div>

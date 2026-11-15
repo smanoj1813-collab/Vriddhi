@@ -119,8 +119,8 @@ export function setAccent(hex: string, persist = true, uid?: string | null): voi
 /** Font-size preference was only applied on Save; apply it at boot as well. */
 export function applyStoredFontSize(uid?: string | null): void {
   const v = readAppearancePref(FONT_SIZE_STORAGE_KEY, uid)
-  const px = v === 'small' ? '14px' : v === 'large' ? '18px' : v === 'medium' ? '16px' : ''
-  if (px) document.documentElement.style.fontSize = px
+  // Missing/invalid values must reset the previous account's size as well.
+  document.documentElement.style.fontSize = v === 'small' ? '14px' : v === 'large' ? '18px' : '16px'
 }
 
 /**

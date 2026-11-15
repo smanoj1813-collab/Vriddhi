@@ -28,6 +28,8 @@ export function orderBy(..._a: any[]) { return {}; }
 export function limit(n: number) { return { __limit: n }; }
 export async function getDoc(ref: any) {
   calls.push('getDoc:' + (ref?.__path ?? '?'));
+  const guard = (globalThis as any).__RC_FIRESTORE_READ_GUARD;
+  if (guard) await guard(ref);
   // A check that needs a document to exist (a challan being declared paid, for
   // instance) sets globalThis.__RC_FIRESTORE_DOC = { data: {...} }; unset, a
   // read misses, exactly as an empty collection does.
@@ -61,6 +63,8 @@ export async function getDocs(q: any) {
 }
 export async function setDoc(...a: any[]) {
   calls.push('setDoc');
+  const guard = (globalThis as any).__RC_FIRESTORE_WRITE_GUARD;
+  if (guard) await guard({ path: a[0]?.__path, data: a[1] });
   const writes = ((globalThis as any).__RC_WRITES ??= [] as any[]);
   writes.push({ path: (a[0] as any)?.__path, data: a[1] });
 }

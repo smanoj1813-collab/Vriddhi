@@ -6,9 +6,7 @@ import { functions } from '@/Firebase/data';
 import ChangePasswordForm from '../../../shared/components/ChangePasswordForm';
 import { useStudentProfile } from '../hooks/useStudentProfile';
 import { useAuth } from '../../auth/context/AuthContext';
-import { useThemeMode } from '../../../shared/contexts/ThemeProvider';
-import LanguageSettingsBlock from '../../../shared/components/LanguageSettingsBlock';
-import { useTranslation } from '../../../shared/contexts/LanguageProvider';
+import AppearanceSettings from '../../../shared/components/AppearanceSettings';
 
 type TabId = 'profile' | 'notifications' | 'privacy' | 'appearance';
 
@@ -38,8 +36,6 @@ function loadPrefs(): Prefs {
 export default function StudentSettings() {
   const { user } = useAuth();
   const { profile, loading, error, refresh } = useStudentProfile(user?.uid);
-  const { resolvedMode, toggleMode } = useThemeMode();
-  const { t } = useTranslation();
 
   const [activeTab, setActiveTab] = useState<TabId>('profile');
   const [name, setName] = useState('');
@@ -368,54 +364,7 @@ export default function StudentSettings() {
             <ChangePasswordForm />
           )}
 
-          {activeTab === 'appearance' && (
-            <div className="space-y-6">
-              <div>
-                <h2 className="text-base font-bold text-slate-900 dark:text-white pb-1">{t('settings.appearance')}</h2>
-                <p className="text-xs text-slate-500 dark:text-slate-400">{t('settings.appearanceDesc')}</p>
-              </div>
-              <LanguageSettingsBlock />
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="p-5 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="w-10 h-10 rounded-xl bg-teal-600/10 dark:bg-teal-900/30 flex items-center justify-center">
-                      <Palette size={18} className="text-teal-600 dark:text-teal-400" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-bold text-slate-900 dark:text-white">Theme Mode</p>
-                      <p className="text-[11px] text-slate-500 dark:text-slate-400">Light for day, dark for night study</p>
-                    </div>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={toggleMode}
-                    className="w-full px-4 py-3 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-bold text-xs shadow-sm flex items-center justify-center gap-2 transition-colors"
-                  >
-                    <Palette size={16} /> Switch to {resolvedMode === 'dark' ? 'Light Theme' : 'Dark Theme'}
-                  </button>
-                  <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-3 text-center">
-                    Currently active: <span className="font-bold uppercase text-teal-600">{resolvedMode} mode</span>
-                  </p>
-                </div>
-
-                <div className="p-5 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
-                  <h4 className="text-sm font-bold text-slate-900 dark:text-white mb-2">Accessibility Tips</h4>
-                  <ul className="text-[11px] text-slate-500 dark:text-slate-400 space-y-1.5 list-disc pl-4">
-                    <li>Dark mode reduces eye strain during night study</li>
-                    <li>Your theme preference is saved automatically</li>
-                    <li>All pages adapt to your chosen theme</li>
-                    <li>Clear cache if theme doesn&apos;t apply immediately</li>
-                  </ul>
-                </div>
-              </div>
-
-              <div className="p-4 rounded-2xl bg-teal-50 dark:bg-teal-950/20 border border-teal-200 dark:border-teal-800">
-                <p className="text-xs font-semibold text-teal-800 dark:text-teal-300">Vriddhi Academic Palette</p>
-                <p className="text-[11px] text-teal-700/70 dark:text-teal-400/70 mt-1">Our design uses a clean light academic palette with teal accents for focus and clarity. The interface is optimized for long study hours with high contrast and readable typography.</p>
-              </div>
-            </div>
-          )}
+          {activeTab === 'appearance' && <AppearanceSettings />}
         </div>
       </div>
     </div>

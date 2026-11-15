@@ -216,12 +216,12 @@ const CreateCollege: React.FC<CreateCollegeProps> = ({ collegeId }) => {
       </div>
 
       {!isEdit && systemConfig.data && !systemConfig.data.allowCollegeOnboarding && (
-        <div className="mb-6 max-w-3xl rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-300">
+        <div className="mb-6 w-full rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-300">
           College onboarding is currently disabled from System Management. Re-enable it there before creating an institution.
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="max-w-3xl space-y-6">
+      <form onSubmit={handleSubmit} className="w-full min-w-0 space-y-6">
         {/* Basic Information */}
         <div className="glass-card p-6">
           <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-5">Basic Information</h2>
