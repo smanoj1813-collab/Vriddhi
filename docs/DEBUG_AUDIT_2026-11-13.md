@@ -1,219 +1,263 @@
 # Vriddhi functional debug and security review — 13 November 2026
 
-## Conclusion
+## Remediation conclusion
 
-**Do not treat the application as security-clean or this report as production sign-off.**
-The executable test/build coverage is healthy, and several reproducible bugs were fixed on
-`arena/a96bdd6e-vriddhi` / PR #131. The review also found a pre-existing **critical tenant-read
-permission gap** and other unfinished security/settings functionality that remain open below.
-These findings should be addressed before a broad production rollout; a green CI run alone
-is not sufficient evidence for them.
+The requested bug fixes are implemented on `arena/a96bdd6e-vriddhi`, in
+[PR #131](https://github.com/smanoj1813-collab/Vriddhi/pull/131). **This is branch-review
+readiness, not a production security certification or authorization to deploy.** Nothing was
+merged or deployed, and no production account, email, credential, database record or risk scan
+was used as a test.
 
-This was a repository-wide automated/regression sweep plus targeted source and browser review,
-not an exhaustive manual UAT of every live account, device, integration, or production record.
-No production authentication, database mutation, email, payment, deployment, or risk scan was
-performed.
+The critical tenant-read gap, misleading security controls, protected-profile save failures,
+account-wide notification caches, student APAAR form bug and two lint errors are addressed.
+All three audited dependency trees now have **zero high/critical advisories**. Moderate/low
+advisories remain, as detailed below; MFA enrollment and remote session revocation are explicitly
+unavailable in the portal, not implemented or simulated by a profile flag.
 
-## Highest-priority findings still open
+The runtime changes in `feaab5016a9e48dbf0b39e643633edb59f875ca2` passed all three CI jobs in
+[run 43715227666](https://github.com/smanoj1813-collab/Vriddhi/actions/runs/43715227666):
+**157 security-rules tests / 0 failures** and **140/140 browser smoke checks**. The follow-up
+adds more settings/query regressions, a compatible Firebase CLI update, and stronger audit gates.
+Use the latest PR checks for that follow-up's exact-head CI outcome; the earlier run is not
+being presented as execution of a later commit.
 
-### R1 — Critical: staff directory list access is not tenant-bound
+The [pre-remediation report](https://github.com/smanoj1813-collab/Vriddhi/blob/bce375bf370c7529db480ab44744e7bfab125dd0/docs/DEBUG_AUDIT_2026-11-13.md)
+is retained in Git history. The status and measurements below supersede its open-finding list.
 
-**Evidence:** `firestore.rules`, the `allow list` statements in `/students/{id}` and
-`/faculty/{id}` (around lines 410 and 434), together with `isStaff()` (around line 124).
+## R1 — Critical private-read tenant gap: fixed and emulator-tested
 
-Both list grants contain a standalone `isStaff()` alternative. That helper verifies the
-signed-in role/suspension state, **not the caller's college**. Therefore an ordinary staff
-identity satisfies the list rule independently of a row's `collegeId`. For example, the
-student directory rule currently has this shape:
+Private collection lists no longer contain a standalone staff-role grant. The rules require
+the caller's verified college claim, not a profile field or a browser-local college selection.
+An arbitrary caller-supplied query cannot replace that authorization boundary.
 
-```text
-allow list: if isSignedIn() && (
-  (isOffice() && sameCollege(resource.data))
-  || isStaff() || isSuperadmin() || ownsStudentProfile(...)
-);
-```
+Covered paths include:
 
-The separate tenant-aware point-get rules and client-side `where('collegeId', ...)` filters
-do not close an overly broad collection-list grant. A caller can construct their own query.
-This is a source-confirmed authorization gap; it was **not probed against production** and
-is not a claim that production data has been accessed or exfiltrated.
+- Top-level student/faculty directories; class sessions, attendance and attendance records;
+  assessments, papers, review queue, attendance summary, issued books and test papers.
+- College-path faculty, materials, events, announcements and notifications.
+- Notification read-marker descendants, which inherit the parent notification's tenant.
+- Faculty planner ledgers: new rows carry a college; older UID/profile-ID ownership queries
+  still work without allowing an unbounded staff-wide ledger scan.
 
-Other remaining role-only reads warrant the same review, notably the college-path faculty,
-materials/events/notifications collections. Not every role-only read is wrong: platform-wide
-universities, shared topic banks, and intentionally universal content must stay available.
-Do not globally replace every `isStaff()` occurrence without checking the contract.
+Super Admin retains global/cross-college reads. Intentionally shared universities, topic/question
+banks and universal papers/templates remain shared. UID, `userId`, document-ID and supported
+email-based owner lookups remain available for legacy identity resolution. Suspended employees
+and accounts without college scope do not receive private staff-directory/report access.
 
-**Required remediation:** bind private staff directory/report reads to the verified college
-claim; retain Super Admin cross-college access and UID/email-scoped legacy identity resolution;
-review affected client queries; add emulator cases for own-college, foreign-college and unbounded
-lists for each supported staff role. Rules changes must not restore client authority over roles,
-tenants, profile identity, or academic records. This broader authorization change was not folded
-into a cosmetic-settings fix without its corresponding query and emulator regression work.
+Users cannot rewrite their own college aliases, identity pointers, email, role or employee/status
+fields. Student pointers are checked against the target college and conflicting explicit UID
+links before being used to vouch for attendance access. Planner ownership does not trust a
+`users.facultyDocId` pointer alone, and an email match cannot override a conflicting explicit
+faculty UID/`userId` link. Protected faculty/admin profile writes were **not** widened.
 
-### R2 — High: the “Two-Factor Authentication” switch is not MFA enrollment
+### Matching query changes
 
-**Evidence:** `src/modules/admin/pages/Settings.tsx` (`handleToggle2FA` and the Security tab)
-and `src/modules/faculty/pages/FacultySettings.tsx` (Security tab).
+`src/shared/api/tenantScope.ts` selects explicit college constraints or cached verified Auth
+claims, fails closed when scope is unresolved, and rejects stale-account token responses.
+It is a query builder, **not** an authorization service. Only Super Admin can intentionally
+request a global list; college-path/write workflows require a concrete selected college.
 
-These handlers change a React/local-storage boolean and attempt a profile-document write.
-They do not enroll a Firebase second factor or implement a second-factor challenge. Failed
-writes can leave the switch visually on. The toggle must not be relied on as proof that MFA
-protects an account. Externally configured Identity Platform enforcement was not inspected.
+- Removed four unfiltered directory fallbacks from `scheduleApi.ts`. The weekly-schedule
+  fallback now uses Auth claims, not `vriddhi_college_id` from global localStorage.
+- Attendance lists, legacy session lookups, faculty maps and session → record → student-name
+  joins each carry college constraints. The optional realtime subscription requires a college.
+- Assessment list/statistics use one scoped source instead of a second independent read.
+- Faculty alias caches include the calling account, college and target identity. Unresolved
+  planner identity does not trigger a collection-wide read.
 
-The admin Active Sessions card also contains static example devices/locations, and the Revoke
-button has no handler; the page does contain a note that backend session revocation is not yet
-integrated. It is not a real session inventory or revocation control.
+Four additive composite indexes accompany these query changes in `firestore.indexes.json`:
 
-**Required remediation:** integrate real enrollment/challenge and verified server-backed session
-revocation, including Firebase project capability/configuration checks, or present explicit,
-honest unavailable/status-only UI rather than implying the preference enables protection.
-No working authentication feature was removed or simulated as a fix in this debug pass.
-
-### R3 — High: ordinary faculty profile / notification cloud saves still target protected profiles
-
-**Evidence:** `FacultySettings.tsx`, `handleSaveProfile` and `handleSavePrefs`, versus the
-`/faculty/{id}` create/update grants in `firestore.rules`.
-
-These UI handlers write directly to `faculty/{auth.uid}`, whereas the rules intentionally
-reserve profile mutations to authorized management/server workflows (and a narrowly scoped
-employee case), not ordinary faculty self-edits. Legacy faculty profile document IDs can also
-differ from the Auth UID. A profile change can update the Firebase Auth display name first and
-then fail its Firestore write, leaving the two displays inconsistent.
-
-This is separate from appearance: **appearance now uses the private owner-only preference
-path and does not require faculty-profile permission**. Notification-save rejection is now
-caught and announced instead of becoming an unhandled rejection, but that error-handling fix
-does not make the protected cloud write authorized.
-
-**Required remediation:** add a self-only, server-validated profile/preference mutation workflow
-with canonical faculty-document resolution and an explicit allowed-field list; do not widen
-faculty identity/tenant write rules just to make the existing client `setDoc` succeed.
-
-### R4 — High advisories remain after the critical dependency patch
-
-Audit results after the patch:
-
-| Dependency tree | Critical | High | Moderate | Low |
-|---|---:|---:|---:|---:|
-| Frontend, all dependencies | 0 | 7 | 6 | 4 |
-| Functions, production dependencies only | 0 | 15 | 10 | 1 |
-| Functions, including dev/tooling | 0 | 26 | 29 | 1 |
-
-These are npm advisory/package counts, **not a count of proven remotely exploitable app bugs**.
-Some are Node/tooling/optional transitive paths, while production entries such as Nodemailer,
-Zod/OpenAI-related dependencies, PDF/browser tooling and body-parser need path-specific triage
-and compatible upgrades. Major-version replacements were not blindly applied: the suggested
-force fix also proposes incompatible Firebase downgrades/other major changes. Avoid
-`npm audit fix --force` as an unreviewed production remedy.
-
-### R5 — Medium: non-appearance notification caches are still browser-wide
-
-Faculty, student and admin notification caches use shared keys such as
-`vriddhi_faculty_prefs`, `vriddhi_notification_prefs`, and `vriddhi_admin_notifications`.
-A second account on a shared browser can inherit cached choices when canonical profile data
-is unavailable. Appearance colour/font caches are account-isolated; this remaining finding is
-about the older non-appearance preferences.
-
-## Fixed in this debug pass
-
-| Finding | Fix / regression evidence |
+| Collection | Fields in index order |
 |---|---|
-| Critical `proxy-addr` advisory GHSA-jqcg-44mw-7w3h in the Functions runtime tree | Targeted patch **2.0.7 → 2.0.8**; only that package's lock entry changed, with no major dependency upgrade. Actual Express-resolved proxy-address tests failed before the patch and pass afterward. The advisory's misconfigured trust-subnet exposure was not demonstrated in this app's production configuration. |
-| Backend dependencies were absent from CI's critical-advisory gate | Added `npm audit --omit=dev --audit-level=critical` to the Functions job. The frontend audit alone does not inspect the separately locked backend tree. |
-| Appearance Retry could race a pending Save and restore an older cloud snapshot | Retry is disabled while loading/saving. A deferred-write regression reproduced the wrong selected colour before the fix and now preserves the saved colour/font without the competing read. |
-| A selected/cloud font was ignored if browser storage was blocked/full | Apply the validated font directly, independently of caching. Regression previously produced 16px instead of 18px and now passes with throwing localStorage access. |
-| Faculty password settings still had the old six-character, no-current-password form | Replaced it with the existing shared flow: verify current password, enforce 10 characters, rotate, best-effort clear the forced-change flag and refresh claims. Ordinary account security was not weakened. |
-| Shared password fields lacked programmatic label links / announced feedback | Added unique IDs/label associations, show-password pressed states, and alert/status roles. Tested in faculty, student and Super Admin hosts. |
-| Rejected faculty notification saves produced an unhandled promise rejection | Added visible error handling and clear stale success state. Protected write rules are unchanged; R3 remains open. |
-| Six existing unit-test files were never invoked by the test scripts | Registered all six: 31 frontend and 44 backend checks. Added three new proxy-address regressions and a 16-check role-settings security suite. |
+| assessments | collegeId ASC, createdAt DESC |
+| attendanceRecords | collegeId ASC, markedAt DESC |
+| attendanceRecords | collegeId ASC, sessionId ASC, markedAt DESC |
+| reviewQueue | collegeId ASC, status ASC, submittedAt DESC |
 
-No authentication, tenant, academic-profile or identity rule was loosened. No client-triggered
-risk scan, new background listener/poll, or unrelated data migration was added.
+These are source definitions, **not deployed indexes**. The emulator checks authorization, not
+production index availability or index build completion.
 
-## Validation executed
+### Regression evidence
 
-### Final local checks after the fixes
+The full Firebase emulator suite grew from 127 to **157 passing cases**. Added cases cover
+own-college success, foreign/mixed/unbounded denial across six academic/platform staff roles;
+directory checks additionally cover accounts and operations. They also cover college paths,
+no-college/suspended callers, owner/legacy queries, a 30-row roster access-budget regression,
+planner aliases/conflicts, notification descendants, protected profile/pointer writes,
+Super Admin and intentionally shared content.
 
-| Check | Result |
+The separate **23-check tenant-query suite** executes shipped query builders against an
+instrumented Auth/Firestore boundary. It verifies constraints, empty-result behavior, account
+switches, blocked storage, scoped joins and cache isolation. It is **not** a permissions emulator.
+
+## R2 — Misleading 2FA / session controls: corrected honestly
+
+Faculty/admin security tabs now use `AccountSecurityNotice.tsx`. There is no switch that
+purports to enroll MFA by saving a boolean, no invented active-device list, and no nonfunctional
+Revoke button. The notice explicitly says factor enrollment/status verification and session
+inventory/remote revocation are unavailable here, and directs users to their platform
+administrator for verification or account-wide revocation.
+
+The real password flow remains: current-password reauthentication, the platform's 10-character
+minimum, password rotation, best-effort clearing of the forced-change flag and claim refresh.
+Existing externally configured Identity Platform enrollment/enforcement was not inspected or
+changed. This change does **not** claim that MFA itself has been implemented.
+
+## R3 — Canonical self-service staff settings: fixed
+
+New `getMyStaffSettings` and `updateMyStaffProfile` callables run in `asia-south1`.
+The server derives UID, role and college from the authenticated request and checks the existing
+canonical account/profile. The client cannot select an identity, tenant, role or profile path.
+
+- Editable fields are only validated name, phone and complete known-boolean notification
+  preferences. Department, email, college, permissions and academic assignments stay managed.
+- Resolution supports provisioning that intentionally creates only `users/{uid}`, official
+  faculty pointers, stable non-UID profile IDs, and legacy UID/`userId`/email anchors.
+  Missing, conflicting or ambiguous supported links fail visibly rather than creating a
+  partial `faculty/{uid}` or `admins/{uid}` shadow record.
+- Existing canonical records are updated atomically with snapshot-version preconditions.
+  A concurrent reassignment/change requires a fresh lookup instead of overwriting a new owner.
+- Firestore commits **before** the derived Auth display-name mirror. A failed batch never
+  changes Auth. Name edits reconcile against the current canonical name with bounded retries;
+  a mirror failure/nonconvergence is returned as a retryable partial-sync notice, not a lost
+  profile save or a false synchronization guarantee. Firebase offers no cross-service transaction.
+- Faculty, admin, HOD, principal and Super Admin settings use this transport. Management fields
+  remain read-only. Load errors have Retry; unknown cloud preferences cannot be overwritten by
+  saving a fallback cache after a failed load.
+
+**70 actual-callable tests** with an atomic/precondition-enforcing fake Admin SDK cover payloads,
+claims, canonical targeting, legacy/users-only provisioning, conflicts, failures, retries and
+out-of-order Auth-name completions. This fake does not prove live Auth service behavior or
+Firestore permissions. The emulator separately verifies protected direct-client writes remain
+denied, and the settings render suite checks the actual forms' payloads and feedback.
+
+## R5 — Account-safe caches and asynchronous settings: fixed
+
+Notification caches now use UID-suffixed keys, accept only known boolean fields, ignore
+unattributed browser-wide legacy values, and give canonical cloud values precedence. The shared
+legacy key is retired only after a confirmed successful save. Blocked/full device storage is
+nonfatal; it does not turn a server save into a reported failure. Theme initialization/changes
+also work without writable localStorage.
+
+Settings remount on account changes and guard deferred loads/saves against unmount, sign-out,
+and an Auth switch that precedes the context update. A previous account cannot populate the
+new account's controls, success/error feedback or preference cache. Admin export and deferred
+push-permission callbacks also check the current account before acting.
+
+`useStudentProfile` tags state with its owning identity and cancels stale reads; sign-out hides
+the old profile immediately. Student settings now hydrate, validate and submit APAAR/ABC ID:
+12 digits after formatting is removed, optional blank explicitly clears it, and partial IDs
+are rejected before a write. Existing name, notification and academic/contact-management
+contracts are preserved. Admin backup frequency hydrates and saves through the college's
+existing General settings workflow; it is labelled a preference, not a new backup scheduler.
+
+Regression coverage includes **12 cache unit cases** and **61 settings security/persistence
+checks**, including delayed load/save/rejection, account switching, blocked storage, honest
+MFA/session copy, password handling, canonical payloads, backup persistence and APAAR.
+
+## R4 — Dependency triage and upgrades
+
+| Dependency tree | Before C / H / M / L | After C / H / M / L |
+|---|---:|---:|
+| Frontend, including tooling | 0 / 7 / 6 / 4 | **0 / 0 / 4 / 2** |
+| Functions, production only | 0 / 15 / 10 / 1 | **0 / 0 / 8 / 0** |
+| Functions, including tooling | 0 / 26 / 29 / 1 | **0 / 0 / 25 / 0** |
+
+These are advisory/package counts, not independently exploitable application bugs. Counts are
+a snapshot of the npm advisory database, not a promise that future audits will remain unchanged.
+
+Targeted updates include patched grpc, body-parser, Undici, node-forge, brace-expansion,
+fast-uri, KaTeX, serializer/source-map utilities and Puppeteer **25.3.0 → 25.17.0** within its
+existing major. A narrow Firestore → grpc override removes the old pinned 1.9.16 copy without
+a Firebase downgrade. Firebase CLI **15.31.0 → 15.36.0**, a compatible minor update, removes the
+remaining vulnerable proxy-agent/get-uri/basic-ftp development-tool chain.
+
+Three direct runtime major upgrades were selected deliberately rather than through `audit fix
+--force`: Nodemailer **6.10.1 → 10.5.0**, OpenAI **4.104.0 → 7.57.0** and Zod **3.25.76 → 4.6.7**.
+The application's used contracts compile and have offline compatibility regressions:
+
+- Actual mail delivery builds MIME/envelopes using Nodemailer's in-memory stream transport;
+  no SMTP socket/email is sent. File/URL access is explicitly disabled for SMTP message data.
+- OpenAI and DeepSeek chat-completion URLs, request body and usage results use mocked fetch.
+- Zod defaults, transformed pagination, validation failures and middleware feedback are tested.
+  Pagination uses `prefault` to retain the previous string-input → number-output defaults.
+- Existing PDF-renderer and wider Functions unit suites also pass. These tests do not certify
+  a deployed Chrome/PDF container or real provider account/configuration.
+
+The earlier `proxy-addr` **2.0.8** critical fix and three Express-resolved regressions remain.
+Lockfile edits were targeted; all existing Windows optional-package entries were retained.
+No blanket lockfile regeneration, incompatible Firebase/rules-testing downgrade, forced major
+transitive override or unreviewed `npm audit fix --force` was used.
+
+Remaining moderate/low paths include upstream uuid / Google Cloud dependencies and build/CLI
+packages such as glob/minimatch and deepmerge. They require continued upstream/compatibility
+review, not hiding the audit or forcing an incompatible tree. CI now blocks **high and critical**
+advisories in the frontend and in both Functions runtime-only and full-tooling audits.
+
+## Other fixes and preserved behavior
+
+- Fixed holiday cancellation's lint error with an explicit pagination continuation condition;
+  a multi-page regression preserves completed/concurrently marked sessions, prevents duplicates,
+  and keeps all transaction reads before writes.
+- Replaced the college-code control-character regex with explicit character validation; tests
+  cover slash rejection, all 32 embedded C0 controls and a valid code. No validation was disabled.
+- Preserved owner-only appearance preferences, changed-only saves, Retry/Save race protection,
+  legacy appearance fallback, eight colours, font/theme/language controls and account isolation.
+- Preserved Super Admin's navigation-only Curriculum Progress/Insights removal and the full-width
+  responsive college form. Role routes and college-role navigation remain intact.
+- No new client-triggered risk scan, background poll, production migration or listener fan-out.
+  Existing risk cadence/acknowledgements, academic/attendance/autosave/recovery, settings/push,
+  backup/mail and course-assignment behavior remain under the regression suites.
+
+## Validation and limitations
+
+| Executed check | Result |
 |---|---|
-| Frontend production build / TypeScript | PASS |
-| Functions build / TypeScript | PASS |
-| Frontend units | **874 / 874** |
-| Functions units | **1618 / 1618** |
-| Aggregate page/role/auth/faculty/cost/appearance/settings render checks | **709 / 709** |
-| Academic/onboarding/import render checks | **54 / 54** |
+| Frontend units | **886 / 886** |
+| Functions units | **1693 / 1693** |
+| Page/role/auth/faculty/cost/appearance/settings/query render suites | **777 / 777**, zero mount crashes |
+| Academic/onboarding/import UI checks | **54 / 54** |
 | Course render checks | **586 / 586** |
 | Previous-year-paper render checks | **27 / 27** |
-| Course content validation | **4 / 4 packs valid** |
-| Browser-test TypeScript, dead-code check, whitespace checks | PASS |
-| Functions production audit at critical threshold | PASS; non-critical advisories remain above |
+| Course content validation | **4 / 4 packs** |
+| Frontend production build and Functions build | PASS |
+| Functions lint | **0 errors, 26 existing warnings** |
+| Browser-test TypeScript, dead-code and whitespace checks | PASS |
+| Frontend / Functions production / Functions full audit at high threshold | PASS |
+| Core remediation's full Firebase emulator suite in CI | **157 passed, 0 failed** |
+| Core remediation's desktop/mobile Chromium smoke suite in CI | **140 / 140** |
 
-That is **2492 unit tests** and **1376 render/behavior checks**, not 3868 independent live-user
-end-to-end transactions. Role/component checks mount the actual components with isolated
-Auth/Firebase/callable I/O; they do not prove deployed permissions or live integration success.
+Unit/render totals are not live-user end-to-end transactions. Component/query tests replace
+only I/O boundaries; the emulator tests real Firestore/Storage/RTDB rules against fixture data.
+Java/emulator binaries are unavailable locally, so the official authorization execution is the
+PR's isolated CI emulator job. Generated logs/audit JSON and CI annotation snapshots are under
+ignored `artifacts/branch-preparation/`; earlier debug evidence remains in
+`artifacts/debug-2026-11-13/`.
 
-### Browser checks and execution limits
+Build large-chunk and Workbox unmatched-glob warnings remain. Live MFA configuration, real
+mail/SMS/push delivery, payments/provider callbacks, deployed PDF/Chrome containers, all legacy
+production identity records, production indexes and billing were not validated. Failing closed
+on inconsistent legacy identity links can require an administrator's existing repair workflow;
+no live identity backfill was performed. No claim of measured production billing savings is made.
 
-- Ran all **140** public Chromium cases (desktop + mobile): **135 passed initially**; five timed
-  out. Four failures occurred while creating a browser context, before app assertions ran;
-  one exceeded the overall 30-second limit during a multi-viewport check.
-- Rechecked those areas serially with the **same assertion/time limits** and tracing disabled:
-  **7/8 passed**, with one further browser-context creation failure. The remaining desktop
-  upskilling case then passed in a fresh isolated **1/1** run. Every original case has a passing
-  execution, but the original full run was **not** a clean first-pass 140/140 run. Local browser
-  context/resource flakiness remains a tooling reliability issue, not evidence of an application
-  assertion failure.
-- Final idle, serial checks passed **16/16 actual-component appearance/college checks** and
-  **16/16 eight-palette light/dark axe audits** after these fixes. A combined build/unit/browser
-  debug run had hit screenshot/navigation resource timeouts. The component replay skipped
-  screenshot capture only, not application assertions; both the failed capture run and the
-  passing serial checks are retained in the ignored debug artifacts.
-- These audits are scoped automated WCAG A/AA checks, not certification that every portal page
-  or custom accent usage is accessible.
+## Release implications — not executed
 
-### Official emulator / CI evidence
+This is no longer a Hosting-only change. A reviewed coordinated rollout needs the **four
+indexes**, the **new Functions callables and updated runtime dependencies**, and **Firestore
+rules**, followed by Hosting. Verify index build readiness and backend availability before the
+new client queries/settings depend on them. Old clients with unscoped private queries will be
+refused by the tightened rules; coordinate the release and refresh behavior accordingly.
 
-PR #131's original head `8daae111026b1ed51af7e910eae6492d0b0a30dd` completed all three CI jobs
-successfully in run [43706958246](https://github.com/smanoj1813-collab/Vriddhi/actions/runs/43706958246).
-The Functions check's **Rules suite** annotation reports **127 passed, 0 failed**, including the
-new owner-only appearance tests. The full rules step and focused course-security step succeeded.
-No Firestore, Storage or RTDB rule was changed during this subsequent debug pass.
+There are no new Storage/RTDB rule changes, secrets or production migrations. Do not deploy
+Hosting alone or widen profile writes to work around an undeployed callable. Nothing in these
+results authorizes merging, deployment, a real password/email change, or destructive live tests.
+Deployment commands should be provided **one at a time when requested**.
 
-Java is unavailable in the local sandbox, so the official emulator suite could not run locally.
-CI provides the real emulator execution; component stubs and rules-test TypeScript checks are
-not substitutes. Results for the updated debug commit are recorded on PR #131. Passing the
-existing 127 cases does **not** cover the missing cross-college list-denial cases in R1.
+## Reproduction
 
-### Other non-green / non-blocking checks
-
-- `npm --prefix functions run lint`: **2 existing errors, 26 warnings**. The errors are the
-  intentionally paged `while (true)` loop in `classSchedule.ts` (`no-constant-condition`) and the
-  control-character rejection regex in `collegeOnboarding.ts` (`no-control-regex`). Those source
-  files were not modified or their checks disabled just to obtain a green lint result.
-- Existing large-chunk and Workbox unmatched-glob build warnings remain.
-- Live MFA configuration, real mail/SMS, push delivery, payment/provider callbacks, production
-  PDF/container behavior, real-account permissions and production billing were not validated.
-
-## Deployment implications
-
-Nothing has been merged or deployed as part of this audit. Follow the open security findings
-before treating this as a production-ready sign-off.
-
-The original appearance-only PR required **Firestore rules first, then Hosting**. This debug
-pass also patches a **Functions runtime dependency**, so a reviewed rollout now needs a
-**Functions redeploy as well** for that patch to reach production. Hosting alone cannot fix
-backend dependencies or activate the new private appearance preference rule. There are no
-new indexes, Storage/RTDB rules, secrets, or account/data migrations in these changes.
-
-Deployment commands should be provided one at a time when requested.
-
-## Reproduction / evidence
-
-Re-run the package scripts `test:unit`, `test:functions:unit`, `test:render`,
+Use the package scripts `test:unit`, `test:functions:unit`, `test:render`,
 `test:render:academic`, `test:render:courses`, `test:render:pyq`, `validate:courses`, `build`,
-`build:functions`, `typecheck:e2e`, and `check:dead-code`. The new security settings suite can
-also run separately with `npm run test:render:settings`.
-
-Ignored local logs, before/after failure reproductions, audit JSON, browser reports/configs,
-and the CI annotation snapshot are under `artifacts/debug-2026-11-13/`. They contain fixture
-accounts only and are not committed as generated artifacts or dependencies.
+`build:functions`, `typecheck:e2e` and `check:dead-code`. Settings and query checks can run
+separately via `test:render:settings` and `test:render:tenant-scope`. With Java and the official
+emulators available, `npm --prefix functions run test:rules` runs the full fixture-only rules
+suite against the `demo-vriddhi-student-portal` project ID.

@@ -49,14 +49,12 @@ jobs:
       - name: Render-check previous-year papers
         run: npm run test:render:pyq
 
-      # Fails only on CRITICAL advisories: those are the ones with a known exploit
-      # path and a patch. High/moderate are reported in the log for triage —
-      # most of what remains is Node-only build tooling (grpc, undici, esbuild)
-      # that never reaches a browser, and the firebase range has no patched
-      # release to move to (see docs/COMPLETE_AUDIT_2026-11-11.md §3).
-      - name: Dependency audit (blocks on critical only)
+      # The reviewed upgrades clear high/critical advisories in this tree.
+      # Keep that improvement enforceable; moderate/low tooling findings are
+      # logged for follow-up, not hidden by an unreviewed force fix.
+      - name: Dependency audit (blocks on high and critical)
         run: |
-          npm audit --audit-level=critical
+          npm audit --audit-level=high
           echo "── full report ──"
           npm audit || true
 
@@ -93,10 +91,12 @@ jobs:
         run: npm ci
 
       # The frontend audit cannot see the separately locked runtime backend
-      # dependencies. Block critical production advisories in this tree too.
-      - name: Functions production dependency audit
+      # dependencies. Check the runtime separately, then include CLI/dev tools.
+      - name: Functions dependency audits (runtime and tooling)
         working-directory: functions
-        run: npm audit --omit=dev --audit-level=critical
+        run: |
+          npm audit --omit=dev --audit-level=high
+          npm audit --audit-level=high
 
       - name: Build the functions
         working-directory: functions
