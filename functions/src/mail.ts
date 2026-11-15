@@ -60,6 +60,7 @@ async function sendViaSmtp(cfg: MailConfig, msg: MailMessage, fromHeader: string
   const transport = nodemailer.createTransport({
     host: cfg.smtp!.host, port: cfg.smtp!.port, secure: cfg.smtp!.secure,
     auth: { user: cfg.smtp!.user, pass: cfg.smtp!.pass },
+    disableFileAccess: true, disableUrlAccess: true,
   })
   const info = await transport.sendMail({ from: fromHeader, to: msg.to, subject: msg.subject, text: msg.text, html: msg.html })
   return String(info.messageId || '')

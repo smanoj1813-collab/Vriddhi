@@ -1773,7 +1773,8 @@ export async function cancelScheduledSessionsForHolidayRange(
   const reason = `Academic calendar: ${String(params.title || 'holiday').trim()}`.slice(0, 300)
   let cursor: FirebaseFirestore.QueryDocumentSnapshot | undefined
   let cancelled = 0
-  while (true) {
+  let hasMore = true
+  while (hasMore) {
     let pageQuery = db
       .collection('classSessions')
       .where('collegeId', '==', params.collegeId)
@@ -1820,7 +1821,7 @@ export async function cancelScheduledSessionsForHolidayRange(
     })
     cancelled += applied
     cursor = page.docs[page.docs.length - 1]
-    if (page.size < MAX_CANCEL_DOCS_PER_TXN) break
+    hasMore = page.size === MAX_CANCEL_DOCS_PER_TXN
   }
   return cancelled
 }

@@ -64,7 +64,7 @@ function matchesSubject(candidate: string | undefined, wanted: string): boolean 
 /** Subjects this faculty member teaches, from curriculum mappings + timetable. */
 async function fetchTaughtSubjects(facultyId: string, collegeId = ''): Promise<Set<string>> {
   const subjects = new Set<string>()
-  const aliases = await resolveFacultyAliases(facultyId).catch(() => null)
+  const aliases = await resolveFacultyAliases(facultyId, collegeId).catch(() => null)
 
   // Scope the mapping read to the college (or, failing that, to the caller's
   // own facultyId) BEFORE any alias matching — an unscoped `limit(200)` over
@@ -154,7 +154,7 @@ export async function fetchFacultyCurriculumTopics(
     }
   }
 
-  const aliases = await resolveFacultyAliases(facultyId).catch(() => null)
+  const aliases = await resolveFacultyAliases(facultyId, cid).catch(() => null)
 
   // ─── 1. Topics flattened from the assigned curriculum documents ─────────
   try {

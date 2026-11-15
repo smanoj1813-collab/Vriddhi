@@ -43,6 +43,7 @@ import { resetUserPassword, syncIdentityClaims, clearMyMustChangePassword } from
 import { auditAndRepairIdentities } from './identityRepair'
 import { syncMyIdentity } from './selfIdentity'
 import { saveMyStaffAttendance } from './staffAttendanceWrites'
+import { getMyStaffSettings, updateMyStaffProfile } from './staffProfile'
 import { resetCollegeData } from './collegeCleanup'
 import { relinkFacultyToCollege } from './collegeLinks'
 import { createFeePaymentOrder, verifyFeePayment, razorpayWebhook } from './payments'
@@ -290,6 +291,8 @@ export {
   auditAndRepairIdentities,
   syncMyIdentity,
   saveMyStaffAttendance,
+  getMyStaffSettings,
+  updateMyStaffProfile,
   resetCollegeData,
   relinkFacultyToCollege,
   createFeePaymentOrder,

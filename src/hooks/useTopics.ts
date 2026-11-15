@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { db } from '../Firebase/data';
+import { useAuth } from '@/modules/auth/context/AuthContext';
 import {
   collection,
   query,
@@ -115,6 +116,7 @@ function docToTopic(d: any, id: string): Topic {
 // ─── Hook ──────────────────────────────────────────────
 
 export function useTopics(facultyId?: string): UseTopicsReturn {
+  const { user } = useAuth();
   const [allTopics, setAllTopics] = useState<Topic[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -125,13 +127,9 @@ export function useTopics(facultyId?: string): UseTopicsReturn {
     setLoading(true);
     setError(null);
     try {
-      // Single equality filter (no composite index needed), sort client-side
-      let q;
-      if (facultyId) {
-        q = query(collection(db, TOPICS_COLLECTION), where('facultyId', '==', facultyId));
-      } else {
-        q = query(collection(db, TOPICS_COLLECTION));
-      }
+      // Never turn a not-yet-resolved identity into a staff-wide ledger scan.
+      if (!facultyId) { setAllTopics([]); return; }
+      const q = query(collection(db, TOPICS_COLLECTION), where('facultyId', '==', facultyId));
       const snap = await getDocs(q);
       const list = snap.docs
         .map((d) => docToTopic(d.data(), d.id))
@@ -175,12 +173,13 @@ export function useTopics(facultyId?: string): UseTopicsReturn {
     const payload = {
       ...data,
       facultyId: facultyId || '',
+      ...(user?.collegeId ? { collegeId: user.collegeId } : {}),
       createdAt: now,
       updatedAt: now,
     };
     const docRef = await addDoc(collection(db, TOPICS_COLLECTION), payload);
     setAllTopics(prev => [docToTopic(payload, docRef.id), ...prev]);
-  }, [facultyId]);
+  }, [facultyId, user?.collegeId]);
 
   const editTopic = useCallback(async (id: string, data: Partial<Topic>) => {
     const updatedAt = new Date().toISOString();

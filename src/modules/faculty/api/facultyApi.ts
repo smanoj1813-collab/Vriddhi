@@ -1,4 +1,5 @@
 import { db } from '@/Firebase/data';
+import { collegeReadConstraints } from '@/shared/api/tenantScope';
 import { sameAttendancePayload } from '../utils/attendanceWritePlan';
 import {
   collection, query, where, getDocs, addDoc, updateDoc, doc,
@@ -330,7 +331,8 @@ function attendanceDocumentId(sessionId: string, date: string): string {
 
 export async function fetchAttendanceForSession(
   sessionId: string,
-  date: string
+  date: string,
+  collegeId?: string
 ): Promise<FacultyAttendanceDoc | null> {
   if (sessionReadCount >= MAX_READS_PER_SESSION) return null;
 
@@ -358,6 +360,7 @@ export async function fetchAttendanceForSession(
     if (!docSnap.exists()) {
       const q = query(
         collection(db, 'attendance'),
+        ...await collegeReadConstraints(collegeId),
         where('sessionId', '==', sessionId),
         limit(20)
       );
@@ -770,12 +773,13 @@ export async function fetchFacultyStudents(
 
 export async function fetchClassSessions(
   facultyId: string,
-  dateStr?: string
+  dateStr?: string,
+  collegeId?: string
 ): Promise<ClassSession[]> {
   if (sessionReadCount >= MAX_READS_PER_SESSION) return [];
 
   try {
-    const constraints: any[] = [where('facultyId', '==', facultyId), limit(100)];
+    const constraints: any[] = [...await collegeReadConstraints(collegeId), where('facultyId', '==', facultyId), limit(100)];
     if (dateStr) constraints.splice(1, 0, where('date', '==', dateStr));
 
     const q = query(collection(db, 'classSessions'), ...constraints);

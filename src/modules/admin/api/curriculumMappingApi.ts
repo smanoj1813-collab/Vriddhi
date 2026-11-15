@@ -3,6 +3,7 @@
 // ═══════════════════════════════════════════════════════════════════════
 
 import { db } from '@/Firebase/data';
+import { auth } from '@/Firebase/config';
 import {
   collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc,
   query, where, limit, Timestamp, writeBatch,
@@ -96,18 +97,20 @@ const aliasCache = new Map<string, FacultyIdentityAliases>();
  * profile document for the uid so a mapping written either way still matches.
  * Mirrors the roster fallback in src/shared/api/staffAttendanceApi.ts.
  */
-export async function resolveFacultyAliases(uid: string): Promise<FacultyIdentityAliases> {
-  const cached = aliasCache.get(uid);
+export async function resolveFacultyAliases(uid: string, collegeId?: string): Promise<FacultyIdentityAliases> {
+  const cacheKey = `${auth.currentUser?.uid || 'signed-out'}:${collegeId || ''}:${uid}`;
+  const cached = aliasCache.get(cacheKey);
   if (cached) return cached;
   const empty: FacultyIdentityAliases = { uid, profileId: null, email: null, ids: [uid] };
   if (!uid) return empty;
   try {
     const snap = await getDocs(
-      query(collection(db, 'faculty'), where('uid', '==', uid), limit(1))
+      query(collection(db, 'faculty'), ...(collegeId ? [where('collegeId', '==', collegeId)] : []), where('uid', '==', uid), limit(2))
     );
+    if (snap.size > 1) throw new Error('Multiple faculty profiles match this account. Ask an administrator to repair the identity link.');
     const docSnap = snap.docs[0];
     if (!docSnap) {
-      aliasCache.set(uid, empty);
+      aliasCache.set(cacheKey, empty);
       return empty;
     }
     const data = docSnap.data() as Record<string, unknown>;
@@ -118,7 +121,7 @@ export async function resolveFacultyAliases(uid: string): Promise<FacultyIdentit
       email,
       ids: [uid, docSnap.id, String(data.facultyId || '')].filter(Boolean),
     };
-    aliasCache.set(uid, resolved);
+    aliasCache.set(cacheKey, resolved);
     return resolved;
   } catch (error) {
     console.warn('[CurriculumMappingApi] faculty alias resolution failed:', error);
@@ -261,7 +264,7 @@ export async function getFacultyCurriculum(facultyId: string, collegeId?: string
     // id (the mapping dialog's historical key) OR the profile email. Without
     // this, every mapping created before the uid work was invisible to the
     // faculty it belonged to and "My Curriculum" rendered empty.
-    const aliases = await resolveFacultyAliases(facultyId);
+    const aliases = await resolveFacultyAliases(facultyId, collegeId);
     const mappings = await listMappings({
       facultyId,
       facultyAliases: aliases.ids,
@@ -376,8 +379,8 @@ const LEDGER_LIMIT = 400;
  * themselves are the primary content of the page, and a missing progress badge
  * must not replace them with an error screen.
  */
-export async function fetchFacultyTopicLedger(facultyId: string): Promise<LedgerTopicRow[]> {
-  const aliases = await resolveFacultyAliases(facultyId);
+export async function fetchFacultyTopicLedger(facultyId: string, collegeId?: string): Promise<LedgerTopicRow[]> {
+  const aliases = await resolveFacultyAliases(facultyId, collegeId);
   const ids = Array.from(new Set([facultyId, ...aliases.ids].filter(Boolean)));
   const snapshots = await Promise.all(
     ids.map((id) =>

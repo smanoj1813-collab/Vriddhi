@@ -10,6 +10,7 @@ import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
 import {
   MAX_BATCH_OPS,
+  cancelScheduledSessionsForHolidayRange,
   callerOwnsFacultyId,
   mergeIdentityIds,
   needsStaffProfileLookup,
@@ -1986,5 +1987,47 @@ describe('completeClassSession — transaction ordering', () => {
     )
 
     assert.deepEqual(txn.reads, [SESSION_PATH, 'facultyTopics/row-t-mean'])
+  })
+})
+
+
+describe('holiday cancellation pagination', () => {
+  it('visits every page, preserves completed sessions and re-checks concurrent attendance before writing', async () => {
+    const size = MAX_CANCEL_DOCS_PER_TXN + 3
+    const rows = Array.from({ length: size }, (_, index) => ({
+      id: `session-${index}`, ref: { id: `session-${index}` },
+      data: () => ({ date: '2026-11-20', status: index === 0 ? 'completed' : 'scheduled', attendanceMarked: false }),
+    }))
+    const updates: string[] = []
+    let pages = 0
+    let offset = 0
+    const query: any = {
+      where: () => query, orderBy: () => query, limit: (max: number) => { assert.equal(max, MAX_CANCEL_DOCS_PER_TXN); return query },
+      startAfter: (cursor: { id: string }) => { offset = rows.findIndex(row => row.id === cursor.id) + 1; return query },
+      get: async () => { pages++; const docs = rows.slice(offset, offset + MAX_CANCEL_DOCS_PER_TXN); return { docs, empty: !docs.length, size: docs.length } },
+    }
+    const db: any = {
+      collection: (name: string) => { assert.equal(name, 'classSessions'); return query },
+      runTransaction: async (work: (txn: any) => Promise<number>) => {
+        let writing = false
+        return work({
+          get: async (ref: { id: string }) => {
+            assert.equal(writing, false, 'read all snapshots before writing')
+            const source = rows.find(row => row.id === ref.id)!
+            // The last row was marked after the query. Cancellation must not
+            // overwrite it, even when it occurs on page two.
+            return { ...source, exists: true, data: () => ({ ...source.data(), attendanceMarked: ref.id === `session-${size - 1}` }) }
+          },
+          update: (ref: { id: string }, patch: Record<string, unknown>) => { writing = true; assert.equal(patch.status, 'cancelled'); updates.push(ref.id) },
+        })
+      },
+    }
+    const count = await cancelScheduledSessionsForHolidayRange(db, { collegeId: 'college-a', startDate: '2026-11-20', endDate: '2026-11-20', title: 'Holiday', actorUid: 'principal-a', fromDate: '2026-11-13' })
+    assert.equal(pages, 2)
+    assert.equal(count, size - 2)
+    assert.equal(updates.length, size - 2)
+    assert.equal(new Set(updates).size, updates.length)
+    assert.equal(updates.includes('session-0'), false)
+    assert.equal(updates.includes(`session-${size - 1}`), false)
   })
 })

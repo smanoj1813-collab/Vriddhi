@@ -17,6 +17,7 @@ export default function LanguageSettingsBlock() {
             <button
               key={lang.code}
               type="button"
+              aria-pressed={active}
               onClick={() => setLanguage(lang.code)}
               className={`flex items-center justify-between px-4 py-3 rounded-xl border-2 text-left transition-all
                 ${active
@@ -25,17 +26,17 @@ export default function LanguageSettingsBlock() {
                 }`}
             >
               <span>
-                <span className={`block text-sm font-semibold ${active ? 'text-teal-700 dark:text-teal-300' : 'text-slate-800 dark:text-slate-100'}`}>
+                <span className={`block text-sm font-semibold ${active ? 'text-teal-800 dark:text-teal-300' : 'text-slate-800 dark:text-slate-100'}`}>
                   {lang.nativeName}
                 </span>
-                <span className="block text-xs text-slate-500">{lang.englishName}</span>
+                <span className="block text-xs text-slate-600 dark:text-slate-300">{lang.englishName}</span>
               </span>
-              {active && <span className="text-xs font-bold text-teal-600">{t('common.yes')}</span>}
+              {active && <span className="text-xs font-bold text-teal-800 dark:text-teal-200">{t('common.yes')}</span>}
             </button>
           );
         })}
       </div>
-      <p className="text-[11px] text-slate-400 mt-2">
+      <p className="text-[11px] text-slate-600 dark:text-slate-300 mt-2">
         {t('settings.southIndianNote')} · {definition.nativeName}
       </p>
     </div>

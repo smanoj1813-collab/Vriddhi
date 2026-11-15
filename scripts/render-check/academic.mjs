@@ -219,6 +219,7 @@ try {
   globalThis.__RC_CALLABLE_DATA.saveCollegeWithSchemes = { collegeId: 'new-college', configurationRevision: 1 };
   globalThis.__RC_CALLABLE_PAYLOADS = []; globalThis.__RC_WRITES = [];
   view = await mount('/src/modules/superadmin/pages/CreateCollege.tsx');
+  check('college create form uses the available page width instead of a fixed narrow cap', () => { assert.ok(document.querySelector('form').classList.contains('w-full')); assert.doesNotMatch(document.querySelector('form').className, /max-w-/); });
   await type(document.querySelector('[name=name]'), created.name); await type(document.querySelector('[name=code]'), created.code);
   await nativeSelect(document.querySelector('[name=universityId]'), 'generated-bcu');
   check('affiliation uses the generated university ID and filters research without assigning academic rules', () => { assert.equal(document.querySelector('[name=universityId]').value, 'generated-bcu'); assert.equal(document.querySelectorAll('input[type=checkbox]:checked').length, 0); assert.match(view.text(), /1 research draft shown/); assert.match(view.text(), /BCU · Bengaluru City University/); assert.equal(globalThis.__RC_CALLABLE_PAYLOADS.length, 0); });
@@ -237,6 +238,7 @@ try {
   globalThis.__RC_FIRESTORE_COLLECTIONS = { universities: [], schemePacks: [p, second].map(pack => docRow(pack.id, { ...pack, collegeId: 'college-a' })) };
   globalThis.__RC_CALLABLE_PAYLOADS = [];
   view = await mount('/src/modules/superadmin/pages/CreateCollege.tsx', { collegeId: 'college-a' });
+  check('college edit form keeps the same full-width responsive layout', () => { assert.ok(document.querySelector('form').classList.contains('w-full')); assert.doesNotMatch(document.querySelector('form').className, /max-w-/); });
   check('editing a college hydrates its names and pins, even when new onboarding is disabled', () => { assert.equal(document.querySelector('[name=name]').value, 'College A'); assert.equal(document.querySelectorAll('input[type=checkbox]:checked').length, 2); assert.equal(buttons('Save Changes')[0].disabled, false); });
   await type(document.querySelector('[name=name]'), 'Edited College A'); await submitForm();
   check('college edit submits its expected configuration revision atomically with metadata', () => { const call = globalThis.__RC_CALLABLE_PAYLOADS.find(c => c.name === 'saveCollegeWithSchemes'); assert.equal(call.payload.collegeId, 'college-a'); assert.equal(call.payload.expectedConfigurationRevision, 9); assert.equal(call.payload.details.name, 'Edited College A'); assert.equal(call.payload.selection.assignments.length, 2); assert.equal(globalThis.__RC_WRITES.length, 0); });

@@ -9,6 +9,7 @@ import {
   QueryConstraint, onSnapshot, Unsubscribe,
 } from 'firebase/firestore';
 import { db } from '@/Firebase/data';
+import { collegeReadConstraints } from '@/shared/api/tenantScope';
 import { ensureClassSession } from './classSessionApi';
 import { normalizeSessionDate } from '@/shared/utils/sessionDate';
 
@@ -92,7 +93,7 @@ export interface ListSessionsFilters {
 
 export async function listClassSessions(filters: ListSessionsFilters = {}): Promise<ClassSession[]> {
   const constraints: QueryConstraint[] = [orderBy('date', 'desc'), orderBy('startTime', 'desc')];
-  if (filters.collegeId) constraints.push(where('collegeId', '==', filters.collegeId));
+  constraints.push(...await collegeReadConstraints(filters.collegeId));
   if (filters.branch) constraints.push(where('branch', '==', filters.branch));
   if (filters.batch) constraints.push(where('batch', '==', filters.batch));
   if (filters.facultyId) constraints.push(where('facultyId', '==', filters.facultyId));
@@ -155,7 +156,7 @@ export async function listAttendanceRecords(filters: {
   const constraints: QueryConstraint[] = [orderBy('markedAt', 'desc')];
   if (filters.sessionId) constraints.push(where('sessionId', '==', filters.sessionId));
   if (filters.studentId) constraints.push(where('studentId', '==', filters.studentId));
-  if (filters.collegeId) constraints.push(where('collegeId', '==', filters.collegeId));
+  constraints.push(...await collegeReadConstraints(filters.collegeId));
 
   const q = query(collection(db, 'attendanceRecords'), ...constraints);
   const snap = await getDocs(q);
@@ -198,7 +199,7 @@ export async function listAttendanceRecordsInRange(filters: {
     where('date', '<=', filters.dateTo),
     orderBy('date', 'desc'),
   ];
-  if (filters.collegeId) constraints.unshift(where('collegeId', '==', filters.collegeId));
+  constraints.unshift(...await collegeReadConstraints(filters.collegeId));
 
   const snap = await getDocs(query(collection(db, 'attendanceRecords'), ...constraints));
   const records = snap.docs.map((d) => {
@@ -263,7 +264,7 @@ export async function getStudentAttendanceSummary(
   studentId: string,
   classSessionIds?: string[]
 ): Promise<AttendanceSummary | null> {
-  const constraints: QueryConstraint[] = [where('studentId', '==', studentId)];
+  const constraints: QueryConstraint[] = [...await collegeReadConstraints(), where('studentId', '==', studentId)];
   if (classSessionIds && classSessionIds.length > 0) {
     // Firestore 'in' supports max 10; chunk if needed
     constraints.push(where('sessionId', 'in', classSessionIds.slice(0, 10)));
@@ -307,8 +308,8 @@ export async function getAllStudentsAttendanceSummary(filters: {
   dateTo?: string;
 }): Promise<AttendanceSummary[]> {
   // Step 1: get relevant sessions
-  const sessionConstraints: QueryConstraint[] = [];
-  if (filters.collegeId) sessionConstraints.push(where('collegeId', '==', filters.collegeId));
+  const tenantConstraints = await collegeReadConstraints(filters.collegeId);
+  const sessionConstraints: QueryConstraint[] = [...tenantConstraints];
   if (filters.branch) sessionConstraints.push(where('branch', '==', filters.branch));
   if (filters.batch) sessionConstraints.push(where('batch', '==', filters.batch));
 
@@ -324,7 +325,7 @@ export async function getAllStudentsAttendanceSummary(filters: {
   const allRecords: AttendanceRecord[] = [];
   for (let i = 0; i < sessionIds.length; i += 10) {
     const chunk = sessionIds.slice(i, i + 10);
-    const recQ = query(collection(db, 'attendanceRecords'), where('sessionId', 'in', chunk));
+    const recQ = query(collection(db, 'attendanceRecords'), ...tenantConstraints, where('sessionId', 'in', chunk));
     const recSnap = await getDocs(recQ);
     recSnap.docs.forEach((d) => {
       allRecords.push({ id: d.id, ...d.data(), markedAt: toISO(d.data().markedAt) } as AttendanceRecord);
@@ -352,7 +353,7 @@ export async function getAllStudentsAttendanceSummary(filters: {
   for (let i = 0; i < studentIds.length; i += 10) {
     const chunk = studentIds.slice(i, i + 10);
     try {
-      const stQ = query(collection(db, 'students'), where('__name__', 'in', chunk));
+      const stQ = query(collection(db, 'students'), ...tenantConstraints, where('__name__', 'in', chunk));
       const stSnap = await getDocs(stQ);
       stSnap.docs.forEach((d) => {
         const data = d.data();
@@ -398,8 +399,7 @@ export async function getAllStudentsAttendanceSummary(filters: {
 export async function getFacultyMap(collegeId?: string): Promise<Map<string, { name: string; id: string }>> {
   const map = new Map<string, { name: string; id: string }>();
   try {
-    const constraints: QueryConstraint[] = [];
-    if (collegeId) constraints.push(where('collegeId', '==', collegeId));
+    const constraints = await collegeReadConstraints(collegeId);
     const qry = query(collection(db, 'faculty'), ...constraints);
     const snap = await getDocs(qry);
     snap.docs.forEach((d) => {
@@ -417,11 +417,12 @@ export async function getFacultyMap(collegeId?: string): Promise<Map<string, { n
 // ═══════════════════════════════════════════════════════════════════════
 
 export function subscribeToSessions(
-  filters: ListSessionsFilters,
+  filters: ListSessionsFilters & { collegeId: string },
   callback: (sessions: ClassSession[]) => void
 ): Unsubscribe {
   const constraints: QueryConstraint[] = [orderBy('date', 'desc'), orderBy('startTime', 'desc')];
-  if (filters.collegeId) constraints.push(where('collegeId', '==', filters.collegeId));
+  if (!filters.collegeId?.trim()) throw new Error('A college is required to subscribe to class sessions.');
+  constraints.push(where('collegeId', '==', filters.collegeId.trim()));
   if (filters.branch) constraints.push(where('branch', '==', filters.branch));
   if (filters.batch) constraints.push(where('batch', '==', filters.batch));
   if (filters.facultyId) constraints.push(where('facultyId', '==', filters.facultyId));

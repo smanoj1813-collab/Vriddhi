@@ -20,6 +20,7 @@ import type {
   ScheduledTest, ScheduleTestInput, ReviewQueueItem,
   TestAnalytics,
 } from '../types/assessment';
+import { collegeReadConstraints } from '@/shared/api/tenantScope';
 import { computeAssessmentStats } from '../utils/assessmentStats';
 
 // ═══════════════════════════════════════════════════════════════════════
@@ -53,7 +54,7 @@ export async function getAssessmentById(id: string): Promise<Assessment | null> 
 
 export async function listAssessments(options: AssessmentFilterOptions = {}): Promise<Assessment[]> {
   const constraints: QueryConstraint[] = [orderBy('createdAt', 'desc')];
-  if (options.collegeId) constraints.push(where('collegeId', '==', options.collegeId));
+  constraints.push(...await collegeReadConstraints(options.collegeId));
   if (options.subjectId) constraints.push(where('subjectId', '==', options.subjectId));
   if (options.courseId) constraints.push(where('courseId', '==', options.courseId));
   if (options.status) constraints.push(where('status', '==', options.status));
@@ -270,8 +271,8 @@ export async function getAssessmentAverageScore(assessmentId: string): Promise<n
 // Review Queue
 // ═══════════════════════════════════════════════════════════════════════
 
-export async function getPendingReviews(): Promise<ReviewQueueItem[]> {
-  const q = query(collection(db, 'reviewQueue'), where('status', '==', 'pending'), orderBy('submittedAt', 'desc'));
+export async function getPendingReviews(collegeId?: string): Promise<ReviewQueueItem[]> {
+  const q = query(collection(db, 'reviewQueue'), ...await collegeReadConstraints(collegeId), where('status', '==', 'pending'), orderBy('submittedAt', 'desc'));
   const snapshot = await getDocs(q);
   return snapshot.docs.map((d) => {
     const data = d.data();

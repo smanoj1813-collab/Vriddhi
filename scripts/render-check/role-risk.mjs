@@ -88,6 +88,13 @@ try {
     reset(role); const view = await mount('/src/shared/components/Layout.tsx', { children: React.createElement('p', null, 'Protected role content') });
     check(`${role} shell: navigation icons opt into shared hover/focus motion`, () => { assert.ok(view.all('.portal-motion-target .portal-interactive-icon').length > 0); assert.match(view.text(), /Protected role content/); });
     check(`${role} shell: Risk Alerts respects the role permission boundary`, () => { const entries = view.all('[role="button"],button').filter(el => el.textContent.trim() === 'Risk Alerts'); assert.equal(entries.length > 0, ['faculty', 'hod', 'principal'].includes(role)); });
+    if (['hod', 'principal'].includes(role)) {
+      await view.click(view.q('nav button[aria-label="More"]'));
+      check(`${role} navigation: college Curriculum Insights and Progress remain available`, () => {
+        assert.ok(view.q('[role="dialog"] a[href="/admin/academic-insights"]'));
+        assert.ok(view.q('[role="dialog"] a[href="/admin/curriculum-progress"]'));
+      });
+    }
     if (role === 'superadmin') {
       const drawer = () => view.q('.MuiDrawer-paper');
       const group = label => [...drawer().querySelectorAll('[aria-expanded]')].find(el => el.getAttribute('aria-label') === label);
@@ -101,7 +108,7 @@ try {
         ],
         Academics: [
           ['Curriculum', '/superadmin/curriculum'], ['Workflow Inbox', '/admin/workflow-inbox'], ['Prep Content Studio', '/superadmin/prep-studio'],
-          ['Question Bank', '/superadmin/question-bank'], ['Curriculum Insights', '/admin/academic-insights'], ['Curriculum Progress', '/admin/curriculum-progress'],
+          ['Question Bank', '/superadmin/question-bank'],
         ],
         'Billing & Products': [['Comparison', '/superadmin/comparison'], ['Billing', '/superadmin/billing'], ['Products & Access MIS', '/superadmin/products']],
         System: [['System Management', '/superadmin/system-management'], ['System Health', '/superadmin/health'], ['Settings', '/admin/settings']],
@@ -133,11 +140,11 @@ try {
           visited.push(destination);
         }
       }
-      check('Super Admin sidebar: all 25 previous unique destinations remain reachable without additional callable requests', () => {
+      check('Super Admin sidebar: all 23 intended destinations remain reachable without additional callable requests', () => {
         const layout = readFileSync(path.join(root, 'src/shared/components/Layout.tsx'), 'utf8');
         const flatSource = layout.slice(layout.indexOf('const navItems:'), layout.indexOf('interface SidebarLeaf'));
         const declared = [...flatSource.matchAll(/\{\s*label:\s*"[^"]+",\s*path:\s*"([^"]+)"[^\n]*roles:\s*\[[^\]]*"superadmin"[^\]]*\]/g)].map(match => match[1]);
-        assert.equal(visited.length, 25); assert.equal(new Set(visited).size, 25);
+        assert.equal(visited.length, 23); assert.equal(new Set(visited).size, 23);
         assert.deepEqual([...new Set(declared)].sort(), [...visited].sort());
         assert.equal(globalThis.__RC_CALLABLE_PAYLOADS.length, callableCount);
       });
@@ -154,7 +161,6 @@ try {
         ['/superadmin/colleges/new', 'Institutions', 'Create College'],
         ['/superadmin/colleges/college-a/edit', 'Institutions', 'Colleges'],
         ['/superadmin/faculty/profile-1', 'People & Access', 'Manage Faculty'],
-        ['/admin/academic-insights', 'Academics', 'Curriculum Insights'],
         ['/admin/workflow-inbox', 'Academics', 'Workflow Inbox'],
         ['/admin/settings', 'System', 'Settings'],
       ]) {
@@ -185,13 +191,15 @@ try {
         assert.ok(drawer().textContent.includes('Import Students'));
       });
       await view.click(view.q('nav button[aria-label="More"]'));
-      check('Super Admin mobile More: the same five groups plus four unchanged bottom tabs cover all 25 destinations exactly once', () => {
+      check('Super Admin mobile More: the same five groups plus four unchanged bottom tabs cover all 23 destinations exactly once', () => {
         const dialog = view.q('[role="dialog"]');
         assert.deepEqual([...dialog.querySelectorAll('section h2')].map(el => el.textContent), Object.keys(expectedGroups));
         const paths = [...dialog.querySelectorAll('a[href]')].map(a => a.getAttribute('href'));
         paths.push('/superadmin/dashboard', '/superadmin/colleges', '/superadmin/admins', '/superadmin/universities');
-        assert.equal(paths.length, 25); assert.equal(new Set(paths).size, 25);
+        assert.equal(paths.length, 23); assert.equal(new Set(paths).size, 23);
         assert.deepEqual(paths.sort(), visited.sort());
+        assert.ok(!paths.includes('/admin/academic-insights'));
+        assert.ok(!paths.includes('/admin/curriculum-progress'));
       });
       const mobileSettings = view.q('[role="dialog"] a[href="/admin/settings"]');
       mobileSettings.addEventListener('click', event => event.preventDefault(), { once: true });
