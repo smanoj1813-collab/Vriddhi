@@ -154,6 +154,10 @@ const NAV_LABEL_KEYS: Record<string, TranslationKey> = {
   Calendar: "nav.calendar",
   "Mentored Students": "nav.mentoredStudents",
   "Attendance Overview": "nav.attendanceOverview",
+  Institutions: "nav.institutions",
+  "People & Access": "nav.peopleAccess",
+  "Billing & Products": "nav.billingProducts",
+  System: "nav.system",
 };
 
 const navItems: NavItem[] = [
@@ -178,11 +182,11 @@ const navItems: NavItem[] = [
   // reachable only through /admin/settings → "AI Content & Cost" tab.
   { label: "Prep Content Studio", path: "/superadmin/prep-studio", icon: <AutoAwesome fontSize="small" />, roles: ["superadmin"], section: "Academic" },
   { label: "Question Bank", path: "/superadmin/question-bank", icon: <QuestionAnswer fontSize="small" />, roles: ["superadmin"], section: "Academic" },
-  { label: "Comparison", path: "/superadmin/comparison", icon: <BarChartIcon fontSize="small" />, roles: ["superadmin"], section: "System" },
-  { label: "Billing", path: "/superadmin/billing", icon: <CreditCardIcon fontSize="small" />, roles: ["superadmin"], section: "System" },
+  { label: "Comparison", path: "/superadmin/comparison", icon: <BarChartIcon fontSize="small" />, roles: ["superadmin"], section: "Billing & Products" },
+  { label: "Billing", path: "/superadmin/billing", icon: <CreditCardIcon fontSize="small" />, roles: ["superadmin"], section: "Billing & Products" },
   // Products & Access MIS: the duration-and-price catalogue students are
   // onboarded onto, plus the subscription buckets and value per product.
-  { label: "Products & Access MIS", path: "/superadmin/products", icon: <LayersIcon fontSize="small" />, roles: ["superadmin"], section: "System" },
+  { label: "Products & Access MIS", path: "/superadmin/products", icon: <LayersIcon fontSize="small" />, roles: ["superadmin"], section: "Billing & Products" },
   { label: "System Management", path: "/superadmin/system-management", icon: <Settings fontSize="small" />, roles: ["superadmin"], section: "System" },
   { label: "System Health", path: "/superadmin/health", icon: <MonitorHeartIcon fontSize="small" />, roles: ["superadmin"], section: "System" },
   // Superadmin can open the shared Settings surface (hosted under /admin, whose
@@ -271,6 +275,29 @@ interface SidebarLeaf {
 type SidebarEntry =
   | { kind: "link"; label: string; path: string; icon: React.ReactNode }
   | { kind: "group"; label: string; icon: React.ReactNode; children: SidebarLeaf[] };
+
+// Reuse the existing role-filtered destinations rather than maintaining a
+// second list of Super Admin paths. Shared /admin academic/settings entries
+// belong here too; grouping never grants access or changes a route.
+const superadminItems = navItems.filter((item) => item.roles.includes("superadmin"));
+const superadminNav: SidebarEntry[] = [
+  ...superadminItems.filter((item) => item.section === "Overview").map(({ label, path, icon }) => ({
+    kind: "link" as const, label, path, icon,
+  })),
+  ...[
+    { section: "Institutions", label: "Institutions", icon: <Business fontSize="small" /> },
+    { section: "User Management", label: "People & Access", icon: <ManageAccounts fontSize="small" /> },
+    { section: "Academic", label: "Academics", icon: <School fontSize="small" /> },
+    { section: "Billing & Products", label: "Billing & Products", icon: <CreditCardIcon fontSize="small" /> },
+    { section: "System", label: "System", icon: <Settings fontSize="small" /> },
+  ].map(({ section, label, icon }) => ({
+    kind: "group" as const,
+    label,
+    icon,
+    children: superadminItems.filter((item) => item.section === section)
+      .map(({ label, path, icon }) => ({ label, path, icon })),
+  })),
+];
 
 const facultyNav: SidebarEntry[] = [
   { kind: "link", label: "Dashboard", path: "/faculty/dashboard", icon: <Dashboard fontSize="small" /> },
@@ -742,6 +769,7 @@ const employeeNav: SidebarEntry[] = [
 ];
 
 const collapsibleNavByRole: Partial<Record<string, SidebarEntry[]>> = {
+  superadmin: superadminNav,
   faculty: facultyNav,
   employee: employeeNav,
   // Admin ≡ department HOD: they get the HOD portal, not a separate admin
@@ -888,6 +916,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
+  const sidebarNavId = React.useId();
   const [collapsed, setCollapsed] = useState<boolean>(() => {
     return localStorage.getItem('vriddhi-sidebar-collapsed') === 'true';
   });
@@ -934,6 +963,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   };
 
   const effectiveRole = user?.role || "admin";
+  const singleOpenGroups = effectiveRole === "faculty" || effectiveRole === "superadmin";
   const showInstallApp = !isPwaStandalone();
 
   const filteredNav = React.useMemo(() => {
@@ -948,9 +978,9 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   }, [effectiveRole]);
 
   // ─── Collapsible groups ────────────────────────────────────────────────────
-  // Faculty uses a single-open accordion so menus do not accumulate as they
-  // navigate. Other portals retain their existing multi-open behaviour. Deep
-  // links open the owning group; a user can still close it manually.
+  // Faculty and Super Admin use a single-open accordion so menus do not
+  // accumulate as they navigate. Other portals retain their multi-open
+  // behaviour. Deep links reveal the owning group, which can still be closed.
   const [openGroups, setOpenGroups] = useState<Set<string>>(() => new Set());
   const pathname = location.pathname;
 
@@ -962,6 +992,18 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     () => filterNavForRole(collapsibleNavByRole[effectiveRole], effectiveRole as UserRole, access),
     [effectiveRole, access]
   );
+
+  // Super Admin includes list/create/import paths with shared prefixes. Only
+  // the most specific destination is current (not both Students and Import).
+  const activeSuperadminPath = React.useMemo(() => {
+    if (effectiveRole !== "superadmin" || !collapsibleNav) return undefined;
+    const current = pathname === "/superadmin" ? "/superadmin/dashboard" : pathname;
+    return collapsibleNav.flatMap((entry) => entry.kind === "link" ? [entry.path] : entry.children.map((child) => child.path))
+      .filter((path) => isNavPathActive(current, path))
+      .sort((a, b) => b.length - a.length)[0];
+  }, [collapsibleNav, effectiveRole, pathname]);
+  const isSidebarPathActive = (path: string) => effectiveRole === "superadmin"
+    ? activeSuperadminPath === path : isNavPathActive(pathname, path);
 
   const activeGroup = React.useMemo(() => {
     if (!collapsibleNav) return null;
@@ -976,18 +1018,18 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
   const activeGroupLabel = activeGroup?.kind === "group" ? activeGroup.label : null;
   useEffect(() => {
-    if (effectiveRole === "faculty") {
+    if (singleOpenGroups) {
       setOpenGroups(new Set(activeGroupLabel ? [activeGroupLabel] : []));
     } else if (activeGroupLabel) {
       setOpenGroups((prev) =>
         prev.has(activeGroupLabel) ? prev : new Set(prev).add(activeGroupLabel)
       );
     }
-  }, [activeGroupLabel, effectiveRole, pathname]);
+  }, [activeGroupLabel, effectiveRole, pathname, singleOpenGroups]);
 
   const toggleGroup = (label: string) => {
     setOpenGroups((prev) => {
-      if (effectiveRole === "faculty") {
+      if (singleOpenGroups) {
         return new Set(prev.has(label) ? [] : [label]);
       }
       const next = new Set(prev);
@@ -1126,6 +1168,17 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
   const drawerWidth = collapsed ? DRAWER_COLLAPSED_WIDTH : DRAWER_EXPANDED_WIDTH;
 
+  // Keep Super Admin's small selected labels legible in both themes while
+  // respecting the saved accent. Other portals retain their existing palette.
+  const sidebarAccentText = effectiveRole === "superadmin"
+    ? resolvedMode === "dark" ? "primary.light" : "rgb(var(--accent-800))"
+    : "primary.main";
+  const sidebarSelectedBg = effectiveRole === "superadmin" ? "rgb(var(--accent-800))" : "primary.main";
+  const sidebarSelectedHoverBg = effectiveRole === "superadmin" ? "rgb(var(--accent-900))" : "primary.dark";
+  const sidebarDangerText = effectiveRole === "superadmin"
+    ? resolvedMode === "dark" ? "error.light" : "error.dark"
+    : "error.main";
+
   const drawerContent = (
     <Box sx={{ height: "100%", display: "flex", flexDirection: "column", bgcolor: "background.paper" }}>
       {/* Brand Header */}
@@ -1143,7 +1196,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         <Link
           to="/"
           style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}
-          aria-label="Vriddhi Institutions"
+          aria-label={collapsed ? "Vriddhi Institutions" : `Vriddhi Institutions — ${t("brand.subtitle")}`}
         >
           {collapsed ? (
             <VriddhiLogo variant="mark" height={34} reverse={resolvedMode === "dark"} className="shrink-0" />
@@ -1163,6 +1216,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         <Box sx={{ display: { xs: "none", md: "block" } }}>
           <IconButton
             size="small"
+            aria-label={t(collapsed ? "nav.expandSidebar" : "nav.collapseSidebar")}
             onClick={toggleCollapse}
             sx={{
               color: "text.secondary",
@@ -1226,13 +1280,13 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       <List sx={{ flex: 1, overflowY: "auto", px: 1, py: 1 }}>
         {collapsibleNav ? (
           <>
-            {/* Grouped roles (faculty, principal): collapsible master groups.
+            {/* Grouped roles: collapsible master groups.
                 Navigation-only reorganisation — every path lives in the role's
                 routes file unchanged. */}
-            {collapsibleNav.map((entry) => {
+            {collapsibleNav.map((entry, index) => {
               if (entry.kind === "link") {
                 const isActive =
-                  isNavPathActive(pathname, entry.path) ||
+                  isSidebarPathActive(entry.path) ||
                   (pathname === "/faculty" && entry.path === "/faculty/dashboard");
                 return (
                   <ListItem key={entry.path} disablePadding sx={{ mb: 0.5 }}>
@@ -1241,6 +1295,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                         className="portal-motion-target"
                         onClick={() => followNavPath(entry.path)}
                         selected={isActive}
+                        aria-current={isActive ? "page" : undefined}
                         sx={{
                           borderRadius: 2,
                           justifyContent: collapsed ? "center" : "flex-start",
@@ -1249,10 +1304,10 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                           minHeight: 44,
                           transition: "all 0.15s ease",
                           "&.Mui-selected": {
-                            bgcolor: "primary.main",
+                            bgcolor: sidebarSelectedBg,
                             color: "#ffffff",
                             boxShadow: "0 2px 8px rgba(13, 148, 136, 0.25)",
-                            "&:hover": { bgcolor: "primary.dark" },
+                            "&:hover": { bgcolor: sidebarSelectedHoverBg },
                             "& .MuiListItemIcon-root": { color: "#ffffff" },
                             "& .MuiTypography-root": { fontWeight: 600 },
                           },
@@ -1294,22 +1349,34 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               }
 
               const isGroupActive = entry.children.some((child) =>
-                isNavPathActive(pathname, child.path)
+                isSidebarPathActive(child.path)
               );
               const isOpen = openGroups.has(entry.label);
+              const groupButtonId = `${sidebarNavId}-group-${index}`;
+              const groupPanelId = `${groupButtonId}-panel`;
 
               return (
-                <React.Fragment key={entry.label}>
-                  <ListItem disablePadding sx={{ mb: 0.5 }}>
+                <Box component="li" key={entry.label} sx={{ listStyle: "none" }}>
+                  <ListItem component="div" disablePadding sx={{ mb: 0.5 }}>
                     <Tooltip title={collapsed ? navLabel(entry.label) : ""} placement="right" arrow>
                       <ListItemButton
                         className="portal-motion-target"
-                        onClick={() =>
-                          collapsed
-                            ? followNavPath(entry.children[0].path)
-                            : toggleGroup(entry.label)
-                        }
-                        aria-expanded={isOpen}
+                        id={groupButtonId}
+                        aria-label={navLabel(entry.label)}
+                        onClick={() => {
+                          if (collapsed && effectiveRole === "superadmin") {
+                            // A compact-rail group reveals its choices instead
+                            // of unexpectedly navigating to the first child.
+                            toggleCollapse();
+                            setOpenGroups(new Set([entry.label]));
+                          } else if (collapsed) {
+                            followNavPath(entry.children[0].path);
+                          } else {
+                            toggleGroup(entry.label);
+                          }
+                        }}
+                        aria-expanded={!collapsed && isOpen}
+                        aria-controls={!collapsed && isOpen ? groupPanelId : undefined}
                         sx={{
                           borderRadius: 2,
                           justifyContent: collapsed ? "center" : "flex-start",
@@ -1323,8 +1390,8 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                                   resolvedMode === "dark"
                                     ? "rgba(13, 148, 136, 0.14)"
                                     : "rgba(13, 148, 136, 0.07)",
-                                "& .MuiListItemIcon-root": { color: "primary.main" },
-                                "& .MuiTypography-root": { fontWeight: 700, color: "primary.main" },
+                                "& .MuiListItemIcon-root": { color: sidebarAccentText },
+                                "& .MuiTypography-root": { fontWeight: 700, color: sidebarAccentText },
                               }
                             : {
                                 "&:hover": {
@@ -1338,7 +1405,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                           className="portal-interactive-icon"
                           sx={{
                             minWidth: collapsed ? "auto" : 36,
-                            color: isGroupActive ? "primary.main" : "text.secondary",
+                            color: isGroupActive ? sidebarAccentText : "text.secondary",
                             justifyContent: "center",
                           }}
                         >
@@ -1353,7 +1420,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                                   sx={{
                                     fontSize: "0.875rem",
                                     fontWeight: isGroupActive ? 700 : 600,
-                                    color: isGroupActive ? "primary.main" : "text.primary",
+                                    color: isGroupActive ? sidebarAccentText : "text.primary",
                                   }}
                                 >
                                   {navLabel(entry.label)}
@@ -1368,16 +1435,17 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                   </ListItem>
 
                   {!collapsed && (
-                    <Collapse in={isOpen} timeout="auto" unmountOnExit>
+                    <Collapse id={groupPanelId} role="group" aria-labelledby={groupButtonId} in={isOpen} timeout="auto" unmountOnExit>
                       <List disablePadding sx={{ px: 0.5, mb: 0.5 }}>
                         {entry.children.map((child) => {
-                          const isActive = isNavPathActive(pathname, child.path);
+                          const isActive = isSidebarPathActive(child.path);
                           return (
                             <ListItem key={child.path} disablePadding sx={{ mb: 0.25 }}>
                               <ListItemButton
                         className="portal-motion-target"
                                 onClick={() => followNavPath(child.path)}
                                 selected={isActive}
+                                aria-current={isActive ? "page" : undefined}
                                 sx={{
                                   borderRadius: 2,
                                   pl: 3.5,
@@ -1386,10 +1454,10 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                                   minHeight: 40,
                                   transition: "all 0.15s ease",
                                   "&.Mui-selected": {
-                                    bgcolor: "primary.main",
+                                    bgcolor: sidebarSelectedBg,
                                     color: "#ffffff",
                                     boxShadow: "0 2px 8px rgba(13, 148, 136, 0.25)",
-                                    "&:hover": { bgcolor: "primary.dark" },
+                                    "&:hover": { bgcolor: sidebarSelectedHoverBg },
                                     "& .MuiListItemIcon-root": { color: "#ffffff" },
                                     "& .MuiTypography-root": { fontWeight: 600 },
                                   },
@@ -1430,7 +1498,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                       </List>
                     </Collapse>
                   )}
-                </React.Fragment>
+                </Box>
               );
             })}
           </>
@@ -1454,10 +1522,10 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                     minHeight: 44,
                     transition: 'all 0.15s ease',
                     "&.Mui-selected": {
-                      bgcolor: "primary.main",
+                      bgcolor: sidebarSelectedBg,
                       color: "#ffffff",
                       boxShadow: "0 2px 8px rgba(13, 148, 136, 0.25)",
-                      "&:hover": { bgcolor: "primary.dark" },
+                      "&:hover": { bgcolor: sidebarSelectedHoverBg },
                       "& .MuiListItemIcon-root": { color: "#ffffff" },
                       "& .MuiTypography-root": { fontWeight: 600 },
                     },
@@ -1519,11 +1587,11 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               justifyContent: collapsed ? "center" : "flex-start",
               px: collapsed ? 1.5 : 2,
               py: 0.8,
-              color: "primary.main",
+              color: sidebarAccentText,
               "&:hover": { bgcolor: resolvedMode === 'dark' ? 'rgba(20,184,166,0.1)' : '#f0fdfa' },
             }}
           >
-            <ListItemIcon sx={{ minWidth: collapsed ? "auto" : 36, color: "primary.main", justifyContent: "center" }}>
+            <ListItemIcon sx={{ minWidth: collapsed ? "auto" : 36, color: sidebarAccentText, justifyContent: "center" }}>
               <InstallMobile fontSize="small" />
             </ListItemIcon>
             {!collapsed && (
@@ -1568,11 +1636,11 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             justifyContent: collapsed ? "center" : "flex-start",
             px: collapsed ? 1.5 : 2,
             py: 0.8,
-            color: "error.main",
+            color: sidebarDangerText,
             "&:hover": { bgcolor: "error.light", opacity: 0.15 },
           }}
         >
-          <ListItemIcon sx={{ minWidth: collapsed ? "auto" : 36, color: "error.main", justifyContent: "center" }}>
+          <ListItemIcon sx={{ minWidth: collapsed ? "auto" : 36, color: sidebarDangerText, justifyContent: "center" }}>
             <ExitToApp fontSize="small" />
           </ListItemIcon>
           {!collapsed && (

@@ -88,6 +88,124 @@ try {
     reset(role); const view = await mount('/src/shared/components/Layout.tsx', { children: React.createElement('p', null, 'Protected role content') });
     check(`${role} shell: navigation icons opt into shared hover/focus motion`, () => { assert.ok(view.all('.portal-motion-target .portal-interactive-icon').length > 0); assert.match(view.text(), /Protected role content/); });
     check(`${role} shell: Risk Alerts respects the role permission boundary`, () => { const entries = view.all('[role="button"],button').filter(el => el.textContent.trim() === 'Risk Alerts'); assert.equal(entries.length > 0, ['faculty', 'hod', 'principal'].includes(role)); });
+    if (role === 'superadmin') {
+      const drawer = () => view.q('.MuiDrawer-paper');
+      const group = label => [...drawer().querySelectorAll('[aria-expanded]')].find(el => el.getAttribute('aria-label') === label);
+      const expanded = () => [...drawer().querySelectorAll('[aria-expanded="true"]')];
+      const expectedGroups = {
+        Institutions: [['Colleges', '/superadmin/colleges'], ['Universities', '/superadmin/universities'], ['Create College', '/superadmin/colleges/new']],
+        'People & Access': [
+          ['Admins', '/superadmin/admins'], ['Create Admin', '/superadmin/admins/new'], ['Access Control', '/superadmin/access'],
+          ['Platform Employees', '/superadmin/employees'], ['Manage Faculty', '/superadmin/faculty'], ['Import Faculty', '/superadmin/faculty/import'],
+          ['Manage Students', '/superadmin/students'], ['Import Students', '/superadmin/students/import'], ['Regenerate Credentials', '/superadmin/credentials/regenerate'],
+        ],
+        Academics: [
+          ['Curriculum', '/superadmin/curriculum'], ['Workflow Inbox', '/admin/workflow-inbox'], ['Prep Content Studio', '/superadmin/prep-studio'],
+          ['Question Bank', '/superadmin/question-bank'], ['Curriculum Insights', '/admin/academic-insights'], ['Curriculum Progress', '/admin/curriculum-progress'],
+        ],
+        'Billing & Products': [['Comparison', '/superadmin/comparison'], ['Billing', '/superadmin/billing'], ['Products & Access MIS', '/superadmin/products']],
+        System: [['System Management', '/superadmin/system-management'], ['System Health', '/superadmin/health'], ['Settings', '/admin/settings']],
+      };
+      check('Super Admin sidebar: Dashboard stays current above five closed, keyboard-focusable groups', () => {
+        assert.deepEqual([...drawer().querySelectorAll('[aria-expanded]')].map(el => el.textContent), Object.keys(expectedGroups));
+        assert.equal(expanded().length, 0);
+        assert.equal(drawer().querySelector('[aria-current="page"]').textContent, 'Dashboard');
+        assert.equal(drawer().querySelector('ul').querySelectorAll(':scope > li').length, 6);
+        for (const label of Object.keys(expectedGroups)) { assert.equal(group(label).getAttribute('role'), 'button'); assert.equal(group(label).tabIndex, 0); }
+      });
+      const callableCount = globalThis.__RC_CALLABLE_PAYLOADS.length;
+      const visited = ['/superadmin/dashboard'];
+      for (const [label, children] of Object.entries(expectedGroups)) {
+        await view.click(group(label));
+        check(`Super Admin ${label}: one expanded group with a labelled panel and every existing destination`, () => {
+          assert.equal(expanded().length, 1);
+          assert.equal(drawer().querySelector('ul').querySelectorAll(':scope > :not(li):not(style):not(script)').length, 0);
+          const toggle = group(label), panel = document.getElementById(toggle.getAttribute('aria-controls'));
+          assert.equal(panel.getAttribute('role'), 'group');
+          assert.equal(panel.getAttribute('aria-labelledby'), toggle.id);
+          assert.deepEqual([...panel.querySelectorAll('[role="button"]')].map(el => el.textContent), children.map(([name]) => name));
+        });
+        for (const [name, destination] of children) {
+          const panel = document.getElementById(group(label).getAttribute('aria-controls'));
+          const button = [...panel.querySelectorAll('[role="button"]')].find(el => el.textContent === name);
+          await view.click(button);
+          assert.equal(globalThis.__navigated, destination, `Super Admin ${name} still opens ${destination}`);
+          visited.push(destination);
+        }
+      }
+      check('Super Admin sidebar: all 25 previous unique destinations remain reachable without additional callable requests', () => {
+        const layout = readFileSync(path.join(root, 'src/shared/components/Layout.tsx'), 'utf8');
+        const flatSource = layout.slice(layout.indexOf('const navItems:'), layout.indexOf('interface SidebarLeaf'));
+        const declared = [...flatSource.matchAll(/\{\s*label:\s*"[^"]+",\s*path:\s*"([^"]+)"[^\n]*roles:\s*\[[^\]]*"superadmin"[^\]]*\]/g)].map(match => match[1]);
+        assert.equal(visited.length, 25); assert.equal(new Set(visited).size, 25);
+        assert.deepEqual([...new Set(declared)].sort(), [...visited].sort());
+        assert.equal(globalThis.__RC_CALLABLE_PAYLOADS.length, callableCount);
+      });
+      await view.click(group('System'));
+      check('Super Admin sidebar: a group can be closed completely', () => assert.equal(expanded().length, 0));
+      const institutions = group('Institutions');
+      await act(async () => institutions.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true })));
+      await settle();
+      check('Super Admin sidebar: Enter opens a disclosure through the real MUI keyboard handler', () => assert.equal(institutions.getAttribute('aria-expanded'), 'true'));
+      for (const [pathname, label, destination] of [
+        ['/superadmin/students/import', 'People & Access', 'Import Students'],
+        ['/superadmin/faculty/import', 'People & Access', 'Import Faculty'],
+        ['/superadmin/admins/new', 'People & Access', 'Create Admin'],
+        ['/superadmin/colleges/new', 'Institutions', 'Create College'],
+        ['/superadmin/colleges/college-a/edit', 'Institutions', 'Colleges'],
+        ['/superadmin/faculty/profile-1', 'People & Access', 'Manage Faculty'],
+        ['/admin/academic-insights', 'Academics', 'Curriculum Insights'],
+        ['/admin/workflow-inbox', 'Academics', 'Workflow Inbox'],
+        ['/admin/settings', 'System', 'Settings'],
+      ]) {
+        globalThis.__RC_PATHNAME = pathname; await view.render();
+        check(`Super Admin ${pathname}: route changes reveal the owning group and only the most specific destination`, () => {
+          assert.equal(expanded().length, 1); assert.equal(expanded()[0], group(label));
+          assert.deepEqual([...drawer().querySelectorAll('.Mui-selected')].map(el => el.textContent), [destination]);
+          assert.equal(drawer().querySelector('[aria-current="page"]').textContent, destination);
+        });
+      }
+      await view.click(group('System'));
+      check('Super Admin sidebar: even an active group may be closed manually', () => assert.equal(expanded().length, 0));
+      globalThis.__RC_PATHNAME = '/superadmin'; await view.render();
+      check('Super Admin index: Dashboard remains selected on the index route', () => {
+        assert.equal(expanded().length, 0); assert.equal(drawer().querySelector('[aria-current="page"]').textContent, 'Dashboard');
+      });
+      await view.click(drawer().querySelector('button[aria-label="Collapse sidebar"]'));
+      check('Super Admin compact rail: all five group icons keep accessible names and do not claim hidden panels are open', () => {
+        assert.equal(localStorage.getItem('vriddhi-sidebar-collapsed'), 'true');
+        for (const label of Object.keys(expectedGroups)) { assert.ok(group(label)); assert.equal(group(label).getAttribute('aria-expanded'), 'false'); }
+      });
+      delete globalThis.__navigated;
+      await view.click(group('People & Access'));
+      check('Super Admin compact rail: selecting a group expands its choices without navigating to the first child', () => {
+        assert.equal(localStorage.getItem('vriddhi-sidebar-collapsed'), 'false');
+        assert.equal(group('People & Access').getAttribute('aria-expanded'), 'true');
+        assert.equal(globalThis.__navigated, undefined);
+        assert.ok(drawer().textContent.includes('Import Students'));
+      });
+      await view.click(view.q('nav button[aria-label="More"]'));
+      check('Super Admin mobile More: the same five groups plus four unchanged bottom tabs cover all 25 destinations exactly once', () => {
+        const dialog = view.q('[role="dialog"]');
+        assert.deepEqual([...dialog.querySelectorAll('section h2')].map(el => el.textContent), Object.keys(expectedGroups));
+        const paths = [...dialog.querySelectorAll('a[href]')].map(a => a.getAttribute('href'));
+        paths.push('/superadmin/dashboard', '/superadmin/colleges', '/superadmin/admins', '/superadmin/universities');
+        assert.equal(paths.length, 25); assert.equal(new Set(paths).size, 25);
+        assert.deepEqual(paths.sort(), visited.sort());
+      });
+      const mobileSettings = view.q('[role="dialog"] a[href="/admin/settings"]');
+      mobileSettings.addEventListener('click', event => event.preventDefault(), { once: true });
+      await view.click(mobileSettings);
+      check('Super Admin mobile More: choosing a destination closes the sheet', () => assert.equal(view.q('[role="dialog"]'), null));
+      const { dictionaries } = await server.ssrLoadModule('/src/shared/i18n/translations.ts');
+      for (const language of ['hi', 'kn', 'ta', 'te', 'ml', 'en']) {
+        await select(view.q('select'), language);
+        check(`Super Admin groups: ${language} translates new headings and the sidebar control without changing access`, () => {
+          for (const key of ['institutions', 'peopleAccess', 'billingProducts', 'system']) assert.ok([...drawer().querySelectorAll('[aria-expanded]')].find(el => el.getAttribute('aria-label') === dictionaries[language][`nav.${key}`]));
+          assert.ok([...drawer().querySelectorAll('button')].find(el => el.getAttribute('aria-label') === dictionaries[language]['nav.collapseSidebar']));
+        });
+      }
+    }
     await view.close();
   }
 
