@@ -41,10 +41,6 @@ export default function AcademicRiskAlertsPage() {
   const coverage = alerts.filter(a => a.category === 'coverage' && ['active', 'unverified'].includes(a.state));
   const list = (mode === 'active' ? active : alerts.filter(a => a.category !== 'coverage' && ['resolved', 'archived'].includes(a.state))).filter(a => category === 'all' || a.category === category);
   const latest = data?.checkedAt || Math.max(0, ...alerts.map(a => a.checkedAt));
-  const scheduleLabel = data?.reviewCadence === 'weekly' ? 'Weekly reviews start each Monday at 3:00 AM IST'
-    : data?.reviewCadence === 'daily' ? 'Daily reviews start at 3:00 AM IST'
-    : data?.reviewCadence === 'monthly' ? 'Monthly reviews start on the 1st at 3:00 AM IST'
-    : 'Automatic reviews follow the deployed server schedule';
   const supervisor = ['principal', 'hod', 'admin'].includes(user?.role || '');
   if (!eligible) return <div role="alert" className="p-6 text-sm text-slate-700 dark:text-slate-200">Academic alerts require a verified faculty, student, HOD or Principal account.</div>;
   return <div className="space-y-5">
@@ -55,8 +51,7 @@ export default function AcademicRiskAlertsPage() {
         <button type="button" onClick={() => void refetch()} disabled={isFetching} className={control}><RefreshCw size={14} aria-hidden="true" className="portal-interactive-icon" />{isFetching ? 'Loading…' : 'Refresh inbox'}</button>
         {data?.canConfigure && <button type="button" aria-expanded={showSettings} aria-controls={`${id}-settings`} onClick={() => setShowSettings(v => !v)} className={control}><Settings2 size={14} aria-hidden="true" className="portal-interactive-icon" />Warning settings</button>}
       </div>
-      <p className="mt-3 flex items-start gap-1.5 text-xs leading-relaxed text-slate-600 dark:text-slate-400"><Clock3 size={14} aria-hidden="true" className="mt-0.5 shrink-0" /><span>{supervisor ? 'Most recent received faculty check' : 'Last completed check'}: {riskCheckedLabel(latest)}. {scheduleLabel}; large rosters finish in batches. Refresh inbox only reloads saved results; it cannot start a review. College accounts cannot run checks manually. {supervisor && 'Missing department or recipient links appear as coverage warnings, not college-wide HOD broadcasts.'}</span></p>
-      <p role="note" className="mt-2 text-xs leading-relaxed text-amber-900 dark:text-amber-200">Scheduled snapshot — not live monitoring. Attendance changes and deadlines between reviews may not appear. Review the original records for recent changes; alerts update at the next scheduled review.</p>
+      <p className="mt-3 flex items-center gap-1.5 text-xs text-slate-600 dark:text-slate-400"><Clock3 size={14} aria-hidden="true" className="shrink-0" /><span>{supervisor ? 'Latest faculty check' : 'Last check'}: {riskCheckedLabel(latest)}</span></p>
       {data?.truncated && <p role="status" className="mt-2 text-xs text-amber-900 dark:text-amber-200">Only the most recent 300 inbox entries are shown. Older items are not necessarily resolved.</p>}
     </section>
     {showSettings && data?.canConfigure && <div id={`${id}-settings`}><Suspense fallback={<p role="status">Loading warning settings…</p>}><AcademicRiskSettings /></Suspense></div>}
