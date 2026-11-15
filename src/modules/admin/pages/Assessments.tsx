@@ -30,7 +30,9 @@ import VisibilityIcon from '@mui/icons-material/Visibility';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import ArchiveIcon from '@mui/icons-material/Archive';
 
-import { listAssessments, getAssessmentStats, publishAssessment, activateAssessment, archiveAssessment } from '../api/assessmentsApi';
+import { listAssessments, publishAssessment, activateAssessment, archiveAssessment } from '../api/assessmentsApi';
+import { useAuth } from '@/modules/auth/context/AuthContext';
+import { computeAssessmentStats } from '../utils/assessmentStats';
 import type { Assessment, AssessmentStats } from '../types/assessment';
 
 const STATUS_COLORS: Record<string, 'default' | 'primary' | 'success' | 'warning' | 'error'> = {
@@ -43,6 +45,8 @@ const STATUS_COLORS: Record<string, 'default' | 'primary' | 'success' | 'warning
 
 export default function Assessments() {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const [error, setError] = useState<string | null>(null);
   const [tab, setTab] = useState(0);
   const [loading, setLoading] = useState(true);
   const [assessments, setAssessments] = useState<Assessment[]>([]);
@@ -52,19 +56,21 @@ export default function Assessments() {
 
   const fetchData = useCallback(async () => {
     setLoading(true);
+    setError(null);
     try {
-      const [items, s] = await Promise.all([
-        listAssessments(statusFilter === 'all' ? {} : { status: statusFilter }),
-        getAssessmentStats(''),
-      ]);
-      setAssessments(items);
-      setStats(s);
+      if (!user || (!user.collegeId && user.role !== 'superadmin')) throw new Error('A college-linked sign-in is required to load assessments.');
+      // One tenant-scoped read supplies both the list and its statistics.
+      const items = await listAssessments(user.collegeId ? { collegeId: user.collegeId } : {});
+      setAssessments(statusFilter === 'all' ? items : items.filter(item => item.status === statusFilter));
+      setStats(computeAssessmentStats(items));
     } catch (e) {
-      console.error('[Assessments] fetch error', e);
+      setAssessments([]);
+      setStats(null);
+      setError(e instanceof Error ? e.message : 'Unable to load assessments.');
     } finally {
       setLoading(false);
     }
-  }, [statusFilter]);
+  }, [statusFilter, user]);
 
   useEffect(() => {
     fetchData();
@@ -119,6 +125,8 @@ export default function Assessments() {
           </Button>
         </Stack>
       </Box>
+
+      {error && <Typography role="alert" color="error" sx={{ mb: 2 }}>{error}</Typography>}
 
       {/* Stats */}
       <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, mb: 3 }}>

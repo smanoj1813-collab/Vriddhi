@@ -534,3 +534,13 @@ describe('complete academic document storage budget', () => {
     assert.equal(JSON.stringify([...data]), before)
   })
 })
+
+
+describe('college code control-character validation', () => {
+  it('continues to reject slashes and every embedded C0 control character', () => {
+    for (const character of ['/', ...Array.from({ length: 32 }, (_, code) => String.fromCharCode(code))]) {
+      assert.throws(() => onboarding.validateCollegeDetails({ name: 'College', code: `A${character}B` }), /Invalid college code/)
+    }
+    assert.equal(onboarding.validateCollegeDetails({ name: 'College', code: 'KA-BCU_2026' }).code, 'KA-BCU_2026')
+  })
+})

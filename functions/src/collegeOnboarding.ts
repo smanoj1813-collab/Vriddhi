@@ -23,7 +23,7 @@ export function validateCollegeDetails(value: unknown): Record<string, unknown> 
     clean[field] = raw[field].trim()
   }
   if (!clean.name || !clean.code) throw new HttpsError('invalid-argument', 'College name and code are required')
-  if (String(clean.code).length > 80 || /[/\u0000-\u001f]/u.test(String(clean.code))) throw new HttpsError('invalid-argument', 'Invalid college code')
+  if (String(clean.code).length > 80 || [...String(clean.code)].some(character => character === '/' || character.charCodeAt(0) < 32)) throw new HttpsError('invalid-argument', 'Invalid college code')
   if (clean.universityId && String(clean.universityId).includes('/')) throw new HttpsError('invalid-argument', 'Invalid university identifier')
   for (const [field, options] of Object.entries(ENUMS)) if (raw[field] !== undefined) {
     if (!options.includes(String(raw[field]))) throw new HttpsError('invalid-argument', `Invalid college ${field}`)

@@ -28,6 +28,9 @@ function reset(role) {
   const user = { uid, id: uid, role, name: 'Settings fixture', email: `${uid}@example.edu`, ...(role === 'superadmin' ? {} : { collegeId: 'college-a' }) };
   globalThis.__RC_ROLE = role; globalThis.__RC_AUTH_USER = user;
   globalThis.__RC_SEARCH = ''; globalThis.__RC_CALLABLE_PAYLOADS = []; globalThis.__RC_CALLABLE_ERRORS = {}; globalThis.__RC_CALLABLE_DATA = {};
+  globalThis.__RC_CALLABLE_DATA.getMyStaffSettings = { uid, name: user.name, phone: '', email: user.email, department: 'Science', collegeId: user.collegeId || null, notificationPrefs: null, appearance: null };
+  globalThis.__RC_CALLABLE_DATA.updateMyStaffProfile = { success: true, uid, authDisplayNameSynced: true };
+  globalThis.__RC_CALLABLE_DATA.updateMyStudentProfile = { success: true, name: user.name, notificationPrefs: null };
   globalThis.__RC_WRITES = []; globalThis.__RC_FIRESTORE_DOCS = []; globalThis.__RC_FIRESTORE_COLLECTIONS = {};
   globalThis.__RC_FIRESTORE_BY_PATH = {};
   globalThis.__RC_PASSWORD_AUTH = { calls: [] };
@@ -63,6 +66,7 @@ try {
   ]) {
     const fixture = reset(role);
     const view = await mount(file, tab);
+    globalThis.__RC_CALLABLE_PAYLOADS = [];
     check(`${role} security: uses the current-password reauthentication flow and platform 10-character minimum`, () => {
       assert.ok(view.q('input[autocomplete="current-password"]'));
       assert.equal(view.q('input[autocomplete="new-password"]').placeholder, 'Minimum 10 characters');
@@ -106,10 +110,10 @@ try {
   }
   reset('faculty');
   const notifications = await mount('/src/modules/faculty/pages/FacultySettings.tsx', 'Notifications');
-  globalThis.__RC_FIRESTORE_WRITE_GUARD = () => { throw new Error('Missing or insufficient permissions'); };
+  globalThis.__RC_CALLABLE_ERRORS.updateMyStaffProfile = { code: 'functions/unavailable', message: 'Settings service unavailable' };
   await notifications.click(notifications.all('button').find(button => button.textContent.trim() === 'Save Preferences'));
-  check('faculty notifications: rejected profile writes are announced without an unhandled rejection or false success', () => {
-    assert.match(notifications.q('[role="alert"]').textContent, /Missing or insufficient permissions/);
+  check('faculty notifications: rejected server saves are announced without an unhandled rejection or false success', () => {
+    assert.match(notifications.q('[role="alert"]').textContent, /Settings service unavailable/);
     assert.doesNotMatch(notifications.text(), /Saved!/);
     assert.equal(notifications.all('button').find(button => button.textContent.trim() === 'Save Preferences').disabled, false);
     assert.equal(globalThis.__RC_WRITES.length, 0);

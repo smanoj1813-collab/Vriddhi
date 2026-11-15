@@ -2776,3 +2776,193 @@ describe('academic risk server-only storage boundary', () => {
     })
   }
 })
+
+// R1 regression matrix: positive tenant queries AND adversarial queries. A
+// point-get test alone cannot prove a list grant is safe (rules are not filters).
+describe('private staff reads require verified tenant scope', () => {
+  const ROLES = ['admin', 'principal', 'hod', 'faculty', 'mentor', 'employee']
+  const PRIVATE = ['attendance', 'attendanceRecords', 'classSessions', 'assessments', 'papers', 'notifications', 'attendanceSummary', 'issuedBooks', 'reviewQueue', 'testPapers']
+  const PATHS = ['faculty', 'materials', 'events', 'notifications', 'announcements']
+  const staffDb = (role: string, claims: Record<string, unknown> = {}) => testEnv.authenticatedContext(`private-${role}`, {
+    role, collegeId: COLLEGE_A, ...claims,
+  }).firestore()
+
+  beforeEach(async () => {
+    await testEnv.withSecurityRulesDisabled(async context => {
+      const db = context.firestore()
+      const writes: Promise<unknown>[] = []
+      for (const [suffix, collegeId] of [['a', COLLEGE_A], ['b', COLLEGE_B]]) {
+        writes.push(setDoc(doc(db, 'faculty', `directory-${suffix}`), { uid: `directory-auth-${suffix}`, name: `Teacher ${suffix}`, collegeId }))
+        for (const name of PRIVATE) writes.push(setDoc(doc(db, name, `private-${suffix}`), {
+          collegeId, studentId: suffix === 'a' ? STUDENT_ID : 'student-domain-c', uid: 'not-the-caller', createdBy: 'not-the-caller',
+        }))
+        for (const name of PATHS) writes.push(setDoc(doc(db, 'colleges', collegeId, name, 'private-row'), { collegeId, title: 'Private' }))
+      }
+      await Promise.all(writes)
+    })
+  })
+
+  for (const role of [...ROLES, 'accounts', 'operations']) {
+    it(`${role}: directory permits own college and refuses foreign, mixed and unbounded queries`, async () => {
+      const db = staffDb(role)
+      for (const name of ['students', 'faculty']) {
+        const own = await assertSucceeds(getDocs(query(collection(db, name), where('collegeId', '==', COLLEGE_A))))
+        assert.ok(own.size > 0)
+        await assertFails(getDocs(query(collection(db, name), where('collegeId', '==', COLLEGE_B))))
+        await assertFails(getDocs(query(collection(db, name), where('collegeId', 'in', [COLLEGE_A, COLLEGE_B]))))
+        await assertFails(getDocs(query(collection(db, name), limit(1))))
+      }
+      await assertFails(getDoc(doc(db, 'faculty', 'directory-b')))
+      await assertFails(getDoc(doc(db, 'students', 'student-domain-c')))
+    })
+  }
+
+  for (const role of ROLES) {
+    it(`${role}: private reports/drafts/notifications require the college filter on get and list`, async () => {
+      const db = staffDb(role)
+      for (const name of PRIVATE) {
+        await assertSucceeds(getDoc(doc(db, name, 'private-a')))
+        await assertSucceeds(getDocs(query(collection(db, name), where('collegeId', '==', COLLEGE_A))))
+        await assertFails(getDoc(doc(db, name, 'private-b')))
+        await assertFails(getDocs(query(collection(db, name), where('collegeId', '==', COLLEGE_B))))
+        await assertFails(getDocs(query(collection(db, name), limit(1))))
+      }
+    })
+    it(`${role}: naming a foreign college path never grants private reads`, async () => {
+      const db = staffDb(role)
+      for (const name of PATHS) {
+        await assertSucceeds(getDoc(doc(db, 'colleges', COLLEGE_A, name, 'private-row')))
+        await assertSucceeds(getDocs(collection(db, 'colleges', COLLEGE_A, name)))
+        await assertFails(getDoc(doc(db, 'colleges', COLLEGE_B, name, 'private-row')))
+        await assertFails(getDocs(collection(db, 'colleges', COLLEGE_B, name)))
+      }
+    })
+  }
+
+  it('unassigned staff, suspended employees and unsigned callers cannot list private directories/reports', async () => {
+    const contexts = [
+      testEnv.unauthenticatedContext(),
+      testEnv.authenticatedContext('no-college', { role: 'faculty' }),
+      testEnv.authenticatedContext('empty-college', { role: 'admin', collegeId: '' }),
+      testEnv.authenticatedContext('suspended-employee', { role: 'employee', collegeId: COLLEGE_A, employeeStatus: 'suspended' }),
+    ]
+    for (const context of contexts) for (const name of ['students', 'faculty', ...PRIVATE]) {
+      await assertFails(getDocs(query(collection(context.firestore(), name), where('collegeId', '==', COLLEGE_A))))
+    }
+  })
+
+  it('claimless legacy accounts retain only their own UID, userId or email-scoped profile resolution', async () => {
+    await testEnv.withSecurityRulesDisabled(async context => {
+      const db = context.firestore()
+      await Promise.all([
+        setDoc(doc(db, 'faculty', 'legacy-user-link'), { userId: 'legacy-settings', email: 'own@example.edu', collegeId: COLLEGE_A }),
+        setDoc(doc(db, 'students', 'legacy-email-link'), { email: 'own@example.edu', collegeId: COLLEGE_A }),
+      ])
+    })
+    const db = testEnv.authenticatedContext('legacy-settings', { email: 'own@example.edu' }).firestore()
+    await assertSucceeds(getDocs(query(collection(db, 'faculty'), where('userId', '==', 'legacy-settings'))))
+    await assertSucceeds(getDocs(query(collection(db, 'faculty'), where('email', '==', 'own@example.edu'))))
+    await assertSucceeds(getDocs(query(collection(db, 'students'), where('email', '==', 'own@example.edu'))))
+    await assertFails(getDocs(collection(db, 'faculty')))
+    await assertFails(getDocs(collection(db, 'students')))
+  })
+
+  it('a large own-college directory does not exceed the rules document-access budget', async () => {
+    await testEnv.withSecurityRulesDisabled(async context => {
+      await Promise.all(Array.from({ length: 30 }, (_, index) => setDoc(doc(context.firestore(), 'students', `roster-${index}`), {
+        collegeId: COLLEGE_A, userId: `roster-auth-${index}`,
+      })))
+    })
+    for (const role of ['faculty', 'admin', 'accounts', 'operations']) {
+      const result = await assertSucceeds(getDocs(query(collection(staffDb(role), 'students'), where('collegeId', '==', COLLEGE_A))))
+      assert.ok(result.size >= 30)
+    }
+  })
+
+  it('planner legacy UID and canonical profile-ID queries work without exposing another teacher ledger', async () => {
+    await testEnv.withSecurityRulesDisabled(async context => {
+      const db = context.firestore()
+      await Promise.all([
+        setDoc(doc(db, 'users', 'private-faculty'), { uid: 'private-faculty', facultyDocId: 'FAC-settings', role: 'faculty', collegeId: COLLEGE_A }),
+        setDoc(doc(db, 'faculty', 'FAC-settings'), { uid: 'private-faculty', collegeId: COLLEGE_A }),
+        setDoc(doc(db, 'facultyTopics', 'own-uid'), { facultyId: 'private-faculty' }),
+        setDoc(doc(db, 'facultyTopics', 'own-profile'), { facultyId: 'FAC-settings' }),
+        setDoc(doc(db, 'facultyTopics', 'other-profile'), { facultyId: 'directory-b', collegeId: COLLEGE_B }),
+      ])
+    })
+    const db = staffDb('faculty')
+    for (const id of ['private-faculty', 'FAC-settings']) {
+      const own = await assertSucceeds(getDocs(query(collection(db, 'facultyTopics'), where('facultyId', '==', id))))
+      assert.equal(own.size, 1)
+    }
+    await assertFails(getDocs(query(collection(db, 'facultyTopics'), where('facultyId', '==', 'directory-b'))))
+    await assertFails(getDocs(collection(db, 'facultyTopics')))
+    await assertFails(setDoc(doc(db, 'facultyTopics', 'forged-college'), { facultyId: 'private-faculty', collegeId: COLLEGE_B }))
+  })
+
+  it('planner email/pointer aliases never override conflicting explicit UID links', async () => {
+    await testEnv.withSecurityRulesDisabled(async context => {
+      const db = context.firestore()
+      await Promise.all([
+        setDoc(doc(db, 'users', 'private-faculty'), { uid: 'private-faculty', role: 'faculty', collegeId: COLLEGE_A, facultyDocId: 'conflicted-faculty' }),
+        setDoc(doc(db, 'faculty', 'conflicted-faculty'), { uid: 'another-teacher', email: 'private-faculty@example.edu', collegeId: COLLEGE_A }),
+        setDoc(doc(db, 'facultyTopics', 'conflicted-ledger'), { facultyId: 'conflicted-faculty' }),
+      ])
+    })
+    const db = testEnv.authenticatedContext('private-faculty', { role: 'faculty', collegeId: COLLEGE_A, email: 'private-faculty@example.edu' }).firestore()
+    await assertFails(getDocs(query(collection(db, 'facultyTopics'), where('facultyId', '==', 'conflicted-faculty'))))
+  })
+
+  it('notification read markers inherit the parent notification tenant', async () => {
+    await testEnv.withSecurityRulesDisabled(async context => {
+      for (const suffix of ['a', 'b']) await setDoc(doc(context.firestore(), 'notifications', `private-${suffix}`, 'reads', 'reader'), { readAt: Timestamp.now() })
+    })
+    const db = staffDb('faculty')
+    await assertSucceeds(getDocs(collection(db, 'notifications', 'private-a', 'reads')))
+    await assertFails(getDocs(collection(db, 'notifications', 'private-b', 'reads')))
+    await assertFails(getDoc(doc(db, 'notifications', 'private-b', 'reads', 'reader')))
+  })
+
+  it('self-service settings do not widen protected faculty or admin profile writes', async () => {
+    const db = staffDb('faculty')
+    await testEnv.withSecurityRulesDisabled(context => setDoc(doc(context.firestore(), 'faculty', 'private-faculty'), {
+      uid: 'private-faculty', collegeId: COLLEGE_A, name: 'Original', role: 'faculty',
+    }))
+    for (const patch of [{ name: 'Changed' }, { notificationPrefs: { classes: false } }, { role: 'superadmin' }, { collegeId: COLLEGE_B }]) {
+      await assertFails(updateDoc(doc(db, 'faculty', 'private-faculty'), patch))
+    }
+    await assertFails(setDoc(doc(staffDb('admin'), 'admins', 'private-admin'), { name: 'Self-created shadow profile' }))
+  })
+
+  it('profile pointers and identity aliases cannot be rewritten by their owner', async () => {
+    const db = studentContext().firestore()
+    for (const patch of [
+      { studentDocId: 'student-domain-c' }, { facultyDocId: 'directory-b' },
+      { collegeID: COLLEGE_B }, { college_id: COLLEGE_B }, { email: 'another@example.edu' },
+      { employeeStatus: 'active' }, { status: 'active' }, { profileCollection: 'superadmins' },
+    ]) await assertFails(updateDoc(doc(db, 'users', STUDENT_UID), patch))
+    // Defence in depth for a stale pointer that already existed before this
+    // deployment: it must not vouch for another person's or another tenant's row.
+    await testEnv.withSecurityRulesDisabled(context => updateDoc(doc(context.firestore(), 'users', STUDENT_UID), { studentDocId: 'student-domain-c' }))
+    await assertFails(getDoc(doc(db, 'attendanceRecords', 'private-b')))
+    await assertFails(getDocs(query(collection(db, 'attendanceRecords'), where('studentId', '==', 'student-domain-c'))))
+  })
+
+  it('superadmin keeps cross-college and unbounded private access', async () => {
+    const db = testEnv.authenticatedContext('private-superadmin', { role: 'superadmin' }).firestore()
+    for (const name of ['students', 'faculty', ...PRIVATE, 'facultyTopics']) await assertSucceeds(getDocs(collection(db, name)))
+    for (const name of PATHS) await assertSucceeds(getDocs(collection(db, 'colleges', COLLEGE_B, name)))
+  })
+
+  it('shared platform reference/question banks remain intentionally cross-college readable by staff', async () => {
+    const shared = ['questions', 'topics', 'questionReviews', 'questionBank_meta', 'questionBank_content', 'papers_universal', 'paperTemplates', 'universities', 'accessProducts']
+    await testEnv.withSecurityRulesDisabled(async context => {
+      await Promise.all(shared.map(name => setDoc(doc(context.firestore(), name, 'shared-reference'), { collegeId: COLLEGE_B, title: 'Shared content' })))
+    })
+    const db = staffDb('faculty')
+    for (const name of shared) {
+      await assertSucceeds(getDoc(doc(db, name, 'shared-reference')))
+      await assertSucceeds(getDocs(collection(db, name)))
+    }
+  })
+})

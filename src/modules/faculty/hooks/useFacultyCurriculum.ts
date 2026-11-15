@@ -134,7 +134,7 @@ export function useFacultyCurriculum(
       // the modules themselves are the thing the teacher came to read.
       setCoverageLoading(true);
       setCoverageError(null);
-      fetchFacultyTopicLedger(facultyId)
+      fetchFacultyTopicLedger(facultyId, collegeId)
         .then((rows) => setLedger(rows))
         .catch((err) => {
           console.warn('[useFacultyCurriculum] topic ledger unavailable:', err);

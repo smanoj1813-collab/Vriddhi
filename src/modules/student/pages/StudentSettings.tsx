@@ -1,40 +1,32 @@
 import { useEffect, useMemo, useState } from 'react';
 import { User, Bell, Shield, Palette, Save, Loader2, Check, Lock, Mail, GraduationCap, Building2, Hash, BookOpen } from 'lucide-react';
 import { httpsCallable } from 'firebase/functions';
-import { auth } from '@/Firebase/config'
 import { functions } from '@/Firebase/data';
 import ChangePasswordForm from '../../../shared/components/ChangePasswordForm';
 import { useStudentProfile } from '../hooks/useStudentProfile';
-import { useAuth } from '../../auth/context/AuthContext';
+import { useAuth, type AppUser } from '../../auth/context/AuthContext';
+import { useAccountScope } from '@/shared/hooks/useAccountScope';
+import { booleanPreferences, cacheAccountPreferences, readAccountPreferences, STUDENT_NOTIFICATION_DEFAULTS } from '@/shared/utils/accountPreferences';
 import AppearanceSettings from '../../../shared/components/AppearanceSettings';
 
 type TabId = 'profile' | 'notifications' | 'privacy' | 'appearance';
 
-interface Prefs {
-  exams: boolean;
-  fees: boolean;
-  assignments: boolean;
-  events: boolean;
-}
-
-const DEFAULT_PREFS: Prefs = { exams: true, fees: true, assignments: true, events: true };
+type Prefs = typeof STUDENT_NOTIFICATION_DEFAULTS;
+const DEFAULT_PREFS = STUDENT_NOTIFICATION_DEFAULTS;
+const PREFS_KEY = 'vriddhi_notification_prefs';
 
 const updateStudentProfile = httpsCallable<
-  { name?: string; notificationPrefs?: Prefs },
+  { name?: string; apaarId?: string; notificationPrefs?: Prefs },
   { success: boolean; name: string; notificationPrefs: Prefs | null }
 >(functions, 'updateMyStudentProfile');
 
-function loadPrefs(): Prefs {
-  try {
-    const raw = localStorage.getItem('vriddhi_notification_prefs');
-    return raw ? { ...DEFAULT_PREFS, ...JSON.parse(raw) } : DEFAULT_PREFS;
-  } catch {
-    return DEFAULT_PREFS;
-  }
-}
-
 export default function StudentSettings() {
   const { user } = useAuth();
+  return <StudentAccountSettings key={user?.uid || 'signed-out'} user={user} />;
+}
+
+function StudentAccountSettings({ user }: { user: AppUser | null }) {
+  const isCurrent = useAccountScope(user?.uid);
   const { profile, loading, error, refresh } = useStudentProfile(user?.uid);
 
   const [activeTab, setActiveTab] = useState<TabId>('profile');
@@ -43,7 +35,7 @@ export default function StudentSettings() {
   const [savingProfile, setSavingProfile] = useState(false);
   const [profileMsg, setProfileMsg] = useState<{ type: 'ok' | 'err'; text: string } | null>(null);
 
-  const [prefs, setPrefs] = useState<Prefs>(loadPrefs);
+  const [prefs, setPrefs] = useState<Prefs>(() => readAccountPreferences(PREFS_KEY, user?.uid, DEFAULT_PREFS));
   const [prefsSaved, setPrefsSaved] = useState(false);
   const [prefsError, setPrefsError] = useState<string | null>(null);
   const [savingPrefs, setSavingPrefs] = useState(false);
@@ -55,10 +47,10 @@ export default function StudentSettings() {
   useEffect(() => {
     if (profile) {
       setName(profile.name || '');
-      const storedPrefs = profile.notificationPrefs as Partial<Prefs> | undefined;
-      if (storedPrefs) setPrefs({ ...DEFAULT_PREFS, ...storedPrefs });
+      setApaarId(typeof profile.apaarId === 'string' ? profile.apaarId : '');
+      setPrefs(booleanPreferences(DEFAULT_PREFS, profile.notificationPrefs ?? readAccountPreferences(PREFS_KEY, user?.uid, DEFAULT_PREFS)));
     }
-  }, [profile]);
+  }, [profile, user?.uid]);
 
   const tabs = useMemo(
     () => [
@@ -72,6 +64,12 @@ export default function StudentSettings() {
 
   const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!user || !isCurrent() || savingProfile) return;
+    const cleanApaarId = apaarId.replace(/\D/g, '');
+    if (cleanApaarId && cleanApaarId.length !== 12) {
+      setProfileMsg({ type: 'err', text: 'APAAR/ABC ID must be 12 digits.' });
+      return;
+    }
     if (!name.trim()) {
       setProfileMsg({ type: 'err', text: 'Full name cannot be empty.' });
       return;
@@ -79,32 +77,36 @@ export default function StudentSettings() {
     setSavingProfile(true);
     setProfileMsg(null);
     try {
-      await updateStudentProfile({ name: name.trim() });
+      await updateStudentProfile({ name: name.trim(), apaarId: cleanApaarId });
+      if (!isCurrent()) return;
       setProfileMsg({ type: 'ok', text: 'Profile updated successfully.' });
       refresh();
     } catch (err: any) {
-      setProfileMsg({ type: 'err', text: err.message || 'Failed to update profile.' });
+      if (isCurrent()) setProfileMsg({ type: 'err', text: err.message || 'Failed to update profile.' });
     } finally {
-      setSavingProfile(false);
+      if (isCurrent()) setSavingProfile(false);
     }
   };
 
   const handleSavePrefs = async () => {
+    if (!user || !isCurrent() || savingPrefs) return;
     setSavingPrefs(true);
     setPrefsSaved(false);
     setPrefsError(null);
     try {
       await updateStudentProfile({ notificationPrefs: prefs });
       // Keep a local copy only as an offline UI cache; Firestore is canonical.
-      localStorage.setItem('vriddhi_notification_prefs', JSON.stringify(prefs));
+      if (!isCurrent()) return;
+      cacheAccountPreferences(PREFS_KEY, user.uid, DEFAULT_PREFS, prefs);
       setPrefsSaved(true);
-      setTimeout(() => setPrefsSaved(false), 2500);
     } catch (err: any) {
-      setPrefsError(err.message || 'Failed to save notification preferences.');
+      if (isCurrent()) setPrefsError(err.message || 'Failed to save notification preferences.');
     } finally {
-      setSavingPrefs(false);
+      if (isCurrent()) setSavingPrefs(false);
     }
   };
+
+  if (!user) return <p role="alert">Sign in to manage your settings.</p>;
 
   if (loading) {
     return (
@@ -189,13 +191,16 @@ export default function StudentSettings() {
 
               <div className="grid grid-cols-1 gap-5 pt-2 border-t border-slate-100 dark:border-slate-800">
                 <div>
-                  <label className="text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5 block">
+                  <label htmlFor="student-full-name" className="text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5 block">
                     Full Name
                   </label>
                   <div className="relative">
                     <User size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
                     <input
+                      id="student-full-name"
                       type="text"
+                      maxLength={100}
+                      disabled={savingProfile}
                       value={name}
                       onChange={(e) => setName(e.target.value)}
                       placeholder="Your full name"
@@ -206,13 +211,15 @@ export default function StudentSettings() {
                 </div>
 
                 <div>
-                  <label className="text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5 block">
+                  <label htmlFor="student-apaar-id" className="text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5 block">
                     APAAR / ABC ID
                   </label>
                   <div className="relative">
                     <GraduationCap size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
                     <input
+                      id="student-apaar-id"
                       type="text"
+                      disabled={savingProfile}
                       inputMode="numeric"
                       value={apaarId}
                       onChange={(e) => setApaarId(e.target.value.replace(/[^\d\s-]/g, ''))}
@@ -288,7 +295,7 @@ export default function StudentSettings() {
               </div>
 
               {profileMsg && (
-                <div className={`p-3 rounded-xl text-xs font-bold border flex items-center gap-2 ${profileMsg.type === 'ok' ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/30 dark:text-emerald-300 dark:border-emerald-800' : 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/30 dark:text-rose-300 dark:border-rose-800'}`}>
+                <div role={profileMsg.type === 'err' ? 'alert' : 'status'} className={`p-3 rounded-xl text-xs font-bold border flex items-center gap-2 ${profileMsg.type === 'ok' ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/30 dark:text-emerald-300 dark:border-emerald-800' : 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/30 dark:text-rose-300 dark:border-rose-800'}`}>
                   {profileMsg.type === 'ok' ? <Check size={14} /> : <Shield size={14} />}
                   {profileMsg.text}
                 </div>
@@ -309,7 +316,7 @@ export default function StudentSettings() {
             <div className="space-y-5">
               <div>
                 <h2 className="text-base font-bold text-slate-900 dark:text-white pb-1">Notification Preferences</h2>
-                <p className="text-xs text-slate-500 dark:text-slate-400">Choose which alerts you want to receive. Preferences are saved locally and synced to your profile.</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400">Choose which alerts you want to receive. Preferences are saved to your profile, with an optional account-specific browser cache.</p>
               </div>
 
               <div className="space-y-3 pt-2">
@@ -327,8 +334,10 @@ export default function StudentSettings() {
                     <label className="relative inline-flex items-center cursor-pointer">
                       <input
                         type="checkbox"
+                        aria-label={item.label}
+                        disabled={savingPrefs}
                         checked={prefs[item.key]}
-                        onChange={(e) => setPrefs({ ...prefs, [item.key]: e.target.checked })}
+                        onChange={(e) => { setPrefs({ ...prefs, [item.key]: e.target.checked }); setPrefsSaved(false); setPrefsError(null); }}
                         className="sr-only peer"
                       />
                       <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-teal-500/30 rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-teal-600"></div>
@@ -347,7 +356,7 @@ export default function StudentSettings() {
                   {savingPrefs ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />} Save Preferences
                 </button>
                 {prefsSaved && (
-                  <span className="text-xs font-bold text-emerald-600 flex items-center gap-1 animate-in fade-in">
+                  <span role="status" className="text-xs font-bold text-emerald-600 flex items-center gap-1 animate-in fade-in">
                     <Check size={14} /> Saved!
                   </span>
                 )}

@@ -75,8 +75,8 @@ const questionFilterSchema = z.object({
   difficulty: z.string().optional(),
   topic: z.string().optional(),
   createdBy: z.string().optional(),
-  limit: z.string().transform(Number).pipe(z.number().min(1).max(100)).default('50'),
-  offset: z.string().transform(Number).pipe(z.number().min(0)).default('0'),
+  limit: z.string().transform(Number).pipe(z.number().min(1).max(100)).prefault('50'),
+  offset: z.string().transform(Number).pipe(z.number().min(0)).prefault('0'),
 });
 
 export {

@@ -357,13 +357,13 @@ export default function Attendance() {
       setExpandedSessionId(session.id);
       if (sessionStudents[session.id]) return;
       try {
-        const records = await listAttendanceRecords({ sessionId: session.id });
+        const records = await listAttendanceRecords({ sessionId: session.id, collegeId: session.collegeId || collegeId });
         setSessionStudents((prev) => ({ ...prev, [session.id]: records }));
       } catch {
         setSessionStudents((prev) => ({ ...prev, [session.id]: [] }));
       }
     },
-    [expandedSessionId, sessionStudents]
+    [expandedSessionId, sessionStudents, collegeId]
   );
 
   const statCards = [

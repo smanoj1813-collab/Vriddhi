@@ -257,9 +257,11 @@ const darkTheme = createTheme({
 
 export const AppThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [mode, setMode] = useState<ThemeMode>(() => {
-    const saved = localStorage.getItem('vriddhi-theme-mode');
-    // Default to light mode for crisp academic branding
-    return (saved as ThemeMode) || 'light';
+    try {
+      const saved = localStorage.getItem('vriddhi-theme-mode');
+      if (saved === 'light' || saved === 'dark' || saved === 'system') return saved;
+    } catch { /* Device storage is optional, including in private browsers. */ }
+    return 'light';
   });
 
   const [resolvedMode, setResolvedMode] = useState<'light' | 'dark'>('light');
@@ -304,7 +306,7 @@ export const AppThemeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   const handleSetMode = (newMode: ThemeMode) => {
     setMode(newMode);
-    localStorage.setItem('vriddhi-theme-mode', newMode);
+    try { localStorage.setItem('vriddhi-theme-mode', newMode); } catch { /* Keep the in-memory theme usable. */ }
   };
 
   const toggleMode = () => {

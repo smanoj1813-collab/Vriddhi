@@ -152,7 +152,7 @@ export function useFacultyAttendance() {
         setStudents(studentsData);
         setRosterDiagnostics(diagnostics);
 
-        const existing = await fetchAttendanceForSession(cls.id, cls.date);
+        const existing = await fetchAttendanceForSession(cls.id, cls.date, cid);
         setExistingAttendance(existing);
 
         if (existing) {

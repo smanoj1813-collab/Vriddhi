@@ -4,16 +4,18 @@ import { applyLocalAppearance, DEFAULT_APPEARANCE } from '@/shared/theme/appeara
 import { saveAppearancePreferences } from '@/shared/services/appearancePreferences'
 import { useSearchParams } from 'react-router-dom'
 import { useThemeMode } from '../../../shared/contexts/ThemeProvider'
-import { useAuth } from '../../auth/context/AuthContext'
-import { auth } from '@/Firebase/config'
+import { useAuth, type AppUser } from '../../auth/context/AuthContext'
+import AccountSecurityNotice from '@/shared/components/AccountSecurityNotice'
+import { getMyStaffSettings, updateMyStaffProfile } from '@/shared/services/staffProfile'
+import { useAccountScope } from '@/shared/hooks/useAccountScope'
+import { booleanPreferences, cacheAccountPreferences, readAccountPreferences, ADMIN_NOTIFICATION_DEFAULTS } from '@/shared/utils/accountPreferences'
 import { db } from '@/Firebase/data'
-import { doc, getDoc, updateDoc, setDoc, collection, getDocs, query, where } from 'firebase/firestore'
-import { updateProfile as updateFirebaseProfile } from 'firebase/auth'
+import { doc, getDoc, setDoc, collection, getDocs, query, where } from 'firebase/firestore'
 import ChangePasswordForm from '../../../shared/components/ChangePasswordForm'
 import {
   Save, User, Building2, Bell, Shield, Palette, Database, Download,
   Sun, Moon, Check, Upload, Trash2, AlertTriangle,
-  Lock, Eye, EyeOff, Smartphone, Mail, FileText, Calendar, Loader2, Info, Sparkles
+  Smartphone, Mail, FileText, Calendar, Loader2, Info, Sparkles
 } from 'lucide-react'
 import { useNotification } from '../../../shared/providers/NotificationProvider'
 import { useTranslation } from '../../../shared/contexts/LanguageProvider'
@@ -25,10 +27,14 @@ import CollegeBrandingUpload from '@/shared/components/CollegeBrandingUpload'
 import EmailSettingsCard from '../components/EmailSettingsCard'
 
 // Toggle Switch Component
-function ToggleSwitch({ checked, onChange, label }: { checked: boolean; onChange: (v: boolean) => void; label?: string }) {
+function ToggleSwitch({ checked, onChange, label, disabled }: { checked: boolean; onChange: (v: boolean) => void; label: string; disabled?: boolean }) {
   return (
     <button
       type="button"
+      role="switch"
+      aria-checked={checked}
+      aria-label={label}
+      disabled={disabled}
       onClick={() => onChange(!checked)}
       className={`relative w-12 h-7 rounded-full transition-all duration-300 ${checked ? 'bg-teal-500' : 'bg-slate-300 dark:bg-slate-600'}`}
     >
@@ -110,7 +116,7 @@ function Message({ type, text }: { type: 'ok' | 'err' | 'info'; text: string }) 
     info: 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/30 dark:text-blue-300 dark:border-blue-800',
   }
   return (
-    <div className={`p-3 rounded-xl text-xs font-semibold border flex items-start gap-2 ${styles[type]}`}>
+    <div role={type === 'err' ? 'alert' : 'status'} className={`p-3 rounded-xl text-xs font-semibold border flex items-start gap-2 ${styles[type]}`}>
       {type === 'ok' ? <Check className="w-4 h-4 mt-0.5 shrink-0" /> : type === 'err' ? <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" /> : <Info className="w-4 h-4 mt-0.5 shrink-0" />}
       <span>{text}</span>
     </div>
@@ -119,6 +125,11 @@ function Message({ type, text }: { type: 'ok' | 'err' | 'info'; text: string }) 
 
 export default function Settings() {
   const { user } = useAuth()
+  return <AccountSettings key={user?.uid || 'signed-out'} user={user} />
+}
+
+function AccountSettings({ user }: { user: AppUser | null }) {
+  const isCurrent = useAccountScope(user?.uid)
   // Platform accounts have no college settings to load/save by default.
   const [activeTab, setActiveTab] = useState(() => user?.role === 'superadmin' ? 'appearance' : 'general')
   // Deep-link support: /admin/settings?tab=ai-content lands the superadmin
@@ -130,6 +141,8 @@ export default function Settings() {
 
   // Loading states
   const [initialLoading, setInitialLoading] = useState(true)
+  const [loadError, setLoadError] = useState<string | null>(null)
+  const [reloadKey, setReloadKey] = useState(0)
 
   // General state
   const [collegeName, setCollegeName] = useState('')
@@ -141,34 +154,26 @@ export default function Settings() {
   const [generalMsg, setGeneralMsg] = useState<{ type: 'ok' | 'err'; text: string } | null>(null)
 
   // Profile state
-  const [fullName, setFullName] = useState('')
-  const [email, setEmail] = useState('')
-  const [phone, setPhone] = useState('')
-  const [role, setRole] = useState('HOD')
+  const [fullName, setFullName] = useState(user?.name || '')
+  const [email, setEmail] = useState(user?.email || '')
+  const [phone, setPhone] = useState(user?.phone || '')
+  const role = user?.role === 'admin' || user?.role === 'hod' ? t('role.hod') : user?.role ? user.role.charAt(0).toUpperCase() + user.role.slice(1) : ''
   const [savingProfile, setSavingProfile] = useState(false)
   const [profileMsg, setProfileMsg] = useState<{ type: 'ok' | 'err'; text: string } | null>(null)
 
   // Notifications state
-  const [notifications, setNotifications] = useState({
-    emailAssessments: true,
-    smsAttendance: true,
-    weeklyReports: false,
-    milestoneAlerts: true,
-    maintenance: true,
-    pushEnabled: true,
-  })
+  const [notifications, setNotifications] = useState(() => readAccountPreferences('vriddhi_admin_notifications', user?.uid, ADMIN_NOTIFICATION_DEFAULTS))
   const [savingNotifications, setSavingNotifications] = useState(false)
   const [notificationMsg, setNotificationMsg] = useState<{ type: 'ok' | 'err'; text: string } | null>(null)
 
   const updateNotification = (key: string, value: boolean) => {
     setNotifications(prev => ({ ...prev, [key]: value }))
+    setNotificationMsg(null)
   }
 
   // Security state — password change lives in the shared ChangePasswordForm
   // (re-authenticates with the current password, 10-char floor, clears the
   // mustChangePassword claim), so no local password state is needed here.
-  const [twoFAEnabled, setTwoFAEnabled] = useState(false)
-  const [saving2FA, setSaving2FA] = useState(false)
 
   // Existing profile preferences are read-only migration fallbacks; all new
   // appearance writes use the signed-in owner's private preference document.
@@ -203,80 +208,48 @@ export default function Settings() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams, user?.role])
 
-  // Load initial data
+  // Parallel, one-shot reads. Ignore responses after an account switch; cloud
+  // preferences take precedence over this account's optional offline cache.
   useEffect(() => {
-    const load = async () => {
-      if (!user) {
-        setInitialLoading(false)
-        return
-      }
-      setInitialLoading(true)
-      try {
-        // Load college
-        if (user.collegeId) {
-          try {
-            const collegeSnap = await getDoc(doc(db, 'colleges', user.collegeId))
-            if (collegeSnap.exists()) {
-              const data = collegeSnap.data() as any
-              setCollegeName(data.name || data.collegeName || '')
-              setAcademicYear(data.academicYear || data.settings?.academicYear || '2026-2027')
-              setSemesterStart(data.semesterStart || data.settings?.semesterStart || '2026-07-01')
-              setSemesterEnd(data.semesterEnd || data.settings?.semesterEnd || '2026-12-15')
-              setPassPercentage(String(data.passPercentage || data.settings?.passPercentage || '40'))
-              if (data.settings?.autoBackup) setAutoBackup(data.settings.autoBackup)
-            }
-          } catch (e) {
-            console.warn('Failed to load college:', e)
-          }
-        }
-
-        // Load admin profile
-        try {
-          const adminRef = doc(db, 'admins', user.uid)
-          const adminSnap = await getDoc(adminRef)
-          if (adminSnap.exists()) {
-            const data = adminSnap.data() as any
-            setFullName(data.name || user.name || '')
-            setEmail(data.email || user.email || '')
-            setPhone(data.phone || user.phone || '')
-            setRole(data.role === 'admin' || data.role === 'hod' ? t('role.hod') : data.role ? data.role.charAt(0).toUpperCase() + data.role.slice(1) : t('role.hod'))
-            if (data.notificationPrefs) {
-              setNotifications(prev => ({ ...prev, ...data.notificationPrefs }))
-            }
-            if (typeof data.twoFAEnabled === 'boolean') setTwoFAEnabled(data.twoFAEnabled)
-            if (data.appearance) setLegacyAppearance({ uid: user.uid, value: data.appearance })
-          } else {
-            // fallback to auth user
-            setFullName(user.name || '')
-            setEmail(user.email || '')
-            setPhone(user.phone || '')
-            setRole(user.role === 'admin' || user.role === 'hod' ? t('role.hod') : user.role ? user.role.charAt(0).toUpperCase() + user.role.slice(1) : t('role.hod'))
-          }
-        } catch (e) {
-          console.warn('Failed to load admin profile:', e)
-          setFullName(user.name || '')
-          setEmail(user.email || '')
-          setPhone(user.phone || '')
-        }
-
-        // Load local prefs (this account's keys only)
-        try {
-          const localNotif = localStorage.getItem('vriddhi_admin_notifications')
-          if (localNotif) setNotifications(prev => ({ ...prev, ...JSON.parse(localNotif) }))
-          const local2FA = localStorage.getItem('vriddhi_2fa_enabled')
-          if (local2FA) setTwoFAEnabled(local2FA === 'true')
-          const localBackup = localStorage.getItem('vriddhi_auto_backup')
-          if (localBackup) setAutoBackup(localBackup)
-        } catch { }
-      } finally {
-        setInitialLoading(false)
-      }
+    let cancelled = false
+    setInitialLoading(true)
+    setLoadError(null)
+    if (!user) { setInitialLoading(false); return }
+    const current = () => !cancelled && isCurrent()
+    const loadProfile = async () => {
+      const data = await getMyStaffSettings()
+      if (!current()) return
+      if (data.uid !== user.uid) throw new Error('Your account changed. Reload settings.')
+      setFullName(data.name || user.name || '')
+      setEmail(data.email || user.email || '')
+      setPhone(data.phone)
+      setNotifications(booleanPreferences(ADMIN_NOTIFICATION_DEFAULTS, data.notificationPrefs ?? readAccountPreferences('vriddhi_admin_notifications', user.uid, ADMIN_NOTIFICATION_DEFAULTS)))
+      if (data.appearance) setLegacyAppearance({ uid: user.uid, value: data.appearance })
     }
-    load()
-  }, [user])
+    const loadCollege = async () => {
+      if (!user.collegeId) return
+      const snapshot = await getDoc(doc(db, 'colleges', user.collegeId))
+      if (!current() || !snapshot.exists()) return
+      const data = snapshot.data()
+      setCollegeName(data.name || data.collegeName || '')
+      setAcademicYear(data.academicYear || data.settings?.academicYear || '2026-2027')
+      setSemesterStart(data.semesterStart || data.settings?.semesterStart || '2026-07-01')
+      setSemesterEnd(data.semesterEnd || data.settings?.semesterEnd || '2026-12-15')
+      setPassPercentage(String(data.passPercentage ?? data.settings?.passPercentage ?? '40'))
+      if (['daily', 'weekly', 'monthly', 'never'].includes(data.settings?.autoBackup)) setAutoBackup(data.settings.autoBackup)
+    }
+    Promise.allSettled([loadProfile(), loadCollege()]).then(results => {
+      if (!current()) return
+      const failure = results.find((result): result is PromiseRejectedResult => result.status === 'rejected')
+      if (failure) setLoadError(failure.reason instanceof Error ? failure.reason.message : 'Unable to load cloud settings.')
+      setInitialLoading(false)
+    })
+    return () => { cancelled = true }
+  }, [user, isCurrent, reloadKey])
 
   // Handlers
   const handleSaveGeneral = async () => {
+    if (!isCurrent() || savingGeneral) return
     if (!user?.collegeId) {
       setGeneralMsg({ type: 'err', text: 'No college ID found. Please contact support.' })
       return
@@ -300,40 +273,31 @@ export default function Settings() {
         },
         updatedAt: new Date().toISOString(),
       }, { merge: true })
-      setGeneralMsg({ type: 'ok', text: 'General settings saved successfully!' })
+      if (isCurrent()) setGeneralMsg({ type: 'ok', text: 'General settings saved successfully!' })
     } catch (e: any) {
-      setGeneralMsg({ type: 'err', text: e.message || 'Failed to save general settings' })
+      if (isCurrent()) setGeneralMsg({ type: 'err', text: e.message || 'Failed to save general settings' })
     } finally {
-      setSavingGeneral(false)
+      if (isCurrent()) setSavingGeneral(false)
     }
   }
 
   const handleSaveProfile = async () => {
-    if (!user?.uid) {
-      setProfileMsg({ type: 'err', text: 'No user found' })
-      return
-    }
-    if (!fullName.trim()) {
-      setProfileMsg({ type: 'err', text: 'Full name cannot be empty' })
+    if (!user || !isCurrent() || savingProfile) return
+    if (fullName.trim().length < 2) {
+      setProfileMsg({ type: 'err', text: 'Full name must have at least 2 characters' })
       return
     }
     setSavingProfile(true)
     setProfileMsg(null)
     try {
-      if (auth.currentUser) {
-        await updateFirebaseProfile(auth.currentUser, { displayName: fullName.trim() })
-      }
-      const adminRef = doc(db, 'admins', user.uid)
-      await setDoc(adminRef, {
-        name: fullName.trim(),
-        phone: phone.trim(),
-        updatedAt: new Date().toISOString(),
-      }, { merge: true })
-      setProfileMsg({ type: 'ok', text: 'Profile updated successfully!' })
-    } catch (e: any) {
-      setProfileMsg({ type: 'err', text: e.message || 'Failed to update profile' })
+      const result = await updateMyStaffProfile(user.uid, { name: fullName.trim(), phone: phone.trim() })
+      if (isCurrent()) setProfileMsg({ type: 'ok', text: result.authDisplayNameSynced
+        ? 'Profile updated successfully!'
+        : 'Profile saved. The sign-in display name could not sync; save again to retry.' })
+    } catch (error: unknown) {
+      if (isCurrent()) setProfileMsg({ type: 'err', text: error instanceof Error ? error.message : 'Failed to update profile' })
     } finally {
-      setSavingProfile(false)
+      if (isCurrent()) setSavingProfile(false)
     }
   }
 
@@ -342,6 +306,7 @@ export default function Settings() {
     typeof window !== 'undefined' && 'Notification' in window ? Notification.permission : 'unsupported'
   )
   const handleTogglePush = async (value: boolean) => {
+    if (!isCurrent() || savingNotifications) return
     if (!value) { updateNotification('pushEnabled', false); return }
     if (!('Notification' in window)) {
       setPushPermission('unsupported')
@@ -349,7 +314,13 @@ export default function Settings() {
       return
     }
     let perm = Notification.permission
-    if (perm === 'default') perm = await Notification.requestPermission()
+    try {
+      if (perm === 'default') perm = await Notification.requestPermission()
+    } catch {
+      if (isCurrent()) setNotificationMsg({ type: 'err', text: 'Notification permission could not be requested. Try again from your browser settings.' })
+      return
+    }
+    if (!isCurrent()) return
     setPushPermission(perm)
     if (perm !== 'granted') {
       updateNotification('pushEnabled', false)
@@ -361,69 +332,53 @@ export default function Settings() {
       new Notification('Vriddhi notifications enabled', { body: 'You will see alerts on this device.', icon: '/favicon.ico' })
     } catch {
       // Some mobile browsers only allow notifications via a service worker.
-      navigator.serviceWorker?.ready.then((reg) => reg.showNotification('Vriddhi notifications enabled', { body: 'You will see alerts on this device.' })).catch(() => undefined)
+      navigator.serviceWorker?.ready.then((reg) => { if (isCurrent()) return reg.showNotification('Vriddhi notifications enabled', { body: 'You will see alerts on this device.' }) }).catch(() => undefined)
     }
   }
 
   const handleSaveNotifications = async () => {
+    if (!user || !isCurrent() || savingNotifications || loadError) return
     setSavingNotifications(true)
     setNotificationMsg(null)
     try {
-      localStorage.setItem('vriddhi_admin_notifications', JSON.stringify(notifications))
-      if (user?.uid) {
-        const adminRef = doc(db, 'admins', user.uid)
-        await setDoc(adminRef, {
-          notificationPrefs: notifications,
-          updatedAt: new Date().toISOString(),
-        }, { merge: true })
-      }
+      await updateMyStaffProfile(user.uid, { notificationPrefs: notifications })
+      if (!isCurrent()) return
+      cacheAccountPreferences('vriddhi_admin_notifications', user.uid, ADMIN_NOTIFICATION_DEFAULTS, notifications)
       setNotificationMsg({ type: 'ok', text: 'Notification preferences saved!' })
-      setTimeout(() => setNotificationMsg(null), 3000)
-    } catch (e: any) {
-      setNotificationMsg({ type: 'err', text: e.message || 'Failed to save preferences' })
+    } catch (error: unknown) {
+      if (isCurrent()) setNotificationMsg({ type: 'err', text: error instanceof Error ? error.message : 'Failed to save preferences' })
     } finally {
-      setSavingNotifications(false)
-    }
-  }
-
-  const handleToggle2FA = async (value: boolean) => {
-    setTwoFAEnabled(value)
-    setSaving2FA(true)
-    try {
-      localStorage.setItem('vriddhi_2fa_enabled', String(value))
-      if (user?.uid) {
-        await setDoc(doc(db, 'admins', user.uid), { twoFAEnabled: value, updatedAt: new Date().toISOString() }, { merge: true })
-      }
-    } catch (e) {
-      console.warn('Failed to save 2FA:', e)
-    } finally {
-      setSaving2FA(false)
+      if (isCurrent()) setSavingNotifications(false)
     }
   }
 
   const handleExportJSON = async () => {
+    if (!isCurrent()) return
     try {
       if (!user?.collegeId) throw new Error('No college ID')
       const collegeId = user.collegeId
       // Fetch college data
       const collegeSnap = await getDoc(doc(db, 'colleges', collegeId))
+      if (!isCurrent()) return
       const collegeData = collegeSnap.exists() ? collegeSnap.data() : {}
 
       // Fetch students
       let students: any[] = []
-      try {
+      {
         const q = query(collection(db, 'students'), where('collegeId', '==', collegeId))
         const snap = await getDocs(q)
+        if (!isCurrent()) return
         students = snap.docs.map(d => ({ id: d.id, ...d.data() }))
-      } catch { }
+      }
 
       // Fetch faculty
       let faculty: any[] = []
-      try {
+      {
         const q = query(collection(db, 'faculty'), where('collegeId', '==', collegeId))
         const snap = await getDocs(q)
+        if (!isCurrent()) return
         faculty = snap.docs.map(d => ({ id: d.id, ...d.data() }))
-      } catch { }
+      }
 
       const exportData = {
         college: collegeData,
@@ -441,20 +396,22 @@ export default function Settings() {
       a.click()
       URL.revokeObjectURL(url)
     } catch (e: any) {
-      showError(`Export failed: ${e.message}`)
+      if (isCurrent()) showError(`Export failed: ${e.message}`)
     }
   }
 
   const handleExportCSV = async () => {
+    if (!isCurrent()) return
     try {
       if (!user?.collegeId) throw new Error('No college ID')
       const collegeId = user.collegeId
       let students: any[] = []
-      try {
+      {
         const q = query(collection(db, 'students'), where('collegeId', '==', collegeId))
         const snap = await getDocs(q)
+        if (!isCurrent()) return
         students = snap.docs.map(d => ({ id: d.id, ...d.data() }))
-      } catch { }
+      }
 
       if (students.length === 0) {
         showWarning('No students found to export')
@@ -471,9 +428,11 @@ export default function Settings() {
       a.click()
       URL.revokeObjectURL(url)
     } catch (e: any) {
-      showError(`Export failed: ${e.message}`)
+      if (isCurrent()) showError(`Export failed: ${e.message}`)
     }
   }
+
+  if (!user) return <p role="alert">Sign in to manage your settings.</p>
 
   if (initialLoading) {
     return (
@@ -492,6 +451,10 @@ export default function Settings() {
         <p className="text-slate-500 dark:text-slate-400">Manage your college and personal preferences</p>
       </div>
 
+      {loadError && <div role="alert" className="mb-4 rounded-xl border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900 dark:bg-amber-950/30 dark:text-amber-200">
+        Cloud settings could not be loaded: {loadError}{' '}
+        <button type="button" disabled={savingProfile || savingNotifications || savingGeneral} className="font-bold underline" onClick={() => setReloadKey(key => key + 1)}>Retry</button>
+      </div>}
       <div className="flex flex-col lg:flex-row gap-6 max-w-7xl">
         {/* Sidebar Tabs */}
         <div className="lg:w-72 flex-shrink-0">
@@ -670,6 +633,8 @@ export default function Settings() {
                     <Label>Full Name</Label>
                     <SettingsInput
                       type="text"
+                      maxLength={100}
+                      disabled={savingProfile}
                       value={fullName}
                       onChange={(e) => setFullName(e.target.value)}
                       placeholder="Your full name"
@@ -691,6 +656,8 @@ export default function Settings() {
                   <Label>Phone Number</Label>
                   <SettingsInput
                     type="tel"
+                    maxLength={32}
+                    disabled={savingProfile}
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
                     placeholder="+91 98765 43210"
@@ -723,7 +690,7 @@ export default function Settings() {
           {activeTab === 'notifications' && (
             <SettingsCard className="p-6 md:p-8">
               <SectionTitle>Notification Preferences</SectionTitle>
-              <SectionDesc>Choose how and when you want to be notified. Preferences are saved to your admin profile and local storage.</SectionDesc>
+              <SectionDesc>Choose how and when you want to be notified. Preferences are saved to your account; the browser keeps an optional account-specific cache.</SectionDesc>
 
               <div className="mb-4"><EmailSettingsCard /></div>
 
@@ -748,6 +715,8 @@ export default function Settings() {
                     </div>
                   </div>
                   <ToggleSwitch
+                    label="Push Notifications"
+                    disabled={savingNotifications || !!loadError}
                     checked={notifications.pushEnabled}
                     onChange={handleTogglePush}
                   />
@@ -773,6 +742,8 @@ export default function Settings() {
                         </div>
                       </div>
                       <ToggleSwitch
+                        label={item.label}
+                        disabled={savingNotifications || !!loadError}
                         checked={notifications[item.key as keyof typeof notifications]}
                         onChange={(v) => updateNotification(item.key, v)}
                       />
@@ -785,7 +756,7 @@ export default function Settings() {
                 <div className="pt-4 border-t border-slate-200 dark:border-slate-700/50">
                   <button
                     onClick={handleSaveNotifications}
-                    disabled={savingNotifications}
+                    disabled={savingNotifications || !!loadError}
                     className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-teal-500 hover:bg-teal-600 disabled:opacity-60 text-white font-medium text-sm transition-all duration-200 shadow-md shadow-teal-500/20"
                   >
                     {savingNotifications ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
@@ -812,50 +783,7 @@ export default function Settings() {
                   <ChangePasswordForm bare />
                 </div>
 
-                <div className="border-t border-slate-200 dark:border-slate-700/50 pt-6">
-                  <div className="flex items-center justify-between p-4 rounded-xl bg-slate-50 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-700/30">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-teal-500/10 dark:bg-teal-900/30 flex items-center justify-center">
-                        <Shield className="w-5 h-5 text-teal-600 dark:text-teal-400" />
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-slate-800 dark:text-white">Two-Factor Authentication</p>
-                        <p className="text-xs text-slate-500 dark:text-slate-400">Add an extra layer of security to your account</p>
-                        {saving2FA && <p className="text-[11px] text-teal-600 mt-1">Saving...</p>}
-                      </div>
-                    </div>
-                    <ToggleSwitch
-                      checked={twoFAEnabled}
-                      onChange={handleToggle2FA}
-                    />
-                  </div>
-                </div>
-
-                <div className="border-t border-slate-200 dark:border-slate-700/50 pt-6">
-                  <h4 className="text-sm font-semibold text-slate-700 dark:text-slate-200 mb-3">Active Sessions</h4>
-                  <div className="space-y-2">
-                    {[
-                      { device: 'Windows PC - Chrome', location: 'Mumbai, India', current: true, time: 'Active now' },
-                      { device: 'iPhone 14 - Safari', location: 'Mumbai, India', current: false, time: '2 hours ago' },
-                    ].map((session, i) => (
-                      <div key={i} className="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-700/30">
-                        <div>
-                          <p className="text-sm font-medium text-slate-700 dark:text-slate-200">
-                            {session.device}
-                            {session.current && <span className="ml-2 text-xs bg-teal-500/10 text-teal-600 dark:text-teal-400 px-2 py-0.5 rounded-full">Current</span>}
-                          </p>
-                          <p className="text-xs text-slate-500">{session.location} · {session.time}</p>
-                        </div>
-                        {!session.current && (
-                          <button className="text-xs text-red-500 hover:text-red-600 font-medium">
-                            Revoke
-                          </button>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                  <p className="text-[11px] text-slate-400 mt-2">Session management is local for now. Full session revocation requires backend integration.</p>
-                </div>
+                <AccountSecurityNotice showSessions />
               </div>
             </SettingsCard>
           )}
@@ -930,12 +858,9 @@ export default function Settings() {
                     <div className="flex-1">
                       <h4 className="text-sm font-semibold text-slate-800 dark:text-white mb-1">Automatic Backups</h4>
                       <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">
-                        Schedule automatic backups to cloud storage. Preference is saved locally and to college settings.
+                        Choose the college backup preference. Use Save Changes on the General tab to save it to your college.
                       </p>
-                      <SettingsSelect value={autoBackup} onChange={(e) => {
-                        setAutoBackup(e.target.value)
-                        localStorage.setItem('vriddhi_auto_backup', e.target.value)
-                      }}>
+                      <SettingsSelect aria-label="Automatic backup frequency" value={autoBackup} onChange={(e) => setAutoBackup(e.target.value)}>
                         <option value="daily">Daily</option>
                         <option value="weekly">Weekly</option>
                         <option value="monthly">Monthly</option>
@@ -958,25 +883,27 @@ export default function Settings() {
                       <div className="flex flex-wrap gap-2">
                         <button onClick={() => {
                           if (confirm('Clear all local cached data? This will remove theme, notification prefs, etc.')) {
-                            localStorage.clear()
-                            showSuccess('Local data cleared. Please refresh.')
+                            try {
+                              localStorage.clear()
+                              showSuccess('Local data cleared. Please refresh.')
+                            } catch { showError('Browser storage is unavailable; the cache could not be cleared.') }
                           }
                         }} className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-red-100 dark:bg-red-500/10 text-red-700 dark:text-red-400 text-sm font-medium hover:bg-red-200 dark:hover:bg-red-500/20 transition-colors">
                           <Trash2 className="w-4 h-4" />
                           Clear Local Cache
                         </button>
                         <button disabled={resettingAppearance} onClick={async () => {
-                          if (!user?.uid || resettingAppearance || !confirm('Reset appearance to defaults?')) return
+                          if (!isCurrent() || !user?.uid || resettingAppearance || !confirm('Reset appearance to defaults?')) return
                           setResettingAppearance(true)
                           applyLocalAppearance(user.uid, { ...DEFAULT_APPEARANCE })
                           setMode('light')
                           try {
                             await saveAppearancePreferences(user.uid, { ...DEFAULT_APPEARANCE })
-                            showSuccess('Appearance reset to defaults')
+                            if (isCurrent()) showSuccess('Appearance reset to defaults')
                           } catch {
-                            showError('Appearance was reset on this device, but could not be synced. Try again.')
+                            if (isCurrent()) showError('Appearance was reset on this device, but could not be synced. Try again.')
                           } finally {
-                            setResettingAppearance(false)
+                            if (isCurrent()) setResettingAppearance(false)
                           }
                         }} className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white dark:bg-slate-800 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 text-sm font-medium hover:bg-red-50 transition-colors disabled:opacity-60">
                           Reset Appearance

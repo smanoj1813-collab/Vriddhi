@@ -2,6 +2,7 @@
 // ─── Firestore CRUD for Class Schedules (Weekly Recurring + Daily Sessions) ─────────────────
 
 import { db } from '@/Firebase/data'
+import { requireCollegeId as getCollegeId } from '@/shared/api/tenantScope'
 import {
   collection, query, where, getDocs, addDoc, updateDoc, doc,
   deleteDoc, orderBy, limit, writeBatch, getDoc, deleteField
@@ -47,22 +48,6 @@ export function getReadStats() {
 
 export function resetReadStats() {
   sessionReadCount = 0
-}
-
-// ─── Helper: Get collegeId from localStorage ──────────────
-
-function getCollegeId(): string {
-  const id = localStorage.getItem('vriddhi_college_id')
-  if (!id) {
-    // Returning '' used to mean `colleges//weeklySchedules` — a query against a path that
-    // cannot exist, so the page rendered an empty table and looked like a data problem.
-    throw new Error(
-      'This sign-in carries no college to scope queries to. Sign out and back in so the ' +
-        'token is refreshed; if it persists, an administrator must link this profile to a ' +
-        'college (Access Control → Identity repair).'
-    )
-  }
-  return id
 }
 
 // ─── Helper: Convert Firestore doc to ClassSchedule ─────
@@ -344,7 +329,7 @@ const WEEKLY_COLLECTION = 'weeklySchedules'
 // ─── Fetch all weekly schedules for a college ───────────
 
 export async function fetchWeeklySchedules(collegeId?: string): Promise<WeeklyClassSchedule[]> {
-  const cid = collegeId || getCollegeId()
+  const cid = collegeId || await getCollegeId()
   console.log('[ScheduleApi] fetchWeeklySchedules — collegeId:', cid)
 
   if (!cid) {
@@ -388,7 +373,7 @@ export async function fetchFacultyWeeklySchedule(
   scope: { collegeId?: string; email?: string | null } = {},
 ): Promise<WeeklyClassSchedule[]> {
   if (!facultyId.trim()) return []
-  const collegeId = scope.collegeId || getCollegeId()
+  const collegeId = scope.collegeId || await getCollegeId()
   try {
     const profile = await fetchFacultyProfile({ collegeId, uid: facultyId, email: scope.email })
     const { ids } = facultyIdentityFor({ uid: facultyId, collegeId }, profile)
@@ -422,7 +407,8 @@ export async function fetchFacultyWeeklySchedule(
 
 // ─── Fetch weekly schedules by faculty NAME (fallback when ID doesn't match) ─
 
-export async function fetchFacultyWeeklyScheduleByName(facultyName: string, collegeId = getCollegeId()): Promise<WeeklyClassSchedule[]> {
+export async function fetchFacultyWeeklyScheduleByName(facultyName: string, selectedCollegeId?: string): Promise<WeeklyClassSchedule[]> {
+  const collegeId = await getCollegeId(selectedCollegeId)
   console.log('[ScheduleApi] fetchFacultyWeeklyScheduleByName — facultyName:', facultyName)
   if (!facultyName) {
     console.warn('[ScheduleApi] No facultyName provided')
@@ -505,7 +491,7 @@ export async function fetchStudentWeeklySchedule(
 // ─── Create Weekly Schedule ─────────────────────────────
 
 export async function createWeeklySchedule(data: WeeklyScheduleFormData): Promise<WeeklyClassSchedule> {
-  const collegeId = getCollegeId()
+  const collegeId = await getCollegeId()
   if (!collegeId) {
     throw new Error('No collegeId found. Cannot create schedule.')
   }
@@ -622,7 +608,7 @@ export async function deleteWeeklySchedule(id: string): Promise<void> {
 // ─── Bulk Create Weekly Schedules ───────────────────────
 
 export async function bulkCreateWeeklySchedules(items: WeeklyScheduleFormData[]): Promise<void> {
-  const collegeId = getCollegeId()
+  const collegeId = await getCollegeId()
   if (!collegeId) throw new Error('No collegeId found')
 
   const batch = writeBatch(db)
@@ -679,18 +665,12 @@ export async function fetchFacultyList(collegeId: string): Promise<{ id: string;
     return []
   }
   try {
-    let q = query(
+    const q = query(
       collection(db, 'faculty'),
       where('collegeId', '==', collegeId),
       limit(100)
     )
-    let snap = await getDocs(q)
-
-    if (snap.empty) {
-      console.log('[ScheduleApi] No faculty with collegeId, trying unfiltered...')
-      q = query(collection(db, 'faculty'), limit(100))
-      snap = await getDocs(q)
-    }
+    const snap = await getDocs(q)
 
     trackRead(snap.size)
     return snap.docs.map(d => {
@@ -722,17 +702,12 @@ export interface SubjectInfo {
 export async function fetchSubjectsFromFaculty(collegeId: string): Promise<SubjectInfo[]> {
   if (!collegeId) return []
   try {
-    let q = query(
+    const q = query(
       collection(db, 'faculty'),
       where('collegeId', '==', collegeId),
       limit(100)
     )
-    let snap = await getDocs(q)
-
-    if (snap.empty) {
-      q = query(collection(db, 'faculty'), limit(100))
-      snap = await getDocs(q)
-    }
+    const snap = await getDocs(q)
 
     trackRead(snap.size)
     const subjects: SubjectInfo[] = []
@@ -781,17 +756,12 @@ export async function fetchSubjectsFromFaculty(collegeId: string): Promise<Subje
 export async function fetchBatchesFromStudents(collegeId: string): Promise<string[]> {
   if (!collegeId) return []
   try {
-    let q = query(
+    const q = query(
       collection(db, 'students'),
       where('collegeId', '==', collegeId),
       limit(500)
     )
-    let snap = await getDocs(q)
-
-    if (snap.empty) {
-      q = query(collection(db, 'students'), limit(500))
-      snap = await getDocs(q)
-    }
+    const snap = await getDocs(q)
 
     trackRead(snap.size)
     const batches = new Set<string>()
@@ -811,17 +781,12 @@ export async function fetchBatchesFromStudents(collegeId: string): Promise<strin
 export async function fetchBranchesFromStudents(collegeId: string): Promise<string[]> {
   if (!collegeId) return []
   try {
-    let q = query(
+    const q = query(
       collection(db, 'students'),
       where('collegeId', '==', collegeId),
       limit(500)
     )
-    let snap = await getDocs(q)
-
-    if (snap.empty) {
-      q = query(collection(db, 'students'), limit(500))
-      snap = await getDocs(q)
-    }
+    const snap = await getDocs(q)
 
     trackRead(snap.size)
     const branches = new Set<string>()
@@ -888,7 +853,7 @@ export async function checkScheduleClashes(
   entry: Omit<ScheduleEntry, 'id' | 'isActive'>,
   ignoreId?: string
 ): Promise<ClashCheckResult> {
-  const collegeId = entry.collegeId || getCollegeId()
+  const collegeId = entry.collegeId || await getCollegeId()
   if (!collegeId) {
     return { hasClashes: false, clashes: [], warnings: ['No collegeId provided'] }
   }
@@ -964,7 +929,7 @@ export async function checkBatchScheduleClashes(
 export async function createWeeklyScheduleWithClashCheck(
   data: WeeklyScheduleFormData
 ): Promise<{ schedule: WeeklyClassSchedule; warnings: string[] }> {
-  const collegeId = getCollegeId()
+  const collegeId = await getCollegeId()
   
   const entry = {
     collegeId,
@@ -1002,17 +967,18 @@ export async function updateWeeklyScheduleWithClashCheck(
   id: string,
   data: Partial<WeeklyScheduleFormData>
 ): Promise<void> {
+  const collegeId = await getCollegeId()
   // Get current schedule to build the full entry
   const existingQuery = query(
     collection(db, WEEKLY_COLLECTION),
-    where('collegeId', '==', getCollegeId()),
+    where('collegeId', '==', collegeId),
     limit(1)
   )
   const existingSnap = await getDocs(existingQuery)
   
   // Build the entry with updates applied
   const entry: Omit<ScheduleEntry, 'id' | 'isActive'> = {
-    collegeId: getCollegeId(),
+    collegeId,
     subject: data.subject || '',
     subjectCode: data.subjectCode || '',
     facultyId: data.facultyId || '',
@@ -1046,7 +1012,7 @@ export async function updateWeeklyScheduleWithClashCheck(
 export async function bulkCreateWeeklySchedulesWithClashCheck(
   items: WeeklyScheduleFormData[]
 ): Promise<{ success: number; failed: Array<{ index: number; reason: string }> }> {
-  const collegeId = getCollegeId()
+  const collegeId = await getCollegeId()
   const result = { success: 0, failed: [] as Array<{ index: number; reason: string }> }
 
   // First check for internal clashes within the batch

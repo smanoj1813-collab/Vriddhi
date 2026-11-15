@@ -13,6 +13,8 @@ const server = await createServer({ root, configFile: path.join(root, 'scripts/r
 const { AppThemeProvider } = await server.ssrLoadModule('/src/shared/contexts/ThemeProvider.tsx');
 const { LanguageProvider } = await server.ssrLoadModule('/src/shared/contexts/LanguageProvider.tsx');
 const { calls } = await server.ssrLoadModule('/scripts/render-check/stubs/firestore.ts');
+const { auth } = await server.ssrLoadModule('/scripts/render-check/stubs/firebaseConfig.ts');
+const originalAuth = auth.currentUser;
 const { applyStoredAppearanceForUser } = await server.ssrLoadModule('/src/shared/theme/accent.ts');
 const { DEFAULT_APPEARANCE, applyLocalAppearance } = await server.ssrLoadModule('/src/shared/theme/appearance.ts');
 const views = new Set();
@@ -26,7 +28,8 @@ function reset(role = 'faculty') {
   document.documentElement.style.fontSize = '16px';
   globalThis.__RC_ROLE = role; globalThis.__RC_AUTH_USER = account(`${role}-appearance`, role);
   globalThis.__RC_SEARCH = ''; globalThis.__RC_WRITES = []; globalThis.__RC_CALLABLE_PAYLOADS = [];
-  globalThis.__RC_CALLABLE_DATA = {}; globalThis.__RC_CALLABLE_ERRORS = {};
+  auth.currentUser = { uid: globalThis.__RC_AUTH_USER.uid };
+  globalThis.__RC_CALLABLE_DATA = { getMyStaffSettings: { uid: globalThis.__RC_AUTH_USER.uid, name: 'Appearance user', phone: '', email: globalThis.__RC_AUTH_USER.email, department: '', collegeId: globalThis.__RC_AUTH_USER.collegeId || null, notificationPrefs: null, appearance: null } }; globalThis.__RC_CALLABLE_ERRORS = {};
   globalThis.__RC_FIRESTORE_DOCS = []; globalThis.__RC_FIRESTORE_COLLECTIONS = {};
   globalThis.__RC_FIRESTORE_BY_PATH = {};
   delete globalThis.__RC_FIRESTORE_READ_GUARD; delete globalThis.__RC_FIRESTORE_WRITE_GUARD;
@@ -87,7 +90,7 @@ try {
       assert.deepEqual(globalThis.__RC_WRITES[0], { path: ownedPath(uid), data: { accentColor: '#6366f1', fontSize: 'large', compactMode: false, animationsEnabled: true, updatedAt: { __stub: 'serverTimestamp' } } });
       assert.equal(document.documentElement.style.fontSize, '18px');
       assert.match(view.text(), /Appearance saved to your account/);
-      assert.equal(globalThis.__RC_CALLABLE_PAYLOADS.length, 0);
+      assert.deepEqual(globalThis.__RC_CALLABLE_PAYLOADS.map(call => call.name), role === 'student' ? [] : ['getMyStaffSettings']);
     });
     await view.click(view.button('Save Preferences'));
     check(`${role} appearance: repeated unchanged saves do not add writes or reads`, () => {
@@ -291,6 +294,7 @@ try {
 } finally {
   for (const view of views) await view.close();
   delete globalThis.__RC_AUTH_USER; delete globalThis.__RC_FIRESTORE_READ_GUARD; delete globalThis.__RC_FIRESTORE_WRITE_GUARD;
+  auth.currentUser = originalAuth;
   await server.close();
 }
 process.exit(process.exitCode || 0);
