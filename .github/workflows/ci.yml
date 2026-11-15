@@ -92,6 +92,12 @@ jobs:
         working-directory: functions
         run: npm ci
 
+      # The frontend audit cannot see the separately locked runtime backend
+      # dependencies. Block critical production advisories in this tree too.
+      - name: Functions production dependency audit
+        working-directory: functions
+        run: npm audit --omit=dev --audit-level=critical
+
       - name: Build the functions
         working-directory: functions
         run: npm run build

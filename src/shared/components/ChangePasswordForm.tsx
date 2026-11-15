@@ -16,7 +16,7 @@
 //      password stops nagging (self-only by construction server-side);
 //   4. best-effort token refresh so the new claims land without re-login.
 // ------------------------------------------------------------------
-import { useState } from 'react';
+import { useId, useState } from 'react';
 import { Check, Eye, EyeOff, Loader2, Lock, ShieldAlert } from 'lucide-react';
 import {
   EmailAuthProvider,
@@ -41,6 +41,7 @@ interface ChangePasswordFormProps {
 }
 
 export default function ChangePasswordForm({ onDone, bare }: ChangePasswordFormProps) {
+  const id = useId();
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -146,13 +147,14 @@ export default function ChangePasswordForm({ onDone, bare }: ChangePasswordFormP
 
       <div className="space-y-4 max-w-md pt-1">
         <div>
-          <label className="text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5 block">
+          <label htmlFor={`${id}-current`} className="text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5 block">
             Current Password
           </label>
           <div className="relative">
             <Lock size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
             <input
               type={showCurrent ? 'text' : 'password'}
+              id={`${id}-current`}
               value={currentPassword}
               onChange={(e) => setCurrentPassword(e.target.value)}
               placeholder="The password you sign in with"
@@ -164,6 +166,7 @@ export default function ChangePasswordForm({ onDone, bare }: ChangePasswordFormP
               type="button"
               onClick={() => setShowCurrent((v) => !v)}
               className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+              aria-pressed={showCurrent}
               aria-label={showCurrent ? 'Hide current password' : 'Show current password'}
             >
               {showCurrent ? <EyeOff size={15} /> : <Eye size={15} />}
@@ -175,13 +178,14 @@ export default function ChangePasswordForm({ onDone, bare }: ChangePasswordFormP
         </div>
 
         <div>
-          <label className="text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5 block">
+          <label htmlFor={`${id}-new`} className="text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5 block">
             New Password
           </label>
           <div className="relative">
             <Lock size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
             <input
               type={showNew ? 'text' : 'password'}
+              id={`${id}-new`}
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
               placeholder={`Minimum ${MIN_PASSWORD_LENGTH} characters`}
@@ -193,6 +197,7 @@ export default function ChangePasswordForm({ onDone, bare }: ChangePasswordFormP
               type="button"
               onClick={() => setShowNew((v) => !v)}
               className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+              aria-pressed={showNew}
               aria-label={showNew ? 'Hide new password' : 'Show new password'}
             >
               {showNew ? <EyeOff size={15} /> : <Eye size={15} />}
@@ -201,13 +206,14 @@ export default function ChangePasswordForm({ onDone, bare }: ChangePasswordFormP
         </div>
 
         <div>
-          <label className="text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5 block">
+          <label htmlFor={`${id}-confirm`} className="text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5 block">
             Confirm New Password
           </label>
           <div className="relative">
             <Lock size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
             <input
               type="password"
+              id={`${id}-confirm`}
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               placeholder="Re-enter the new password"
@@ -229,6 +235,7 @@ export default function ChangePasswordForm({ onDone, bare }: ChangePasswordFormP
 
       {msg && (
         <div
+          role={msg.type === 'ok' ? 'status' : 'alert'}
           className={`p-3 rounded-xl text-xs font-bold border flex items-center gap-2 max-w-md ${
             msg.type === 'ok'
               ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/30 dark:text-emerald-300 dark:border-emerald-800'

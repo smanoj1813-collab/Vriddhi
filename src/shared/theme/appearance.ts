@@ -2,7 +2,7 @@ import {
   ACCENT_STORAGE_KEY,
   DEFAULT_ACCENT,
   FONT_SIZE_STORAGE_KEY,
-  applyStoredFontSize,
+  applyFontSize,
   readAppearancePref,
   setAccent,
   writeAppearancePref,
@@ -73,7 +73,7 @@ export function applyLocalAppearance(uid: string, value: AppearancePreferences):
   writeAppearancePref(FONT_SIZE_STORAGE_KEY, uid, preferences.fontSize)
   writeAppearancePref('vriddhi_compact_mode', uid, String(preferences.compactMode))
   writeAppearancePref('vriddhi_animations', uid, String(preferences.animationsEnabled))
-  applyStoredFontSize(uid)
+  applyFontSize(preferences.fontSize)
 }
 
 export function sameAppearance(a: AppearancePreferences | null, b: AppearancePreferences): boolean {

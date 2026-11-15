@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import AppearanceSettings from '@/shared/components/AppearanceSettings'
-import { User, Bell, Shield, Palette, Save, Loader2, Check, Lock, Mail, Building2, Phone, GraduationCap } from 'lucide-react'
-import { updatePassword, updateProfile as updateFirebaseProfile } from 'firebase/auth'
+import ChangePasswordForm from '@/shared/components/ChangePasswordForm'
+import { User, Bell, Shield, Palette, Save, Loader2, Check, Mail, Building2, Phone, GraduationCap } from 'lucide-react'
+import { updateProfile as updateFirebaseProfile } from 'firebase/auth'
 import { doc, getDoc, setDoc } from 'firebase/firestore'
 import { auth } from '@/Firebase/config'
 import { db } from '@/Firebase/data'
@@ -58,12 +59,9 @@ export default function FacultySettings() {
   const [prefs, setPrefs] = useState<Prefs>(loadPrefs)
   const [savingPrefs, setSavingPrefs] = useState(false)
   const [prefsSaved, setPrefsSaved] = useState(false)
+  const [prefsError, setPrefsError] = useState<string | null>(null)
 
   // Security
-  const [newPassword, setNewPassword] = useState('')
-  const [confirmPassword, setConfirmPassword] = useState('')
-  const [savingPassword, setSavingPassword] = useState(false)
-  const [passwordMsg, setPasswordMsg] = useState<{ type: 'ok' | 'err'; text: string } | null>(null)
   const [twoFAEnabled, setTwoFAEnabled] = useState(false)
 
   // Retain existing cloud values as read-only migration fallbacks.
@@ -156,6 +154,8 @@ export default function FacultySettings() {
 
   const handleSavePrefs = async () => {
     setSavingPrefs(true)
+    setPrefsSaved(false)
+    setPrefsError(null)
     try {
       localStorage.setItem('vriddhi_faculty_prefs', JSON.stringify(prefs))
       if (user?.uid) {
@@ -163,39 +163,12 @@ export default function FacultySettings() {
       }
       setPrefsSaved(true)
       setTimeout(() => setPrefsSaved(false), 2500)
+    } catch (err: any) {
+      setPrefsError(err.message || 'Failed to sync notification preferences. Please try again.')
     } finally {
       setSavingPrefs(false)
     }
   }
-
-  const handleUpdatePassword = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (newPassword !== confirmPassword) {
-      setPasswordMsg({ type: 'err', text: 'Passwords do not match' })
-      return
-    }
-    if (newPassword.length < 6) {
-      setPasswordMsg({ type: 'err', text: 'Password must be at least 6 characters' })
-      return
-    }
-    setSavingPassword(true)
-    setPasswordMsg(null)
-    try {
-      if (auth.currentUser) {
-        await updatePassword(auth.currentUser, newPassword)
-        setPasswordMsg({ type: 'ok', text: 'Password updated successfully!' })
-        setNewPassword('')
-        setConfirmPassword('')
-      }
-    } catch (err: any) {
-      let msg = err.message || 'Failed to update password'
-      if (msg.includes('requires-recent-login')) msg = 'Please log out and log in again, then try changing password.'
-      setPasswordMsg({ type: 'err', text: msg })
-    } finally {
-      setSavingPassword(false)
-    }
-  }
-
 
   if (loading) {
     return (
@@ -332,6 +305,7 @@ export default function FacultySettings() {
                 ))}
               </div>
 
+              {prefsError && <p role="alert" className="rounded-xl border border-rose-200 bg-rose-50 p-3 text-sm text-rose-800 dark:border-rose-900 dark:bg-rose-950/30 dark:text-rose-200">{prefsError}</p>}
               <div className="flex items-center gap-3 pt-3">
                 <button onClick={handleSavePrefs} disabled={savingPrefs} className="px-5 py-2.5 rounded-xl bg-teal-600 hover:bg-teal-700 disabled:opacity-60 text-white font-bold text-xs md:text-sm flex items-center gap-2">
                   {savingPrefs ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />} Save Preferences
@@ -342,46 +316,8 @@ export default function FacultySettings() {
           )}
 
           {activeTab === 'security' && (
-            <form onSubmit={handleUpdatePassword} className="space-y-6">
-              <div>
-                <h2 className="text-base font-bold text-slate-900 dark:text-white">Security & Password</h2>
-                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Keep your faculty account secure.</p>
-              </div>
-
-              <div className="space-y-4 max-w-md pt-2">
-                <div>
-                  <label className="text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5 block">New Password</label>
-                  <div className="relative">
-                    <Lock size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
-                    <input type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} placeholder="Minimum 6 characters" required className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-sm outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20" />
-                  </div>
-                </div>
-                <div>
-                  <label className="text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5 block">Confirm New Password</label>
-                  <div className="relative">
-                    <Lock size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
-                    <input type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} placeholder="Re-enter password" required className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-sm outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20" />
-                  </div>
-                </div>
-
-                <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-[11px] text-slate-500">
-                  <ul className="list-disc pl-4 space-y-1">
-                    <li>Use at least 6 characters</li>
-                    <li>Include numbers and symbols for stronger security</li>
-                    <li>Don&apos;t reuse previous passwords</li>
-                  </ul>
-                </div>
-
-                {passwordMsg && (
-                  <div className={`p-3 rounded-xl text-xs font-bold border ${passwordMsg.type === 'ok' ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/30 dark:text-emerald-300' : 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/30 dark:text-rose-300'}`}>
-                    {passwordMsg.text}
-                  </div>
-                )}
-
-                <button type="submit" disabled={savingPassword} className="px-5 py-2.5 rounded-xl bg-teal-600 hover:bg-teal-700 disabled:opacity-60 text-white font-bold text-xs md:text-sm flex items-center gap-2">
-                  {savingPassword ? <Loader2 size={16} className="animate-spin" /> : <Lock size={16} />} Update Password
-                </button>
-              </div>
+            <div className="space-y-6">
+              <ChangePasswordForm />
 
               <div className="border-t border-slate-200 dark:border-slate-800 pt-6">
                 <div className="flex items-center justify-between p-4 rounded-xl bg-slate-50 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-700/30">
@@ -403,7 +339,7 @@ export default function FacultySettings() {
                   }} />
                 </div>
               </div>
-            </form>
+            </div>
           )}
 
           {activeTab === 'appearance' && (

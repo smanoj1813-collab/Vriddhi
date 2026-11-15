@@ -14,7 +14,7 @@ const { AppThemeProvider } = await server.ssrLoadModule('/src/shared/contexts/Th
 const { LanguageProvider } = await server.ssrLoadModule('/src/shared/contexts/LanguageProvider.tsx');
 const { calls } = await server.ssrLoadModule('/scripts/render-check/stubs/firestore.ts');
 const { applyStoredAppearanceForUser } = await server.ssrLoadModule('/src/shared/theme/accent.ts');
-const { DEFAULT_APPEARANCE } = await server.ssrLoadModule('/src/shared/theme/appearance.ts');
+const { DEFAULT_APPEARANCE, applyLocalAppearance } = await server.ssrLoadModule('/src/shared/theme/appearance.ts');
 const views = new Set();
 let checks = 0;
 const check = (name, fn) => { fn(); console.log(`ok ${++checks} - ${name}`); };
@@ -149,6 +149,44 @@ try {
   await view.click(view.button('Save Preferences'));
   check('appearance write retry: one successful private save clears the previous error', () => { assert.equal(view.q('[role="alert"]'), null); assert.equal(globalThis.__RC_WRITES.length, 1); assert.match(view.text(), /Appearance saved to your account/); });
   await view.close();
+
+  reset();
+  const retryUid = globalThis.__RC_AUTH_USER.uid;
+  globalThis.__RC_FIRESTORE_BY_PATH[ownedPath(retryUid)] = { ...DEFAULT_APPEARANCE };
+  globalThis.__RC_FIRESTORE_READ_GUARD = () => { throw new Error('Temporarily offline'); };
+  view = await mount(PAGE);
+  delete globalThis.__RC_FIRESTORE_READ_GUARD;
+  const pendingSave = deferred();
+  globalThis.__RC_FIRESTORE_WRITE_GUARD = () => pendingSave.promise;
+  await view.click(view.q('button[title="Violet"]'));
+  await select(view.q('select'), 'large');
+  await view.click(view.button('Save Preferences'));
+  const readsBeforeRetry = calls.filter(call => call === `getDoc:${ownedPath(retryUid)}`).length;
+  // A retry must not race an outstanding write and restore stale cloud data.
+  const retryDuringSave = view.button('Retry');
+  if (!retryDuringSave.disabled) await view.click(retryDuringSave);
+  await act(async () => pendingSave.resolve()); await settle();
+  check('appearance save/retry race: an old cloud read cannot replace the values just saved', () => {
+    assert.equal(view.q('button[title="Violet"]').getAttribute('aria-pressed'), 'true');
+    assert.equal(view.q('select').value, 'large');
+    assert.equal(document.documentElement.style.fontSize, '18px');
+    assert.equal(calls.filter(call => call === `getDoc:${ownedPath(retryUid)}`).length, readsBeforeRetry);
+    assert.match(view.text(), /Appearance saved to your account/);
+  });
+  await view.close();
+
+  reset();
+  const originalStorage = Object.getOwnPropertyDescriptor(globalThis, 'localStorage');
+  try {
+    Object.defineProperty(globalThis, 'localStorage', { configurable: true, get: () => { throw new Error('Storage blocked'); } });
+    applyLocalAppearance(globalThis.__RC_AUTH_USER.uid, { ...DEFAULT_APPEARANCE, accentColor: '#8b5cf6', fontSize: 'large' });
+    check('appearance storage denial: validated cloud/font preferences still apply without a writable device cache', () => {
+      assert.equal(document.documentElement.style.fontSize, '18px');
+      assert.equal(document.documentElement.style.getPropertyValue('--accent-500'), '139 92 246');
+    });
+  } finally {
+    Object.defineProperty(globalThis, 'localStorage', originalStorage);
+  }
 
   reset();
   const lateRead = deferred();

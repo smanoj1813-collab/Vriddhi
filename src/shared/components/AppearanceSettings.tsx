@@ -132,7 +132,7 @@ function AccountAppearanceSettings({ uid, legacyAppearance, showCompactMode = fa
       {loadFailed && (
         <div role="alert" className="rounded-xl border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-100">
           <p>{t('settings.appearanceLoadError')}</p>
-          <button type="button" onClick={() => setReload(value => value + 1)} className="mt-2 inline-flex items-center gap-2 font-semibold underline underline-offset-4">
+          <button type="button" disabled={loading || saving} onClick={() => setReload(value => value + 1)} className="mt-2 inline-flex items-center gap-2 font-semibold underline underline-offset-4 disabled:opacity-60">
             <RefreshCw size={14} aria-hidden="true" />{t('common.retry')}
           </button>
         </div>
