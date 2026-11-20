@@ -43,7 +43,9 @@ function reset(role = 'faculty') {
   globalThis.__RC_FIRESTORE_BY_PATH = { 'platform/stats': { totalColleges: 12, totalStudents: 540, totalFaculty: 42, totalAdmins: 12, activeColleges: 12, suspendedColleges: 0, topColleges: [], updatedAt: new Date().toISOString() } };
   globalThis.__RC_CALLABLE_ERRORS = {}; globalThis.__RC_CALLABLE_PAYLOADS = [];
   globalThis.__RC_CALLABLE_DATA = {
-    getMyAcademicRiskAlerts: { alerts: [], checkedAt: null, truncated: false, reviewCadence: 'weekly', canRefresh: false, canConfigure: role === 'principal' },
+    getMyAcademicRiskAlerts: { alerts: [], checkedAt: null, truncated: false, canRefresh: false, canConfigure: role === 'principal',
+      manualReviewScope: role === 'principal' ? 'college' : role === 'faculty' ? 'self' : null, manualReview: null },
+    requestAcademicRiskReview: { accepted: true },
     getFacultyAcademicContext: { enabled: false },
     getMyEmployeeAccess: { employee: null, superadmin: false },
     syncMyIdentity: { success: true },
@@ -222,10 +224,10 @@ try {
   const coverage = baseAlert('c', { category: 'coverage', severity: 'info', title: 'Some academic checks need more data', message: 'Assigned attendance policy is missing.\nA register import is incomplete.' });
   const resolved = baseAlert('d', { state: 'resolved', title: 'Previously cleared assignment' });
   // A stale server response must not restore the removed manual-scan action.
-  globalThis.__RC_CALLABLE_DATA.getMyAcademicRiskAlerts = { reviewCadence: 'weekly', alerts: [warning, missed, coverage, resolved], checkedAt: Date.now(), canRefresh: true, canConfigure: false, truncated: false };
+  globalThis.__RC_CALLABLE_DATA.getMyAcademicRiskAlerts = { alerts: [warning, missed, coverage, resolved], checkedAt: Date.now(), canRefresh: true, canConfigure: false, truncated: false, manualReviewScope: null, manualReview: null };
   let view = await mount(PAGE);
   check('student inbox: active risks, history and coverage are separate', () => { assert.match(view.text(), /2 attention items/); assert.match(view.text(), /Coverage warnings — not confirmed risks/); assert.doesNotMatch(view.text(), /Previously cleared assignment/); });
-  check('student inbox: compact last-check timestamp replaces the explanatory paragraphs, without a manual-check button', () => { assert.match(view.text(), /Last check:/); assert.doesNotMatch(view.text(), /Not checked yet|reviews start|large rosters|Scheduled snapshot|deadlines between reviews|College accounts cannot run checks manually/); assert.ok(!view.byText('button', 'Check my records now')); assert.doesNotMatch(view.text(), /on demand|request a new check|over four hours old/); });
+  check('student inbox: compact last-check timestamp replaces the explanatory paragraphs, without a manual-check button', () => { assert.match(view.text(), /Last check:/); assert.doesNotMatch(view.text(), /Not checked yet|large rosters|Scheduled snapshot|deadlines between reviews|College accounts cannot run checks manually/); for (const label of ['Check my records now', 'Check my risk status', 'Request college risk review']) assert.ok(!view.byText('button', label)); assert.doesNotMatch(view.text(), /on demand|request a new check|over four hours old/); });
   check('student inbox: no interval, focus or reconnect poller remains', () => { const query = view.client.getQueryCache().getAll().find(q => q.queryKey[0] === 'academic-risk-alerts'); assert.ok(query); assert.equal(query.options.refetchInterval, false); assert.equal(query.options.refetchOnWindowFocus, false); assert.equal(query.options.refetchOnReconnect, false); });
   check('student inbox: opening the page reads saved results but does not automatically recompute records', () => { assert.equal(globalThis.__RC_CALLABLE_PAYLOADS.filter(c => c.name === 'getMyAcademicRiskAlerts').length, 1); assert.equal(globalThis.__RC_CALLABLE_PAYLOADS.filter(c => c.name === 'refreshMyAcademicRiskAlerts').length, 0); });
   check('student inbox: critical before warnings; incomplete rechecks remain explicitly unverified', () => { assert.match(view.all('article h2')[0].textContent, /Assignment/); assert.match(view.text(), /Recheck needed — not confirmed current/); });
@@ -243,14 +245,15 @@ try {
   check('student inbox: history distinguishes resolved records from current warnings', () => { assert.equal(view.all('article').length, 1); assert.match(view.text(), /Previously cleared assignment/); });
   await view.close();
 
-  for (const cadence of ['daily', 'monthly', undefined]) {
+  for (const legacy of ['daily', 'monthly', undefined]) {
     reset('student');
     const checkedAt = Date.UTC(2026, 10, 15, 6, 41);
-    Object.assign(globalThis.__RC_CALLABLE_DATA.getMyAcademicRiskAlerts, { reviewCadence: cadence, checkedAt });
+    Object.assign(globalThis.__RC_CALLABLE_DATA.getMyAcademicRiskAlerts, { reviewCadence: legacy, checkedAt });
     view = await mount(PAGE);
-    check(`risk schedule metadata: ${cadence || 'old backend'} keeps the saved timestamp without the removed schedule prose`, () => {
+    check(`legacy risk metadata: ${legacy || 'old backend'} keeps the saved timestamp without schedule prose or a scan control`, () => {
       assert.ok(view.text().includes(`Last check: ${riskCheckedLabel(checkedAt)}`));
       assert.doesNotMatch(view.text(), /reviews start|follow the deployed server schedule|Scheduled snapshot|Refresh inbox only reloads/);
+      assert.ok(!view.byText('button', 'Check my risk status'));
     });
     await view.close();
   }
@@ -261,14 +264,72 @@ try {
     view = await mount(PAGE);
     const savedLoads = globalThis.__RC_CALLABLE_PAYLOADS.filter(c => c.name === 'getMyAcademicRiskAlerts').length;
     await view.click(view.byText('button', 'Refresh inbox'));
-    check(`${role}: inbox refresh reads saved results with no manual scan control, even with a legacy canRefresh response`, () => { assert.ok(!view.byText('button', 'Check my records now')); assert.doesNotMatch(view.text(), /Checking records|on demand|request a new check/); assert.doesNotMatch(view.text(), /College accounts cannot run checks manually|Scheduled snapshot|large rosters finish in batches/); assert.match(view.text(), role === 'student' || role === 'faculty' || role === 'mentor' ? /Last check:/ : /Latest faculty check:/); assert.ok(view.byText('button', 'Refresh inbox')); assert.equal(globalThis.__RC_CALLABLE_PAYLOADS.filter(c => c.name === 'getMyAcademicRiskAlerts').length, savedLoads + 1); assert.equal(globalThis.__RC_CALLABLE_PAYLOADS.filter(c => c.name === 'refreshMyAcademicRiskAlerts').length, 0); });
+    const manual = role === 'faculty' || role === 'principal';
+    check(`${role}: inbox refresh reads saved results; only Faculty/Principals get a manual review control, never the retired scan`, () => { assert.ok(!view.byText('button', 'Check my records now')); assert.doesNotMatch(view.text(), /Checking records|on demand|request a new check/); assert.doesNotMatch(view.text(), /College accounts cannot run checks manually|Scheduled snapshot|large rosters finish in batches/); assert.match(view.text(), role === 'student' || role === 'faculty' || role === 'mentor' ? /Last check:/ : /Latest faculty check:/); assert.ok(view.byText('button', 'Refresh inbox')); assert.equal(!!view.byText('button', 'Check my risk status'), role === 'faculty'); assert.equal(!!view.byText('button', 'Request college risk review'), role === 'principal'); assert.equal(manual, view.text().includes(role === 'principal' ? 'One college review per IST day' : role === 'faculty' ? 'One personal review per IST day' : 'per IST day')); assert.equal(globalThis.__RC_CALLABLE_PAYLOADS.filter(c => c.name === 'getMyAcademicRiskAlerts').length, savedLoads + 1); assert.equal(globalThis.__RC_CALLABLE_PAYLOADS.filter(c => c.name === 'refreshMyAcademicRiskAlerts').length, 0); });
     await view.close();
   }
+  reset('faculty');
+  view = await mount(PAGE);
+  await view.click(view.byText('button', 'Check my risk status'));
+  check('faculty inbox: the manual review button requests exactly one scoped review and re-reads saved results', () => {
+    const requests = globalThis.__RC_CALLABLE_PAYLOADS.filter(c => c.name === 'requestAcademicRiskReview');
+    assert.equal(requests.length, 1);
+    assert.deepEqual(requests[0].payload, {}, 'the client never names a college, subject or period');
+    assert.match(view.text(), /Risk review requested\./);
+    assert.equal(globalThis.__RC_CALLABLE_PAYLOADS.filter(c => c.name === 'getMyAcademicRiskAlerts').length, 2);
+    assert.equal(globalThis.__RC_CALLABLE_PAYLOADS.filter(c => c.name === 'refreshMyAcademicRiskAlerts').length, 0);
+  });
+  await view.close();
+  reset('faculty'); globalThis.__RC_CALLABLE_DATA.requestAcademicRiskReview = { accepted: false, reason: 'already-requested' };
+  view = await mount(PAGE);
+  await view.click(view.byText('button', 'Check my risk status'));
+  check('faculty inbox: a duplicate same-day request is explained instead of silently rescanning', () => assert.match(view.text(), /already requested today \(IST\)/));
+  await view.close();
+  reset('faculty'); globalThis.__RC_CALLABLE_DATA.getMyAcademicRiskAlerts.manualReview = { status: 'running', processed: 0, errors: 0 };
+  view = await mount(PAGE);
+  check('faculty inbox: a running review disables the request button and keeps inbox refresh available', () => {
+    assert.equal(view.byText('button', 'Check my risk status')?.disabled, true);
+    assert.match(view.text(), /Review in progress\. Refresh inbox to check again\./);
+    assert.equal(view.byText('button', 'Refresh inbox')?.disabled, false);
+  });
+  await view.close();
+  for (const [review, expected] of [
+    [{ status: 'complete', processed: 4, errors: 0 }, /Last requested review finished\./],
+    [{ status: 'complete', processed: 4, errors: 2 }, /Review finished with 2 incomplete check\(s\)\./],
+    [{ status: 'failed', processed: 0, errors: 1 }, /The last review did not finish\. A new review can be requested on the next IST day\./],
+  ]) {
+    reset('faculty'); globalThis.__RC_CALLABLE_DATA.getMyAcademicRiskAlerts.manualReview = review;
+    view = await mount(PAGE);
+    check(`faculty inbox: review status "${review.status}/${review.errors}" is reported honestly`, () => { assert.match(view.text(), expected); assert.equal(view.byText('button', 'Check my risk status')?.disabled, false); });
+    await view.close();
+  }
+  reset('principal');
+  view = await mount(PAGE);
+  await view.click(view.byText('button', 'Request college risk review'));
+  check('principal inbox: the college review request is explicit, scoped and followed by a saved-result reload', () => {
+    assert.equal(globalThis.__RC_CALLABLE_PAYLOADS.filter(c => c.name === 'requestAcademicRiskReview').length, 1);
+    assert.match(view.text(), /Risk review requested\./);
+    assert.equal(globalThis.__RC_CALLABLE_PAYLOADS.filter(c => c.name === 'refreshMyAcademicRiskAlerts').length, 0);
+  });
+  await view.close();
+  reset('faculty'); globalThis.__RC_CALLABLE_ERRORS.requestAcademicRiskReview = { code: 'functions/resource-exhausted', message: 'A review is already running for your college. Try again after it finishes.' };
+  view = await mount(PAGE);
+  await view.click(view.byText('button', 'Check my risk status'));
+  check('faculty inbox: a rejected request surfaces the server reason instead of claiming a review started', () => {
+    assert.doesNotMatch(view.text(), /Risk review requested\./);
+    assert.match(view.text(), /already running for your college/);
+  });
+  await view.close();
   reset('student');
   view = await mount('/src/shared/components/RiskAlertsSummary.tsx');
-  check('dashboard risk summary: the first review waits for the server schedule, not a manual inbox action', () => { assert.match(view.text(), /first automatic scheduled review is pending/); assert.match(view.text(), /No completed check yet/); assert.doesNotMatch(view.text(), /Scheduled snapshot|Opening or refreshing the inbox|Run your first check/); });
+  check('dashboard risk summary: with no saved results it explains the manual review path without promising an automatic review', () => { assert.match(view.text(), /No review has finished yet/); assert.match(view.text(), /Faculty can check their own records; Principals can request a college review/); assert.match(view.text(), /No completed check yet/); assert.doesNotMatch(view.text(), /Scheduled snapshot|Opening or refreshing the inbox|Run your first check|first automatic scheduled review/); });
   await view.close();
-  check('risk client: no scan API wrapper, mutation or capability-driven action remains', () => { for (const file of ['src/shared/services/riskAlertsApi.ts', 'src/shared/hooks/useAcademicRiskAlerts.ts', 'src/shared/pages/AcademicRiskAlertsPage.tsx']) assert.doesNotMatch(readFileSync(path.join(root, file), 'utf8'), /refreshMyAcademicRiskAlerts|canRefresh/); });
+  check('risk client: the retired scan endpoint is gone, and the only refresh is an explicit review request', () => {
+    for (const file of ['src/shared/services/riskAlertsApi.ts', 'src/shared/hooks/useAcademicRiskAlerts.ts', 'src/shared/pages/AcademicRiskAlertsPage.tsx']) assert.doesNotMatch(readFileSync(path.join(root, file), 'utf8'), /refreshMyAcademicRiskAlerts|canRefresh/);
+    const service = readFileSync(path.join(root, 'src/shared/services/riskAlertsApi.ts'), 'utf8');
+    assert.match(service, /requestAcademicRiskReview/);
+    assert.match(readFileSync(path.join(root, 'src/shared/pages/AcademicRiskAlertsPage.tsx'), 'utf8'), /manualReviewScope/);
+  });
 
   reset('faculty'); globalThis.__RC_CALLABLE_ERRORS.getMyAcademicRiskAlerts = { code: 'functions/unavailable', message: 'Fixture service unavailable' };
   view = await mount(PAGE); await act(async () => { await new Promise(r => setTimeout(r, 1300)); });
@@ -283,15 +344,15 @@ try {
   reset('principal'); globalThis.__RC_CALLABLE_DATA.getMyAcademicRiskAlerts.canRefresh = false;
   view = await mount(PAGE);
   await view.click(view.byText('button', 'Warning settings')); await settle();
-  check('Principal settings: lazy, labelled and version-aware, with all configurable buffers', () => { assert.match(view.text(), /College warning settings/); assert.match(view.text(), /revision 0/); assert.match(view.text(), /Enable scheduled academic reviews/); assert.match(view.text(), /saving cannot start a check/); assert.doesNotMatch(view.text(), /Run academic early-warning checks/); assert.equal(view.all('input[type="number"]').length, 7); const region = document.getElementById(view.q('button[aria-expanded="true"]').getAttribute('aria-controls')); assert.ok(region?.textContent.includes('College warning settings')); });
+  check('Principal settings: lazy, labelled and version-aware, with all configurable buffers', () => { assert.match(view.text(), /College warning settings/); assert.match(view.text(), /revision 0/); assert.match(view.text(), /Enable academic risk reviews/); assert.match(view.text(), /saving cannot start a check/); assert.doesNotMatch(view.text(), /Run academic early-warning checks|scheduled academic reviews/); assert.equal(view.all('input[type="number"]').length, 7); const region = document.getElementById(view.q('button[aria-expanded="true"]').getAttribute('aria-controls')); assert.ok(region?.textContent.includes('College warning settings')); });
   const numeric = view.all('input[type="number"]'); await type(numeric[2], '4');
   await submit(numeric[0].closest('form'));
-  check('Principal settings: save uses reviewed revision and thresholds, never a client-selected tenant', () => { const call = globalThis.__RC_CALLABLE_PAYLOADS.find(c => c.name === 'saveAcademicRiskConfiguration'); assert.equal(call.payload.expectedRevision, 0); assert.equal(call.payload.settings.registerGraceHours, 4); assert.equal(call.payload.collegeId, undefined); assert.match(view.text(), /next scheduled review; saving does not start a check/); assert.equal(globalThis.__RC_CALLABLE_PAYLOADS.filter(c => c.name === 'refreshMyAcademicRiskAlerts').length, 0); });
+  check('Principal settings: save uses reviewed revision and thresholds, never a client-selected tenant', () => { const call = globalThis.__RC_CALLABLE_PAYLOADS.find(c => c.name === 'saveAcademicRiskConfiguration'); assert.equal(call.payload.expectedRevision, 0); assert.equal(call.payload.settings.registerGraceHours, 4); assert.equal(call.payload.collegeId, undefined); assert.match(view.text(), /next requested review; saving does not start a check/); assert.equal(globalThis.__RC_CALLABLE_PAYLOADS.filter(c => c.name === 'refreshMyAcademicRiskAlerts').length, 0); });
   await select(view.q('select[id$="-faculty"]'), 'faculty-1');
   const weekdays = view.all('fieldset input[type="checkbox"]'); await view.click(weekdays[5]);
   await type(view.q('input[id$="-startTime"]'), '09:00'); await type(view.q('input[id$="-endTime"]'), '17:00'); await type(view.q('input[id$="-effectiveFrom"]'), '2026-11-13');
   await submit(view.q('select[id$="-faculty"]').closest('form'));
-  check('Principal settings: staff monitoring requires explicit days/hours/dates and chosen verified faculty', () => { const call = globalThis.__RC_CALLABLE_PAYLOADS.find(c => c.name === 'saveFacultyRiskWorkSchedule'); assert.equal(call.payload.facultyUid, 'faculty-1'); assert.deepEqual(call.payload.schedule.days, [5]); assert.equal(call.payload.schedule.startTime, '09:00'); assert.equal(call.payload.schedule.effectiveFrom, '2026-11-13'); assert.match(view.text(), /Working schedule saved for the next scheduled review/); assert.equal(globalThis.__RC_CALLABLE_PAYLOADS.filter(c => c.name === 'refreshMyAcademicRiskAlerts').length, 0); });
+  check('Principal settings: staff monitoring requires explicit days/hours/dates and chosen verified faculty', () => { const call = globalThis.__RC_CALLABLE_PAYLOADS.find(c => c.name === 'saveFacultyRiskWorkSchedule'); assert.equal(call.payload.facultyUid, 'faculty-1'); assert.deepEqual(call.payload.schedule.days, [5]); assert.equal(call.payload.schedule.startTime, '09:00'); assert.equal(call.payload.schedule.effectiveFrom, '2026-11-13'); assert.match(view.text(), /Working schedule saved for the next requested review/); assert.equal(globalThis.__RC_CALLABLE_PAYLOADS.filter(c => c.name === 'refreshMyAcademicRiskAlerts').length, 0); });
   await view.close();
 
   const css = readFileSync(path.join(root, 'src/shared/styles/portalExperience.css'), 'utf8');

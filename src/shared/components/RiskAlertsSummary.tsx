@@ -29,7 +29,7 @@ export default function RiskAlertsSummary() {
           <span className="min-w-0 break-words">{alert.subjectUid !== (user?.uid || user?.id) && <strong>{alert.subjectName} · </strong>}{alert.title}{alert.state === 'unverified' ? ' · recheck needed' : ''}</span>
         </Link>)}
         {coverage.length > 0 && <p className="flex items-start gap-2"><Info size={14} aria-hidden="true" className="shrink-0 mt-0.5" /><span>{coverage.length} coverage warning{coverage.length === 1 ? '' : 's'} — incomplete data, not confirmed risks.</span></p>}
-        {!active.length && !coverage.length && <p>{last ? 'No active alerts from the completed checks. This is not a final eligibility or compliance decision.' : 'Your first automatic scheduled review is pending. Supervisors receive faculty alerts after the scheduled review.'}</p>}
+        {!active.length && !coverage.length && <p>{last ? 'No active alerts from the completed checks. This is not a final eligibility or compliance decision.' : 'No review has finished yet. Faculty can check their own records; Principals can request a college review.'}</p>}
         {data?.truncated && <p>Showing the most recent 300 inbox entries; older items may not be included.</p>}
       </div>}
     </section>

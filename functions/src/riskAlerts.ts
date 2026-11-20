@@ -4,7 +4,7 @@ import { onDocumentCreated } from 'firebase-functions/v2/firestore'
 import * as admin from 'firebase-admin'
 import * as logger from 'firebase-functions/logger'
 import { DEFAULT_RISK_SETTINGS, validateRiskSettings, text, type RiskRow } from './riskCore'
-import { RISK_REVIEW_POLICY, RISK_REVIEW_SCHEDULE, RISK_PUSH_RECOVERY_SCHEDULE, RISK_SWEEP_REQUESTS, queueScheduledRiskSweep, processScheduledRiskSweepRequest } from './riskSweep'
+import { RISK_PUSH_RECOVERY_SCHEDULE, RISK_SWEEP_REQUESTS, getManualRiskReviewStatus, manualRiskScope, queueManualRiskSweep, processRiskSweepRequest } from './riskSweep'
 import {
   filterReadableRiskAlerts, personFromAuth,
   requireRiskPerson, riskHash, validateStaffRiskSchedule,
@@ -33,7 +33,8 @@ export const getMyAcademicRiskAlerts = onCall(OPTIONS, async request => {
     ? { ...a, checkedAt: Math.max(Number(a.checkedAt) || 0, checked.get(text(a.subjectUid)) || 0) } : a)
   return { alerts, truncated: snap.size > 300, checkedAt: Math.max(0, ...checked.values()) || null,
     // Compatibility for cached clients: never offer the retired scan action.
-    reviewCadence: RISK_REVIEW_POLICY.cadence, canRefresh: false, canConfigure: person.role === 'principal' }
+    canRefresh: false, canConfigure: person.role === 'principal',
+    manualReviewScope: manualRiskScope(person), manualReview: await getManualRiskReviewStatus(person) }
 })
 export const markMyAcademicRiskAlertRead = onCall(OPTIONS, async request => {
   const person = await requireRiskPerson(request.auth?.uid)
@@ -51,7 +52,7 @@ export const markMyAcademicRiskAlertRead = onCall(OPTIONS, async request => {
  * memory during production startup, before this small handler could run. */
 export const refreshMyAcademicRiskAlerts = onCall({ ...OPTIONS, timeoutSeconds: 10, maxInstances: 2 }, async request => {
   if (!request.auth?.uid) throw new HttpsError('unauthenticated', 'Sign in to view academic alerts')
-  throw new HttpsError('permission-denied', 'Manual academic risk checks are disabled. Reviews run automatically on the server schedule.')
+  throw new HttpsError('permission-denied', 'This refresh is retired. Use Request risk review in the current portal.')
 })
 export const getAcademicRiskConfiguration = onCall(OPTIONS, async request => {
   const person = await requireRiskPerson(request.auth?.uid)
@@ -108,14 +109,25 @@ export const saveFacultyRiskWorkSchedule = onCall(OPTIONS, async request => {
   return { success: true }
 })
 
-/** Bounded scheduled snapshot, not continuous early-warning monitoring. The starter
- * only queues one cycle; bounded create-triggered chunks finish large rosters
- * in the same review period instead of dropping the roster after the first 1,000. */
-export const sweepAcademicRiskAlerts = onSchedule({ region: 'asia-south1', schedule: RISK_REVIEW_SCHEDULE, timeZone: 'Asia/Kolkata', memory: '256MiB', timeoutSeconds: 60, maxInstances: 1, retryCount: 3, minBackoffSeconds: 300, maxBackoffSeconds: 600 }, async event => {
-  await queueScheduledRiskSweep(event.scheduleTime)
+/** Legacy Scheduler target stays a no-op during a targeted rollout. Pause
+ * its deployed job once this revision is healthy; it must never queue a scan. */
+export const sweepAcademicRiskAlerts = onSchedule({ region: 'asia-south1', schedule: '0 3 * * *', timeZone: 'Asia/Kolkata', memory: '512MiB', timeoutSeconds: 30, maxInstances: 1 }, async () => {})
+
+export const requestAcademicRiskReview = onCall({ ...OPTIONS, timeoutSeconds: 30, maxInstances: 10 }, async request => {
+  if (!request.auth?.uid) throw new HttpsError('unauthenticated', 'Sign in to request a risk review')
+  let record: admin.auth.UserRecord
+  try { record = await admin.auth().getUser(request.auth.uid) }
+  catch (error) {
+    // A deleted/missing Auth account is an authorization failure, never a scan.
+    if ((error as { code?: string }).code === 'auth/user-not-found') throw new HttpsError('permission-denied', 'Only verified Faculty and Principals can start a review')
+    throw error
+  }
+  const person = personFromAuth(record)
+  if (!person || !manualRiskScope(person)) throw new HttpsError('permission-denied', 'Only verified Faculty and Principals can start a review')
+  return queueManualRiskSweep(person)
 })
 export const continueAcademicRiskSweep = onDocumentCreated({ region: 'asia-south1', document: `${RISK_SWEEP_REQUESTS}/{requestId}`, memory: '1GiB', timeoutSeconds: 540, concurrency: 1, maxInstances: 1, retry: true }, async event => {
-  await processScheduledRiskSweepRequest(event.params.requestId)
+  await processRiskSweepRequest(event.params.requestId)
 })
 
 const TOKEN_PATTERN = /^[A-Za-z0-9_:.-]{50,4096}$/

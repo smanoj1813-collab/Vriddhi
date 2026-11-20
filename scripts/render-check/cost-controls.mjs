@@ -213,6 +213,86 @@ try {
     if (hiddenDescriptor) Object.defineProperty(document, 'hidden', hiddenDescriptor); else delete document.hidden;
   }
 
+  // Manually persisting an ended test's lifecycle is the only remaining way a
+  // stale published/ongoing row becomes completed; nothing runs on a schedule.
+  const listCalls = () => globalThis.__RC_CALLABLE_PAYLOADS.filter(call => call.name === 'listManagedAssessmentTests');
+  const pressButton = async (host, label) => {
+    const button = [...host.querySelectorAll('button')].find(element => element.textContent.trim() === label);
+    assert.ok(button, `button ${label} exists`);
+    await act(async () => button.dispatchEvent(new MouseEvent('click', { bubbles: true }))); await settle(); await settle();
+    return button;
+  };
+  const endedTest = (extra = {}) => ({
+    id: 'ended-test', title: 'Ended DBMS test', subject: 'DBMS', status: 'completed', storedStatus: 'published',
+    facultyId: 'staff', facultyName: 'Faculty', startDateTime: new Date(Date.now() - 7_200_000).toISOString(),
+    endDateTime: new Date(Date.now() - 3_600_000).toISOString(), totalQuestions: 1, totalMarks: 1, maxTabSwitches: 0,
+    totalRegistered: 1, totalStarted: 1, totalSubmitted: 1, totalGraded: 1, ...extra,
+  });
+  reset();
+  globalThis.__RC_CALLABLE_DATA = {
+    listManagedAssessmentTests: { tests: [endedTest()] },
+    getAssessmentConfig: { performanceCategories: [] },
+    refreshAssessmentTestStatus: { status: 'completed', changed: true },
+    getAssessmentTestReport: { reportRevision: '', test: endedTest(), summary: {}, students: [] },
+  };
+  let statusView = await mount(Reports);
+  check('ended test: a stored published row offers an explicit status refresh and starts no automatic write', () => {
+    assert.ok([...statusView.host.querySelectorAll('button')].some(button => button.textContent.trim() === 'Refresh status'));
+    assert.equal(listCalls().length, 1);
+    assert.deepEqual(globalThis.__RC_WRITES, [], 'rendering an ended test never writes a lifecycle change');
+    assert.deepEqual(globalThis.__RC_CALLABLE_PAYLOADS.filter(call => call.name === 'refreshAssessmentTestStatus'), []);
+  });
+  await pressButton(statusView.host, 'Refresh status');
+  check('ended test: refresh asks the server to persist completion for that exact test only', () => {
+    const calls = globalThis.__RC_CALLABLE_PAYLOADS.filter(call => call.name === 'refreshAssessmentTestStatus');
+    assert.deepEqual(calls.map(call => call.payload), [{ testId: 'ended-test' }]);
+  });
+  check('ended test: after the server confirms completion the refresh control disappears and the row stays completed', () => {
+    assert.ok(![...statusView.host.querySelectorAll('button')].some(button => button.textContent.trim() === 'Refresh status'));
+    assert.match(statusView.host.textContent, /Completed/);
+  });
+  await statusView.close();
+  for (const [label, test, role] of [
+    ['a still-running test', endedTest({ status: 'ongoing', endDateTime: new Date(Date.now() + 600_000).toISOString(), storedStatus: 'ongoing' }), 'faculty'],
+    ['a cancelled test', endedTest({ status: 'cancelled', storedStatus: 'cancelled' }), 'faculty'],
+    ['an already persisted completion', endedTest({ storedStatus: 'completed' }), 'faculty'],
+    ['a colleague’s test', endedTest({ facultyId: 'other-staff' }), 'faculty'],
+    ['a HOD’s college view', endedTest(), 'hod'],
+  ]) {
+    reset();
+    globalThis.__RC_ROLE = role;
+    globalThis.__RC_AUTH_USER = role === 'faculty'
+      ? { uid: 'staff', id: 'staff', role: 'faculty', name: 'Faculty', collegeId: 'college-a' }
+      : { uid: 'hod', id: 'hod', role: 'hod', name: 'HOD', collegeId: 'college-a' };
+    globalThis.__RC_CALLABLE_DATA = {
+      listManagedAssessmentTests: { tests: [test] },
+      getAssessmentConfig: { performanceCategories: [] },
+      refreshAssessmentTestStatus: { status: 'completed', changed: true },
+      getAssessmentTestReport: { reportRevision: '', test, summary: {}, students: [] },
+    };
+    statusView = await mount(Reports);
+    check(`status refresh is not offered for ${label}`, () => {
+      assert.ok(![...statusView.host.querySelectorAll('button')].some(button => button.textContent.trim() === 'Refresh status'));
+      assert.equal(globalThis.__RC_CALLABLE_PAYLOADS.filter(call => call.name === 'refreshAssessmentTestStatus').length, 0);
+    });
+    await statusView.close();
+  }
+  reset();
+  globalThis.__RC_CALLABLE_DATA = {
+    listManagedAssessmentTests: { tests: [endedTest()] },
+    getAssessmentConfig: { performanceCategories: [] },
+    refreshAssessmentTestStatus: { status: 'completed', changed: true },
+    getAssessmentTestReport: { reportRevision: '', test: endedTest(), summary: {}, students: [] },
+  };
+  globalThis.__RC_CALLABLE_ERRORS.refreshAssessmentTestStatus = { code: 'functions/permission-denied', message: 'Faculty may only refresh their own tests.' };
+  statusView = await mount(Reports);
+  await pressButton(statusView.host, 'Refresh status');
+  check('ended test: a rejected refresh reports the reason and leaves the local lifecycle untouched', () => {
+    assert.match(statusView.host.textContent, /Faculty may only refresh their own tests/);
+    assert.ok([...statusView.host.querySelectorAll('button')].some(button => button.textContent.trim() === 'Refresh status'));
+  });
+  await statusView.close();
+
   reset(); globalThis.__RC_ROLE = 'superadmin';
   const row = (id, data) => ({ id, data: () => data });
   globalThis.__RC_FIRESTORE_COLLECTIONS = { performanceMetrics: Array.from({ length: 96 }, (_, i) => row(`m-${i}`, { timestamp: '2026-11-13', responseTime: 10 })), errors: [], slowQueries: [], alerts: [] };

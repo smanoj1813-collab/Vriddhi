@@ -559,6 +559,7 @@ export interface UseScheduledTestsReturn {
   schedule: (input: ScheduleTestInput) => Promise<void>;
   publish: (testId: string) => Promise<void>;
   cancel: (testId: string, reason: string) => Promise<void>;
+  refreshStatus: (testId: string) => Promise<void>;
   loading: boolean;
   error: string | null;
   refresh: () => void;
@@ -635,7 +636,20 @@ export const useScheduledTests = (collegeId?: string): UseScheduledTestsReturn =
     );
   }, [runMutation]);
 
-  return { tests, schedule, publish, cancel, loading, error, refresh: () => { void fetchData(); } };
+  const refreshStatus = useCallback(async (testId: string) => {
+    setError(null);
+    try {
+      const { status } = await callable<{ testId: string }, { status: string; changed: boolean }>('refreshAssessmentTestStatus', { testId });
+      setTests(current => current.map(test => test.id !== testId ? test : {
+        ...test, storedStatus: status,
+        status: status === 'completed' || status === 'cancelled' ? status : test.status,
+      }));
+    } catch (err) {
+      setError(errorMessage(err, 'Could not refresh the test status.'));
+    }
+  }, []);
+
+  return { tests, schedule, publish, cancel, refreshStatus, loading, error, refresh: () => { void fetchData(); } };
 };
 
 export default useStudentTests;

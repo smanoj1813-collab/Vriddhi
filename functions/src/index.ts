@@ -81,6 +81,7 @@ import {
   checkPaperScheduling,
   publishAssessmentTest,
   cancelAssessmentTest,
+  refreshAssessmentTestStatus,
   gradeStudentAssessmentSubmission,
   listPendingAssessmentSubmissions,
   autoSubmitExpiredStudentTests,
@@ -329,6 +330,7 @@ export {
   checkPaperScheduling,
   publishAssessmentTest,
   cancelAssessmentTest,
+  refreshAssessmentTestStatus,
   gradeStudentAssessmentSubmission,
   listPendingAssessmentSubmissions,
   autoSubmitExpiredStudentTests,
@@ -408,7 +410,7 @@ export {
 
 // Server-owned academic risk inbox, scoped escalation, settings and opt-in push.
 export {
-  getMyAcademicRiskAlerts, markMyAcademicRiskAlertRead, refreshMyAcademicRiskAlerts,
+  getMyAcademicRiskAlerts, markMyAcademicRiskAlertRead, refreshMyAcademicRiskAlerts, requestAcademicRiskReview,
   getAcademicRiskConfiguration, saveAcademicRiskConfiguration, saveFacultyRiskWorkSchedule,
   sweepAcademicRiskAlerts, continueAcademicRiskSweep, registerMyAcademicRiskDevice, unregisterMyAcademicRiskDevice,
   sendAcademicRiskPush, retryAcademicRiskPush,

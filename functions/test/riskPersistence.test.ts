@@ -45,9 +45,9 @@ const selfAlert = (category: string) => entries('riskAlerts').find(r => r.catego
 // Persistence fixtures use the same internal service as the scheduled worker,
 // never the retired client callable. The scheduled create-trigger path also
 // has its own end-to-end handler/continuation coverage below and in riskSweep.
-async function reviewSubject(uid = 'faculty-uid') {
+async function reviewSubject(uid = 'faculty-uid', assertLease: Parameters<typeof service.refreshRiskSubject>[2] = async () => {}) {
   const person = await service.requireRiskPerson(uid)
-  return service.refreshRiskSubject(person, await service.loadCollegeRiskEvidence(person.collegeId))
+  return service.refreshRiskSubject(person, await service.loadCollegeRiskEvidence(person.collegeId), assertLease)
 }
 
 describe('scheduled risk materialization and authenticated inbox handlers', () => {
@@ -163,7 +163,7 @@ describe('scheduled risk materialization and authenticated inbox handlers', () =
         force: true, canRefresh: true, period: '2026-11',
       }, { role: 'superadmin' })), {
         code: 'permission-denied',
-        message: 'Manual academic risk checks are disabled. Reviews run automatically on the server schedule.',
+        message: 'This refresh is retired. Use Request risk review in the current portal.',
       })
       assert.deepEqual(store.reads.slice(reads), [], 'retired endpoint must not scan or even read a cooldown lock')
       assert.deepEqual(store.writes.slice(writes), [], 'retired endpoint must not acquire locks or persist a run')
@@ -185,13 +185,17 @@ describe('scheduled risk materialization and authenticated inbox handlers', () =
       const inbox = await api.getMyAcademicRiskAlerts.run(request(uid, { canRefresh: true, force: true }))
       assert.equal(inbox.canRefresh, false, 'cached clients must hide their old button')
       assert.equal(store.writes.length, 0)
-      assert.ok(store.reads.every(p => ['faculty', 'mentors', 'hods', 'riskAlerts', 'riskSubjectRuns'].includes(p.split('/')[0])), 'only identity, saved alerts and run summaries may be loaded')
+      assert.ok(inbox.manualReviewScope === (uid === 'faculty-uid' ? 'self' : uid === 'principal-a' ? 'college' : null))
+      assert.equal(inbox.manualReview, null)
+      assert.ok(!('manualReview' in inbox) || inbox.manualReview === null)
+      assert.ok(store.reads.every(p => ['faculty', 'mentors', 'hods', 'riskAlerts', 'riskSubjectRuns', 'riskJobs'].includes(p.split('/')[0])), 'only identity, saved alerts, run summaries and the review status may be loaded')
     })
   }
-  it('serializes duplicated scheduled subject work using a subject lease', async () => {
-    store.data.set(`riskSubjectLocks/${service.riskHash('college-a', 'faculty-uid')}`, { lease: 'other-run', leaseUntil: NOW + 1000 })
-    await assert.rejects(reviewSubject(), { code: 'resource-exhausted' })
+  it('does not publish changed alerts or notifications when the chunk lease check rejects', async () => {
+    await assert.rejects(reviewSubject('faculty-uid', async () => { throw new Error('lease lost') }), /lease lost/)
     assert.equal(entries('riskAlerts').length, 0)
+    assert.equal(entries('riskPushOutbox').length, 0)
+    assert.equal(entries('riskSubjectRuns').length, 0)
   })
   it('an incomplete register read retains earlier alerts as unverified, not resolved', async () => {
     await reviewSubject()
@@ -420,14 +424,33 @@ describe('safety caps and resumable background checks', () => {
     const result = await service.readRiskRows(ctx, 'submissions', { limit: (n: number) => ({ get: async () => ({ size: 3, docs: [1, 2, 3].slice(0, n).map(id => ({ id: String(id), data: () => ({}) })) }) }) } as any, 2)
     assert.equal(result.length, 2); assert.equal(ctx.complete.submissions, false); assert.match(ctx.coverage.join(' '), /safety read limit/)
   })
-  it('the scheduled starter queues a bounded worker that validates discovered accounts', async () => {
+  it('the retired starter queues nothing and cannot scan discovered accounts', async () => {
     await api.sweepAcademicRiskAlerts.run({ scheduleTime: new Date(NOW).toISOString() } as any)
-    assert.equal(store.data.get('riskJobs/academic-sweep')!.cycleComplete, false)
+    assert.equal(entries('riskJobs').length, 0)
+    assert.equal(entries('riskSweepRequests').length, 0)
     assert.equal(entries('riskAlerts').length, 0)
-    await api.continueAcademicRiskSweep.run({ params: { requestId: 'daily_2026-11-13__0' } } as any)
-    assert.equal(store.data.get('riskJobs/academic-sweep')!.cycleComplete, true)
-    assert.equal(store.data.get('riskJobs/academic-sweep')!.cursor, '')
+    assert.deepEqual(store.reads, [])
+    assert.deepEqual(store.writes, [])
+  })
+  it('a Principal college review runs through the durable worker for discovered accounts', async () => {
+    const queued = await api.requestAcademicRiskReview.run(request('principal-a'))
+    assert.deepEqual(queued, { accepted: true })
+    const job = entries('riskJobs')[0]
+    assert.equal(job.mode, 'college')
+    const id = [...store.data.keys()].find(p => p.startsWith('riskSweepRequests/'))!
+    await api.continueAcademicRiskSweep.run({ params: { requestId: id.split('/')[1] } } as any)
+    assert.equal(entries('riskJobs')[0].cycleComplete, true)
+    assert.equal(entries('riskJobs')[0].cursor, '')
     assert.ok(entries('riskAlerts').some(a => a.subjectUid === 'faculty-uid'))
     assert.ok(entries('riskAlerts').some(a => a.subjectUid === 'student-uid'))
+  })
+  it('a Faculty self review never checks a colleague', async () => {
+    account('faculty-b', 'faculty', 'college-a')
+    assert.deepEqual(await api.requestAcademicRiskReview.run(request('faculty-uid')), { accepted: true })
+    const id = [...store.data.keys()].find(p => p.startsWith('riskSweepRequests/'))!
+    await api.continueAcademicRiskSweep.run({ params: { requestId: id.split('/')[1] } } as any)
+    const subjects = entries('riskSubjectRuns').map(r => r.subjectUid)
+    assert.deepEqual(subjects, ['faculty-uid'])
+    assert.equal(entries('riskAlerts').filter(a => a.subjectUid === 'faculty-b').length, 0)
   })
 })
