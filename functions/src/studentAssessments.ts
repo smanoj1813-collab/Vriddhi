@@ -1,4 +1,4 @@
-import { canReuseAssessmentReport, loadEndedTestPages, memoizeRunLoad } from './assessmentMaintenance'
+import { canReuseAssessmentReport, memoizeRunLoad } from './assessmentMaintenance'
 import admin from 'firebase-admin'
 import * as logger from 'firebase-functions/logger'
 import { HttpsError, onCall } from 'firebase-functions/v2/https'
@@ -14,6 +14,7 @@ import { canonicalQuestionType, findSchedulingProblem } from './questionTypes'
 import { geminiClient, openaiClient, deepseekClient } from './config/aiProviders'
 import { generateWithGeminiFallback, primaryGeminiModel } from './config/aiModels'
 import { maybeTrace, traceRequested } from './assessmentCostTrace'
+import { normalizeRole } from './identityShared'
 
 const VISIBLE_TEST_STATUSES = ['published', 'ongoing', 'completed']
 const STARTABLE_TEST_STATUSES = ['published', 'ongoing']
@@ -1510,9 +1511,9 @@ export const listManagedAssessmentTests = onCall(
           id: test.id,
           ...data,
           // Never trust a stale persisted lifecycle label in the staff UI.
-          // The scheduled cleanup still heals storage, while this read is
-          // immediately correct even if that scheduler has not run/deployed.
+          // Display follows the clock without writing a lifecycle change.
           status,
+          storedStatus: String(data.status || ''),
           startDateTime: iso(data.startDateTime),
           endDateTime: iso(data.endDateTime),
           resultPublishDate: iso(data.resultPublishDate) || null,
@@ -1824,6 +1825,40 @@ export const publishAssessmentTest = onCall(
     })
     return { success: true }
   }
+)
+
+/** Explicitly persist the completed label for one test, without scanning the
+ * college or touching attempts. Recovery still runs independently. */
+export const refreshAssessmentTestStatus = onCall(
+  { region: 'asia-south1', memory: '512MiB', timeoutSeconds: 30, maxInstances: 10 },
+  async request => {
+    const uid = request.auth?.uid
+    if (!uid) throw new HttpsError('unauthenticated', 'Authentication is required')
+    const account = await admin.auth().getUser(uid)
+    const role = normalizeRole(account.customClaims?.role)
+    const collegeId = account.customClaims?.collegeId
+    if (account.disabled || !['faculty', 'principal'].includes(role) || typeof collegeId !== 'string' || !collegeId) {
+      throw new HttpsError('permission-denied', 'Only verified faculty and Principals can refresh test status')
+    }
+    const testId = request.data?.testId
+    if (typeof testId !== 'string' || !testId.trim() || testId.includes('/') || testId.length > 200) {
+      throw new HttpsError('invalid-argument', 'Choose a valid test')
+    }
+    const db = admin.firestore()
+    const ref = db.collection('scheduledTests').doc(testId)
+    return db.runTransaction(async tx => {
+      const test = (await tx.get(ref)).data()
+      if (!test || test.collegeId !== collegeId || (role === 'faculty' && test.facultyId !== uid)) {
+        throw new HttpsError('not-found', 'Test not found in your scope')
+      }
+      const status = String(test.status || '')
+      const end = timestampToDate(test.endDateTime)
+      if (!STARTABLE_TEST_STATUSES.includes(status) || !end || end.getTime() > Date.now()) return { status, changed: false }
+      const stamp = admin.firestore.FieldValue.serverTimestamp()
+      tx.update(ref, { status: 'completed', completedAt: stamp, updatedAt: stamp })
+      return { status: 'completed', changed: true }
+    })
+  },
 )
 
 export const cancelAssessmentTest = onCall(
@@ -2501,46 +2536,7 @@ export const autoSubmitExpiredStudentTests = onSchedule(
       logger.info('[StudentAssessments] Expired attempts finalized', { scanned: attempts.size })
     }
 
-    // Close out tests whose window has ended: published/ongoing → completed.
-    // Nothing else ever moved the stored status, so a test whose window had
-    // passed kept showing "ongoing" in the scheduler forever.
-    // Filter canonical timestamps by due time on the server. Keep a bounded
-    // string-only legacy pass: timezone-offset strings cannot safely use a
-    // lexical UTC deadline comparison. JS still checks their actual instant.
-    // Both paths use the shipped index and retain its rollout fallback.
-    const liveTests = await loadEndedTestPages(
-      async (status, format) => {
-        const lower = format === 'timestamp' ? admin.firestore.Timestamp.fromMillis(0) : ''
-        const upper = format === 'timestamp' ? now : '\uf8ff'
-        const page = await admin.firestore().collection('scheduledTests')
-          .where('status', '==', status).where('endDateTime', '>=', lower).where('endDateTime', '<=', upper)
-          .orderBy('endDateTime', 'asc').limit(250).get()
-        return page.docs
-      },
-      async status => (await admin.firestore().collection('scheduledTests').where('status', '==', status).limit(250).get()).docs,
-      () => logger.warn('[StudentAssessments] Due-test index unavailable; using compatible cleanup query'),
-    )
-    const endedTests = [...new Map(liveTests.map(doc => [doc.id, doc])).values()]
-      .filter((testDoc) => {
-        const end = timestampToDate(testDoc.data().endDateTime)
-        return Boolean(end && end.getTime() <= now.toMillis())
-      })
-    const completions = await Promise.allSettled(endedTests.map((testDoc) =>
-      testDoc.ref.update({
-        status: 'completed',
-        completedAt: admin.firestore.FieldValue.serverTimestamp(),
-        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-      })
-    ))
-    const completionFailures = completions.filter((outcome) => outcome.status === 'rejected').length
-    if (completionFailures > 0) {
-      logger.error('[StudentAssessments] Some ended tests could not be completed', {
-        scanned: endedTests.length,
-        failures: completionFailures,
-      })
-    } else if (endedTests.length > 0) {
-      logger.info('[StudentAssessments] Ended tests marked completed', { scanned: endedTests.length })
-    }
+
   }
 )
 

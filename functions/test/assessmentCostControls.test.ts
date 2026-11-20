@@ -6,6 +6,8 @@ import { makeCostStore } from './helpers/costStore'
 const store = makeCostStore()
 const originalFirestore = admin.firestore
 const descriptor = Object.getOwnPropertyDescriptor(admin, 'firestore')!
+const originalAuth = admin.auth
+const authDescriptor = Object.getOwnPropertyDescriptor(admin, 'auth')!
 let api: typeof import('../src/studentAssessments')
 let attendance: typeof import('../src/attendanceSummary')
 let journey: typeof import('../src/studentJourney')
@@ -14,11 +16,15 @@ before(async () => {
   Object.defineProperty(admin, 'firestore', { configurable: true, value: Object.assign(() => store.db, {
     FieldValue: original.FieldValue, Timestamp: original.Timestamp, FieldPath: original.FieldPath,
   }) })
+  Object.defineProperty(admin, 'auth', { configurable: true, value: () => store.auth })
   api = await import('../src/studentAssessments')
   attendance = await import('../src/attendanceSummary')
   journey = await import('../src/studentJourney')
 })
-after(() => { if (descriptor) Object.defineProperty(admin, 'firestore', descriptor); else delete (admin as any).firestore })
+after(() => {
+  if (descriptor) Object.defineProperty(admin, 'firestore', descriptor); else delete (admin as any).firestore
+  if (authDescriptor) Object.defineProperty(admin, 'auth', authDescriptor)
+})
 beforeEach(() => {
   store.reset()
   store.seed('users/staff', { role: 'faculty', collegeId: 'college-a', name: 'Faculty' })
@@ -33,6 +39,10 @@ function attempts(count = 1) {
   for (let i = 0; i < count; i++) store.seed(`studentAssessments/a-${i}`, { testId: 'test-a', studentId: `s-${i}`, collegeId: 'college-a', status: 'graded',
     updatedAt: new Date(Date.now() + i), totalMarks: 10, marksObtained: 8, percentage: 80, timeSpent: 10 })
 }
+function staff(uid: string, role: string, collegeId = 'college-a', disabled = false) {
+  store.accounts.set(uid, { uid, disabled, customClaims: { role, collegeId } })
+}
+const refresh = (uid: string, testId: string) => api.refreshAssessmentTestStatus.run({ auth: { uid, token: {} }, data: { testId } } as any) as Promise<any>
 const report = (extra: Record<string, unknown> = {}, collegeId = 'college-a') => api.getAssessmentTestReport.run({
   auth: { uid: 'staff', token: { role: 'faculty', collegeId } }, data: { testId: 'test-a', ...extra },
 } as any) as Promise<any>
@@ -105,31 +115,62 @@ describe('real assessment handler cost and compatibility guards', () => {
     assert.equal(store.data.get('scheduledTests/test-a').totalGraded, 3)
     assert.equal(store.writes.filter(path => path === 'scheduledTests/test-a').length, 1)
   })
-  it('future tests do not get downloaded by the indexed five-minute cleanup', async () => {
+  it('the five-minute cleanup never queries or writes scheduledTests status', async () => {
     for (let i = 0; i < 100; i++) store.seed(`scheduledTests/future-${i}`, testRow({ status: 'published' }))
+    store.seed('scheduledTests/ended', testRow({ status: 'ongoing', endDateTime: new Date(Date.now() - 1000) }))
     await api.autoSubmitExpiredStudentTests.run({} as any)
     assert.equal(store.reads.filter(path => path.startsWith('scheduledTests/')).length, 0)
+    assert.equal(store.queries.filter(query => query.path === 'scheduledTests').length, 0)
     assert.equal(store.writes.length, 0)
-    assert.equal(store.queries.filter(query => query.path === 'scheduledTests').length, 4)
+    assert.equal(store.data.get('scheduledTests/ended').status, 'ongoing')
   })
-  it('completes due Timestamp and legacy ISO tests but leaves future tests open', async () => {
-    store.seed('scheduledTests/date', testRow({ endDateTime: new Date(Date.now() - 1000) }))
-    store.seed('scheduledTests/iso', testRow({ endDateTime: new Date(Date.now() - 1000).toISOString() }))
-    store.seed('scheduledTests/future', testRow())
-    store.seed('scheduledTests/offset', testRow({ endDateTime: new Date(Date.now() + 5.5 * 3_600_000 - 1000).toISOString().replace('Z', '+05:30') }))
-    store.seed('scheduledTests/future-string', testRow({ endDateTime: new Date(Date.now() + 3_600_000).toISOString() }))
+  it('ended tests keep their stored status until a staff member refreshes it', async () => {
+    store.seed('scheduledTests/ended', testRow({ status: 'published', endDateTime: new Date(Date.now() - 1000) }))
     await api.autoSubmitExpiredStudentTests.run({} as any)
-    assert.equal(store.data.get('scheduledTests/date').status, 'completed')
-    assert.equal(store.data.get('scheduledTests/iso').status, 'completed')
-    assert.equal(store.data.get('scheduledTests/offset').status, 'completed')
-    assert.equal(store.data.get('scheduledTests/future-string').status, 'ongoing')
-    assert.equal(store.data.get('scheduledTests/future').status, 'ongoing')
+    assert.equal(store.data.get('scheduledTests/ended').status, 'published')
   })
-  it('cleanup remains operational while the new due-time index is missing', async () => {
-    store.seed('scheduledTests/ended', testRow({ endDateTime: new Date(Date.now() - 1000) }))
-    store.failures.set('scheduledTests:ordered', 9)
-    await api.autoSubmitExpiredStudentTests.run({} as any)
+  it('a manual refresh completes only an ended published/ongoing test for the owning faculty', async () => {
+    staff('staff', 'faculty')
+    store.seed('scheduledTests/ended', testRow({ status: 'published', endDateTime: new Date(Date.now() - 1000) }))
+    const result = await refresh('staff', 'ended')
+    assert.deepEqual(result, { status: 'completed', changed: true })
     assert.equal(store.data.get('scheduledTests/ended').status, 'completed')
+    assert.ok(store.data.get('scheduledTests/ended').completedAt)
+    assert.equal(store.writes.filter(path => path === 'scheduledTests/ended').length, 1)
+  })
+  it('a manual refresh is idempotent for an already completed or still running test', async () => {
+    staff('staff', 'faculty')
+    store.seed('scheduledTests/done', testRow({ status: 'completed' }))
+    store.seed('scheduledTests/live', testRow({ status: 'published' }))
+    const stamp = store.data.get('scheduledTests/done').completedAt
+    for (const testId of ['done', 'live', 'done', 'live']) assert.equal((await refresh('staff', testId)).changed, false)
+    assert.equal(store.data.get('scheduledTests/done').status, 'completed')
+    assert.equal(store.data.get('scheduledTests/done').completedAt, stamp)
+    assert.equal(store.data.get('scheduledTests/live').status, 'published')
+    assert.equal(store.writes.length, 0)
+  })
+  it('a manual refresh never reopens a cancelled test', async () => {
+    staff('staff', 'faculty')
+    store.seed('scheduledTests/cancelled', testRow({ status: 'cancelled', endDateTime: new Date(Date.now() - 1000) }))
+    assert.deepEqual(await refresh('staff', 'cancelled'), { status: 'cancelled', changed: false })
+    assert.equal(store.data.get('scheduledTests/cancelled').status, 'cancelled')
+  })
+  it('manual refresh is scoped to the owning faculty and the same college', async () => {
+    staff('staff', 'faculty'); staff('other-faculty', 'faculty'); staff('principal', 'principal'); staff('foreign-principal', 'principal', 'college-b')
+    store.seed('scheduledTests/ended', testRow({ status: 'ongoing', endDateTime: new Date(Date.now() - 1000) }))
+    await assert.rejects(refresh('other-faculty', 'ended'), { code: 'not-found' })
+    await assert.rejects(refresh('foreign-principal', 'ended'), { code: 'not-found' })
+    await assert.rejects(refresh('staff', '../ended'), { code: 'invalid-argument' })
+    await assert.rejects(api.refreshAssessmentTestStatus.run({ data: { testId: 'ended' } } as any), { code: 'unauthenticated' })
+    assert.equal(store.data.get('scheduledTests/ended').status, 'ongoing')
+    assert.deepEqual(await refresh('principal', 'ended'), { status: 'completed', changed: true })
+  })
+  it('students and unverified staff cannot refresh test status', async () => {
+    staff('learner', 'student'); staff('disabled-staff', 'faculty', 'college-a', true)
+    store.seed('scheduledTests/ended', testRow({ status: 'ongoing', endDateTime: new Date(Date.now() - 1000) }))
+    await assert.rejects(refresh('learner', 'ended'), { code: 'permission-denied' })
+    await assert.rejects(refresh('disabled-staff', 'ended'), { code: 'permission-denied' })
+    assert.equal(store.data.get('scheduledTests/ended').status, 'ongoing')
   })
   it('multiple expired attempts share one question load and still finalize transactionally', async () => {
     store.seed('scheduledTests/test-a', testRow({ totalSubmitted: 0, totalGraded: 0 }))

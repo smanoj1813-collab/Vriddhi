@@ -1427,15 +1427,19 @@
       ]
     },
     {
-      "collectionGroup": "scheduledTests",
+      "collectionGroup": "users",
       "queryScope": "COLLECTION",
       "fields": [
         {
-          "fieldPath": "status",
+          "fieldPath": "role",
           "order": "ASCENDING"
         },
         {
-          "fieldPath": "endDateTime",
+          "fieldPath": "collegeId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "__name__",
           "order": "ASCENDING"
         }
       ]

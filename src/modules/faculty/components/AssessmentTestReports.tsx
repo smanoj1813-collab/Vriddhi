@@ -724,7 +724,7 @@ export default function AssessmentTestReports({
 }) {
   const { user } = useAuth();
   const collegeId = user?.collegeId || '';
-  const { tests, loading, error, refresh, publish, cancel } = useScheduledTests(collegeId);
+  const { tests, loading, error, refresh, publish, cancel, refreshStatus } = useScheduledTests(collegeId);
   const [reportTestId, setReportTestId] = useState<string | null>(null);
   const [now, setNow] = useState(() => Date.now());
   const [busyId, setBusyId] = useState<string | null>(null);
@@ -839,6 +839,9 @@ export default function AssessmentTestReports({
       || user.role === 'faculty'
         ? test.facultyId === user?.uid
         : true;
+    const canRefreshStatus = phase === 'completed'
+      && ['published', 'ongoing'].includes(test.storedStatus || '')
+      && (user?.role === 'principal' || (user?.role === 'faculty' && test.facultyId === user.uid));
     return (
       <Card key={test.id} variant="outlined">
         <CardContent sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 2, p: 2.5 }}>
@@ -874,6 +877,14 @@ export default function AssessmentTestReports({
             <Button variant="contained" size="small" startIcon={<BarChart />} onClick={() => setReportTestId(test.id)}>
               Report
             </Button>
+            {canRefreshStatus && (
+              <Button variant="outlined" size="small" disabled={busyId !== null} onClick={async () => {
+                setBusyId(test.id);
+                try { await refreshStatus(test.id); } finally { setBusyId(null); }
+              }}>
+                {busyId === test.id ? 'Refreshing status…' : 'Refresh status'}
+              </Button>
+            )}
             {test.status === 'scheduled' && canManage && (
               <Button
                 variant="outlined"
@@ -941,7 +952,7 @@ export default function AssessmentTestReports({
           >
             {drillMode ? 'Flat list' : 'Drill-down'}
           </Button>
-          <Button variant="outlined" size="small" onClick={() => { void refresh(); }}>Refresh</Button>
+          <Button variant="outlined" size="small" onClick={() => { void refresh(); }}>Reload tests</Button>
         </Box>
       </Box>
       {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}

@@ -24,7 +24,8 @@ export interface AcademicRiskInbox {
   checkedAt: number | null;
   truncated: boolean;
   canConfigure: boolean;
-  reviewCadence?: 'daily' | 'weekly' | 'monthly';
+  manualReviewScope?: 'self' | 'college' | null;
+  manualReview?: { status: 'running' | 'complete' | 'failed'; processed: number; errors: number } | null;
 }
 export interface FacultyRiskWorkSchedule {
   facultyUid: string;
@@ -46,6 +47,7 @@ async function call<T>(name: string, payload: unknown = {}): Promise<T> {
   return (await httpsCallable<unknown, T>(functions, name)(payload)).data;
 }
 export const getMyAcademicRiskAlerts = () => call<AcademicRiskInbox>('getMyAcademicRiskAlerts');
+export const requestAcademicRiskReview = () => call<{ accepted: boolean; reason?: 'already-requested' }>('requestAcademicRiskReview');
 export const markMyAcademicRiskAlertRead = (id: string) => call('markMyAcademicRiskAlertRead', { id });
 export const getAcademicRiskConfiguration = () => call<AcademicRiskConfiguration>('getAcademicRiskConfiguration');
 export const saveAcademicRiskConfiguration = (settings: RiskSettings, expectedRevision: number) => call('saveAcademicRiskConfiguration', { settings, expectedRevision });

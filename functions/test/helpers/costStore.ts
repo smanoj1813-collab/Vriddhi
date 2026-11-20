@@ -49,13 +49,13 @@ export function makeCostStore() {
   }
   const comparable = (value: any) => value instanceof Date ? value.getTime() : value?.toMillis ? value.toMillis() : value
   class Query {
-    constructor(readonly path: string, readonly filters: any[] = [], readonly max = Infinity, readonly order?: [string, string], readonly fields?: string[], readonly cursor?: string) {}
+    constructor(readonly path: string, readonly filters: any[] = [], readonly max = Infinity, readonly order?: [string, string], readonly fields?: string[], readonly cursor?: string | ReturnType<typeof snapshot>) {}
     doc(id: string) { return new Ref(this.path + '/' + id) }
     where(field: string, op: string, value: any) { return new Query(this.path, [...this.filters, [field, op, value]], this.max, this.order, this.fields, this.cursor) }
     orderBy(field: any, direction = 'asc') { return new Query(this.path, this.filters, this.max, [typeof field === 'string' ? field : '__name__', direction], this.fields, this.cursor) }
     limit(max: number) { return new Query(this.path, this.filters, max, this.order, this.fields, this.cursor) }
     select(...fields: string[]) { return new Query(this.path, this.filters, this.max, this.order, fields, this.cursor) }
-    startAfter(cursor: string) { return new Query(this.path, this.filters, this.max, this.order, this.fields, cursor) }
+    startAfter(cursor: string | ReturnType<typeof snapshot>) { return new Query(this.path, this.filters, this.max, this.order, this.fields, cursor) }
     count() { return { get: async () => { const result = await this.get(); return { data: () => ({ count: result.size }) } } } }
     async get() {
       const failure = failures.get(this.path + (this.order ? ':ordered' : '')) ?? failures.get(this.path)
@@ -72,18 +72,34 @@ export function makeCostStore() {
       if (this.order) {
         const [field, direction] = this.order
         found = found.filter(([, row]) => field === '__name__' || row[field] !== undefined)
-        found.sort(([ap, a], [bp, b]) => {
+        const compare = ([ap, a]: [string, any], [bp, b]: [string, any]) => {
           const av = field === '__name__' ? ap.split('/').pop() : comparable(a[field])
           const bv = field === '__name__' ? bp.split('/').pop() : comparable(b[field])
           return (av < bv ? -1 : av > bv ? 1 : ap.localeCompare(bp)) * (direction === 'desc' ? -1 : 1)
-        })
+        }
+        found.sort(compare)
+        if (this.cursor && typeof this.cursor !== 'string') {
+          const after: [string, any] = [this.cursor.ref.path, this.cursor.data()]
+          found = found.filter(row => compare(row, after) > 0)
+        }
       }
-      if (this.cursor) found = found.filter(([path]) => path.split('/').pop()! > this.cursor!)
+      if (typeof this.cursor === 'string') {
+        const after = this.cursor
+        found = found.filter(([path]) => path.split('/').pop()! > after)
+      }
       const docs = found.slice(0, this.max).map(([path]) => snapshot(new Ref(path), this.fields))
       reads.push(...docs.map(doc => doc.ref.path))
       queries.push({ path: this.path, filters: this.filters, returned: docs.length, limit: this.max, selected: !!this.fields })
       return { docs, size: docs.length, empty: !docs.length }
     }
+  }
+  const accounts = new Map<string, any>()
+  const auth = {
+    async getUser(uid: string) {
+      const record = accounts.get(uid)
+      if (!record) throw Object.assign(new Error('Fixture account not found'), { code: 'auth/user-not-found' })
+      return copy(record)
+    },
   }
   const db = {
     collection: (path: string) => new Query(path), doc: (path: string) => new Ref(path),
@@ -104,6 +120,6 @@ export function makeCostStore() {
       return result
     },
   }
-  return { data, reads, writes, queries, db, failures, seed, observeReads: (fn?: (path: string) => void) => { onRead = fn },
-    reset() { data.clear(); versions.clear(); reads.length = writes.length = queries.length = 0; sequence = 0; failures.clear(); onRead = undefined } }
+  return { data, accounts, auth, reads, writes, queries, db, failures, seed, observeReads: (fn?: (path: string) => void) => { onRead = fn },
+    reset() { data.clear(); accounts.clear(); versions.clear(); reads.length = writes.length = queries.length = 0; sequence = 0; failures.clear(); onRead = undefined } }
 }

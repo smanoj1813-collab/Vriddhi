@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
-import { canReuseAssessmentReport, loadEndedTestPages, memoizeRunLoad } from '../src/assessmentMaintenance'
+import { canReuseAssessmentReport, memoizeRunLoad } from '../src/assessmentMaintenance'
 import { createReadThroughCache } from '../src/readThroughCache'
 import { shouldWritePlatformStats, STATS_HEARTBEAT_MS } from '../src/platformStatsGuard'
 import { riskReviewPeriod, riskReviewPolicy } from '../src/riskCadence'
@@ -23,12 +23,6 @@ describe('cost guards without lost freshness', () => {
       assert.equal(canReuseAssessmentReport(request, 'a', now), false)
     }
     assert.equal(canReuseAssessmentReport({ knownRevision: '', loadedAt: now }, '', now), false)
-  })
-  it('query rollout fallback is bounded to each status and genuine outages surface', async () => {
-    let fallbacks = 0
-    const result = await loadEndedTestPages(async () => { throw Object.assign(new Error('index'), { code: 9 }) }, async status => { fallbacks++; return [status] }, () => {})
-    assert.deepEqual(result, ['published', 'ongoing']); assert.equal(fallbacks, 2)
-    await assert.rejects(loadEndedTestPages(async () => { throw Object.assign(new Error('network'), { code: 14 }) }, async () => assert.fail('must not hide outages'), () => {}))
   })
   it('keeps unchanged stats fresh with a heartbeat, but writes meaningful changes immediately', () => {
     const now = Date.now(), previous = { total: 5, top: [{ id: 'a', count: 2 }], updatedAt: new Date(now - 1000).toISOString() }

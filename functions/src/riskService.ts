@@ -40,7 +40,7 @@ export async function readRiskRows(ctx: RiskReadContext, source: string, query: 
   } catch (error) {
     logger.error('[academicRisk] source unavailable', { source, error: error instanceof Error ? error.message : String(error) })
     ctx.complete[source] = false
-    ctx.coverage.push(`${SOURCE_LABELS[source] || source} could not be read. Related checks are incomplete and will be revisited at the next monthly review.`)
+    ctx.coverage.push(`${SOURCE_LABELS[source] || source} could not be read. Related checks are incomplete and will be revisited at the next requested review.`)
     return []
   }
 }
@@ -233,7 +233,11 @@ function alertPathFor(recipient: RiskPerson, subject: RiskPerson, finding: RiskF
   if (finding.category === 'assessment') return '/admin/test-reports'
   return '/admin/risk-alerts'
 }
-async function saveRiskAlert(subject: RiskPerson, recipient: RiskPerson, finding: RiskFinding, now: number) {
+/** Scheduled reviews must prove they still own their chunk in each transaction
+ * that mutates saved results. A retry or a replaced worker cannot publish stale data. */
+export type AssertRiskReviewLease = (tx: FirebaseFirestore.Transaction) => Promise<void>
+
+async function saveRiskAlert(subject: RiskPerson, recipient: RiskPerson, finding: RiskFinding, now: number, assertReviewLease: AssertRiskReviewLease) {
   const id = riskHash(subject.collegeId, subject.uid, recipient.uid, finding.key)
   const ref = db().collection('riskAlerts').doc(id)
   await db().runTransaction(async tx => {
@@ -252,24 +256,12 @@ async function saveRiskAlert(subject: RiskPerson, recipient: RiskPerson, finding
       // alert write (or change inbox order) for an unchanged finding copy.
       if (isDeepStrictEqual(previousContent, next)) return
     }
+    await assertReviewLease(tx)
     tx.set(ref, { ...next, updatedAt: now, checkedAt: now })
     if (notify) tx.create(db().collection('riskPushOutbox').doc(`${id}__${generation}`), { alertId: id, generation, recipientUid: recipient.uid, collegeId: subject.collegeId, status: 'pending', createdAt: now, attempts: 0 })
   })
 }
-export async function refreshRiskSubject(person: RiskPerson, college: CollegeEvidence, now = Date.now()) {
-  const lock = db().collection('riskSubjectLocks').doc(riskHash(person.collegeId, person.uid))
-  const lease = riskHash(String(now), String(Math.random()))
-  await db().runTransaction(async tx => {
-    const old = await tx.get(lock)
-    if (Number(old.data()?.leaseUntil) > Date.now()) throw new HttpsError('resource-exhausted', 'Your records are already being checked. Refresh the inbox shortly.')
-    tx.set(lock, { lease, leaseUntil: Date.now() + 10 * 60_000 })
-  })
-  try { return await refreshRiskSubjectWithLease(person, college, now) }
-  finally {
-    await db().runTransaction(async tx => { const current = await tx.get(lock); if (current.data()?.lease === lease) tx.delete(lock) })
-  }
-}
-async function refreshRiskSubjectWithLease(person: RiskPerson, college: CollegeEvidence, now: number) {
+export async function refreshRiskSubject(person: RiskPerson, college: CollegeEvidence, assertReviewLease: AssertRiskReviewLease, now = Date.now()) {
   const evidence = await collectRiskEvidence(person, college, now)
   const result = buildRiskFindings(evidence)
   evidence.complete = result.complete
@@ -285,20 +277,27 @@ async function refreshRiskSubjectWithLease(person: RiskPerson, college: CollegeE
   // and PUSH time, so a moved/demoted HOD cannot retain access to old copies.
   const previous = await db().collection('riskAlerts').where('subjectUid', '==', person.uid).where('collegeId', '==', person.collegeId).where('state', 'in', ['active', 'unverified']).limit(3001).get()
   if (previous.size > 3000) throw new HttpsError('resource-exhausted', 'Risk history needs archive maintenance before this account can be checked safely.')
-  for (const recipient of recipients) for (const finding of findings) await saveRiskAlert(person, recipient, finding, now)
-  let batch = db().batch()
-  let pending = 0
+  for (const recipient of recipients) for (const finding of findings) await saveRiskAlert(person, recipient, finding, now, assertReviewLease)
+  let pending: Array<{ ref: FirebaseFirestore.DocumentReference; patch: FirebaseFirestore.UpdateData<FirebaseFirestore.DocumentData> }> = []
+  const runRef = db().collection('riskSubjectRuns').doc(riskHash(person.collegeId, person.uid))
+  const run = { collegeId: person.collegeId, subjectUid: person.uid, checkedAt: now, settingsRevision: college.settingsRevision, complete: evidence.complete, coverage: result.coverage, findingCount: result.findings.length }
+  const flush = async (publishRun: boolean) => {
+    await db().runTransaction(async tx => {
+      await assertReviewLease(tx)
+      for (const { ref, patch } of pending) tx.update(ref, patch)
+      if (publishRun) tx.set(runRef, run)
+    })
+    pending = []
+  }
   for (const doc of previous.docs) {
     const old = doc.data()
     if (nextKeys.has(old.key)) continue
     const state = riskReconciliationState(old, nextKeys, evidence.complete, evidence.settings.enabled, now)
     if (old.state === state && old.stale === (state === 'unverified')) continue
-    batch.update(doc.ref, { state, stale: state === 'unverified', checkedAt: now, updatedAt: now, ...(state === 'resolved' ? { resolvedAt: now } : {}) })
-    pending++
-    if (pending >= 400) { await batch.commit(); batch = db().batch(); pending = 0 }
+    pending.push({ ref: doc.ref, patch: { state, stale: state === 'unverified', checkedAt: now, updatedAt: now, ...(state === 'resolved' ? { resolvedAt: now } : {}) } })
+    if (pending.length >= 400) await flush(false)
   }
-  if (pending) await batch.commit()
-  await db().collection('riskSubjectRuns').doc(riskHash(person.collegeId, person.uid)).set({ collegeId: person.collegeId, subjectUid: person.uid, checkedAt: now, settingsRevision: college.settingsRevision, complete: evidence.complete, coverage: result.coverage, findingCount: result.findings.length })
+  await flush(true)
   return { checkedAt: now, findings: result.findings.length, coverage: result.coverage }
 }
 /** Current claims and current subject departments are checked on every inbox

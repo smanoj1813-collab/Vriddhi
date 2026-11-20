@@ -494,6 +494,8 @@ export interface ScheduledTest {
   duration: number
   durationMinutes?: number
   status: 'upcoming' | 'ongoing' | 'completed' | 'scheduled' | 'published' | 'cancelled'
+  /** Lifecycle stored in Firestore; `status` can be derived from the clock. */
+  storedStatus?: string
   description?: string
   visibility?: TestVisibility | string
   accessCode?: string
