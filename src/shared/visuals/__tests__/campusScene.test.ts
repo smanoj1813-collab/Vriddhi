@@ -362,3 +362,23 @@ test('the clock hand is wide enough to see at the size the artwork is drawn', ()
   const width = Math.max(...xs) - Math.min(...xs);
   assert.ok(width >= 2, `the hand has body (was ${width.toFixed(2)} world units)`);
 });
+
+test('the tower hand tracks the minutes, not just the hour', () => {
+  // The first version passed only the integer hour, so the hand jumped in twelve
+  // steps and changing the clock by twenty minutes changed nothing.
+  const tip = (hour: number) => {
+    const points = clockHand(hour, [0, 200, 0], 10)!.flatMap((face) => face.points);
+    return points.reduce((best, point) => {
+      const d = point[0] ** 2 + (point[1] - 200) ** 2;
+      const bestD = best[0] ** 2 + (best[1] - 200) ** 2;
+      return d > bestD ? point : best;
+    }, points[0]);
+  };
+  const at9 = tip(9);
+  const at920 = tip(9 + 20 / 60);
+  const moved = Math.abs(at9[0] - at920[0]) > 0.05 || Math.abs(at9[1] - at920[1]) > 0.05;
+  assert.ok(moved, 'twenty past the hour is a visibly different pose');
+  // And a full twelve hours later it is the same pose: an analog dial cannot
+  // tell morning from evening, which is a property of the design, not a bug.
+  assert.deepEqual(clockHand(9, [0, 200, 0], 10), clockHand(21, [0, 200, 0], 10));
+});

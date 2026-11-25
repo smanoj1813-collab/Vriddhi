@@ -47,14 +47,27 @@ type Phase = 'arriving' | 'idle' | 'manual';
  * dusk by itself. Reading `Date` here rather than inside the engine keeps
  * `buildScene` pure; without `showTime` the campus keeps its daylight pattern.
  */
+/** Reads the clock as a fractional hour, so the tower hand tracks the minutes. */
+function readLocalHour(): number {
+  const now = new Date();
+  return now.getHours() + now.getMinutes() / 60 + now.getSeconds() / 3600;
+}
+
 function useLocalTime(enabled: boolean): LearningTime | undefined {
-  const [hour, setHour] = useState<number | undefined>(() => (enabled ? new Date().getHours() : undefined));
+  const [hour, setHour] = useState<number | undefined>(() => (enabled ? readLocalHour() : undefined));
   useEffect(() => {
     if (!enabled) { setHour(undefined); return; }
-    setHour(new Date().getHours());
-    // Ten minutes: the transition eases over ~an hour, so a finer tick would
-    // repaint identically and only burn timers.
-    const timer = setInterval(() => setHour(new Date().getHours()), 10 * 60 * 1000);
+    setHour(readLocalHour());
+    // Whole hours were too coarse: the hand moved in twelve steps and ignored
+    // the minutes, so changing the clock by a few minutes changed nothing. A
+    // minute tick keeps it honest; the state is a single number, and the scene
+    // only rebuilds when it actually differs.
+    const timer = setInterval(() => {
+      const next = readLocalHour();
+      // Stored rounded to the minute: a sub-minute change would repaint the
+      // whole scene for movement nobody can see.
+      setHour((previous) => (previous !== undefined && Math.floor(previous * 60) === Math.floor(next * 60) ? previous : next));
+    }, 60 * 1000);
     return () => clearInterval(timer);
   }, [enabled]);
   return hour === undefined ? undefined : { hour };
