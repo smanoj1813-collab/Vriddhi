@@ -158,24 +158,29 @@ try {
 
   // Portability, one layer down from the bundler: on a case-insensitive
   // filesystem (Windows, macOS) two modules whose names differ only in casing
-  // are the same file. A `Campus3D.tsx` beside a `campus3d.ts` made
-  // `import Campus3D from './Campus3D'` resolve to the engine instead of the
-  // component, failing with "no default export" — invisible to Linux CI, fatal
-  // for a contributor on Windows. Compare module *stems*, not whole names.
+  // are the same file. This bit twice — a `campus3d.ts` beside `Campus3D.tsx`
+  // made `import Campus3D from './Campus3D'` resolve to the engine ("no default
+  // export"), and `campus3d.test.ts` beside `Campus3D.test.ts` made a Windows
+  // checkout write both specs to one path, corrupting the working tree. Linux
+  // CI cannot see either. Walk all of src so no folder is exempt.
   const MODULE = /\.(mjs|cjs|js|jsx|ts|tsx)$/i;
   const byStem = new Map();
-  for (const dir of ['src/shared/visuals', 'src/shared/visuals/__tests__']) {
-    let names = [];
-    try { names = fs.readdirSync(path.join(root, dir)); } catch { continue; }
-    for (const name of names.filter((entry) => MODULE.test(entry))) {
-      const stem = name.replace(MODULE, '');
-      const key = `${dir}/${stem.toLowerCase()}`;
-      byStem.set(key, [...(byStem.get(key) ?? []), `${dir}/${name}`]);
+  const walk = (dir) => {
+    let entries = [];
+    try { entries = fs.readdirSync(dir, { withFileTypes: true }); } catch { return; }
+    for (const entry of entries) {
+      const full = path.join(dir, entry.name);
+      if (entry.isDirectory()) {
+        if (entry.name !== 'node_modules') walk(full);
+        continue;
+      }
+      if (!MODULE.test(entry.name)) continue;
+      const key = `${path.relative(root, dir)}:${entry.name.replace(MODULE, '').toLowerCase()}`;
+      byStem.set(key, [...(byStem.get(key) ?? []), path.relative(root, full)]);
     }
-  }
-  const collisions = [...byStem.values()]
-    .filter((group) => new Set(group.map((entry) => entry.replace(/^.*\//, ''))).size > 1)
-    .map((group) => group.join(' / '));
+  };
+  walk(path.join(root, 'src'));
+  const collisions = [...byStem.values()].filter((group) => group.length > 1).map((group) => group.join(' / '));
   check('portability: no two modules in one folder differ only in letter case', collisions.length === 0, collisions.join(', '));
 } finally {
   await act(async () => reactRoot.unmount());
