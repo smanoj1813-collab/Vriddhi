@@ -238,13 +238,8 @@ test('reduced motion skips the entrance animation entirely', async () => {
   try {
     const { host, unmount } = await mount();
     try {
-      console.error('DBG A classes:', host.querySelector('.campus3d')?.className);
-      console.error('DBG A arriving:', String(host.querySelector('.campus3d.is-arriving')));
-      console.error('DBG A stage:', String(host.querySelector('.campus3d-stage')));
       assert.ok(host.querySelector('svg.campus3d-svg'), 'the campus still renders, just still');
-      console.error('DBG C', host.querySelectorAll('polygon').length);
       assert.ok(host.querySelectorAll('polygon').length > 200);
-      console.error('DBG D');
     } finally {
       await unmount();
     }
