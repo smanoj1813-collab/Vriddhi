@@ -1,4 +1,5 @@
 import { Suspense, useCallback, useEffect, useState } from 'react';
+import PortalPageEnter from '@/shared/components/PortalPageEnter';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../auth/context/AuthContext';
 import { dashboardPathFor } from '../../auth/roleRoutes';
@@ -120,7 +121,11 @@ export default function StudentLayout() {
       <main className="flex-1 min-w-0 overflow-x-hidden overflow-y-auto pt-[calc(3.5rem+env(safe-area-inset-top))] md:pt-0 pb-[calc(5.75rem+env(safe-area-inset-bottom))] md:pb-12">
         <div className="px-3 py-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
           <Suspense fallback={<PageLoader />}>
-            <Outlet />
+            {/* Keyed on the pathname, so two different routes that happen to
+                share this Suspense boundary still replay the entrance. */}
+            <PortalPageEnter>
+              <Outlet />
+            </PortalPageEnter>
           </Suspense>
         </div>
       </main>

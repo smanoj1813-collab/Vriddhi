@@ -321,6 +321,56 @@ try {
       assert.ok(times[0] * count + (times[1] ?? 0) < 5, decl.toString());
     });
   });
+  check('motion: the portal entrance is one-shot, staggered, and off for reduced motion', () => {
+    const entrance = [];
+    css.walkAtRules('keyframes', (rule) => {
+      if (rule.params.trim() === 'portal-page-enter') entrance.push(rule);
+    });
+    assert.equal(entrance.length, 1, 'portal-page-enter keyframes are missing');
+    let applied = 0;
+    css.walkRules((rule) => {
+      if (!rule.selectors.some((selector) => selector.trim() === '.portal-page-enter > *')) return;
+      rule.walkDecls('animation', (decl) => {
+        // `animation: none` in the reduced-motion block is the intended off switch.
+        if (decl.value === 'none') return;
+        applied += 1;
+        assert.ok(!/infinite/.test(decl.value), decl.toString());
+        const tokens = decl.value.split(/\s+/);
+        const times = tokens.filter((token) => /^\d*\.?\d+s$/.test(token)).map(parseFloat);
+        const count = Number(tokens.find((token) => /^\d+$/.test(token)) ?? 1);
+        assert.equal(count, 1, `the entrance must play once, not ${count} times`);
+        assert.ok(times[0] > 0 && times[0] < 1, `entrance duration ${times[0]}s is not a short one-shot`);
+      });
+    });
+    assert.ok(applied > 0, 'the entrance keyframes are never applied');
+    // The longest element must settle inside five seconds even with its stagger.
+    let slowest = 0;
+    css.walkRules((rule) => {
+      if (!rule.selectors.some((selector) => selector.trim().startsWith('.portal-page-enter >'))) return;
+      rule.walkDecls('animation-delay', (decl) => { slowest = Math.max(slowest, parseFloat(decl.value)); });
+    });
+    assert.ok(slowest < 1, `stagger delay ${slowest}s is too long`);
+    const reduced = new Set();
+    css.walkAtRules('media', (rule) => {
+      if (!/prefers-reduced-motion:\s*reduce/.test(rule.params)) return;
+      rule.walkRules((child) => {
+        if (child.nodes.some((decl) => decl.prop === 'animation' && decl.value === 'none' && decl.important)) {
+          child.selectors.forEach((selector) => reduced.add(selector.trim()));
+        }
+      });
+    });
+    assert.ok(reduced.has('.portal-page-enter > *'), 'reduced motion does not switch the entrance off');
+  });
+
+  check('motion: a test in progress is never wrapped in the entrance', () => {
+    const source = readFileSync(path.join(root, 'src/modules/student/components/StudentLayout.tsx'), 'utf8');
+    const activeTest = source.slice(source.indexOf('if (inActiveTest)'));
+    const branch = activeTest.slice(0, activeTest.indexOf('\n  return ('));
+    assert.ok(branch.includes('<Outlet />'), 'the active-test branch still renders the page');
+    assert.ok(!branch.includes('PortalPageEnter'), 'the active-test surface must not animate');
+    assert.ok(source.includes('PortalPageEnter'), 'normal student pages lost their entrance');
+  });
+
   console.log(`\n${checks}/${checks} student UI render checks passed.`);
 } finally {
   for (const view of views) await view.close();

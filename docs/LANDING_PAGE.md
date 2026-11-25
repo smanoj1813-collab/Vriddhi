@@ -104,8 +104,12 @@ one number:
   arrangement is not simply the daytime one brightened — it looks like a
   caretaker walking the corridors. The transition eases over about an hour at
   each end (`darknessAt`), so a page left open crosses it smoothly.
-- **The tower clock.** Its hand points at the current hour on a normal
-  twelve-hour dial: 12 up, 3 right, 6 down, 9 left.
+- **The tower clock.** Its hand points at the current time on a normal
+  twelve-hour dial: 12 up, 3 right, 6 down, 9 left. It tracks minutes, not just
+  hours, so moving the clock on by twenty minutes visibly moves the hand.
+- **The sky.** A twelve-hour dial necessarily shows 9am and 9pm in the same
+  position, so the sky carries the difference: after dusk the sun becomes a
+  crescent moon. It is the same three circles, so the node count is unchanged.
 
 This costs nothing at runtime, which is the only reason it exists:
 
@@ -114,7 +118,7 @@ This costs nothing at runtime, which is the only reason it exists:
 | Network / assets | none — no image, font, or request |
 | DOM nodes | none — recolours the polygons the idle drift already repaints |
 | Dependencies | none |
-| Bundle | +0.61 kB gzip (measured), landing chunk unchanged |
+| Bundle | +0.76 kB gzip total for time, moon and page entrances (measured), landing chunk unchanged |
 | Animation budget | none — no `animation:` is added, so the five-second rule holds |
 
 Two rules keep it that way, both enforced by `landing-3d.mjs`:
@@ -123,10 +127,10 @@ Two rules keep it that way, both enforced by `landing-3d.mjs`:
    as data, so the scene stays a pure function of its arguments and is
    reproducible in tests. `undefined` means "no opinion" and every window keeps
    the original daytime pattern.
-2. **The component reads the clock once, on a slow interval** — ten minutes,
-   because the transition spans an hour and a finer tick would repaint
-   identically. The drift loop receives the value through a ref so it never
-   resubscribes.
+2. **The component reads the clock once, on a slow interval** — one minute,
+   which is the finest granularity the hand can show; the state is skipped when
+   the minute has not changed, so an idle page does not repaint. The drift loop
+   receives the value through a ref so it never resubscribes.
 
 The clock hand is a five-face prism, deliberately: it replaces a five-face box,
 so supplying a time never changes the model's polygon count (474 at every hour).

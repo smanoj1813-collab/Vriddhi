@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { RotateCcw, Sparkles } from 'lucide-react';
-import { buildScene, fitTransform, makeView, PITCH_FROM_YAW, type LearningTime, type Scene } from './campusScene';
+import { buildScene, darknessAt, fitTransform, makeView, PITCH_FROM_YAW, type LearningTime, type Scene } from './campusScene';
 import './campus3d.css';
 
 /**
@@ -391,7 +391,7 @@ export default function Campus3D({
           <ellipse cx={VIEWBOX.width * 0.52} cy={VIEWBOX.height * 0.74} rx={VIEWBOX.width * 0.42} ry={VIEWBOX.height * 0.2} fill="#DCEBCF" opacity="0.55" />
 
           {/* Sky: behind everything, and never drawn over the building. */}
-          <Sun scene={scene} />
+          <Sun scene={scene} time={time} />
           <g className="campus3d-clouds">
             {scene.billboards.filter((item) => item.art === 'cloud').map((cloud) => (
               <g key={cloud.id} transform={`translate(${cloud.anchor[0]} ${cloud.anchor[1]}) scale(${(cloud.scale * 46).toFixed(2)})`}>
@@ -499,13 +499,27 @@ export default function Campus3D({
 }
 
 /** The sun sits behind the scene; it fades in rather than animating forever. */
-function Sun({ scene }: { scene: Scene }) {
+function Sun({ scene, time }: { scene: Scene; time?: LearningTime }) {
   const sun = scene.billboards.find((item) => item.art === 'sun');
   if (!sun) return null;
   // A soft halo rather than a hard disc: it sits in the upper-left sky, far
   // behind the campus, and must not compete with the building for attention.
   const x = 150;
   const y = 118;
+  // A twelve-hour dial cannot tell 9am from 9pm — that duplication is correct
+  // and deliberate, so the sky carries the difference instead. After dark the
+  // same three shapes become a crescent moon: a cool halo, a pale disc and one
+  // bite of sky, still three circles, so the node count is unchanged.
+  const night = time !== undefined && darknessAt(time.hour) >= 0.5;
+  if (night) {
+    return (
+      <g className="campus3d-sun" transform={`translate(${x} ${y})`}>
+        <circle r={62} fill="#9FB4D2" opacity={0.22} />
+        <circle r={34} fill="#B9C9E0" />
+        <circle r={27} cx={13} cy={-9} fill="#F0F6E9" />
+      </g>
+    );
+  }
   return (
     <g className="campus3d-sun" transform={`translate(${x} ${y})`}>
       <circle r={76} fill="#F4E0A8" opacity={0.3} />

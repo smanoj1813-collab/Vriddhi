@@ -203,6 +203,19 @@ try {
   check('local time: no animation is declared for it', !/animation:[^;]*(dusk|dawn|night|lit|hour)/i.test(css));
   check('local time: no request and no asset', !/fetch\(|https?:\/\//.test(componentSource));
 
+  // A twelve-hour dial shows 9am and 9pm identically on purpose, so the sky has
+  // to carry day versus night. The moon reuses the sun's three circles: same
+  // node count, same cost, no new asset.
+  check('local time: the sky shows a moon after dark, without extra elements', (() => {
+    const night = componentSource.slice(componentSource.indexOf('const night ='), componentSource.indexOf('return (', componentSource.indexOf('const night =')));
+    if (!/darknessAt\(/.test(night)) return false;
+    const sky = componentSource.slice(componentSource.indexOf('function Sun('), componentSource.indexOf('function Student('));
+    // Three circles per branch: day and night must cost the same nodes.
+    const circles = (sky.match(/<circle/g) ?? []).length;
+    return circles === 6;
+  })());
+  check('local time: the moon is drawn, not fetched', !/href=|import .*\.(png|jpg|svg|webp)|https?:\/\//.test(componentSource));
+
 } finally {
   await act(async () => reactRoot.unmount());
   host.remove();
