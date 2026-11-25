@@ -228,6 +228,16 @@ try {
     assert.ok(checked >= 0);
     assert.ok(rules.length >= 1, 'the story grid still declares an art column');
   });
+  check('sign-in header: the language switcher may shrink below its widest option', () => {
+    // A <select> will not shrink below its widest option's min-content width, and
+    // Tamil's label is the widest of the six. At 320px that pushed the control
+    // past the header padding and gave the page a sideways scroll; `min-width: 0`
+    // is what allows it to be squeezed instead.
+    const rule = css.match(/\.auth-header select \{([^}]*)\}/);
+    assert.ok(rule, '.auth-header select is styled');
+    assert.match(rule[1], /min-width:\s*0/, 'the switcher is allowed to shrink');
+    assert.match(rule[1], /max-width:\s*100%/, 'the switcher cannot exceed its box');
+  });
   check('sign-in shell: no data SDK, risk hook, polling or remote illustration dependency', () => {
     const shell = readFileSync(path.join(root, 'src/modules/auth/components/AuthPageLayout.tsx'), 'utf8');
     assert.doesNotMatch(shell, /firebase\/|Firebase\/data|useAcademicRiskAlerts|setInterval|https?:\/\//);
