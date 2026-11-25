@@ -115,7 +115,7 @@
   .auth-eyebrow > span { width: 15px; }
   .auth-story h1 { grid-column: 1; align-self: start; font-size: 28px; letter-spacing: -.8px; line-height: 1.22; }
   .auth-story-description { display: none; }
-  .auth-art { grid-column: 2; grid-row: 1 / 3; margin: 0 -5px 0 0; width: 150px; }
+  .auth-art { grid-column: 2; grid-row: 1 / 3; margin: 0 -5px 0 0; width: 140px; }
   .auth-art-note { display: none; }
   .auth-form-column { max-width: none; }
   .auth-card { padding: 23px 25px 22px; border-radius: 23px; }

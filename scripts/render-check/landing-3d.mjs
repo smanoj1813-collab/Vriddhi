@@ -129,6 +129,23 @@ try {
     'campus3d.css exists but nothing imports it, so the scene ships unstyled');
   check('motion: the scene has a scoped reduced-motion override', /prefers-reduced-motion:\s*reduce/.test(css));
   check('motion: no perpetual CSS animation runs the illustration', !/animation:[^;]*infinite/.test(css));
+  check('motion: every automatic animation ends within five seconds', (() => {
+    // The repo's rule (asserted for the student portal): no infinite CSS
+    // animation, and duration x iteration + delay stays under five seconds.
+    // CI caught a 9s cloud drift and a 5.2s spark loop here; keep it honest.
+    const failures = [];
+    for (const match of css.matchAll(/animation:\s*([^;]+);/g)) {
+      const value = match[1].trim();
+      if (value === 'none') continue;
+      const tokens = value.split(/\s+/);
+      const times = tokens.filter((token) => /^\d*\.?\d+s$/.test(token)).map(parseFloat);
+      const count = Number(tokens.find((token) => /^\d+$/.test(token)) ?? 1);
+      const duration = times[0] ?? 0;
+      const delay = times[1] ?? 0;
+      if (!(duration * count + delay < 5)) failures.push(value);
+    }
+    return failures.length === 0;
+  })(), 'an entrance animation runs longer than five seconds');
   check('motion: the idle drift honours the preference in JavaScript too, not just CSS', /prefers-reduced-motion: reduce/.test(campus) && /reducedMotion/.test(campus));
   check('motion: the drift pauses when the tab is hidden', /visibilitychange/.test(campus));
   check('motion: the drift pauses when the hero is scrolled out of view', /IntersectionObserver/.test(campus));

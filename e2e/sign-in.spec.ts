@@ -29,7 +29,9 @@ for (const { route, other, active, submit } of [
       })
       expect(artBeforeForm).toBe(true)
       // The first thing Tab reaches is still the form, not the illustration.
-      await page.locator('body').click({ position: { x: 2, y: 2 } })
+      // Start from the document root rather than clicking a coordinate: that
+      // point could land on the art or the form and move focus before the Tab.
+      await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur())
       await page.keyboard.press('Tab')
       await expect(page.locator('input#login-email')).toBeFocused()
 
@@ -85,7 +87,7 @@ for (const { route, other, active, submit } of [
       await page.emulateMedia({ reducedMotion: 'reduce' })
       await page.goto(route)
       await expect(page.locator('input[type="email"]')).toBeVisible()
-      await expect(page.locator('.auth-art > svg')).toBeVisible()
+      await expect(page.locator('.auth-art svg.campus3d-svg')).toBeVisible()
       const animations = await page.locator('.auth-page').evaluate(el => el.getAnimations({ subtree: true }).length)
       expect(animations).toBe(0)
     })
@@ -94,17 +96,48 @@ for (const { route, other, active, submit } of [
       await page.emulateMedia({ reducedMotion: 'no-preference' })
       await page.goto(route)
       await expect(page.locator('input[type="email"]')).toBeVisible()
-      const timings = await page.locator('.auth-art').evaluate(el => el.getAnimations({ subtree: true }).map(animation => {
-        const effect = animation.effect!
-        return { iterations: effect.getTiming().iterations, endTime: effect.getComputedTiming().endTime }
-      }))
+
+      // Snapshot the entrance as it happens rather than sampling it cold: it is
+      // driven by requestAnimationFrame and may already have finished by the
+      // time we look, which would leave only the (intentionally unbounded)
+      // ambient sway on screen.
+      await page.evaluate(() => {
+        const art = document.querySelector('.auth-art')!
+        const seen: { iterations: number; endTime: number }[] = []
+        ;(window as any).__greetingTimings = seen
+        const collect = () => {
+          for (const animation of art.getAnimations({ subtree: true })) {
+            const effect = animation.effect as KeyframeEffect | null
+            if (!effect) continue
+            seen.push({
+              iterations: effect.getTiming().iterations as number,
+              endTime: Number(effect.getComputedTiming().endTime),
+            })
+          }
+        }
+        collect()
+        // Re-read on every frame for the entrance's duration.
+        let frames = 0
+        const tick = () => { collect(); if (++frames < 90) requestAnimationFrame(tick) }
+        requestAnimationFrame(tick)
+      })
+      await page.waitForTimeout(1800)
+      const timings = await page.evaluate(() => (window as any).__greetingTimings as { iterations: number; endTime: number }[])
       expect(timings.length).toBeGreaterThan(0)
-      for (const timing of timings) {
-        expect(Number.isFinite(timing.iterations)).toBe(true)
+
+      // Every CSS entrance belongs to the greeting: finite, and over in under
+      // five seconds.
+      const greetings = timings.filter((timing) => Number.isFinite(timing.iterations))
+      expect(greetings.length).toBeGreaterThan(0)
+      for (const timing of greetings) {
         expect(Number(timing.endTime)).toBeLessThanOrEqual(5000)
       }
-      await page.waitForTimeout(4700)
-      const running = await page.locator('.auth-art').evaluate(el => el.getAnimations({ subtree: true }).filter(animation => animation.playState === 'running').length)
+      // Nothing infinite is left running once the greeting has settled.
+      const running = await page.locator('.auth-art').evaluate(el =>
+        el.getAnimations({ subtree: true })
+          .filter((animation) => animation.playState === 'running')
+          .filter((animation) => Number.isFinite((animation.effect as KeyframeEffect).getTiming().iterations as number))
+          .length)
       expect(running).toBe(0)
     })
   })
