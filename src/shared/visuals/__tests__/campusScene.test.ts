@@ -21,6 +21,7 @@ import {
   buildScene,
   geometryBounds,
   type View,
+  PITCH_FROM_YAW,
   blendHex,
   clockHand,
   darknessAt,
@@ -332,4 +333,32 @@ test('blendHex is clamped and returns its endpoints exactly', () => {
   // Comma-separated rgb(), matching shade(): older SVG rasterisers reject the
   // CSS Color 4 space-separated form.
   assert.match(blendHex('#000000', '#ffffff', 0.5), /^rgb\(\d+, \d+, \d+\)$/);
+});
+
+test('the tower hand is never painted underneath its dial', () => {
+  // The bug this guards: the dial is drawn as a solid, the hand as a thinner
+  // prism, and the painter's sort compares average depth. With the hand too far
+  // back the dial painted over it and the clock read as a blank gold disc —
+  // invisible to every test that only checked the hand's own geometry.
+  const bad: string[] = [];
+  for (let yaw = -1.05; yaw <= 1.05; yaw += 0.05) {
+    const scene = buildScene(makeView(yaw, PITCH_FROM_YAW + yaw * 0.02), { hour: 22 });
+    const hand = scene.solids.find((solid) => solid.id === 'tower-hand');
+    const dial = scene.solids.find((solid) => solid.id === 'tower-dial');
+    assert.ok(hand && dial, 'both the hand and the dial are present');
+    const handIndex = scene.solids.indexOf(hand!);
+    const dialIndex = scene.solids.indexOf(dial!);
+    // Later index paints last, i.e. on top. The hand must come *after* the dial.
+    if (handIndex < dialIndex) bad.push(`yaw ${yaw.toFixed(2)}`);
+  }
+  assert.deepEqual(bad, [], 'the hand paints after the dial, so it stays visible');
+});
+
+test('the clock hand is wide enough to see at the size the artwork is drawn', () => {
+  // Two world units of width project to well under a pixel at the hero's scale,
+  // so a thin hand is invisible even when it is correctly layered.
+  const face = clockHand(12, [0, 214, -15.6], 13)![0];
+  const xs = face.points.map((point) => point[0]);
+  const width = Math.max(...xs) - Math.min(...xs);
+  assert.ok(width >= 2, `the hand has body (was ${width.toFixed(2)} world units)`);
 });

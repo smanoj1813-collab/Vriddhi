@@ -168,7 +168,10 @@ export function clockHand(hour: number | undefined, centre: Vec3, radius: number
   const perpY = dirX;
   const [cx, cy, cz] = centre;
   const reach = radius * 0.72;
-  const half = Math.max(0.6, radius * 0.075);
+  // Wide enough to read: at seven world units per dial radius this projects to
+  // roughly two viewBox units across, and anything thinner vanishes into the
+  // dial's stroke at the size the artwork is actually shown.
+  const half = Math.max(1.1, radius * 0.13);
   const tipX = cx + dirX * reach;
   const tipY = cy + dirY * reach;
 
@@ -460,6 +463,43 @@ export function frontDisc(centre: Vec3, radius: number, options: BoxOptions | st
 }
 
 /**
+ * A short cylinder lying along z, for anything that must sort correctly against
+ * other solids. `frontDisc` is a single flat decal: its depth is one number, so
+ * against a prism (whose depth is the average of five faces) the painter's sort
+ * compares unlike things and can put the decal in front. A dial with a hand on
+ * it needs to be a solid.
+ */
+export function prismDisc(centre: Vec3, radius: number, thickness: number, options: BoxOptions | string, segments = 18): WorldFace[] {
+  const opts: BoxOptions = typeof options === 'string' ? { color: options } : options;
+  const [cx, cy, cz] = centre;
+  const z0 = cz - thickness / 2;
+  const z1 = cz + thickness / 2;
+  const ring = (z: number): Vec3[] => {
+    const points: Vec3[] = [];
+    for (let index = 0; index < segments; index += 1) {
+      const angle = (index / segments) * Math.PI * 2;
+      points.push([cx + Math.cos(angle) * radius, cy + Math.sin(angle) * radius, z]);
+    }
+    return points;
+  };
+  const faces: WorldFace[] = [
+    { points: ring(z1), base: opts.color, stroke: opts.stroke },
+    { points: [...ring(z0)].reverse(), base: opts.color, stroke: opts.stroke },
+  ];
+  // The rim, so the disc reads as having an edge when the view turns.
+  const front = ring(z1);
+  const back = ring(z0);
+  for (let index = 0; index < segments; index += 1) {
+    const next = (index + 1) % segments;
+    faces.push({
+      points: [front[index], front[next], back[next], back[index]],
+      base: opts.stroke ?? opts.color,
+    });
+  }
+  return faces;
+}
+
+/**
  * A low-poly sphere: an apex, three rings and a base. Rounder than an
  * octahedron at a face count a phone can re-sort on every drag frame.
  */
@@ -637,7 +677,10 @@ export function campusShapes(time?: LearningTime): WorldShape[] {
   add('tower-dial', frontDisc([0, 214, -16.4], 14, { color: PALETTE.goldPale, stroke: PALETTE.gold }, 22), 'tower');
   // The static hand the drawing shipped with, replaced by a real one that points
   // at the given hour when a time is supplied.
-  const hand = clockHand(time?.hour, [0, 214, -15.8], 13);
+  // The hand sits just in front of the dial's face. Both are now prisms, so the
+  // painter's sort compares like with like; a flat decal dial would sort on a
+  // single depth and could paint over the hand at some yaw angles.
+  const hand = clockHand(time?.hour, [0, 214, -15.6], 13);
   if (hand) add('tower-hand', hand, 'tower');
   else add('tower-dial-hand', boxes([0, 214, -15.8], { w: 2.4, h: 9, d: 1 }, { color: PALETTE.green }), 'tower');
   add('flagpole', boxes([0, 275, -40], { w: 4, h: 46, d: 4 }, { color: PALETTE.trunk }), 'tower');
@@ -834,7 +877,20 @@ export function buildScene(view: View = makeView(), time?: LearningTime): Scene 
   }
 
   // Painter's algorithm across shapes; ground discs are drawn first, by hand.
+  // One exception, and it must be explicit: the tower hand belongs on top of its
+  // dial. Both sit within a couple of world units of each other, so their average
+  // depths nearly tie and the sort can put the dial last at some yaw angles —
+  // which painted the hand out of existence and left a blank gold disc. Ties are
+  // broken here instead of being tuned away with magic offsets.
   const sortedSolids = sortByDepth(solids);
+  const handAt = sortedSolids.findIndex((solid) => solid.id === 'tower-hand');
+  if (handAt !== -1) {
+    const dialAt = sortedSolids.findIndex((solid) => solid.id === 'tower-dial');
+    if (dialAt > handAt) {
+      const [hand] = sortedSolids.splice(handAt, 1);
+      sortedSolids.splice(sortedSolids.findIndex((solid) => solid.id === 'tower-dial') + 1, 0, hand);
+    }
+  }
 
   return {
     ground,
