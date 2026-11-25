@@ -1,4 +1,4 @@
-// src/shared/visuals/__tests__/campus3d.test.ts
+// src/shared/visuals/__tests__/campusScene.test.ts
 //
 // The 3D campus hero is a hand-rolled projection (no three.js, no WebGL
 // library), so the maths that decides where every vertex lands is plain
@@ -21,7 +21,7 @@ import {
   buildScene,
   geometryBounds,
   type View,
-} from '../campus3d';
+} from '../campusScene';
 
 const ORIGIN: [number, number, number] = [0, 0, 0];
 const DEG = Math.PI / 180;

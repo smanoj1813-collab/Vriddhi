@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { RotateCcw, Sparkles } from 'lucide-react';
-import { buildScene, fitTransform, makeView, PITCH_FROM_YAW, type Scene } from './campus3d';
+import { buildScene, fitTransform, makeView, PITCH_FROM_YAW, type Scene } from './campusScene';
 import './campus3d.css';
 
 /**
@@ -13,7 +13,7 @@ import './campus3d.css';
  * transforms and plain SVG paths.
  *
  * Feel: the scene is rendered *live* while you drag it. Projection, lighting,
- * depth tinting and far-to-near sorting are all pure functions (see campus3d.ts),
+ * depth tinting and far-to-near sorting are all pure functions (see campusScene.ts),
  * so each pointer move is a cheap, deterministic rebuild rather than a
  * pre-baked animation. A slow idle drift keeps it gently alive, and it stops
  * the moment the user interacts, leaves reduced-motion on, or the tab hides.

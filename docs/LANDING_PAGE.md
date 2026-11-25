@@ -8,7 +8,7 @@ resolved by `dashboardPathFor(user.role)`.
 
 - An interactive **3D campus hero** in place of the old flat illustration. The
   scene is a hand-built projection of real boxes, pyramids and low-poly foliage
-  (`src/shared/visuals/campus3d.ts`): faces are lit from a single direction,
+  (`src/shared/visuals/campusScene.ts`): faces are lit from a single direction,
   tinted by depth, and sorted far-to-near each frame. Visitors can drag it, use
   the rotate/reset buttons, or arrow-key the angle slider to look around the
   buildings. The login page reuses the same component.
@@ -88,7 +88,7 @@ unchanged, but are not linked from the landing page.
 - `src/modules/landing/LandingPage.tsx` — page, navigation, FAQs, and interactions
 - `src/modules/landing/LandingAdvantage.tsx` — why Vriddhi, graph, mobile preview,
   customization preview, and AI sections
-- `src/shared/visuals/campus3d.ts` — the 3D engine: projection, lighting, depth
+- `src/shared/visuals/campusScene.ts` — the 3D engine: projection, lighting, depth
   sorting, the campus geometry, and the view-fitting maths (unit tested)
 - `src/shared/visuals/Campus3D.tsx` — the hero component: drag, keyboard and
   button controls, idle drift, and motion preferences

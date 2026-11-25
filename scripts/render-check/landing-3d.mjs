@@ -85,7 +85,7 @@ try {
 
   // ── The cost claims, verified rather than asserted ──────────────────────
   const campus = fs.readFileSync(path.join(root, 'src/shared/visuals/Campus3D.tsx'), 'utf8');
-  const engine = fs.readFileSync(path.join(root, 'src/shared/visuals/campus3d.ts'), 'utf8');
+  const engine = fs.readFileSync(path.join(root, 'src/shared/visuals/campusScene.ts'), 'utf8');
   const css = fs.readFileSync(path.join(root, 'src/shared/visuals/campus3d.css'), 'utf8');
   const all = campus + engine + css;
 
@@ -155,6 +155,28 @@ try {
   // itself would talk over a screen-reader user who is reading the headline.
   const heroLive = host.querySelectorAll('.landing-hero [aria-live], .landing-hero [role="status"]');
   check('a11y: the animated hero announces nothing by itself', heroLive.length === 0, `${heroLive.length} live region(s) inside the hero`);
+
+  // Portability, one layer down from the bundler: on a case-insensitive
+  // filesystem (Windows, macOS) two modules whose names differ only in casing
+  // are the same file. A `Campus3D.tsx` beside a `campus3d.ts` made
+  // `import Campus3D from './Campus3D'` resolve to the engine instead of the
+  // component, failing with "no default export" — invisible to Linux CI, fatal
+  // for a contributor on Windows. Compare module *stems*, not whole names.
+  const MODULE = /\.(mjs|cjs|js|jsx|ts|tsx)$/i;
+  const byStem = new Map();
+  for (const dir of ['src/shared/visuals', 'src/shared/visuals/__tests__']) {
+    let names = [];
+    try { names = fs.readdirSync(path.join(root, dir)); } catch { continue; }
+    for (const name of names.filter((entry) => MODULE.test(entry))) {
+      const stem = name.replace(MODULE, '');
+      const key = `${dir}/${stem.toLowerCase()}`;
+      byStem.set(key, [...(byStem.get(key) ?? []), `${dir}/${name}`]);
+    }
+  }
+  const collisions = [...byStem.values()]
+    .filter((group) => new Set(group.map((entry) => entry.replace(/^.*\//, ''))).size > 1)
+    .map((group) => group.join(' / '));
+  check('portability: no two modules in one folder differ only in letter case', collisions.length === 0, collisions.join(', '));
 } finally {
   await act(async () => reactRoot.unmount());
   host.remove();

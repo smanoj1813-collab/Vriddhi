@@ -1,4 +1,10 @@
-// src/shared/visuals/campus3d.ts
+// src/shared/visuals/campusScene.ts
+//
+// Named `campusScene`, not `campus3d`: on a case-insensitive filesystem
+// (Windows, macOS) a `campus3d.ts` beside `Campus3D.tsx` is reachable as the
+// component, so `import Campus3D from './Campus3D'` resolves the engine first
+// and fails with "no default export". Keeping the two names distinct beyond
+// casing makes the import unambiguous on every platform.
 //
 // A tiny hand-rolled 3D engine for the public landing / sign-in hero.
 //

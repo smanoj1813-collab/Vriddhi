@@ -3,7 +3,7 @@
 // Mounts the real component in jsdom and drives the interactions a visitor
 // actually uses: dragging, the rotation buttons, the keyboard slider, and the
 // reduced-motion / hidden-tab paths that decide whether it animates at all.
-// The geometry maths is covered separately in campus3d.test.ts; this file is
+// The geometry maths is covered separately in campusScene.test.ts; this file is
 // about behaviour and the accessibility contract.
 import test from 'node:test';
 import assert from 'node:assert/strict';
