@@ -21,6 +21,9 @@ import {
   buildScene,
   geometryBounds,
   type View,
+  blendHex,
+  clockHand,
+  darknessAt,
 } from '../campusScene';
 
 const ORIGIN: [number, number, number] = [0, 0, 0];
@@ -220,4 +223,113 @@ test('face identity is stable across yaw, which the imperative repaint relies on
   const orderA = a.solids.map((solid) => solid.id);
   const orderC = c.solids.map((solid) => solid.id);
   assert.notDeepEqual(orderA, orderC, 'depth sorting reorders solids as the model turns');
+});
+
+// ── The campus keeps the visitor's local time ─────────────────────────────
+// The caller supplies the hour, so the scene stays a pure function: these
+// assertions are the contract that stops someone reaching for `Date.now()`
+// inside the engine later.
+
+test('daylight vs after dark: darkness is 0 by day and 1 overnight, eased in between', () => {
+  for (const hour of [7, 9, 12, 15, 17]) {
+    assert.equal(darknessAt(hour), 0, `${hour}:00 is full daylight`);
+  }
+  for (const hour of [19, 21, 23, 0, 3, 5]) {
+    assert.equal(darknessAt(hour), 1, `${hour}:00 is after dark`);
+  }
+  // The transition is a ramp, not a step: 18:00 sits part way up.
+  const dusk = darknessAt(18);
+  assert.ok(dusk > 0 && dusk < 1, `dusk eases (got ${dusk})`);
+  const dawn = darknessAt(6);
+  assert.ok(dawn > 0 && dawn < 1, `dawn eases (got ${dawn})`);
+  // Monotonic through each ramp, so a page left open never flickers.
+  assert.ok(darknessAt(17.6) <= darknessAt(18) && darknessAt(18) <= darknessAt(18.6));
+});
+
+test('darkness ignores nonsense instead of inventing a time of day', () => {
+  for (const bad of [undefined, Number.NaN, Number.POSITIVE_INFINITY]) {
+    assert.equal(darknessAt(bad), 0, `${String(bad)} falls back to daylight`);
+  }
+  // Hours outside 0-24 wrap rather than clamping to midnight.
+  assert.equal(darknessAt(25), darknessAt(1));
+  assert.equal(darknessAt(-1), darknessAt(23));
+});
+
+test('the same hour always produces the identical scene, at every rotation', () => {
+  // The purity contract. If this ever fails, something started reading a clock
+  // inside buildScene and the illustration stops being reproducible.
+  assert.deepEqual(buildScene(makeView(-0.5), { hour: 21 }), buildScene(makeView(-0.5), { hour: 21 }));
+  assert.deepEqual(buildScene(makeView(0.4)), buildScene(makeView(0.4)), 'and with no time at all');
+});
+
+test('the tower hand reads like a real clock: twelve up, three right, six down', () => {
+  const centre: [number, number, number] = [0, 200, 0];
+  // Read the farthest point from the pivot rather than an array index: the hand
+  // is a prism and the tip moves between vertices as it turns.
+  const tip = (hour: number) => {
+    const points = clockHand(hour, centre, 10)!.flatMap((face) => face.points);
+    return points.reduce((best, point) => {
+      const d = (point[0] - centre[0]) ** 2 + (point[1] - centre[1]) ** 2;
+      const bestD = (best[0] - centre[0]) ** 2 + (best[1] - centre[1]) ** 2;
+      return d > bestD ? point : best;
+    }, points[0]);
+  };
+  const up = tip(12);
+  assert.ok(up[1] > 205, `twelve points up (y was ${up[1]})`);
+  assert.ok(Math.abs(up[0]) < 1, 'and straight up, not tilted');
+  const three = tip(3);
+  assert.ok(three[0] > 5, `three points right (x was ${three[0]})`);
+  assert.ok(Math.abs(three[1] - 200) < 1, 'and lies flat');
+  const six = tip(6);
+  assert.ok(six[1] < 195, 'six points down');
+  const nine = tip(9);
+  assert.ok(nine[0] < -5, 'nine points left');
+  // A twelve-hour dial, so AM and PM show the same hand.
+  assert.deepEqual(tip(3), tip(15));
+  assert.ok(Math.abs(tip(3)[0] - 200) > 5, 'three oclock sits at ninety degrees, not forty-five');
+});
+
+test('the tower hand keeps its identity and count as the hour changes', () => {
+  // The imperative repaint addresses faces by id, so a hand that appeared and
+  // vanished would leave a stale polygon behind.
+  const idsAt = (hour: number) => buildScene(makeView(-0.5), { hour }).solids.map((solid) => solid.id).sort();
+  assert.deepEqual(idsAt(3), idsAt(15));
+  assert.ok(idsAt(3).includes('tower-hand'));
+  // Five faces, same as the box it replaces: a time-dependant hand must not
+  // change the model's polygon count just because it is night.
+  const handFaces = (hour: number) =>
+    buildScene(makeView(-0.5), { hour }).solids.find((solid) => solid.id === 'tower-hand')!.faces.length;
+  assert.equal(handFaces(3), 5);
+  // With no time the still frame falls back to the static hand the drawing had.
+  const noTime = buildScene(makeView(-0.5)).solids.map((solid) => solid.id);
+  assert.ok(noTime.includes('tower-dial-hand'));
+  assert.ok(!noTime.includes('tower-hand'));
+});
+
+test('windows recolour after dark without gaining or losing any', () => {
+  // `ground` is where the lawn discs go; folding in only `solids` would miss
+  // them and make a colour change look like a count change.
+  const countFaces = (hour?: number) => {
+    const scene = buildScene(makeView(-0.5), hour === undefined ? undefined : { hour });
+    return [...scene.solids.flatMap((solid) => solid.faces), ...scene.ground].length;
+  };
+  assert.equal(countFaces(12), countFaces(22), 'the same faces, lit differently');
+  assert.equal(countFaces(12), countFaces());
+  // And the lit arrangement genuinely differs: a caretaker walks the corridors,
+  // so the evening pattern is not the daytime one simply brightened.
+  const fills = (hour: number) =>
+    buildScene(makeView(-0.5), { hour }).solids
+      .filter((solid) => solid.id.includes('windows'))
+      .flatMap((solid) => solid.faces.map((face) => face.fill));
+  assert.notDeepEqual(fills(12), fills(22));
+});
+
+test('blendHex is clamped and returns its endpoints exactly', () => {
+  assert.equal(blendHex('#000000', '#ffffff', 0), '#000000');
+  assert.equal(blendHex('#000000', '#ffffff', 1), '#ffffff');
+  assert.equal(blendHex('#000000', '#ffffff', -2), '#000000');
+  assert.equal(blendHex('#000000', '#ffffff', 5), '#ffffff');
+  // Comma-separated rgb(), matching shade(): older SVG rasterisers reject the
+  // CSS Color 4 space-separated form.
+  assert.match(blendHex('#000000', '#ffffff', 0.5), /^rgb\(\d+, \d+, \d+\)$/);
 });

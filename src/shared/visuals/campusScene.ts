@@ -89,6 +89,132 @@ export type Scene = {
   links: Link[];
 };
 
+/**
+ * The campus keeps the visitor's local time.
+ *
+ * Nothing here reads a clock: `LearningTime` is an hour of the day (0-23.99) that
+ * the caller supplies, so `buildScene` stays a pure function of its arguments and
+ * the scene graph is reproducible in tests. `undefined` means "the engine has no
+ * opinion" — every window keeps the fixed pattern below.
+ *
+ * Two effects come out of the same number, and neither costs a thing: the drift
+ * repaint already rewrites every polygon's `fill` each frame, so a time-varying
+ * colour is the arithmetic it was doing anyway. No new nodes, no new attributes,
+ * no network, no animation, no dependency.
+ */
+export interface LearningTime {
+  /** Local hour of day, 0 <= hour < 24. Minutes may be fractional. */
+  hour: number;
+}
+
+/** Windows that glow warm after dusk, and the glass they read as by day. */
+const LIT_AFTER_DARK = '#F5D9A0';
+/** Dusk and dawn windows, when the light is low but the lamps are not on. */
+const LIT_GOLDEN = '#E4E0BA';
+
+/**
+ * How "dark" it is: 0 in full daylight, 1 once the campus is lit only by lamps.
+ * Two smoothsteps rather than a step function, so the transition eases over
+ * roughly an hour at each end instead of switching in one frame.
+ */
+export function darknessAt(hour: number | undefined): number {
+  if (hour === undefined || !Number.isFinite(hour)) return 0;
+  const h = ((hour % 24) + 24) % 24;
+  // Dusk and dawn are separate windows that never overlap, so they add: one
+  // ramps up after 17:30, the other down before 07:00. Multiplying them (as a
+  // first attempt did) yields 0 at every hour, because whichever term is 1 the
+  // other is 0.
+  const dusk = smoothstep(17.5, 19, h);
+  const dawn = 1 - smoothstep(5.5, 7, h);
+  return clamp(dusk + dawn, 0, 1);
+}
+
+/**
+ * Which windows are lit. During the day this is the fixed pattern the scene
+ * shipped with; after dusk a second pattern fades in, so the building lights up
+ * in a different arrangement than it appears by day — like a caretaker walking
+ * the corridors rather than every lamp switching at once.
+ */
+function windowFill(row: number, column: number, darkness: number, options: { dayLit?: string; dayUnlit?: string } = {}): string {
+  const dayLit = options.dayLit ?? PALETTE.windowLit;
+  const dayUnlit = options.dayUnlit ?? PALETTE.window;
+  const afternoon = (row + column) % 3 === 1;
+  const evening = (row * 2 + column) % 3 !== 0;
+  const night = blendHex(dayLit, LIT_AFTER_DARK, darkness);
+  const twilight = blendHex(dayUnlit, LIT_GOLDEN, darkness);
+  if (!afternoon) return evening ? night : twilight;
+  // A window already bright by day brightens first as the light goes.
+  return evening ? night : blendHex(dayLit, LIT_GOLDEN, darkness);
+}
+
+/**
+ * The tower clock's minute hand, or null when the caller gave no time.
+ *
+ * The dial is drawn as a front-facing decal, so the hand is too: a quad from the
+ * centre out along a bearing. Noon points straight up, midnight straight down —
+ * the same convention the drawing already implies.
+ */
+export function clockHand(hour: number | undefined, centre: Vec3, radius: number): WorldFace[] | null {
+  if (hour === undefined || !Number.isFinite(hour)) return null;
+  const h = ((hour % 24) + 24) % 24;
+  // A real tower clock reads twelve hours: 12 at the top, 6 at the bottom, 3 to
+  // the right. (A 24-hour dial, where each hour is 15 degrees, puts 3 o'clock at
+  // 45 degrees — technically valid, but nobody reads a campus clock that way.)
+  const angle = ((h % 12) / 12) * Math.PI * 2;
+  const dirX = Math.sin(angle);
+  const dirY = Math.cos(angle);
+  // The perpendicular, for the narrow base either side of the pivot.
+  const perpX = -dirY;
+  const perpY = dirX;
+  const [cx, cy, cz] = centre;
+  const reach = radius * 0.72;
+  const half = Math.max(0.6, radius * 0.075);
+  const tipX = cx + dirX * reach;
+  const tipY = cy + dirY * reach;
+
+  // A real prism rather than a flat quad: the static hand this replaces is a box
+  // (five faces), and dropping to one face would silently shrink the model's
+  // polygon count just because a visitor happened to load the page after dark.
+  const thickness = 1.4;
+  const z0 = cz - thickness / 2;
+  const z1 = cz + thickness / 2;
+  const face = (points: Vec3[]): WorldFace => ({ points, base: PALETTE.green });
+  return [
+    // The two long sides, front and back.
+    face([
+      [cx + perpX * half, cy + perpY * half, z1],
+      [tipX + perpX * half * 0.4, tipY + perpY * half * 0.4, z1],
+      [tipX - perpX * half * 0.4, tipY - perpY * half * 0.4, z1],
+      [cx - perpX * half, cy - perpY * half, z1],
+    ]),
+    face([
+      [cx + perpX * half, cy + perpY * half, z0],
+      [tipX + perpX * half * 0.4, tipY + perpY * half * 0.4, z0],
+      [tipX - perpX * half * 0.4, tipY - perpY * half * 0.4, z0],
+      [cx - perpX * half, cy - perpY * half, z0],
+    ]),
+    // The two flanks along the shaft, then the tip.
+    face([
+      [cx + perpX * half, cy + perpY * half, z0],
+      [cx + perpX * half, cy + perpY * half, z1],
+      [tipX + perpX * half * 0.4, tipY + perpY * half * 0.4, z1],
+      [tipX + perpX * half * 0.4, tipY + perpY * half * 0.4, z0],
+    ]),
+    face([
+      [cx - perpX * half, cy - perpY * half, z0],
+      [cx - perpX * half, cy - perpY * half, z1],
+      [tipX - perpX * half * 0.4, tipY - perpY * half * 0.4, z1],
+      [tipX - perpX * half * 0.4, tipY - perpY * half * 0.4, z0],
+    ]),
+    face([
+      [tipX + perpX * half * 0.4, tipY + perpY * half * 0.4, z0],
+      [tipX - perpX * half * 0.4, tipY - perpY * half * 0.4, z0],
+      [tipX - perpX * half * 0.4, tipY - perpY * half * 0.4, z1],
+      [tipX + perpX * half * 0.4, tipY + perpY * half * 0.4, z1],
+    ]),
+  ];
+}
+
 /** Camera stand-off. Far enough back that no geometry crosses the eye plane. */
 export const CAMERA_DISTANCE = 1100;
 /** Pitch follows yaw slightly, so looking around also lifts the view. */
@@ -200,6 +326,23 @@ export function haze(hex: string, depth: number): string {
 }
 
 export const finish = (hex: string, ratio: number, depth: number) => haze(shade(hex, ratio), depth);
+
+/** Classic smoothstep: 0 below `edge0`, 1 above `edge1`, eased between. */
+function smoothstep(edge0: number, edge1: number, value: number): number {
+  if (edge0 === edge1) return value < edge0 ? 0 : 1;
+  const t = clamp((value - edge0) / (edge1 - edge0), 0, 1);
+  return t * t * (3 - 2 * t);
+}
+
+/** Linear mix of two hex colours in sRGB. `t` is clamped to 0-1. */
+export function blendHex(from: string, to: string, t: number): string {
+  const amount = clamp(Number.isFinite(t) ? t : 0, 0, 1);
+  if (amount === 0) return from;
+  if (amount === 1) return to;
+  const a = parseColour(from);
+  const b = parseColour(to);
+  return toRgb(a.map((channel, index) => channel + (b[index] - channel) * amount));
+}
 
 export interface BoxOptions {
   /** Base colour for all faces before lighting. */
@@ -409,7 +552,7 @@ const PALETTE = {
   shadow: '#274E3D',
 } as const;
 
-function windowSlots(x: number, z0: number, width: number, height: number, columns: number, rows: number): WorldFace[] {
+function windowSlots(x: number, z0: number, width: number, height: number, columns: number, rows: number, darkness = 0): WorldFace[] {
   const faces: WorldFace[] = [];
   const colGap = width / columns;
   const rowGap = height / (rows + 1);
@@ -417,7 +560,6 @@ function windowSlots(x: number, z0: number, width: number, height: number, colum
     for (let column = 0; column < columns; column += 1) {
       const cx = x - width / 2 + colGap * (column + 0.5);
       const cy = rowGap * row;
-      const lit = (row + column) % 3 === 1;
       faces.push({
         points: [
           [cx - colGap * 0.26, cy - rowGap * 0.28, z0],
@@ -425,7 +567,7 @@ function windowSlots(x: number, z0: number, width: number, height: number, colum
           [cx + colGap * 0.26, cy + rowGap * 0.28, z0],
           [cx - colGap * 0.26, cy + rowGap * 0.28, z0],
         ],
-        base: lit ? PALETTE.windowLit : PALETTE.window,
+        base: windowFill(row, column, darkness),
       });
     }
   }
@@ -437,7 +579,8 @@ function windowSlots(x: number, z0: number, width: number, height: number, colum
  * Kept as plain data so the projection and the composition can be read (and
  * tested) apart from each other.
  */
-export function campusShapes(): WorldShape[] {
+export function campusShapes(time?: LearningTime): WorldShape[] {
+  const darkness = darknessAt(time?.hour);
   const shapes: WorldShape[] = [];
   const add = (id: string, faces: WorldFace[], group?: string) => shapes.push({ id, group, faces });
 
@@ -460,11 +603,11 @@ export function campusShapes(): WorldShape[] {
   add('wing-left', boxes([-238, 0, -46], { w: 96, h: 96, d: 86 }, { color: PALETTE.cream }), 'wing-left');
   add('wing-left-plinth', boxes([-238, 0, -46], { w: 106, h: 6, d: 96 }, { color: PALETTE.stone }), 'wing-left');
   add('wing-left-roof', boxes([-238, 96, -46], { w: 110, h: 10, d: 100 }, { color: PALETTE.roofLight }), 'wing-left');
-  add('wing-left-windows', windowSlots(-238, 7, 74, 70, 3, 2), 'wing-left');
+  add('wing-left-windows', windowSlots(-238, 7, 74, 70, 3, 2, darkness), 'wing-left');
   add('wing-right', boxes([238, 0, -46], { w: 96, h: 86, d: 86 }, { color: PALETTE.stone }), 'wing-right');
   add('wing-right-plinth', boxes([238, 0, -46], { w: 106, h: 6, d: 96 }, { color: PALETTE.sage }), 'wing-right');
   add('wing-right-roof', boxes([238, 86, -46], { w: 110, h: 10, d: 100 }, { color: PALETTE.roof }), 'wing-right');
-  add('wing-right-windows', windowSlots(238, 7, 74, 60, 3, 2), 'wing-right');
+  add('wing-right-windows', windowSlots(238, 7, 74, 60, 3, 2, darkness), 'wing-right');
 
   // ── Main block: body, cornice, pitched roof, clock tower ───────────────
   add('main-body', boxes([0, 0, -40], { w: 236, h: 126, d: 138 }, { color: PALETTE.paper }), 'main');
@@ -474,9 +617,9 @@ export function campusShapes(): WorldShape[] {
   add(
     'main-windows',
     [
-      ...windowSlots(-62, 29, 44, 96, 2, 3),
-      ...windowSlots(62, 29, 44, 96, 2, 3),
-      ...windowSlots(0, 29, 40, 96, 1, 2),
+      ...windowSlots(-62, 29, 44, 96, 2, 3, darkness),
+      ...windowSlots(62, 29, 44, 96, 2, 3, darkness),
+      ...windowSlots(0, 29, 40, 96, 1, 2, darkness),
     ],
     'main',
   );
@@ -492,7 +635,11 @@ export function campusShapes(): WorldShape[] {
   add('tower', boxes([0, 187, -40], { w: 46, h: 54, d: 46 }, { color: PALETTE.paper }), 'tower');
   add('tower-cap', pyramid([0, 241, -40], { w: 56, h: 34, d: 56 }, { color: PALETTE.roof }), 'tower');
   add('tower-dial', frontDisc([0, 214, -16.4], 14, { color: PALETTE.goldPale, stroke: PALETTE.gold }, 22), 'tower');
-  add('tower-dial-hand', boxes([0, 214, -15.8], { w: 2.4, h: 9, d: 1 }, { color: PALETTE.green }), 'tower');
+  // The static hand the drawing shipped with, replaced by a real one that points
+  // at the given hour when a time is supplied.
+  const hand = clockHand(time?.hour, [0, 214, -15.8], 13);
+  if (hand) add('tower-hand', hand, 'tower');
+  else add('tower-dial-hand', boxes([0, 214, -15.8], { w: 2.4, h: 9, d: 1 }, { color: PALETTE.green }), 'tower');
   add('flagpole', boxes([0, 275, -40], { w: 4, h: 46, d: 4 }, { color: PALETTE.trunk }), 'tower');
   add('flag', panel([15, 308, -40], { w: 30, h: 18 }, { color: PALETTE.gold }), 'tower');
 
@@ -657,11 +804,11 @@ function sceneLinks(view: View): Link[] {
  * Builds the drawable scene for one camera view: everything projected, lit,
  * hazed, and ordered far-to-near.
  */
-export function buildScene(view: View = makeView()): Scene {
+export function buildScene(view: View = makeView(), time?: LearningTime): Scene {
   const solids: Solid[] = [];
   let ground: ScreenFace[] = [];
 
-  for (const shape of campusShapes()) {
+  for (const shape of campusShapes(time)) {
     const faces: ScreenFace[] = [];
     let depthTotal = 0;
     for (const face of shape.faces) {

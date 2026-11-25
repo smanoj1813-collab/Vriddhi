@@ -89,9 +89,49 @@ unchanged, but are not linked from the landing page.
 - `src/modules/landing/LandingAdvantage.tsx` — why Vriddhi, graph, mobile preview,
   customization preview, and AI sections
 - `src/shared/visuals/campusScene.ts` — the 3D engine: projection, lighting, depth
-  sorting, the campus geometry, and the view-fitting maths (unit tested)
+  sorting, the campus geometry, the view-fitting maths, and the local-clock
+  lighting model (all unit tested)
 - `src/shared/visuals/Campus3D.tsx` — the hero component: drag, keyboard and
   button controls, idle drift, and motion preferences
+
+### The campus keeps the visitor's local time
+
+The illustration reads the visitor's clock, so a page opened at 22:00 shows a
+lit building and one opened at noon shows daylight glass. Two effects, both from
+one number:
+
+- **Windows.** After dusk a second lit pattern fades in, so the evening
+  arrangement is not simply the daytime one brightened — it looks like a
+  caretaker walking the corridors. The transition eases over about an hour at
+  each end (`darknessAt`), so a page left open crosses it smoothly.
+- **The tower clock.** Its hand points at the current hour on a normal
+  twelve-hour dial: 12 up, 3 right, 6 down, 9 left.
+
+This costs nothing at runtime, which is the only reason it exists:
+
+| Cost | Impact |
+| --- | --- |
+| Network / assets | none — no image, font, or request |
+| DOM nodes | none — recolours the polygons the idle drift already repaints |
+| Dependencies | none |
+| Bundle | +0.61 kB gzip (measured), landing chunk unchanged |
+| Animation budget | none — no `animation:` is added, so the five-second rule holds |
+
+Two rules keep it that way, both enforced by `landing-3d.mjs`:
+
+1. **The engine never reads a clock.** `buildScene(view, time?)` takes the hour
+   as data, so the scene stays a pure function of its arguments and is
+   reproducible in tests. `undefined` means "no opinion" and every window keeps
+   the original daytime pattern.
+2. **The component reads the clock once, on a slow interval** — ten minutes,
+   because the transition spans an hour and a finer tick would repaint
+   identically. The drift loop receives the value through a ref so it never
+   resubscribes.
+
+The clock hand is a five-face prism, deliberately: it replaces a five-face box,
+so supplying a time never changes the model's polygon count (474 at every hour).
+Under `prefers-reduced-motion` the drift never starts and the lit state is simply
+computed once at mount — a correct still frame, not motion.
 - `src/shared/visuals/campus3d.css` — scoped styles, reduced-motion override
 - `src/modules/landing/DrilldownDialog.tsx` — accessible detail dialog
 - `src/modules/landing/DrilldownScene.tsx` — decorative animated dialog vignettes

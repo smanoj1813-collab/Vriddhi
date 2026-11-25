@@ -182,6 +182,27 @@ try {
   walk(path.join(root, 'src'));
   const collisions = [...byStem.values()].filter((group) => group.length > 1).map((group) => group.join(' / '));
   check('portability: no two modules in one folder differ only in letter case', collisions.length === 0, collisions.join(', '));
+
+  // The campus keeps the visitor's local time. Three things must hold for that to
+  // stay free: the engine never reads a clock itself (so it stays pure and
+  // testable), the component asks the browser once rather than per frame, and
+  // nothing new animates or loads. Note: these are flat checks — calling
+  // `check()` inside another `check()` makes the inner call pass its condition
+  // as the *label* and always report success.
+  const stripComments = (source) =>
+    source.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
+  const engineSource = stripComments(fs.readFileSync(path.join(root, 'src/shared/visuals/campusScene.ts'), 'utf8'));
+  const clockAccess = ['new Date(', 'Date.now(', 'performance.now(', 'getHours('].filter((pattern) => engineSource.includes(pattern));
+  check('local time: no clock access inside the pure scene engine', clockAccess.length === 0, clockAccess.join(', '));
+
+  const componentSource = stripComments(campus);
+  check('local time: the hour comes from a timed effect, not a render', /setInterval/.test(componentSource) && /getHours/.test(componentSource));
+  const driftBody = componentSource.slice(componentSource.indexOf('const tick = (now: number)'));
+  check('local time: the drift loop never reads a clock', !/getHours|new Date\(/.test(driftBody.slice(0, 1200)));
+
+  check('local time: no animation is declared for it', !/animation:[^;]*(dusk|dawn|night|lit|hour)/i.test(css));
+  check('local time: no request and no asset', !/fetch\(|https?:\/\//.test(componentSource));
+
 } finally {
   await act(async () => reactRoot.unmount());
   host.remove();

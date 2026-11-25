@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { RotateCcw, Sparkles } from 'lucide-react';
-import { buildScene, fitTransform, makeView, PITCH_FROM_YAW, type Scene } from './campusScene';
+import { buildScene, fitTransform, makeView, PITCH_FROM_YAW, type LearningTime, type Scene } from './campusScene';
 import './campus3d.css';
 
 /**
@@ -42,9 +42,27 @@ type Phase = 'arriving' | 'idle' | 'manual';
  * far-to-near, and that order changes as the model turns. Painting by position
  * would smear one building's colour onto another mid-rotation.
  */
-function paintScene(group: SVGGElement | null, yaw: number) {
+/**
+ * The visitor's local hour, re-read on a slow timer so a page left open crosses
+ * dusk by itself. Reading `Date` here rather than inside the engine keeps
+ * `buildScene` pure; without `showTime` the campus keeps its daylight pattern.
+ */
+function useLocalTime(enabled: boolean): LearningTime | undefined {
+  const [hour, setHour] = useState<number | undefined>(() => (enabled ? new Date().getHours() : undefined));
+  useEffect(() => {
+    if (!enabled) { setHour(undefined); return; }
+    setHour(new Date().getHours());
+    // Ten minutes: the transition eases over ~an hour, so a finer tick would
+    // repaint identically and only burn timers.
+    const timer = setInterval(() => setHour(new Date().getHours()), 10 * 60 * 1000);
+    return () => clearInterval(timer);
+  }, [enabled]);
+  return hour === undefined ? undefined : { hour };
+}
+
+function paintScene(group: SVGGElement | null, yaw: number, time?: LearningTime) {
   if (!group) return;
-  const scene = buildScene(makeView(yaw, PITCH_FROM_YAW + yaw * 0.02));
+  const scene = buildScene(makeView(yaw, PITCH_FROM_YAW + yaw * 0.02), time);
   const paint = (key: string, face: { points: [number, number][]; fill: string; stroke?: string }) => {
     const node = group.querySelector<SVGPolygonElement>(`polygon[data-face="${key}"]`);
     if (!node) return;
@@ -96,6 +114,7 @@ export default function Campus3D({
   className = '',
   showControls = true,
   autoDrift = true,
+  showTime = true,
 }: {
   className?: string;
   /**
@@ -106,12 +125,23 @@ export default function Campus3D({
    */
   showControls?: boolean;
   autoDrift?: boolean;
+  /**
+   * Lights the windows and sets the tower hand from the visitor's local clock.
+   * Off by default? No: it is the cheapest part of the illustration (recolouring
+   * faces the drift already repaints), so it is on wherever the rest is.
+   */
+  showTime?: boolean;
 }) {
   const [yaw, setYaw] = useState(REST_YAW);
   const [phase, setPhase] = useState<Phase>('arriving');
   const [dragging, setDragging] = useState(false);
   const reducedMotion = useReducedMotion();
   const [visible, setVisible] = useState(true);
+  const time = useLocalTime(showTime);
+  // The drift loop must not resubscribe every ten-minute tick, so hand it the
+  // latest clock reading through a ref. `useMemo` above still repaints the tree.
+  const timeRef = useRef(time);
+  timeRef.current = time;
   const frame = useRef<number | null>(null);
   const lastTime = useRef<number | null>(null);
   // The idle drift repaints straight into the DOM instead of going through
@@ -152,7 +182,12 @@ export default function Campus3D({
     moveTo(next);
   }, [moveTo]);
 
-  const scene: Scene = useMemo(() => buildScene(makeView(yaw, PITCH_FROM_YAW + yaw * 0.02)), [yaw]);
+  const scene: Scene = useMemo(
+    () => buildScene(makeView(yaw, PITCH_FROM_YAW + yaw * 0.02), time),
+    // Rebuilding on the hour is the point: the windows recolor and the tower
+    // hand moves. `time` only changes on the ten-minute tick.
+    [yaw, time],
+  );
   // One fixed fit for every reachable angle (see fitTransform): the model never
   // zooms mid-drag, and nothing clips at the extremes.
   const fit = useMemo(
@@ -233,7 +268,7 @@ export default function Campus3D({
         centre + IDLE_RANGE,
       );
       yawRef.current = next;
-      paintScene(sceneGroupRef.current, next);
+      paintScene(sceneGroupRef.current, next, timeRef.current);
       frame.current = requestAnimationFrame(tick);
     };
     frame.current = requestAnimationFrame(tick);
