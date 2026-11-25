@@ -62,7 +62,16 @@ try {
     const fixture = reset();
     const view = await mount(portal);
     check(`${portal}: shared illustrated layout, labelled inputs and the correct active portal`, () => {
-      assert.ok(view.q('.auth-art[aria-hidden="true"] svg[focusable="false"]'));
+      // The 3D campus is labelled for assistive tech rather than aria-hidden.
+      // The floating greeting card beside it stays decorative.
+      assert.ok(view.q('.auth-art svg.campus3d-svg[role="img"]'));
+      assert.ok(view.q('.auth-art [role="group"][aria-label]'));
+      // But it must not compete with the form: no rotation buttons, and no tab
+      // stop before the email field someone came here to fill in.
+      const art = view.q('.auth-art');
+      assert.equal(art.querySelector('.campus3d-controls'), null, 'rotation controls belong on the landing page, not behind a sign-in form');
+      assert.equal(art.querySelector('[role="group"]').getAttribute('tabindex'), '-1');
+      assert.equal(view.q('.auth-art-note').getAttribute('aria-hidden'), 'true');
       assert.equal(view.q('nav [aria-current="page"]').textContent, portal === 'staff' ? 'Staff & Faculty' : 'Student Portal');
       assert.equal(view.q('nav a').getAttribute('href'), portal === 'staff' ? '/student/login' : '/login');
       for (const input of view.all('input')) assert.ok(view.q(`label[for="${input.id}"]`));
@@ -189,6 +198,14 @@ try {
     assert.match(css, /prefers-reduced-motion:\s*reduce/);
     assert.doesNotMatch(css, /animation:[^;]*infinite/);
     assert.match(css, /\.auth-page \*.*animation: none !important/);
+    // The 3D campus must honour reduced motion too, and its continuous rotation
+    // is driven by requestAnimationFrame in JS, which the CSS override cannot
+    // reach — so the component has to check the media query itself.
+    const campusCss = readFileSync(path.join(root, 'src/shared/visuals/campus3d.css'), 'utf8');
+    assert.doesNotMatch(campusCss, /animation:[^;]*infinite/);
+    assert.match(campusCss, /prefers-reduced-motion:\s*reduce/);
+    const campus = readFileSync(path.join(root, 'src/shared/visuals/Campus3D.tsx'), 'utf8');
+    assert.match(campus, /prefers-reduced-motion: reduce/);
   });
   check('sign-in shell: no data SDK, risk hook, polling or remote illustration dependency', () => {
     const shell = readFileSync(path.join(root, 'src/modules/auth/components/AuthPageLayout.tsx'), 'utf8');

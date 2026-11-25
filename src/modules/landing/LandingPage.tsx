@@ -7,7 +7,7 @@ import {
 } from 'lucide-react';
 import VriddhiLogo from '@/shared/components/VriddhiLogo';
 import { ROLE_ICONS } from './roleIcons';
-import CampusIllustration from './CampusIllustration';
+import Campus3D from '@/shared/visuals/Campus3D';
 import DrilldownDialog from './DrilldownDialog';
 import { AiSection, CustomizationSection, MobileViewSection, WhyVriddhiSection } from './LandingAdvantage';
 import type { DrilldownSelection } from './drilldowns';
@@ -178,11 +178,11 @@ export default function LandingPage() {
               </div>
               <div className="landing-hero-note"><ShieldCheck size={17} aria-hidden="true" /><span>Role-based access. A connected experience.</span></div>
             </div>
-            <div className="landing-hero-art">
-              <CampusIllustration />
+            <div className="landing-hero-art landing-hero-art-3d">
+              <Campus3D />
               <div className="landing-art-badge landing-art-badge-top" aria-hidden="true"><span><CheckCheck size={20} /></span><div>Everything, together.<strong>One connected campus</strong></div></div>
               <div className="landing-art-badge landing-art-badge-bottom" aria-hidden="true"><span><GraduationCap size={23} /></span><div>Built for learning.<strong>Designed for growth.</strong></div></div>
-              <span className="landing-art-caption" aria-hidden="true">A little more connected. A lot more possible.</span>
+              <span className="landing-art-caption" aria-hidden="true">Drag the campus — a little more connected, a lot more possible.</span>
             </div>
           </div>
           <div className="landing-container landing-hero-bottom"><span>LESS FRICTION. MORE FORWARD.</span><a href="#platform" aria-label="Discover the platform"><ArrowDown size={17} aria-hidden="true" /></a><span>YOUR COLLEGE, IN SYNC.</span></div>

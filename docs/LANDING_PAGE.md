@@ -6,11 +6,23 @@ resolved by `dashboardPathFor(user.role)`.
 
 ## What is included
 
-- A locally served, original SVG campus illustration (no external image dependency),
-  rendered inline with waving student figures, a bouncing book, and animated
-  feature/role icons. Greetings finish automatically; hover and keyboard focus
-  replay icon reactions. There is no pause/play control, and
-  `prefers-reduced-motion` disables the motion.
+- An interactive **3D campus hero** in place of the old flat illustration. The
+  scene is a hand-built projection of real boxes, pyramids and low-poly foliage
+  (`src/shared/visuals/campus3d.ts`): faces are lit from a single direction,
+  tinted by depth, and sorted far-to-near each frame. Visitors can drag it, use
+  the rotate/reset buttons, or arrow-key the angle slider to look around the
+  buildings. The login page reuses the same component.
+  - **No new runtime cost.** There is no three.js, no WebGL context, no CDN,
+    no texture or model download and no paid rendering service: the geometry is
+    code that ships in the existing bundle (~4 kB gzipped), drawn with the SVG
+    primitives the page already used. Idle drift repaints in place rather than
+    re-rendering the React tree, and pauses when the tab is hidden or the hero
+    scrolls away.
+  - **Accessible and honest about motion.** The stage is a labelled, focusable
+    group with a bounded `role="slider"`; the drawing itself carries an
+    `aria-label`. `prefers-reduced-motion` is honoured both in CSS and in the
+    JavaScript that drives the rotation, and is tracked live rather than read
+    once at mount.
 - Platform highlights, responsive navigation, FAQs, and an upskilling section.
 - A human, everyday-workflow comparison of disconnected tools versus Vriddhi,
   with a static effort graph. The graph is explicitly **illustrative, not
@@ -76,7 +88,11 @@ unchanged, but are not linked from the landing page.
 - `src/modules/landing/LandingPage.tsx` — page, navigation, FAQs, and interactions
 - `src/modules/landing/LandingAdvantage.tsx` — why Vriddhi, graph, mobile preview,
   customization preview, and AI sections
-- `src/modules/landing/CampusIllustration.tsx` — inline animated campus figures
+- `src/shared/visuals/campus3d.ts` — the 3D engine: projection, lighting, depth
+  sorting, the campus geometry, and the view-fitting maths (unit tested)
+- `src/shared/visuals/Campus3D.tsx` — the hero component: drag, keyboard and
+  button controls, idle drift, and motion preferences
+- `src/shared/visuals/campus3d.css` — scoped styles, reduced-motion override
 - `src/modules/landing/DrilldownDialog.tsx` — accessible detail dialog
 - `src/modules/landing/DrilldownScene.tsx` — decorative animated dialog vignettes
 - `src/modules/landing/drilldownVisuals.ts` — per-dialog scene/highlight/step icons
@@ -94,10 +110,16 @@ unchanged, but are not linked from the landing page.
 
 ```sh
 npx tsc --noEmit
-node --import tsx --test src/modules/landing/roles.test.ts src/modules/landing/drilldowns.test.ts src/modules/landing/drilldownVisuals.test.ts
+npm run test:unit          # includes the 3D engine and component tests
+npm run test:render:landing # the hero, its a11y contract, and the cost claims
 npm run test:e2e
 npm run build
 ```
+
+The unit tests cover the projection maths with no browser, and
+`scripts/render-check/landing-3d.mjs` mounts the real page to assert that the
+hero is genuine geometry, keyboard operable, motion-safe, free of any runtime
+network/package dependency, and confined to the two public sign-in surfaces.
 
 The browser suite supplies placeholder Firebase values through its existing
 Playwright configuration. It checks the public page and sign-in navigation,

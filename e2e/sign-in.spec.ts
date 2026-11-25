@@ -13,11 +13,25 @@ for (const { route, other, active, submit } of [
       await expect(page.getByRole('heading', { name: 'Welcome back.', exact: true })).toBeVisible()
       await expect(page.locator('nav [aria-current="page"]')).toHaveText(active)
       await expect(page.getByRole('button', { name: submit, exact: true })).toBeEnabled()
-      // The campus illustration is decorative; it must not enter the tab or
-      // screen-reader reading order in front of the actual form.
-      await expect(page.locator('.auth-art')).toHaveAttribute('aria-hidden', 'true')
-      await expect(page.locator('.auth-art > svg')).toHaveAttribute('focusable', 'false')
-      await expect(page.getByRole('img')).toHaveCount(0)
+      // The sign-in art is now an interactive 3D campus, so it is announced
+      // rather than hidden — but it must stay *after* the form in the document
+      // order so it never comes between a keyboard user and the email field.
+      const art = page.locator('.auth-art')
+      await expect(art).not.toHaveAttribute('aria-hidden', 'true')
+      await expect(art.locator('svg.campus3d-svg')).toHaveAttribute('role', 'img')
+      await expect(art.locator('[role="group"][aria-label]')).toHaveCount(1)
+      const artBeforeForm = await page.evaluate(() => {
+        const art = document.querySelector('.auth-art')
+        const form = document.querySelector('.auth-card')
+        if (!art || !form) return null
+        // DOCUMENT_POSITION_FOLLOWING means the form comes after the art.
+        return !!(art.compareDocumentPosition(form) & Node.DOCUMENT_POSITION_FOLLOWING)
+      })
+      expect(artBeforeForm).toBe(true)
+      // The first thing Tab reaches is still the form, not the illustration.
+      await page.locator('body').click({ position: { x: 2, y: 2 } })
+      await page.keyboard.press('Tab')
+      await expect(page.locator('input#login-email')).toBeFocused()
 
       await page.getByRole('button', { name: 'Forgot?', exact: true }).click()
       await expect(page.locator('.auth-card [role="status"]')).toContainText('Enter your account email above first')

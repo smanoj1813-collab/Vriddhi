@@ -1,8 +1,9 @@
 // scripts/raw-asset-loader.mjs
 //
-// Legacy (Node < 22.15) ESM loader implementing Vite's `?raw` import suffix.
-// Registered by ./raw-asset-hooks.mjs, which prefers the synchronous
-// `module.registerHooks` API when the running Node has it.
+// Legacy (Node < 22.15) ESM loader implementing what Vite does for free and
+// plain Node cannot: the `?raw` import suffix, and side-effect stylesheet
+// imports (`import './thing.css'`). Registered by ./raw-asset-hooks.mjs, which
+// prefers the synchronous `module.registerHooks` API when Node has it.
 //
 // Kept separate because the two APIs are not interchangeable: `register()` runs
 // these hooks on a loader thread where only the async `load` form is supported,
@@ -11,8 +12,15 @@
 import { readFile } from 'node:fs/promises';
 
 const RAW_QUERY = /\?raw$/;
+const STYLESHEET = /\.css$/;
 
 export async function resolve(specifier, context, nextResolve) {
+  if (STYLESHEET.test(specifier)) {
+    // A distinct synthetic URL per stylesheet, so the module cache keeps them
+    // separate. The content is irrelevant: only the side effect matters, and
+    // injecting styles is Vite's job.
+    return { url: `vriddhi-css:${specifier}`, format: 'module', shortCircuit: true };
+  }
   if (!RAW_QUERY.test(specifier)) return nextResolve(specifier, context);
 
   const clean = specifier.replace(RAW_QUERY, '');
@@ -24,6 +32,9 @@ export async function resolve(specifier, context, nextResolve) {
 }
 
 export async function load(url, context, nextLoad) {
+  if (url.startsWith('vriddhi-css:')) {
+    return { format: 'module', shortCircuit: true, source: 'export default {};' };
+  }
   if (!url.endsWith('?raw')) return nextLoad(url, context);
   const source = await readFile(new URL(url.replace(/\?raw$/, '')), 'utf8');
   return {

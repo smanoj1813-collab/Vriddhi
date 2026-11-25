@@ -1,0 +1,131 @@
+/* Shared 3D hero for the public landing page and the sign-in shell.
+   Everything here is local SVG + CSS: no texture, font, image or script is
+   fetched at runtime, so the illustration adds nothing to hosting cost. */
+
+.campus3d {
+  position: relative;
+  width: 100%;
+  isolation: isolate;
+}
+
+/* The stage holds the perspective transform (lift on hover) and the pointer
+   surface. `touch-action: pan-y` keeps vertical page scrolling natural while
+   letting horizontal drags rotate the model. */
+.campus3d-stage {
+  position: relative;
+  border-radius: 22px;
+  overflow: hidden;
+  cursor: grab;
+  touch-action: pan-y;
+  perspective: 1400px;
+  transform-style: preserve-3d;
+  -webkit-user-select: none;
+  user-select: none;
+  transition: transform .55s cubic-bezier(.22, .68, .28, 1);
+  outline: none;
+  /* Promote to its own layer so hover/drag lift never triggers layout. */
+  will-change: transform;
+}
+.campus3d-stage:focus-visible { outline: 3px solid #b58a31; outline-offset: 4px; }
+.campus3d.is-dragging .campus3d-stage { cursor: grabbing; }
+.campus3d-svg { display: block; width: 100%; height: auto; }
+
+/* Entrance lift: the whole scene arrives tilted and settles flat. The rotateX
+   gives the flat SVG a genuine sense of volume for the first second, then it
+   disappears so text beside it never looks warped. */
+.campus3d.is-arriving .campus3d-stage { transform: rotateX(7deg) scale(.985); }
+.campus3d-stage:hover { transform: translateY(-3px) rotateX(1.4deg); }
+.campus3d.is-dragging .campus3d-stage:hover { transform: none; }
+
+.campus3d-sun { transform-box: fill-box; transform-origin: center; animation: campus3d-sun-rise 2.4s cubic-bezier(.2, .8, .3, 1) both; }
+.campus3d-clouds { animation: campus3d-cloud-drift 9s ease-in-out 1 both; }
+.campus3d-sparks path { animation: campus3d-spark 2.6s ease-in-out 2 both; transform-box: fill-box; transform-origin: center; }
+.campus3d-link { animation: campus3d-flow 2.4s ease-in-out 1 both; }
+.campus3d-wave { transform-box: fill-box; transform-origin: 10% 90%; animation: campus3d-wave 3.6s ease-in-out 1 both; }
+.campus3d-svg polygon { transition: fill .12s linear; }
+
+@keyframes campus3d-sun-rise { from { opacity: 0; transform: scale(.7); } to { opacity: 1; transform: scale(1); } }
+@keyframes campus3d-cloud-drift { 0%, 100% { transform: translateX(0); } 55% { transform: translateX(16px); } }
+@keyframes campus3d-spark { 0%, 100% { opacity: .5; transform: scale(.9); } 50% { opacity: 1; transform: scale(1.18); } }
+@keyframes campus3d-flow { from { stroke-dashoffset: 26; opacity: .3; } to { stroke-dashoffset: 0; opacity: .9; } }
+@keyframes campus3d-wave { 0%, 100% { transform: rotate(0); } 18%, 60%, 92% { transform: rotate(-16deg); } 38%, 78% { transform: rotate(-6deg); } }
+
+/* ── Controls ─────────────────────────────────────────────────────────── */
+.campus3d-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px 14px;
+  margin-top: 12px;
+  padding-inline: 2px;
+}
+.campus3d-hint { display: inline-flex; align-items: center; gap: 7px; font-size: 11px; font-weight: 600; letter-spacing: .3px; color: #6C7F6E; }
+.campus3d-hint svg { color: #A5853C; flex-shrink: 0; }
+.campus3d-buttons { display: flex; align-items: center; gap: 7px; }
+.campus3d-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-width: 32px;
+  min-height: 32px;
+  padding: 0 8px;
+  border: 1px solid #D9E3D6;
+  border-radius: 9px;
+  background: #FFFFFF;
+  color: #43624F;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background .18s, border-color .18s, transform .18s;
+}
+.campus3d-btn:hover { background: #EFF5E9; border-color: #B4C8B2; }
+.campus3d-btn:active { transform: translateY(1px); }
+.campus3d-btn-reset { padding-inline: 10px 12px; }
+.campus3d-reset-icon { transform: rotate(-40deg); }
+.campus3d-dial {
+  position: relative;
+  width: clamp(74px, 12vw, 112px);
+  height: 8px;
+  border-radius: 99px;
+  background: #E4EBDD;
+  overflow: hidden;
+  cursor: pointer;
+}
+.campus3d-dial:focus-visible { outline: 3px solid #20846c; outline-offset: 4px; }
+.campus3d-dial-fill { position: absolute; inset-block: 0; left: 0; border-radius: 99px; background: linear-gradient(90deg, #A9CBAE, #176B53); transition: width .16s linear; }
+
+/* ── Reduced motion ───────────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .campus3d *,
+  .campus3d *::before,
+  .campus3d *::after { animation: none !important; transition: none !important; }
+  .campus3d-stage,
+  .campus3d.is-arriving .campus3d-stage,
+  .campus3d-stage:hover { transform: none; }
+}
+
+/* ── Dark sign-in shell ───────────────────────────────────────────────── */
+.dark .campus3d-hint { color: #A4B9AD; }
+.dark .campus3d-hint svg { color: #D8BE83; }
+.dark .campus3d-btn { background: #1B2E28; border-color: #33473D; color: #CFE2D6; }
+.dark .campus3d-btn:hover { background: #24392F; border-color: #47614F; }
+.dark .campus3d-dial { background: #2A3E35; }
+.dark .campus3d-dial-fill { background: linear-gradient(90deg, #4F8F79, #A2D5B8); }
+.dark .campus3d-stage { box-shadow: 0 18px 50px -28px rgba(0, 0, 0, .8); }
+
+/* ── Compact ──────────────────────────────────────────────────────────── */
+@media (max-width: 760px) {
+  .campus3d-stage { border-radius: 16px; }
+  .campus3d-controls { justify-content: center; gap: 8px; }
+  .campus3d-hint { font-size: 10px; order: 2; }
+  .campus3d-buttons { order: 1; }
+  .campus3d-btn-reset span { display: none; }
+  .campus3d-btn-reset { padding-inline: 8px; }
+}
+
+/* Snapshot/animation tests and print: hold the composed pose, no motion. */
+@media print {
+  .campus3d-controls { display: none; }
+}
