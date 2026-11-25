@@ -132,7 +132,7 @@
   .auth-content { padding-inline: 16px; }
   .auth-story { grid-template-columns: minmax(0, 1fr) 105px; }
   .auth-story h1 { font-size: 26px; }
-  .auth-art { width: 120px; }
+  .auth-art { width: 100%; max-width: 120px; justify-self: end; }
   .auth-card { padding-inline: 20px; }
   .auth-portal { font-size: 10px; gap: 5px; }
 }

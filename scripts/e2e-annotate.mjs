@@ -53,8 +53,19 @@ if (!failures.length) process.exit(0)
 const lines = ['### Browser smoke tests failed', '']
 for (const f of failures) {
   const first = f.error.split('\n').find((l) => l.trim()) ?? f.state
-  lines.push(`- **${f.title}** — ${f.state}: ${first.slice(0, 300)}`)
-  console.log(`::error title=Playwright::${f.title} — ${first.slice(0, 400)}`)
+  // The first line is usually just "expect(received).toBe(expected)". The next
+  // few carry the actual values, which is the only thing that makes a failure
+  // diagnosable when the log is unreachable — include them.
+  const detail = f.error
+    .split('\n')
+    .slice(0, 14)
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .filter((line) => !/^\^?\s*at |^Call log|^\s*$/.test(line))
+    .slice(0, 6)
+    .join(' | ')
+  lines.push(`- **${f.title}** — ${f.state}: ${detail.slice(0, 900)}`)
+  console.log(`::error title=Playwright::${f.title} — ${detail.slice(0, 900)}`)
 }
 if (process.env.GITHUB_STEP_SUMMARY) {
   appendFileSync(process.env.GITHUB_STEP_SUMMARY, lines.join('\n') + '\n')

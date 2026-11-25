@@ -31,8 +31,9 @@ for (const { route, other, active, submit } of [
         return !!(art.compareDocumentPosition(form) & Node.DOCUMENT_POSITION_FOLLOWING)
       })
       expect(artBeforeForm).toBe(true)
-      // And the form stays reachable and first-tab-focusable among the fields.
-      const email = page.locator('input#login-email')
+      // And the form stays reachable: its email field can take focus.
+      // The portals use different ids, so address it by type.
+      const email = page.locator('input[type="email"]')
       await email.focus()
       await expect(email).toBeFocused()
 
@@ -77,8 +78,26 @@ for (const { route, other, active, submit } of [
       for (const language of ['en', 'hi', 'kn', 'ta', 'te', 'ml']) {
         await switcher.selectOption(language)
         await expect(page.locator('html')).toHaveAttribute('data-language', language)
-        const sizes = await page.evaluate(() => ({ width: innerWidth, content: document.documentElement.scrollWidth }))
-        expect(sizes.content, `${language} on 320 px`).toBeLessThanOrEqual(sizes.width + 2)
+        // Name the offender. An annotation only carries the first error line, so
+        // "ta on 320 px" alone is not actionable — report what actually sticks
+        // out past the viewport's right edge.
+        const sizes = await page.evaluate(() => {
+          const limit = 320 + 2
+          const offenders: string[] = []
+          for (const element of Array.from(document.querySelectorAll('body *'))) {
+            const box = element.getBoundingClientRect()
+            if (box.width === 0 || box.height === 0) continue
+            if (box.right <= limit) continue
+            const name = element.tagName.toLowerCase()
+            const id = element.id ? `#${element.id}` : ''
+            const cls = typeof element.className === 'string' && element.className
+              ? `.${element.className.trim().split(/\s+/).join('.')}`
+              : ''
+            offenders.push(`${name}${id}${cls} right=${Math.round(box.right)} w=${Math.round(box.width)}`)
+          }
+          return { width: innerWidth, content: document.documentElement.scrollWidth, offenders: offenders.slice(0, 3) }
+        })
+        expect(sizes.content, `${language} on 320 px: ${sizes.offenders.join(' ; ') || 'no element past the edge'}`).toBeLessThanOrEqual(sizes.width + 2)
         await expect(page.locator('input[type="email"]')).toBeVisible()
         await expect(page.locator('button[type="submit"]')).toBeVisible()
       }
@@ -133,16 +152,30 @@ for (const { route, other, active, submit } of [
       for (const timing of greetings) {
         expect(Number(timing.endTime)).toBeLessThanOrEqual(5000)
       }
-      // Nothing from the greeting is still running once it has settled. The
-      // scene's ambient sway is intentionally unbounded and stops under
-      // reduced motion (covered by the neighbouring test), so this looks
-      // specifically at finite animations rather than requiring a silent page.
-      const running = await page.locator('.auth-art').evaluate(el =>
+      // And it does settle: once the budget has elapsed no CSS animation inside
+      // the illustration is still running. Poll rather than sleeping a fixed
+      // amount so a slow CI box cannot race the assertion.
+      await page.waitForFunction(() => {
+        const art = document.querySelector('.auth-art')
+        if (!art) return false
+        return art.getAnimations({ subtree: true }).every((animation) => {
+          const timing = (animation.effect as KeyframeEffect | null)?.getComputedTiming()
+          // Unbounded iterations are the scene's reduced-motion-aware ambient
+          // sway, which is covered by its own test; every other animation must
+          // have finished (its absolute start + duration is in the past).
+          if (!timing || !Number.isFinite(timing.iterations)) return true
+          const started = Number(animation.startTime)
+          if (!Number.isFinite(started)) return false
+          return animation.playState === 'finished'
+            || started + Number(timing.endTime) <= Number(document.timeline.currentTime) + 50
+        })
+      }, undefined, { timeout: 8000 })
+      const stillRunning = await page.locator('.auth-art').evaluate((el) =>
         el.getAnimations({ subtree: true })
           .filter((animation) => animation.playState === 'running')
-          .filter((animation) => Number.isFinite((animation.effect as KeyframeEffect).getTiming().iterations as number))
-          .map((animation) => (animation as any).animationName ?? 'unnamed'))
-      expect(running).toEqual([])
+          .map((animation) => (animation.effect as KeyframeEffect | null)?.getComputedTiming().iterations ?? 1)
+          .filter((iterations) => Number.isFinite(iterations)))
+      expect(stillRunning).toEqual([])
     })
   })
 }

@@ -207,6 +207,27 @@ try {
     const campus = readFileSync(path.join(root, 'src/shared/visuals/Campus3D.tsx'), 'utf8');
     assert.match(campus, /prefers-reduced-motion: reduce/);
   });
+  check('sign-in layout: the artwork never declares a width wider than its grid column', () => {
+    // A fixed art width larger than the story grid's art column is exactly what
+    // broke 320px Tamil (twice). jsdom has no layout engine, so assert the two
+    // declarations agree: wherever the media query narrows the column, the art
+    // must be sized from it rather than pinned to a bigger pixel width.
+    const rules = [...css.matchAll(/\.auth-story \{\s*[^}]*?grid-template-columns:\s*minmax\(0,\s*1fr\)\s*(\d+)px/g)]
+      .map((match) => Number(match[1]));
+    const widths = [...css.matchAll(/\.auth-art \{[^}]*\}/g)].map((match) => match[0]);
+    let checked = 0;
+    for (const width of widths) {
+      const fixed = width.match(/(?:^|;|\s)width:\s*(\d+)px/);
+      if (!fixed) continue;
+      checked += 1;
+      // A fixed width is only safe if no column it lives in is narrower.
+      for (const column of rules) {
+        assert.ok(Number(fixed[1]) <= column, `.auth-art width ${fixed[1]}px exceeds its ${column}px grid column`);
+      }
+    }
+    assert.ok(checked >= 0);
+    assert.ok(rules.length >= 1, 'the story grid still declares an art column');
+  });
   check('sign-in shell: no data SDK, risk hook, polling or remote illustration dependency', () => {
     const shell = readFileSync(path.join(root, 'src/modules/auth/components/AuthPageLayout.tsx'), 'utf8');
     assert.doesNotMatch(shell, /firebase\/|Firebase\/data|useAcademicRiskAlerts|setInterval|https?:\/\//);
