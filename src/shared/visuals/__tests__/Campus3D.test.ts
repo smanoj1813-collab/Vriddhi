@@ -272,8 +272,11 @@ test('the idle drift keeps painting without re-rendering the whole tree', async 
     // centre (moving in the third decimal, which is below the drawing's
     // precision), then genuinely sways. Waiting for visible movement keeps the
     // test about the behaviour instead of about a frame budget.
+    // The sway is phased from mount, so it is already moving here; the polling
+    // budget is generous only because a loaded CI box may schedule few frames,
+    // and the drawing is rounded to a tenth of a pixel before it changes.
     let after = before;
-    for (let attempt = 0; attempt < 30 && after === before; attempt += 1) {
+    for (let attempt = 0; attempt < 60 && after === before; attempt += 1) {
       await new Promise((resolve) => setTimeout(resolve, 100));
       after = solidPoints(host, 'main-body');
     }

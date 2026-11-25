@@ -215,6 +215,12 @@ export default function Campus3D({
   useEffect(() => {
     if (!autoDrift || phase !== 'idle' || reducedMotion || dragging || !visible) return;
     const centre = DRIFT_CENTRE;
+    // Phase the sway from mount, not from the absolute clock. `performance.now()`
+    // is time since navigation start, so keying the sine off it made the drift
+    // depend on *when* the page was loaded: a visitor who arrived near a zero
+    // crossing saw the campus sit almost still for a second or two, and the
+    // behaviour was not reproducible between runs.
+    const origin = performance.now();
     const tick = (now: number) => {
       const previous = lastTime.current ?? now;
       // Clamp the step so a backgrounded tab resuming does not jump the model.
@@ -222,7 +228,7 @@ export default function Campus3D({
       lastTime.current = now;
       const current = yawRef.current;
       const next = clamp(
-        current + Math.sin(now / 2600) * IDLE_SPEED * delta + (centre - current) * 0.004,
+        current + Math.sin((now - origin) / 2600) * IDLE_SPEED * delta + (centre - current) * 0.004,
         centre - IDLE_RANGE,
         centre + IDLE_RANGE,
       );
