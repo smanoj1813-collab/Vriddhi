@@ -62,7 +62,16 @@ try {
     const fixture = reset();
     const view = await mount(portal);
     check(`${portal}: shared illustrated layout, labelled inputs and the correct active portal`, () => {
-      assert.ok(view.q('.auth-art[aria-hidden="true"] svg[focusable="false"]'));
+      // The 3D campus is labelled for assistive tech rather than aria-hidden.
+      // The floating greeting card beside it stays decorative.
+      assert.ok(view.q('.auth-art svg.campus3d-svg[role="img"]'));
+      assert.ok(view.q('.auth-art [role="group"][aria-label]'));
+      // But it must not compete with the form: no rotation buttons, and no tab
+      // stop before the email field someone came here to fill in.
+      const art = view.q('.auth-art');
+      assert.equal(art.querySelector('.campus3d-controls'), null, 'rotation controls belong on the landing page, not behind a sign-in form');
+      assert.equal(art.querySelector('[role="group"]').getAttribute('tabindex'), '-1');
+      assert.equal(view.q('.auth-art-note').getAttribute('aria-hidden'), 'true');
       assert.equal(view.q('nav [aria-current="page"]').textContent, portal === 'staff' ? 'Staff & Faculty' : 'Student Portal');
       assert.equal(view.q('nav a').getAttribute('href'), portal === 'staff' ? '/student/login' : '/login');
       for (const input of view.all('input')) assert.ok(view.q(`label[for="${input.id}"]`));
@@ -189,6 +198,45 @@ try {
     assert.match(css, /prefers-reduced-motion:\s*reduce/);
     assert.doesNotMatch(css, /animation:[^;]*infinite/);
     assert.match(css, /\.auth-page \*.*animation: none !important/);
+    // The 3D campus must honour reduced motion too, and its continuous rotation
+    // is driven by requestAnimationFrame in JS, which the CSS override cannot
+    // reach — so the component has to check the media query itself.
+    const campusCss = readFileSync(path.join(root, 'src/shared/visuals/campus3d.css'), 'utf8');
+    assert.doesNotMatch(campusCss, /animation:[^;]*infinite/);
+    assert.match(campusCss, /prefers-reduced-motion:\s*reduce/);
+    const campus = readFileSync(path.join(root, 'src/shared/visuals/Campus3D.tsx'), 'utf8');
+    assert.match(campus, /prefers-reduced-motion: reduce/);
+  });
+  check('sign-in layout: the artwork never declares a width wider than its grid column', () => {
+    // A fixed art width larger than the story grid's art column is exactly what
+    // broke 320px Tamil (twice). jsdom has no layout engine, so assert the two
+    // declarations agree: wherever the media query narrows the column, the art
+    // must be sized from it rather than pinned to a bigger pixel width.
+    const rules = [...css.matchAll(/\.auth-story \{\s*[^}]*?grid-template-columns:\s*minmax\(0,\s*1fr\)\s*(\d+)px/g)]
+      .map((match) => Number(match[1]));
+    const widths = [...css.matchAll(/\.auth-art \{[^}]*\}/g)].map((match) => match[0]);
+    let checked = 0;
+    for (const width of widths) {
+      const fixed = width.match(/(?:^|;|\s)width:\s*(\d+)px/);
+      if (!fixed) continue;
+      checked += 1;
+      // A fixed width is only safe if no column it lives in is narrower.
+      for (const column of rules) {
+        assert.ok(Number(fixed[1]) <= column, `.auth-art width ${fixed[1]}px exceeds its ${column}px grid column`);
+      }
+    }
+    assert.ok(checked >= 0);
+    assert.ok(rules.length >= 1, 'the story grid still declares an art column');
+  });
+  check('sign-in header: the language switcher may shrink below its widest option', () => {
+    // A <select> will not shrink below its widest option's min-content width, and
+    // Tamil's label is the widest of the six. At 320px that pushed the control
+    // past the header padding and gave the page a sideways scroll; `min-width: 0`
+    // is what allows it to be squeezed instead.
+    const rule = css.match(/\.auth-header select \{([^}]*)\}/);
+    assert.ok(rule, '.auth-header select is styled');
+    assert.match(rule[1], /min-width:\s*0/, 'the switcher is allowed to shrink');
+    assert.match(rule[1], /max-width:\s*100%/, 'the switcher cannot exceed its box');
   });
   check('sign-in shell: no data SDK, risk hook, polling or remote illustration dependency', () => {
     const shell = readFileSync(path.join(root, 'src/modules/auth/components/AuthPageLayout.tsx'), 'utf8');

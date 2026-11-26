@@ -9,6 +9,7 @@ import LanguageSwitcher from "./LanguageSwitcher";
 import VriddhiLogo from "./VriddhiLogo";
 import type { TranslationKey } from "../i18n";
 import FloatingAIChatWidget from "./FloatingAIChatWidget";
+import PortalPageEnter from "./PortalPageEnter";
 import {
   Box,
   Drawer,
@@ -1882,7 +1883,9 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         }}
       >
         <div className="p-3 sm:p-6 lg:p-8 max-w-[1600px] mx-auto min-w-0" style={{ paddingBottom: 'max(1rem, env(safe-area-inset-bottom))' }}>
-          {children || <Outlet />}
+          {/* Staff surfaces use one shared layout, so the entrance lands here
+              once rather than in each portal. */}
+          <PortalPageEnter>{children || <Outlet />}</PortalPageEnter>
         </div>
       </Box>
 

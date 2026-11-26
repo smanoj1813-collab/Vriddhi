@@ -6,11 +6,23 @@ resolved by `dashboardPathFor(user.role)`.
 
 ## What is included
 
-- A locally served, original SVG campus illustration (no external image dependency),
-  rendered inline with waving student figures, a bouncing book, and animated
-  feature/role icons. Greetings finish automatically; hover and keyboard focus
-  replay icon reactions. There is no pause/play control, and
-  `prefers-reduced-motion` disables the motion.
+- An interactive **3D campus hero** in place of the old flat illustration. The
+  scene is a hand-built projection of real boxes, pyramids and low-poly foliage
+  (`src/shared/visuals/campusScene.ts`): faces are lit from a single direction,
+  tinted by depth, and sorted far-to-near each frame. Visitors can drag it, use
+  the rotate/reset buttons, or arrow-key the angle slider to look around the
+  buildings. The login page reuses the same component.
+  - **No new runtime cost.** There is no three.js, no WebGL context, no CDN,
+    no texture or model download and no paid rendering service: the geometry is
+    code that ships in the existing bundle (~4 kB gzipped), drawn with the SVG
+    primitives the page already used. Idle drift repaints in place rather than
+    re-rendering the React tree, and pauses when the tab is hidden or the hero
+    scrolls away.
+  - **Accessible and honest about motion.** The stage is a labelled, focusable
+    group with a bounded `role="slider"`; the drawing itself carries an
+    `aria-label`. `prefers-reduced-motion` is honoured both in CSS and in the
+    JavaScript that drives the rotation, and is tracked live rather than read
+    once at mount.
 - Platform highlights, responsive navigation, FAQs, and an upskilling section.
 - A human, everyday-workflow comparison of disconnected tools versus Vriddhi,
   with a static effort graph. The graph is explicitly **illustrative, not
@@ -76,7 +88,55 @@ unchanged, but are not linked from the landing page.
 - `src/modules/landing/LandingPage.tsx` — page, navigation, FAQs, and interactions
 - `src/modules/landing/LandingAdvantage.tsx` — why Vriddhi, graph, mobile preview,
   customization preview, and AI sections
-- `src/modules/landing/CampusIllustration.tsx` — inline animated campus figures
+- `src/shared/visuals/campusScene.ts` — the 3D engine: projection, lighting, depth
+  sorting, the campus geometry, the view-fitting maths, and the local-clock
+  lighting model (all unit tested)
+- `src/shared/visuals/Campus3D.tsx` — the hero component: drag, keyboard and
+  button controls, idle drift, and motion preferences
+
+### The campus keeps the visitor's local time
+
+The illustration reads the visitor's clock, so a page opened at 22:00 shows a
+lit building and one opened at noon shows daylight glass. Two effects, both from
+one number:
+
+- **Windows.** After dusk a second lit pattern fades in, so the evening
+  arrangement is not simply the daytime one brightened — it looks like a
+  caretaker walking the corridors. The transition eases over about an hour at
+  each end (`darknessAt`), so a page left open crosses it smoothly.
+- **The tower clock.** Its hand points at the current time on a normal
+  twelve-hour dial: 12 up, 3 right, 6 down, 9 left. It tracks minutes, not just
+  hours, so moving the clock on by twenty minutes visibly moves the hand.
+- **The sky.** A twelve-hour dial necessarily shows 9am and 9pm in the same
+  position, so the sky carries the difference: after dusk the sun becomes a
+  crescent moon. It is the same three circles, so the node count is unchanged.
+
+This costs nothing at runtime, which is the only reason it exists:
+
+| Cost | Impact |
+| --- | --- |
+| Network / assets | none — no image, font, or request |
+| DOM nodes | none — recolours the polygons the idle drift already repaints |
+| Dependencies | none |
+| Bundle | +0.76 kB gzip total for time, moon and page entrances (measured), landing chunk unchanged |
+| Animation budget | none — no `animation:` is added, so the five-second rule holds |
+
+Two rules keep it that way, both enforced by `landing-3d.mjs`:
+
+1. **The engine never reads a clock.** `buildScene(view, time?)` takes the hour
+   as data, so the scene stays a pure function of its arguments and is
+   reproducible in tests. `undefined` means "no opinion" and every window keeps
+   the original daytime pattern.
+2. **The component reads the clock once, on a slow interval** — one minute,
+   which is the finest granularity the hand can show; the state is skipped when
+   the minute has not changed, so an idle page does not repaint. The drift loop
+   receives the value through a ref so it never resubscribes.
+
+The clock hand is a five-face prism, deliberately: it replaces a five-face box,
+so supplying a time never changes the model's polygon count (474 at every hour).
+Under `prefers-reduced-motion` the drift never starts and the lit state is simply
+computed once at mount — a correct still frame, not motion.
+- `src/shared/visuals/campus3d.css` — scoped styles, reduced-motion override
 - `src/modules/landing/DrilldownDialog.tsx` — accessible detail dialog
 - `src/modules/landing/DrilldownScene.tsx` — decorative animated dialog vignettes
 - `src/modules/landing/drilldownVisuals.ts` — per-dialog scene/highlight/step icons
@@ -94,10 +154,16 @@ unchanged, but are not linked from the landing page.
 
 ```sh
 npx tsc --noEmit
-node --import tsx --test src/modules/landing/roles.test.ts src/modules/landing/drilldowns.test.ts src/modules/landing/drilldownVisuals.test.ts
+npm run test:unit          # includes the 3D engine and component tests
+npm run test:render:landing # the hero, its a11y contract, and the cost claims
 npm run test:e2e
 npm run build
 ```
+
+The unit tests cover the projection maths with no browser, and
+`scripts/render-check/landing-3d.mjs` mounts the real page to assert that the
+hero is genuine geometry, keyboard operable, motion-safe, free of any runtime
+network/package dependency, and confined to the two public sign-in surfaces.
 
 The browser suite supplies placeholder Firebase values through its existing
 Playwright configuration. It checks the public page and sign-in navigation,

@@ -21,13 +21,17 @@
 .auth-page :focus-visible { outline: 3px solid #20846c; outline-offset: 4px; }
 .auth-header, .auth-footer { width: min(1320px, 100%); margin-inline: auto; padding-inline: 48px; }
 .auth-header { min-height: 100px; display: flex; align-items: center; justify-content: space-between; gap: 20px; }
-.auth-brand { display: inline-flex; align-items: center; gap: 11px; min-width: 0; color: var(--auth-ink); border-radius: 8px; }
+.auth-brand { display: inline-flex; flex-shrink: 1; align-items: center; gap: 11px; min-width: 0; color: var(--auth-ink); border-radius: 8px; }
 .auth-brand-mark { width: 47px; height: 47px; flex: 0 0 47px; border: 1px solid var(--auth-line); border-radius: 13px; background: white; display: grid; place-items: center; }
 .auth-brand-mark img { width: 40px; height: 40px; object-fit: contain; }
 .auth-brand > span:last-child { min-width: 0; overflow-wrap: anywhere; }
 .auth-brand strong { display: block; font-size: 18px; font-weight: 750; letter-spacing: -.6px; }
 .auth-brand small { display: block; margin-top: 2px; color: var(--auth-muted); font-size: 10px; font-weight: 500; }
-.auth-header select { min-height: 36px; border-color: var(--auth-line); background: var(--auth-paper); color: var(--auth-muted); }
+/* A select is a form control: its intrinsic width is its widest option and it
+   will not shrink below that, so long translated labels (Tamil's, at 320px)
+   pushed the control past the header's padding and gave the page a sideways
+   scroll. Allow it to shrink and clip its own text instead. */
+.auth-header select { min-height: 36px; min-width: 0; max-width: 100%; border-color: var(--auth-line); background: var(--auth-paper); color: var(--auth-muted); }
 .auth-content { width: min(1170px, 100%); margin: auto; padding: 28px 40px 24px; display: grid; grid-template-columns: minmax(0, 1.12fr) minmax(0, 1fr); align-items: center; gap: clamp(40px, 6vw, 90px); flex: 1; }
 .auth-story { min-width: 0; padding-top: 8px; animation: auth-arrive .65s ease-out both; }
 .auth-eyebrow { display: flex; align-items: center; gap: 9px; margin: 0 0 19px; text-transform: uppercase; letter-spacing: 2.1px; color: var(--auth-green); font-weight: 750; font-size: 10px; }
@@ -35,9 +39,14 @@
 .auth-story h1 { margin: 0; color: var(--auth-ink); font-size: clamp(38px, 4.05vw, 55px); font-weight: 650; overflow-wrap: anywhere; line-height: 1.17; letter-spacing: -2.1px; }
 .auth-story h1 em { color: var(--auth-green); font-family: Georgia, var(--vriddhi-font-family, serif); font-weight: 400; }
 .auth-story-description { max-width: 360px; margin: 18px 0 0; font-size: 14px; line-height: 1.85; color: var(--auth-muted); }
-.auth-art { position: relative; max-width: 500px; margin: 2px 0 8px -8px; }
-.auth-art .landing-campus-image { display: block; width: 100%; height: auto; overflow: visible; }
-.auth-art-note { position: absolute; right: 0; bottom: 20px; display: flex; align-items: center; gap: 11px; padding: 13px 17px 13px 12px; border: 1px solid var(--auth-line); border-radius: 15px; background: var(--auth-paper); box-shadow: 0 9px 30px #294d3610; transform: rotate(-3deg); animation: auth-note-greet 4.3s ease-in-out .2s 1 both; }
+.auth-art { position: relative; max-width: 520px; margin: 6px 0 10px 0; }
+/* The 3D campus carries its own rotation controls; the greeting card floats
+   over its lower-right corner without blocking the stage's drag surface. */
+.auth-art-3d { position: relative; z-index: 1; }
+.auth-art-3d .campus3d-stage { border-radius: 18px; box-shadow: 0 22px 60px -34px #173c3233, 0 2px 4px #173c3208; }
+/* No rotation controls here: the form owns the tab order. The stage is still
+   draggable, and the artwork's own cursor is the affordance. */
+.auth-art-note { position: absolute; right: -6px; bottom: 58px; display: flex; align-items: center; gap: 11px; padding: 13px 17px 13px 12px; border: 1px solid var(--auth-line); border-radius: 15px; background: var(--auth-paper); box-shadow: 0 9px 30px #294d3610; transform: rotate(-3deg); animation: auth-note-greet 4.3s ease-in-out .2s 1 both; }
 .auth-note-icon { display: grid; place-items: center; width: 38px; height: 38px; background: #eaf3e8; color: #216c53; border-radius: 11px; }
 .auth-art-note small { display: block; color: var(--auth-muted); font-size: 10px; margin-bottom: 3px; }
 .auth-art-note strong { display: block; color: var(--auth-ink); font-size: 12px; font-weight: 700; }
@@ -78,18 +87,9 @@
 .auth-footer-signature { font-size: 10px; }
 .auth-footer-signature > span { padding-inline: 8px; color: #a7894c; }
 
-/* Gently greet once, then settle. No perpetual decorative animation. */
-.auth-art .campus-student, .auth-art .campus-book { transform-box: fill-box; transform-origin: center bottom; animation: auth-campus-bob 4s ease-in-out 1 both; }
-.auth-art .campus-arm { transform-box: view-box; animation: auth-campus-wave 3.6s ease-in-out .2s 1 both; }
-.auth-art .campus-arm-left { transform-origin: 178px 380px; }
-.auth-art .campus-arm-right { transform-origin: 466px 380px; animation-delay: .4s; }
-.auth-art .campus-sparkles { animation: auth-campus-spark 2s ease-in-out 2 both; }
 /* Keep text fully opaque during entry so labels and actions stay readable. */
 @keyframes auth-arrive { from { transform: translateY(9px); } to { transform: none; } }
 @keyframes auth-note-greet { 0%, 100% { transform: translateY(0) rotate(-3deg); } 50% { transform: translateY(-5px) rotate(-2deg); } }
-@keyframes auth-campus-bob { 0%, 100% { transform: translateY(0); } 45%, 70% { transform: translateY(-3px); } }
-@keyframes auth-campus-wave { 0%, 100% { transform: rotate(0); } 22%, 64% { transform: rotate(-48deg); } 40%, 80% { transform: rotate(-30deg); } }
-@keyframes auth-campus-spark { 0%, 100% { opacity: 1; } 50% { opacity: .35; } }
 
 .dark .auth-page { --auth-bg: #101e1c; --auth-paper: #182925; --auth-ink: #e9f1e9; --auth-muted: #a4b9ad; --auth-green: #a2d5b8; --auth-line: #30443a; --auth-wash: #12221c; background: radial-gradient(ellipse at 12% 58%, #1a3126 0, transparent 49%), var(--auth-bg); }
 .dark .auth-card input[type="email"], .dark .auth-card input[type="password"], .dark .auth-card input[type="text"] { background: #13241e; border-color: #395043; color: var(--auth-ink); }
@@ -104,7 +104,7 @@
   .auth-content { gap: 35px; padding-inline: 32px; }
   .auth-story h1 { font-size: 40px; letter-spacing: -1.5px; }
   .auth-card { padding-inline: 25px; }
-  .auth-art-note { right: -8px; padding: 10px; }
+  .auth-art-note { right: -10px; bottom: 54px; padding: 10px; }
   .auth-note-dot { display: none; }
 }
 @media (max-width: 760px) {
@@ -119,7 +119,7 @@
   .auth-eyebrow > span { width: 15px; }
   .auth-story h1 { grid-column: 1; align-self: start; font-size: 28px; letter-spacing: -.8px; line-height: 1.22; }
   .auth-story-description { display: none; }
-  .auth-art { grid-column: 2; grid-row: 1 / 3; margin: 0 -5px 0 0; width: 140px; }
+  .auth-art { grid-column: 2; grid-row: 1 / 3; margin: 0 -5px 0 0; width: 100%; max-width: 140px; justify-self: end; }
   .auth-art-note { display: none; }
   .auth-form-column { max-width: none; }
   .auth-card { padding: 23px 25px 22px; border-radius: 23px; }
@@ -136,7 +136,7 @@
   .auth-content { padding-inline: 16px; }
   .auth-story { grid-template-columns: minmax(0, 1fr) 105px; }
   .auth-story h1 { font-size: 26px; }
-  .auth-art { width: 120px; }
+  .auth-art { width: 100%; max-width: 120px; justify-self: end; }
   .auth-card { padding-inline: 20px; }
   .auth-portal { font-size: 10px; gap: 5px; }
 }

@@ -110,3 +110,34 @@
   }
   .portal-motion-target .portal-link-arrow { transform: none !important; }
 }
+
+/* ─── Portal entrance ────────────────────────────────────────────────────
+   A short, one-shot arrival for every workspace page: the content lifts and
+   settles, and its immediate cards follow in a shallow stagger. Deliberately
+   finite (0.42s per element, longest chain ~0.6s) and never repeating, because
+   a perpetual loop behind a results table costs battery on the budget Android
+   devices this product is sold to — the render guards enforce that, and this
+   rule is written to stay inside them.
+
+   Scoped to direct children so a page cannot accidentally animate its own
+   nested lists, and it animates opacity/translate only: no layout property is
+   touched, so tables do not reflow. */
+@keyframes portal-page-enter {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.portal-page-enter > * {
+  animation: portal-page-enter .42s cubic-bezier(.22, .68, .28, 1) both;
+}
+/* A shallow stagger, capped at five steps: enough to read as a sequence, short
+   enough that the last card is settled well inside half a second. */
+.portal-page-enter > *:nth-child(1) { animation-delay: 0s; }
+.portal-page-enter > *:nth-child(2) { animation-delay: .045s; }
+.portal-page-enter > *:nth-child(3) { animation-delay: .09s; }
+.portal-page-enter > *:nth-child(4) { animation-delay: .135s; }
+.portal-page-enter > *:nth-child(n+5) { animation-delay: .18s; }
+
+@media (prefers-reduced-motion: reduce) {
+  .portal-page-enter > * { animation: none !important; }
+}

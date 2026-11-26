@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { ArrowLeft, BookOpen, ShieldCheck, Sparkles, Users } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import CampusIllustration from '@/modules/landing/CampusIllustration';
+import Campus3D from '@/shared/visuals/Campus3D';
 import LanguageSwitcher from '@/shared/components/LanguageSwitcher';
 import { useTranslation } from '@/shared/contexts/LanguageProvider';
 import '../styles/auth.css';
@@ -30,9 +30,9 @@ export default function AuthPageLayout({ portal, children }: { portal: 'staff' |
           <p className="auth-eyebrow"><span aria-hidden="true" />{t('brand.subtitle')}</p>
           <h1 id="auth-story-heading">{t('auth.heroTitle')}<br /><em>{t('auth.heroAccent')}</em></h1>
           <p className="auth-story-description">{t('auth.heroDescription')}</p>
-          <div className="auth-art" aria-hidden="true">
-            <CampusIllustration />
-            <div className="auth-art-note">
+          <div className="auth-art">
+            <Campus3D showControls={false} autoDrift className="auth-art-3d" />
+            <div className="auth-art-note" aria-hidden="true">
               <span className="auth-note-icon"><Sparkles size={20} /></span>
               <span><small>{t('auth.campusLife')}</small><strong>{t('auth.heroCaption')}</strong></span>
               <span className="auth-note-dot" />

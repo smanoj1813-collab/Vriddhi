@@ -1,6 +1,14 @@
 // scripts/raw-asset-hooks.mjs
 //
-// Teaches `node --import tsx --test` about Vite's `?raw` import suffix.
+// Teaches `node --import tsx --test` about two things Vite does for free but
+// plain Node cannot:
+//
+//   1. Vite's `?raw` import suffix (the full story below).
+//   2. Side-effect stylesheet imports — `import './thing.css'`. Vite turns those
+//      into injected styles at build time; Node throws
+//      ERR_UNKNOWN_FILE_EXTENSION. A component that ships its own CSS is normal
+//      and correct, and its unit test should not have to care, so `.css`
+//      specifiers resolve to an empty module here.
 //
 // The question-bank seed module bundles its CSVs with `import csv from
 // '…/All_QuestionBank.csv?raw'` so the superadmin seeder works without a server
@@ -21,6 +29,7 @@ import { readFileSync } from 'node:fs';
 import * as nodeModule from 'node:module';
 
 const RAW_QUERY = /\?raw$/;
+const STYLESHEET = /\.css$/;
 
 /** Strip `?raw`, resolve against the importer, and re-tag the URL for `load`. */
 function resolveRawUrl(specifier, context) {
@@ -37,10 +46,19 @@ function rawModuleSource(text) {
 if (typeof nodeModule.registerHooks === 'function') {
   nodeModule.registerHooks({
     resolve(specifier, context, nextResolve) {
+      if (STYLESHEET.test(specifier)) {
+        // Give every stylesheet a distinct synthetic URL so Node's module cache
+        // treats them as separate (empty) modules.
+        return { url: `vriddhi-css:${specifier}`, format: 'module', shortCircuit: true };
+      }
       if (!RAW_QUERY.test(specifier)) return nextResolve(specifier, context);
       return { url: resolveRawUrl(specifier, context), format: 'module', shortCircuit: true };
     },
     load(url, context, nextLoad) {
+      if (url.startsWith('vriddhi-css:')) {
+        // Side-effect import only: the styles themselves are Vite's job.
+        return { format: 'module', shortCircuit: true, source: 'export default {};' };
+      }
       if (!url.endsWith('?raw')) return nextLoad(url, context);
       return {
         format: 'module',

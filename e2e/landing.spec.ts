@@ -13,10 +13,10 @@ const ROLES = [
 ]
 
 test.describe('public landing page', () => {
-  test('shows the illustration and exactly six working role entry points', async ({ page }) => {
+  test('shows the 3D campus and exactly six working role entry points', async ({ page }) => {
     await page.goto('/')
     await expect(page.getByRole('heading', { level: 1 })).toContainText('Less busywork.')
-    await expect(page.getByRole('img', { name: /Students learning and growing together/ })).toBeVisible()
+    await expect(page.getByRole('img', { name: /three-dimensional college campus/ })).toBeVisible()
     await expect(page.getByRole('tab')).toHaveCount(6)
 
     for (const role of ROLES) {
@@ -317,29 +317,43 @@ test.describe('public landing page', () => {
     }
   })
 
-  test('student figures wave and icons react without playback controls', async ({ page }) => {
+  test('the 3D campus rotates on drag and by keyboard, and settles under reduced motion', async ({ page }) => {
     await page.emulateMedia({ reducedMotion: 'no-preference' })
     await page.goto('/')
+    // No playback chrome: the scene is not a video the visitor has to manage.
     await expect(page.getByRole('button', { name: /pause animation|play animation/i })).toHaveCount(0)
-    const leftArm = page.locator('.campus-arm-left')
-    const rightArm = page.locator('.campus-arm-right')
-    await expect(leftArm).toHaveCSS('animation-name', 'campus-wave-left')
-    await expect(rightArm).toHaveCSS('animation-name', 'campus-wave-right')
-    await expect(leftArm).toHaveCSS('animation-iteration-count', '1')
-    await expect(rightArm).toHaveCSS('animation-iteration-count', '1')
 
-    const waveTransforms = await leftArm.evaluate((el) => {
-      const animation = el.getAnimations()[0]
-      animation.pause()
-      animation.currentTime = 0
-      const start = getComputedStyle(el).transform
-      animation.currentTime = 700
-      const raised = getComputedStyle(el).transform
-      animation.play()
-      return { start, raised }
-    })
-    expect(waveTransforms.raised).not.toBe(waveTransforms.start)
+    const stage = page.getByRole('group', { name: /Interactive 3D illustration/ })
+    await expect(stage).toBeVisible()
+    const solid = page.locator('.campus3d [data-solid="main-body"] polygon').first()
+    const before = await solid.getAttribute('points')
 
+    // Dragging turns the model: the projected coordinates must change.
+    const box = await stage.boundingBox()
+    if (!box) throw new Error('the campus stage has no layout box')
+    await page.mouse.move(box.x + box.width * 0.5, box.y + box.height * 0.6)
+    await page.mouse.down()
+    await page.mouse.move(box.x + box.width * 0.68, box.y + box.height * 0.6, { steps: 8 })
+    await page.mouse.up()
+    const dragged = await solid.getAttribute('points')
+    expect(dragged).not.toBe(before)
+
+    // Keyboard parity: the stage is focusable and arrow keys move it too.
+    await stage.focus()
+    await page.keyboard.press('ArrowLeft')
+    expect(await solid.getAttribute('points')).not.toBe(dragged)
+
+    // Reduced motion stops the drift, but the model stays visible and usable.
+    await page.emulateMedia({ reducedMotion: 'reduce' })
+    const still = await solid.getAttribute('points')
+    await page.waitForTimeout(400)
+    expect(await solid.getAttribute('points')).toBe(still)
+    await expect(page.getByRole('img', { name: /three-dimensional college campus/ })).toBeVisible()
+  })
+
+  test('feature and role icons still react to hover and focus', async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: 'no-preference' })
+    await page.goto('/')
     const featureIcon = page.locator('.landing-feature-card .landing-feature-icon svg').first()
     await page.locator('.landing-feature-card').first().hover()
     await expect(featureIcon).toHaveCSS('animation-name', 'landing-icon-wiggle')
@@ -348,7 +362,6 @@ test.describe('public landing page', () => {
     await expect(roleTab.locator('.landing-role-icon svg')).toHaveCSS('animation-name', 'landing-icon-wiggle')
 
     await page.emulateMedia({ reducedMotion: 'reduce' })
-    await expect(leftArm).toHaveCSS('animation-name', 'none')
     await expect(featureIcon).toHaveCSS('animation-name', 'none')
     await expect(roleTab.locator('.landing-role-icon svg')).toHaveCSS('animation-name', 'none')
   })
