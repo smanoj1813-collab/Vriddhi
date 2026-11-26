@@ -236,9 +236,24 @@ export interface FacultySession {
   date: string
   courseId?: string
   courseCode?: string
+  /**
+   * Sessions are written from a weekly schedule slot, which carries a subject
+   * and a subject code but never a curriculum course id. Without these two
+   * fields every session was unattributable, and an unattributable session was
+   * dropped by the course filter — which is how a faculty member with classes
+   * today saw "Upcoming sessions: 0".
+   */
+  subject?: string
+  subjectCode?: string
+  /** Who teaches it. The field the dashboard already filters on. */
+  facultyId?: string
+  startTime?: string
+  endTime?: string
+  room?: string
   topicIds?: string[]
   topicNames?: string[]
   status?: string
+  attendanceMarked?: boolean
 }
 
 export interface FacultyAssignment {
@@ -382,20 +397,47 @@ export function buildFacultyAcademicContext(input: {
   const shouldScope = Boolean(input.courseId || input.scopeToCourses)
   const courseIds = new Set(courses.map((course) => course.id).filter(Boolean))
   const courseCodes = new Set(courses.map((course) => lower(course.courseCode)).filter(Boolean))
-  const matchesCourse = (item: { courseId?: string; courseCode?: string }) =>
-    !shouldScope
-    || Boolean(
-      (item.courseId && courseIds.has(item.courseId))
-      || (item.courseCode && courseCodes.has(lower(item.courseCode)))
-    )
+
+  // A session links to its course through the scheduling fields it actually
+  // stores — subject / subjectCode — not through a curriculum course id. Both
+  // spellings are compared because the two writers disagree: the weekly-schedule
+  // path stores "CS301", the ad-hoc path stores a human subject name.
+  const matchesCourse = (item: { courseId?: string; courseCode?: string; subject?: string; subjectCode?: string }) => {
+    if (!shouldScope) return true
+    // An explicit curriculum link always wins.
+    if (item.courseId && courseIds.has(item.courseId)) return true
+    if (item.courseCode && courseCodes.has(lower(item.courseCode))) return true
+    const key = lower(item.subjectCode || item.subject)
+    if (!key) return false
+    if (courseCodes.has(key)) return true
+    // Give back the code-shaped prefix of a subject name ("Language-I" ->
+    // "lang.3.1" style codes are compared whole, but a name stored as
+    // "CS301 - Databases" must still match the code "CS301").
+    const head = lower(String(item.subject || '').split(/[-–—]/)[0])
+    return Boolean(head) && courseCodes.has(head)
+  }
+
+  // Hiding a class a teacher is about to walk into is a worse failure than
+  // showing one extra, so an explicit courseId filter stays strict (the caller
+  // asked for that course) while the implicit "my courses" scope only drops a
+  // session when it can be attributed to a DIFFERENT course. Unattributable
+  // sessions are kept.
+  const belongsToAnotherCourse = (item: { courseId?: string; courseCode?: string; subject?: string; subjectCode?: string }) => {
+    const explicit = item.courseId || item.courseCode
+    if (!explicit) return false
+    return !matchesCourse(item)
+  }
+
   const upcomingSessions = input.sessions
-    .filter(matchesCourse)
+    .filter((item) => (input.courseId ? matchesCourse(item) : !belongsToAnotherCourse(item)))
     .filter((item) => !input.today || item.date >= input.today)
     .sort((a, b) => a.date.localeCompare(b.date) || a.id.localeCompare(b.id))
   return {
     kind: 'faculty', generatedFor: input.today || '', collegeId: input.collegeId, facultyId: input.facultyId,
     courses, completedTopics: [...new Set(input.completedTopics.map(text).filter(Boolean))].sort(),
-    upcomingSessions, assignmentHistory: input.assignments.filter(matchesCourse), assessmentHistory: input.assessments.filter(matchesCourse),
+    upcomingSessions,
+    assignmentHistory: input.assignments.filter((item) => (input.courseId ? matchesCourse(item) : !belongsToAnotherCourse(item))),
+    assessmentHistory: input.assessments.filter((item) => (input.courseId ? matchesCourse(item) : !belongsToAnotherCourse(item))),
   }
 }
 

@@ -160,10 +160,26 @@ async function collectPlatformStats(): Promise<PlatformStats> {
   }
 }
 
+/**
+ * Why hourly and not every 15 minutes.
+ *
+ * Each tick runs six `count()` aggregations — colleges, active, suspended,
+ * students, faculty, admins — and Firestore bills an aggregation per 1,000
+ * index entries scanned, not per document returned. That is invisible in the
+ * console's Query Insights panel, which is why a day of reads could spike with
+ * no matching row in the table. Covering every 15 minutes also means scanning
+ * those six collections 96 times a day to republish a number that barely moves:
+ * a college gains a section or two a fortnight, not a section an hour.
+ *
+ * Hourly keeps the superadmin dashboard fresh enough to be honest (the client
+ * already polls no faster than every two minutes and reads a snapshot doc
+ * stamped "as of") while cutting the scans by 75%. The manual refresh button and
+ * the on-demand callable are unaffected.
+ */
 export const refreshPlatformStats = onSchedule(
   {
     region: 'asia-south1',
-    schedule: 'every 15 minutes',
+    schedule: 'every 60 minutes',
     timeZone: 'Asia/Kolkata',
     memory: '256MiB',
     timeoutSeconds: 120,

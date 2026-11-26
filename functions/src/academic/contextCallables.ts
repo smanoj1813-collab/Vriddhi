@@ -169,10 +169,24 @@ export const getFacultyAcademicContext = onCall(
     if (!collegeId) throw new HttpsError('failed-precondition', 'College scope is required')
     const today = dateKey(request.data?.date || new Date().toISOString())
     const db = admin.firestore()
+    // Sessions used to be read with a bare `limit(200)` and no order. Firestore
+    // returns documents in id order, and session ids begin with the date, so a
+    // college past its 200th session only ever read the OLDEST ones — every
+    // upcoming class fell outside the window and the panel said "0 upcoming"
+    // while the dashboard, which queries by date, correctly showed today's
+    // classes. Bounding by date asks for the rows the panel actually needs and
+    // reads fewer of them than before.
     const [courseDocs, mappingDocs, sessionDocs, assignmentDocs, assessmentDocs, aliases] = await Promise.all([
       db.collection('curriculum').where('collegeId', '==', collegeId).limit(MAX_CONTEXT_DOCS).get(),
       db.collection('curriculumFacultyMappings').where('collegeId', '==', collegeId).limit(MAX_CONTEXT_DOCS).get(),
-      db.collection('classSessions').where('collegeId', '==', collegeId).limit(MAX_CONTEXT_DOCS).get(),
+      // collegeId + date ASC is an existing composite index, so this needs no
+      // index deploy. `today` is inclusive: a class earlier today still shows.
+      db.collection('classSessions')
+        .where('collegeId', '==', collegeId)
+        .where('date', '>=', today)
+        .orderBy('date', 'asc')
+        .limit(MAX_CONTEXT_DOCS)
+        .get(),
       db.collection('assignments').where('collegeId', '==', collegeId).limit(MAX_CONTEXT_DOCS).get(),
       db.collection('scheduledTests').where('collegeId', '==', collegeId).limit(MAX_CONTEXT_DOCS).get(),
       facultyIdentityAliases(uid, token),

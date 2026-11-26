@@ -115,6 +115,103 @@ describe('phase 1 deterministic faculty and paper context', () => {
     assert.deepEqual(context.assignmentHistory.map((item) => item.id), ['a1'])
   })
 
+  // ── The "Upcoming sessions: 0" regression ────────────────────────────────
+  // A faculty member with classes scheduled saw an empty planner. The cause was
+  // not their data: sessions carry subject / subjectCode (written from a weekly
+  // schedule slot) and never a curriculum courseId, so the course filter — which
+  // only understood courseId / courseCode — discarded every single session.
+  // These three cases pin the fix from both directions.
+
+  it('keeps a session whose subjectCode matches an assigned course code', () => {
+    const context = buildFacultyAcademicContext({
+      facultyId: 'f1', collegeId: 'c1', today: '2026-11-26', scopeToCourses: true,
+      courses: [{ id: 'course-1', collegeId: 'c1', courseCode: 'BBA 3.1', courseName: 'Cost Accounting', modules: [] }],
+      sessions: [
+        { id: 'scheduled', date: '2026-11-27', subject: 'Cost Accounting', subjectCode: 'BBA 3.1', facultyId: 'f1' },
+      ],
+      assignments: [], assessments: [], completedTopics: [],
+    })
+    assert.deepEqual(context.upcomingSessions.map((item) => item.id), ['scheduled'])
+  })
+
+  it('keeps a session it cannot attribute to any course rather than hiding a real class', () => {
+    const context = buildFacultyAcademicContext({
+      facultyId: 'f1', collegeId: 'c1', today: '2026-11-26', scopeToCourses: true,
+      courses: [{ id: 'course-1', collegeId: 'c1', courseCode: 'BBA 3.1', courseName: 'Cost Accounting', modules: [] }],
+      sessions: [
+        // No courseId, no courseCode, no subject at all: legacy/partial row.
+        { id: 'unknown-link', date: '2026-11-27', facultyId: 'f1' },
+        // A subject name that does not correspond to any curriculum code.
+        { id: 'free-text', date: '2026-11-28', subject: 'Guest Lecture', subjectCode: 'GL-01' },
+      ],
+      assignments: [], assessments: [], completedTopics: [],
+    })
+    // Both are shown: an unattributable class is still a class this teacher has.
+    assert.deepEqual(context.upcomingSessions.map((item) => item.id), ['unknown-link', 'free-text'])
+  })
+
+  it('still hides a session explicitly attributed to a different course', () => {
+    const context = buildFacultyAcademicContext({
+      facultyId: 'f1', collegeId: 'c1', today: '2026-11-26', scopeToCourses: true,
+      courses: [{ id: 'course-1', collegeId: 'c1', courseCode: 'BBA 3.1', courseName: 'Cost Accounting', modules: [] }],
+      sessions: [
+        { id: 'mine', date: '2026-11-27', subjectCode: 'BBA 3.1' },
+        { id: 'theirs', date: '2026-11-27', courseCode: 'BBA 4.1' },
+      ],
+      assignments: [], assessments: [], completedTopics: [],
+    })
+    assert.deepEqual(context.upcomingSessions.map((item) => item.id), ['mine'])
+  })
+
+  it('an explicit courseId filter stays strict even for an unattributable session', () => {
+    const context = buildFacultyAcademicContext({
+      facultyId: 'f1', collegeId: 'c1', today: '2026-11-26', courseId: 'course-1',
+      courses: [{ id: 'course-1', collegeId: 'c1', courseCode: 'BBA 3.1', courseName: 'Cost Accounting', modules: [] }],
+      sessions: [
+        { id: 'matches', date: '2026-11-27', subjectCode: 'BBA 3.1' },
+        // The caller asked for one course; a session with no link cannot be
+        // claimed as belonging to it.
+        { id: 'unrelated', date: '2026-11-27', subject: 'Guest Lecture', subjectCode: 'GL-01' },
+      ],
+      assignments: [], assessments: [], completedTopics: [],
+    })
+    assert.deepEqual(context.upcomingSessions.map((item) => item.id), ['matches'])
+  })
+
+  it('matches a subject stored as "CODE - Name" against the bare code', () => {
+    const context = buildFacultyAcademicContext({
+      facultyId: 'f1', collegeId: 'c1', today: '2026-11-26', courseId: 'course-1',
+      courses: [{ id: 'course-1', collegeId: 'c1', courseCode: 'CS301', courseName: 'DBMS', modules: [] }],
+      sessions: [{ id: 'dashed', date: '2026-11-27', subject: 'CS301 - Databases' }],
+      assignments: [], assessments: [], completedTopics: [],
+    })
+    assert.deepEqual(context.upcomingSessions.map((item) => item.id), ['dashed'])
+  })
+
+  it('reads the whole term, not just the first 200 session ids', () => {
+    // The query is what caused this, but the builder must also be able to hold
+    // more than the old cap: 340 sessions with the last 40 still upcoming.
+    const day = (n: number) => {
+      const d = new Date(Date.UTC(2026, 7, 1) + n * 86_400_000)
+      return d.toISOString().slice(0, 10)
+    }
+    const sessions = Array.from({ length: 340 }, (_, i) => ({
+      id: `adhoc_f1_${day(i)}_0900_class`,
+      date: day(i),
+      subjectCode: 'BBA 3.1',
+    }))
+    const context = buildFacultyAcademicContext({
+      facultyId: 'f1', collegeId: 'c1', today: '2026-11-26', scopeToCourses: true,
+      courses: [{ id: 'course-1', collegeId: 'c1', courseCode: 'BBA 3.1', courseName: 'Cost Accounting', modules: [] }],
+      sessions, assignments: [], assessments: [], completedTopics: [],
+    })
+    assert.ok(context.upcomingSessions.length > 0, 'a later term must still have upcoming sessions')
+    assert.ok(
+      context.upcomingSessions.every((item) => item.date >= '2026-11-26'),
+      'no past session may leak into the upcoming list'
+    )
+  })
+
   it('keeps only approved paper candidates and returns distributions', () => {
     const context = buildPaperAcademicContext({
       generatedFor: '2026-09-21', collegeId: 'c1', course: null, blueprint: { totalQuestions: 2 },
