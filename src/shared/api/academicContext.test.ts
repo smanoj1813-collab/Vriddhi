@@ -154,6 +154,48 @@ describe('faculty academic context mapping', () => {
     assert.deepEqual(context.completedTopics, ['Normalization'])
   })
 
+  // The planner used to render a bare "Session" for every row because the
+  // normaliser dropped the fields the backend sent. Sessions are scheduled by
+  // subject; that is the only human label most of them carry.
+  it('keeps the subject, room and times a session is scheduled under', () => {
+    const response = normaliseFacultyAcademicContextResponse({
+      enabled: true,
+      context: {
+        kind: 'faculty', generatedFor: '2026-11-26', collegeId: 'c1', facultyId: 'f1',
+        courses: [], completedTopics: [],
+        upcomingSessions: [
+          { id: 's1', date: '2026-11-27', subject: 'Cost Accounting', subjectCode: 'BBA 3.1', room: 'Room 3', startTime: '10:00', endTime: '10:50' },
+        ],
+        assignmentHistory: [], assessmentHistory: [],
+      },
+    })
+    if (!response.enabled) throw new Error('expected an enabled response')
+    const session = response.context.upcomingSessions[0]
+    assert.equal(session.subject, 'Cost Accounting')
+    assert.equal(session.subjectCode, 'BBA 3.1')
+    assert.equal(session.room, 'Room 3')
+    assert.equal(session.startTime, '10:00')
+  })
+
+  it('keeps the course name an assignment or assessment was written for', () => {
+    const response = normaliseFacultyAcademicContextResponse({
+      enabled: true,
+      context: {
+        kind: 'faculty', generatedFor: '2026-11-26', collegeId: 'c1', facultyId: 'f1',
+        courses: [], completedTopics: [], upcomingSessions: [],
+        assignmentHistory: [{ id: 'a1', title: 'Banking', courseName: 'Financial Management', subject: 'Banking' }],
+        assessmentHistory: [{ id: 't1', title: 'Quiz', subject: 'Digital Marketing', subjectName: 'Digital Marketing' }],
+      },
+    })
+    if (!response.enabled) throw new Error('expected an enabled response')
+    assert.equal(response.context.assignmentHistory[0].courseName, 'Financial Management')
+    assert.equal(response.context.assignmentHistory[0].subject, 'Banking')
+    // Both spellings survive; scheduledTests rows written before the rename
+    // carry subjectName only.
+    assert.equal(response.context.assessmentHistory[0].subject, 'Digital Marketing')
+    assert.equal(response.context.assessmentHistory[0].subjectName, 'Digital Marketing')
+  })
+
   it('classifies pending assignments and upcoming assessments deterministically', () => {
     const response = normaliseFacultyAcademicContextResponse(facultyPayload)
     if (!response.enabled) return

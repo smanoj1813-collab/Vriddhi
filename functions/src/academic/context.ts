@@ -260,6 +260,10 @@ export interface FacultyAssignment {
   id: string
   courseId?: string
   courseCode?: string
+  /** Stored by sanitizeAssignmentAuthoringInput. The panel used to ignore it. */
+  courseName?: string
+  subject?: string
+  subjectCode?: string
   title: string
   dueDate?: string
   status?: string
@@ -269,6 +273,10 @@ export interface FacultyAssessment {
   id: string
   courseId?: string
   courseCode?: string
+  /** scheduledTests stores `subject` (or the legacy `subjectName`). */
+  subject?: string
+  subjectName?: string
+  courseName?: string
   title: string
   scheduledAt?: string
   status?: string
