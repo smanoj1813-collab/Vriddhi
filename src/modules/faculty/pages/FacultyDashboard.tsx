@@ -226,6 +226,132 @@ export default function FacultyDashboard() {
     },
   ];
 
+  // Today's schedule and announcements are declared before the layout so the
+  // two can sit in different columns (schedule beside the action block,
+  // announcements at the foot of the page) without duplicating their markup.
+  const todaySchedule = (
+    <Paper sx={{ p: { xs: 2, md: 3 }, borderRadius: 3, height: '100%' }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2, flexWrap: 'wrap', gap: 1 }}>
+        <Typography variant="h6" sx={{ fontWeight: 700, display: 'flex', alignItems: 'center', gap: 1 }}>
+          <CalendarToday color="primary" />
+          Today's Schedule
+        </Typography>
+        <Chip label={new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })} size="small" />
+      </Box>
+
+      {schedule.length === 0 ? (
+        <Box sx={{ textAlign: 'center', py: 6, color: 'text.secondary' }}>
+          <AccessTime sx={{ fontSize: 48, opacity: 0.3, mb: 1 }} />
+          <Typography>No classes scheduled for today</Typography>
+        </Box>
+      ) : (
+        <List>
+          {schedule.map((item) => (
+            <ListItem
+              key={item.id}
+              sx={{
+                mb: 1,
+                borderRadius: 2,
+                bgcolor: item.status === 'ongoing' ? 'success.light' : 'background.paper',
+                border: '1px solid',
+                borderColor: item.status === 'ongoing' ? 'success.main' : 'divider',
+                alignItems: 'flex-start',
+                flexWrap: 'wrap',
+                gap: 1,
+                px: { xs: 1.5, md: 2 },
+                cursor: 'pointer',
+              }}
+              onClick={() => navigate('/faculty/attendance-marking')}
+            >
+              <ListItemAvatar>
+                <Avatar sx={{ bgcolor: item.status === 'ongoing' ? 'success.main' : 'primary.main' }}>
+                  <School />
+                </Avatar>
+              </ListItemAvatar>
+              <ListItemText
+                primary={
+                  <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+                    {item.subject}
+                  </Typography>
+                }
+                secondary={
+                  <Box component="span" sx={{ display: 'block' }}>
+                    <Typography variant="body2" color="text.secondary" component="span" sx={{ display: 'block' }}>
+                      <Box component="span" sx={{ fontWeight: 600, color: 'text.primary' }}>{item.time}</Box>
+                      {' · '}Room {item.room}
+                      <Box component="span" sx={{ display: { xs: 'block', sm: 'inline' } }}>
+                        <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>{' · '}</Box>
+                        {item.course} {item.batch} · Div {[item.division, item.section].filter(Boolean).join(' / ').replace(/,/g, '+')}
+                      </Box>
+                    </Typography>
+                    <MergedDivisionChip division={[item.division, item.section].filter(Boolean).join(',')} />
+                  </Box>
+                }
+              />
+              <Chip
+                label={item.status}
+                size="small"
+                color={item.status === 'ongoing' ? 'success' : item.status === 'completed' ? 'default' : 'primary'}
+                variant={item.status === 'upcoming' ? 'outlined' : 'filled'}
+              />
+            </ListItem>
+          ))}
+        </List>
+      )}
+    </Paper>
+  )
+
+  const announcementsPanel = (
+    <Paper sx={{ p: { xs: 2, md: 3 }, borderRadius: 3, height: '100%' }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
+        <Typography variant="h6" sx={{ fontWeight: 700, display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Announcement color="primary" />
+          Announcements
+        </Typography>
+      </Box>
+
+      {announcements.length === 0 ? (
+        <Box sx={{ textAlign: 'center', py: 6, color: 'text.secondary' }}>
+          <Announcement sx={{ fontSize: 48, opacity: 0.3, mb: 1 }} />
+          <Typography>No announcements yet</Typography>
+        </Box>
+      ) : (
+        <List>
+          {announcements.map((item) => (
+            <ListItem
+              key={item.id}
+              sx={{
+                mb: 1,
+                borderRadius: 2,
+                bgcolor: 'background.paper',
+                border: '1px solid',
+                borderColor: 'divider',
+              }}
+            >
+              <ListItemText
+                primary={
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                      {item.title}
+                    </Typography>
+                    {item.priority === 'high' && (
+                      <Chip label="Important" size="small" color="error" sx={{ height: 20 }} />
+                    )}
+                  </Box>
+                }
+                secondary={
+                  <Typography variant="caption" color="text.secondary">
+                    {item.message.slice(0, 80)}{item.message.length > 80 ? '...' : ''} · {item.date}
+                  </Typography>
+                }
+              />
+            </ListItem>
+          ))}
+        </List>
+      )}
+    </Paper>
+  )
+
   if (loading) {
     return (
       <Box sx={{ p: 4, display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh' }}>
@@ -244,175 +370,80 @@ export default function FacultyDashboard() {
         title={`Welcome back, ${user?.name?.split(' ')[0] || 'Faculty'}`}
         subtitle={`${user?.department || 'Department'} · ${stats.totalClasses} classes today`} />
 
-      <RiskAlertsSummary />
+      {/* ── Layout order ────────────────────────────────────────────────────
+          Set by the product owner: schedule beside the quick-action block,
+          then insights, then planning, and finally risk alerts +
+          announcements at the bottom. Risk alerts used to sit directly under
+          the welcome banner, which pushed the two things a teacher opens the
+          dashboard for (today's classes, next actions) below the fold. */}
+      <Grid container spacing={{ xs: 2, md: 3 }} sx={{ mb: 3, alignItems: 'stretch' }}>
+        {/* Today's Schedule — left, the primary object on this page */}
+        <Grid size={{ xs: 12, md: 7 }}>
+          {todaySchedule}
+        </Grid>
 
-      {/* Quick Actions */}
-      <Grid container spacing={2} sx={{ mb: 3 }}>
-        {quickActions.map((action) => (
-          <Grid size={{ xs: 6, sm: 6, md: 3 }} key={action.label}>
-            <Card
-              className="portal-motion-target"
-              component="button"
-              type="button"
-              sx={{
-                width: '100%', textAlign: 'left', border: 0,
-                cursor: 'pointer',
-                transition: 'all 0.2s',
-                '&:hover': { boxShadow: 4 },
-              }}
-              onClick={() => navigate(action.path)}
-            >
-              <CardContent sx={{ display: 'flex', alignItems: 'center', gap: { xs: 1.5, md: 2 }, p: { xs: 1.5, md: 2 }, '&:last-child': { pb: { xs: 1.5, md: 2 } }, minHeight: 72 }}>
-                <Avatar sx={{ bgcolor: `${action.color}20`, color: action.color, width: { xs: 36, md: 40 }, height: { xs: 36, md: 40 } }}>
-                  <span className="portal-interactive-icon" aria-hidden="true">{action.icon}</span>
-                </Avatar>
-                <Box sx={{ minWidth: 0 }}>
-                  <Typography variant="h6" sx={{ fontWeight: 700, color: action.color, fontSize: { xs: '0.95rem', md: '1.25rem' }, lineHeight: 1.2 }} noWrap>
-                    {action.value}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary" sx={{ fontSize: { xs: '0.72rem', md: '0.875rem' } }} noWrap>
-                    {action.label}
-                  </Typography>
-                </Box>
-              </CardContent>
-            </Card>
-          </Grid>
-        ))}
+        {/* Teacher's own actions — right, in one block beside the schedule */}
+        <Grid size={{ xs: 12, md: 5 }}>
+          <Paper sx={{ p: { xs: 2, md: 3 }, borderRadius: 3, height: '100%' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+              <Typography variant="h6" sx={{ fontWeight: 700 }}>
+                Your actions
+              </Typography>
+            </Box>
+            <Grid container spacing={1.5}>
+              {quickActions.map((action) => (
+                <Grid size={{ xs: 6 }} key={action.label}>
+                  <Card
+                    className="portal-motion-target"
+                    component="button"
+                    type="button"
+                    sx={{
+                      width: '100%', textAlign: 'left', border: 1, borderColor: 'divider',
+                      cursor: 'pointer', boxShadow: 'none',
+                      transition: 'all 0.2s',
+                      '&:hover': { boxShadow: 3, borderColor: action.color },
+                    }}
+                    onClick={() => navigate(action.path)}
+                  >
+                    <CardContent sx={{ display: 'flex', alignItems: 'center', gap: 1.5, p: 1.75, '&:last-child': { pb: 1.75 }, minHeight: 68 }}>
+                      <Avatar sx={{ bgcolor: `${action.color}20`, color: action.color, width: 36, height: 36 }}>
+                        <span className="portal-interactive-icon" aria-hidden="true">{action.icon}</span>
+                      </Avatar>
+                      <Box sx={{ minWidth: 0 }}>
+                        <Typography variant="h6" sx={{ fontWeight: 700, color: action.color, fontSize: '0.95rem', lineHeight: 1.2 }} noWrap>
+                          {action.value}
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.72rem' }} noWrap>
+                          {action.label}
+                        </Typography>
+                      </Box>
+                    </CardContent>
+                  </Card>
+                </Grid>
+              ))}
+            </Grid>
+          </Paper>
+        </Grid>
       </Grid>
+
+      {/* Academic Insights — curriculum coverage, classes, attendance, scores */}
+      <Box sx={{ mb: 3 }}>
+        <AcademicInsightsCard collegeId={user?.collegeId} insightsPath="/faculty/insights" />
+      </Box>
 
       {/* Deterministic academic planning (getFacultyAcademicContext callable).
           Renders nothing when the backend feature gate is off. */}
       <FacultyAcademicPlanner />
 
-      {/* Program Insights — self-scoped: only the subjects this faculty teaches */}
-      <Box sx={{ mb: 3 }}>
-        <AcademicInsightsCard collegeId={user?.collegeId} insightsPath="/faculty/insights" />
-      </Box>
-
-      <Grid container spacing={3}>
-        {/* Today's Schedule */}
-        <Grid size={{ xs: 12, md: 7 }}>
-          <Paper sx={{ p: { xs: 2, md: 3 }, borderRadius: 3, height: '100%' }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2, flexWrap: 'wrap', gap: 1 }}>
-              <Typography variant="h6" sx={{ fontWeight: 700, display: 'flex', alignItems: 'center', gap: 1 }}>
-                <CalendarToday color="primary" />
-                Today's Schedule
-              </Typography>
-              <Chip label={new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })} size="small" />
-            </Box>
-
-            {schedule.length === 0 ? (
-              <Box sx={{ textAlign: 'center', py: 6, color: 'text.secondary' }}>
-                <AccessTime sx={{ fontSize: 48, opacity: 0.3, mb: 1 }} />
-                <Typography>No classes scheduled for today</Typography>
-              </Box>
-            ) : (
-              <List>
-                {schedule.map((item) => (
-                  <ListItem
-                    key={item.id}
-                    sx={{
-                      mb: 1,
-                      borderRadius: 2,
-                      bgcolor: item.status === 'ongoing' ? 'success.light' : 'background.paper',
-                      border: '1px solid',
-                      borderColor: item.status === 'ongoing' ? 'success.main' : 'divider',
-                      alignItems: 'flex-start',
-                      flexWrap: 'wrap',
-                      gap: 1,
-                      px: { xs: 1.5, md: 2 },
-                      cursor: 'pointer',
-                    }}
-                    onClick={() => navigate('/faculty/attendance-marking')}
-                  >
-                    <ListItemAvatar>
-                      <Avatar sx={{ bgcolor: item.status === 'ongoing' ? 'success.main' : 'primary.main' }}>
-                        <School />
-                      </Avatar>
-                    </ListItemAvatar>
-                    <ListItemText
-                      primary={
-                        <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-                          {item.subject}
-                        </Typography>
-                      }
-                      secondary={
-                        <Box component="span" sx={{ display: 'block' }}>
-                          <Typography variant="body2" color="text.secondary" component="span" sx={{ display: 'block' }}>
-                            <Box component="span" sx={{ fontWeight: 600, color: 'text.primary' }}>{item.time}</Box>
-                            {' · '}Room {item.room}
-                            <Box component="span" sx={{ display: { xs: 'block', sm: 'inline' } }}>
-                              <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>{' · '}</Box>
-                              {item.course} {item.batch} · Div {[item.division, item.section].filter(Boolean).join(' / ').replace(/,/g, '+')}
-                            </Box>
-                          </Typography>
-                          <MergedDivisionChip division={[item.division, item.section].filter(Boolean).join(',')} />
-                        </Box>
-                      }
-                    />
-                    <Chip
-                      label={item.status}
-                      size="small"
-                      color={item.status === 'ongoing' ? 'success' : item.status === 'completed' ? 'default' : 'primary'}
-                      variant={item.status === 'upcoming' ? 'outlined' : 'filled'}
-                    />
-                  </ListItem>
-                ))}
-              </List>
-            )}
-          </Paper>
+      {/* Risk alerts + Announcements — supporting context, last on the page */}
+      <Grid container spacing={{ xs: 2, md: 3 }}>
+        <Grid size={{ xs: 12, md: 6 }}>
+          <RiskAlertsSummary />
         </Grid>
 
         {/* Announcements */}
-        <Grid size={{ xs: 12, md: 5 }}>
-          <Paper sx={{ p: { xs: 2, md: 3 }, borderRadius: 3, height: '100%' }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
-              <Typography variant="h6" sx={{ fontWeight: 700, display: 'flex', alignItems: 'center', gap: 1 }}>
-                <Announcement color="primary" />
-                Announcements
-              </Typography>
-            </Box>
-
-            {announcements.length === 0 ? (
-              <Box sx={{ textAlign: 'center', py: 6, color: 'text.secondary' }}>
-                <Announcement sx={{ fontSize: 48, opacity: 0.3, mb: 1 }} />
-                <Typography>No announcements yet</Typography>
-              </Box>
-            ) : (
-              <List>
-                {announcements.map((item) => (
-                  <ListItem
-                    key={item.id}
-                    sx={{
-                      mb: 1,
-                      borderRadius: 2,
-                      bgcolor: 'background.paper',
-                      border: '1px solid',
-                      borderColor: 'divider',
-                    }}
-                  >
-                    <ListItemText
-                      primary={
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                          <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-                            {item.title}
-                          </Typography>
-                          {item.priority === 'high' && (
-                            <Chip label="Important" size="small" color="error" sx={{ height: 20 }} />
-                          )}
-                        </Box>
-                      }
-                      secondary={
-                        <Typography variant="caption" color="text.secondary">
-                          {item.message.slice(0, 80)}{item.message.length > 80 ? '...' : ''} · {item.date}
-                        </Typography>
-                      }
-                    />
-                  </ListItem>
-                ))}
-              </List>
-            )}
-          </Paper>
+        <Grid size={{ xs: 12, md: 6 }}>
+          {announcementsPanel}
         </Grid>
       </Grid>
     </Box>
