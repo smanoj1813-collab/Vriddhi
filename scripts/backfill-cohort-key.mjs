@@ -55,7 +55,7 @@
 
 import path from 'node:path'
 import fs from 'node:fs'
-import { fileURLToPath } from 'node:url'
+import { fileURLToPath, pathToFileURL } from 'node:url'
 import { createRequire } from 'node:module'
 
 const require = createRequire(import.meta.url)
@@ -112,8 +112,12 @@ async function loadCohortHelpers() {
   const utils = path.join(repoRoot, 'src', 'shared', 'utils')
   let cohortKey, cohortConfigCore
   try {
-    cohortKey = await import(path.join(utils, 'cohortKey.ts'))
-    cohortConfigCore = await import(path.join(utils, 'cohortConfigCore.ts'))
+    // pathToFileURL, not the bare path: the ESM loader only accepts file://,
+    // data: and node: URLs. On Windows an absolute path like C:\Projects\...
+    // is read as protocol "c:" and rejected with
+    //   "Only URLs with a scheme in: file, data, and node are supported".
+    cohortKey = await import(pathToFileURL(path.join(utils, 'cohortKey.ts')).href)
+    cohortConfigCore = await import(pathToFileURL(path.join(utils, 'cohortConfigCore.ts')).href)
   } catch (err) {
     console.error('Could not load the cohort helpers from src/shared/utils.')
     console.error('Run through tsx:  node --import tsx scripts/backfill-cohort-key.mjs')
