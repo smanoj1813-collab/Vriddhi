@@ -115,6 +115,48 @@ describe('phase 1 deterministic faculty and paper context', () => {
     assert.deepEqual(context.assignmentHistory.map((item) => item.id), ['a1'])
   })
 
+  // ── "No classes scheduled today" while the timetable showed classes ──────
+  // The student dashboard and the timetable disagreed because the context
+  // builder compared cohort fields strictly while the timetable used the shared
+  // canonical matcher. Every case below is a pairing that occurs in real data
+  // and that strict comparison silently dropped.
+
+  const studentFor = (over: Record<string, unknown> = {}) => ({
+    id: 's1', collegeId: 'c1', branch: 'BBA', batch: '2027', semester: 3, section: 'A', ...over,
+  })
+  const classesFor = (over: Record<string, unknown>) => ([{
+    id: 'cls-1', collegeId: 'c1', date: '2026-11-27', startTime: '10:00', subject: 'Cost Accounting', ...over,
+  }])
+  const classCount = (studentOver: Record<string, unknown>, classOver: Record<string, unknown>) =>
+    buildStudentAcademicContext({
+      date: '2026-11-27',
+      student: studentFor(studentOver),
+      classes: classesFor(classOver) as never,
+      assignments: [], tests: [], curriculum: [], attendance: [],
+    }).classes.length
+
+  it('keeps a class whose batch is an academic-year range ending in the student year', () => {
+    assert.equal(classCount({ batch: '2027' }, { batch: '2026-2027' }), 1)
+  })
+
+  it('keeps a class whose batch and semester differ only in type', () => {
+    assert.equal(classCount({ batch: '2026', semester: 3 }, { batch: '2026', semester: 3 }), 1)
+    assert.equal(classCount({ batch: '2026', semester: '3' }, { batch: '2026', semester: 3 }), 1)
+  })
+
+  it('keeps a class whose section carries the "Section" prefix', () => {
+    assert.equal(classCount({ section: 'A' }, { section: 'Section A' }), 1)
+  })
+
+  it('keeps a class scheduled for a division set that includes the student', () => {
+    assert.equal(classCount({ section: 'A' }, { section: 'A,B,C,D' }), 1)
+  })
+
+  it('still excludes a class for a different branch or section', () => {
+    assert.equal(classCount({ branch: 'BBA' }, { branch: 'BCA' }), 0)
+    assert.equal(classCount({ section: 'A' }, { section: 'E' }), 0)
+  })
+
   // ── The "Upcoming sessions: 0" regression ────────────────────────────────
   // A faculty member with classes scheduled saw an empty planner. The cause was
   // not their data: sessions carry subject / subjectCode (written from a weekly

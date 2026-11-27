@@ -8,6 +8,8 @@
  * test and prevents routine academic answers from becoming agent prompts.
  */
 
+import { sessionMatchesCohort } from '../studentCurriculum'
+
 export interface AcademicStudent {
   id: string
   uid?: string
@@ -334,13 +336,42 @@ const sameCollege = (collegeId: string, value: { collegeId?: string }): boolean 
 const sortByDate = <T extends { dueDate?: string; startDateTime?: string; date?: string }>(items: T[]): T[] =>
   [...items].sort((a, b) => dateMs(a.dueDate || a.startDateTime || a.date) - dateMs(b.dueDate || b.startDateTime || b.date))
 
+/**
+ * Does this session belong to the student's cohort?
+ *
+ * This used to be a hand-rolled strict comparison, and strict comparison is
+ * wrong for this data in ways that are invisible until they bite:
+ *
+ *   schedule "2026-2027" vs student "2027"   → an academic-year range and its
+ *                                              end year are the same class
+ *   schedule batch 2026  vs student "2026"   → number vs string
+ *   schedule "Section A" vs student "A"      → the prefix is noise
+ *   schedule "A,B,C,D"   vs student "A"      → division is a letter SET
+ *   schedule semester 3  vs student "3"      → number vs string
+ *
+ * Every one of those produced "No classes scheduled today" for a student whose
+ * timetable showed three classes — because the timetable page uses the shared
+ * canonical matcher and this did not. `sessionMatchesCohort` in
+ * ../studentCurriculum is that matcher, already used by curriculum progress;
+ * delegate to it so the two screens cannot disagree again.
+ */
 function isStudentClassFor(classItem: ContextClass, student: AcademicStudent): boolean {
-  if (classItem.branch && classItem.branch !== student.branch) return false
-  if (classItem.batch && classItem.batch !== student.batch) return false
-  if (classItem.semester && classItem.semester !== student.semester) return false
-  const division = lower(classItem.division || classItem.section)
-  const studentDivision = lower(student.division || student.section)
-  return !division || !studentDivision || division === studentDivision
+  return sessionMatchesCohort(
+    {
+      branch: classItem.branch,
+      batch: classItem.batch,
+      semester: classItem.semester,
+      division: classItem.division,
+      section: classItem.section,
+    },
+    {
+      branch: student.branch,
+      batch: student.batch,
+      semester: student.semester,
+      division: student.division,
+      section: student.section,
+    }
+  )
 }
 
 export function buildStudentAcademicContext(input: {
