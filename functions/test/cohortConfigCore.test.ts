@@ -16,11 +16,13 @@ import {
   derivePassOutYear,
   normalizeSectionList,
   normalizeSemesterCount,
+  isCohortConfigDeclared,
   sectionIsDeclared,
   semesterIds,
   semesterInRange,
   validateCohortConfig,
   validatePassOutYear,
+  validatePassOutYearShape,
 } from '../src/cohortConfigCore.ts'
 import {
   DEFAULT_COHORT_CONFIG as browserDefault,
@@ -28,11 +30,13 @@ import {
   derivePassOutYear as browserDerivePassOutYear,
   normalizeSectionList as browserNormalizeSectionList,
   normalizeSemesterCount as browserNormalizeSemesterCount,
+  isCohortConfigDeclared as browserIsCohortConfigDeclared,
   sectionIsDeclared as browserSectionIsDeclared,
   semesterIds as browserSemesterIds,
   semesterInRange as browserSemesterInRange,
   validateCohortConfig as browserValidateCohortConfig,
   validatePassOutYear as browserValidatePassOutYear,
+  validatePassOutYearShape as browserValidatePassOutYearShape,
 } from '../../src/shared/utils/cohortConfigCore.ts'
 
 describe('normalizeSectionList', () => {
@@ -232,6 +236,54 @@ describe('validatePassOutYear', () => {
   })
 })
 
+describe('validatePassOutYearShape — clock-free', () => {
+  it('accepts a single four-digit year, past or future', () => {
+    // No clock: an import re-running an existing batch legitimately names a
+    // past year. Recency is validatePassOutYear\'s job.
+    assert.deepEqual(validatePassOutYearShape('2019'), { ok: true, year: 2019, error: null })
+    assert.deepEqual(validatePassOutYearShape('2099'), { ok: true, year: 2099, error: null })
+    assert.deepEqual(validatePassOutYearShape(2027), { ok: true, year: 2027, error: null })
+  })
+
+  it('still rejects a range and a non-year', () => {
+    assert.match(validatePassOutYearShape('2024-2027').error ?? '', /on its own|range/i)
+    assert.match(validatePassOutYearShape('27').error ?? '', /four digits/i)
+    assert.match(validatePassOutYearShape('').error ?? '', /required/i)
+    assert.match(validatePassOutYearShape(null).error ?? '', /required/i)
+  })
+})
+
+describe('validatePassOutYear — recency is opt-out', () => {
+  const opts = { currentYear: 2026 }
+
+  it('rejects a past year by default', () => {
+    assert.match(validatePassOutYear('2023', opts).error ?? '', /past/i)
+  })
+
+  it('accepts a past year when allowPast is set, for re-imports', () => {
+    assert.deepEqual(validatePassOutYear('2023', { ...opts, allowPast: true }), { ok: true, year: 2023, error: null })
+  })
+
+  it('still rejects an implausible future year when allowPast is set', () => {
+    assert.match(validatePassOutYear('2099', { ...opts, allowPast: true }).error ?? '', /years away/i)
+  })
+})
+
+describe('isCohortConfigDeclared', () => {
+  it('is false until the college saves any field', () => {
+    assert.equal(isCohortConfigDeclared(undefined), false)
+    assert.equal(isCohortConfigDeclared(null), false)
+    assert.equal(isCohortConfigDeclared({}), false)
+  })
+
+  it('is true once any field is present, including an empty section list', () => {
+    assert.equal(isCohortConfigDeclared({ sections: ['A'] }), true)
+    assert.equal(isCohortConfigDeclared({ sections: [] }), true, 'a deliberate no-section choice')
+    assert.equal(isCohortConfigDeclared({ semesterCount: 8 }), true)
+    assert.equal(isCohortConfigDeclared({ requireSection: false }), true)
+  })
+})
+
 describe('server copy ≡ browser copy', () => {
   it('agrees on the default vocabulary', () => {
     assert.deepEqual(DEFAULT_COHORT_CONFIG, browserDefault)
@@ -287,6 +339,15 @@ describe('server copy ≡ browser copy', () => {
     }
   })
 
+  it('agrees on declared-ness and year shape', () => {
+    for (const doc of [undefined, null, {}, { sections: [] }, { semesterCount: 8 }, { requireSection: false }]) {
+      assert.equal(isCohortConfigDeclared(doc), browserIsCohortConfigDeclared(doc), JSON.stringify(doc))
+    }
+    for (const value of ['2019', '2027', '2024-2027', '27', '', null, 2027]) {
+      assert.deepEqual(validatePassOutYearShape(value), browserValidatePassOutYearShape(value), String(value))
+    }
+  })
+
   it('agrees on pass-out year derivation and validation', () => {
     for (const [year, semesters] of [[2023, 6], [2023, 8], [2024, 4], [2024, 2]]) {
       assert.equal(derivePassOutYear(year, semesters), browserDerivePassOutYear(year, semesters))
@@ -294,6 +355,11 @@ describe('server copy ≡ browser copy', () => {
     const opts = { currentYear: 2026 }
     for (const value of ['2027', 2027, '2024-2027', '2025', '2099', '27', '', null, 'abcd', '2034']) {
       assert.deepEqual(validatePassOutYear(value, opts), browserValidatePassOutYear(value, opts), String(value))
+      assert.deepEqual(
+        validatePassOutYear(value, { ...opts, allowPast: true }),
+        browserValidatePassOutYear(value, { ...opts, allowPast: true }),
+        `${String(value)} allowPast`,
+      )
     }
   })
 })

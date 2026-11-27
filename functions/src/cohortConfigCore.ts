@@ -150,6 +150,26 @@ export function cohortConfigFromDoc(data: unknown): CohortConfig {
   }
 }
 
+/**
+ * Has this college actually declared its vocabulary, or are we still on the
+ * platform default?
+ *
+ * This distinction decides how strictly an import may behave. A college that
+ * never opened the setting keeps EXACTLY today's behaviour: any section letter,
+ * any semester up to 12. Turning the strict checks on for an unconfigured
+ * college would reject live imports — a PG college (8 semesters) or one
+ * running sections A-F would have rows refused because of a default it never
+ * chose.
+ *
+ * A stored document counts as configured as soon as it records any of the
+ * three fields.
+ */
+export function isCohortConfigDeclared(data: unknown): boolean {
+  if (!data || typeof data !== 'object') return false
+  const raw = data as Record<string, unknown>
+  return raw.sections !== undefined || raw.semesterCount !== undefined || raw.requireSection !== undefined
+}
+
 /** A validated config plus the reasons it was rejected. */
 export interface CohortConfigValidation {
   ok: boolean
@@ -261,12 +281,52 @@ export const MAX_YEARS_TO_PASS_OUT = 8
  */
 export function validatePassOutYear(
   value: unknown,
-  options: { currentYear: number; maxYearsAhead?: number },
+  options: { currentYear: number; maxYearsAhead?: number; allowPast?: boolean },
 ): { ok: boolean; year: number | null; error: string | null } {
+  // FORM, then RECENCY — two separate concerns, because they are trusted
+  // differently. A range is always wrong whatever the date (see below), so it
+  // is rejected without needing a clock. Recency needs `currentYear`, and a
+  // re-import of an existing cohort legitimately names a PAST year, so it is
+  // opt-in via allowPast.
+  const form = validatePassOutYearShape(value)
+  if (!form.ok) return form
+
   const { currentYear } = options
   const maxYearsAhead = options.maxYearsAhead ?? MAX_YEARS_TO_PASS_OUT
-  const text = String(value ?? '').trim()
+  const year = form.year as number
 
+  if (year < currentYear && options.allowPast !== true) {
+    return { ok: false, year: null, error: `Pass-out year ${year} is in the past; this cohort has left.` }
+  }
+  if (year > currentYear + maxYearsAhead) {
+    return {
+      ok: false,
+      year: null,
+      error: `Pass-out year ${year} is more than ${maxYearsAhead} years away — check the intake year.`,
+    }
+  }
+  return { ok: true, year, error: null }
+}
+
+/**
+ * Is this value the SHAPE of a pass-out year — a single four-digit year?
+ *
+ * Clock-free on purpose. This is the check an import runs on every row:
+ * whether the cohort has already graduated is a policy question, not a
+ * data-entry one, and rejecting a past year would break re-importing live
+ * batches.
+ *
+ * A RANGE is rejected here rather than accepted. The batch canonicaliser reads
+ * a four-year range as its end year ("2026-2027" → 2027) but leaves a
+ * three-year range literal ("2024-2027"), so a college typing its programme
+ * range imports cleanly and then matches no class at all.
+ */
+export function validatePassOutYearShape(value: unknown): {
+  ok: boolean
+  year: number | null
+  error: string | null
+} {
+  const text = String(value ?? '').trim()
   if (!text) return { ok: false, year: null, error: 'Pass-out year is required.' }
   if (/\d\s*[-–—/]\s*\d/.test(text)) {
     return {
@@ -278,17 +338,5 @@ export function validatePassOutYear(
   if (!/^\d{4}$/.test(text)) {
     return { ok: false, year: null, error: 'Pass-out year must be four digits, e.g. 2027.' }
   }
-
-  const year = Number(text)
-  if (year < currentYear) {
-    return { ok: false, year: null, error: `Pass-out year ${year} is in the past; this cohort has left.` }
-  }
-  if (year > currentYear + maxYearsAhead) {
-    return {
-      ok: false,
-      year: null,
-      error: `Pass-out year ${year} is more than ${maxYearsAhead} years away — check the intake year.`,
-    }
-  }
-  return { ok: true, year, error: null }
+  return { ok: true, year: Number(text), error: null }
 }

@@ -62,3 +62,93 @@ describe('validateStudentCohortRow', () => {
     assert.match(validateStudentCohortRow({ ...complete, division: undefined }) ?? '', /Missing division/i)
   })
 })
+
+// ─── The college's declared vocabulary ──────────────────────────────────────
+//
+// A row is now also checked against the college's declared sections and
+// semester count. Two mistakes are easy to make here and both were made while
+// writing this code, so they are pinned:
+//
+//   1. Enforcing the PLATFORM DEFAULT on a college that never configured
+//      anything. A PG college (8 semesters) or one running sections A–F would
+//      have live imports rejected because of a default it never chose.
+//   2. Downgrading the MISSING-division error to "only if configured". That
+//      re-opens the original bug, where a row imported fine and the student was
+//      invisible to every roster.
+
+describe('validateStudentCohortRow — declared vocabulary', () => {
+  const complete = { department: 'BBA', batch: '2027', division: 'C', semester: '3' }
+  const config = { sections: ['A', 'B', 'C', 'D'], semesterCount: 6, requireSection: true }
+
+  it('accepts a declared section letter', () => {
+    for (const division of ['A', 'B', 'C', 'D']) {
+      assert.equal(validateStudentCohortRow({ ...complete, division }, config, { declared: true }), null)
+    }
+  })
+
+  it('rejects an undeclared letter, naming the declared set', () => {
+    const error = validateStudentCohortRow({ ...complete, division: 'E' }, config, { declared: true }) ?? ''
+    assert.match(error, /not one of this college's sections/i)
+    assert.match(error, /A, B, C, D/, 'the message must show what is allowed')
+  })
+
+  it('accepts the letter from either field', () => {
+    assert.equal(
+      validateStudentCohortRow({ ...complete, division: '', section: 'B' }, config, { declared: true }),
+      null,
+      'section-only row',
+    )
+    assert.match(
+      validateStudentCohortRow({ ...complete, division: '', section: 'F' }, config, { declared: true }) ?? '',
+      /not one of this college's sections/i,
+      'an undeclared section-only row is still rejected',
+    )
+  })
+
+  it('rejects a semester beyond the declared count', () => {
+    const error = validateStudentCohortRow({ ...complete, semester: '7' }, config, { declared: true }) ?? ''
+    assert.match(error, /1-6/)
+  })
+
+  it('accepts any letter and up to 12 semesters when NOTHING is declared', () => {
+    // Today's behaviour must survive: an unconfigured college imports unchanged.
+    for (const division of ['A', 'E', 'F', 'Z']) {
+      assert.equal(validateStudentCohortRow({ ...complete, division }, config, { declared: false }), null, division)
+    }
+    for (const semester of ['1', '7', '8', '12']) {
+      assert.equal(validateStudentCohortRow({ ...complete, semester }, config, { declared: false }), null, semester)
+    }
+    assert.match(validateStudentCohortRow({ ...complete, semester: '13' }, config, { declared: false }) ?? '', /1-12/)
+  })
+
+  it('ALWAYS rejects a missing division, configured or not', () => {
+    // The safeguard that once prevented 343 unplaceable students must not
+    // depend on configuration.
+    for (const declared of [true, false]) {
+      assert.match(
+        validateStudentCohortRow({ ...complete, division: '' }, config, { declared }) ?? '',
+        /Missing division/i,
+        `declared=${declared}`,
+      )
+      assert.match(
+        validateStudentCohortRow({ ...complete, division: undefined }, config, { declared }) ?? '',
+        /Missing division/i,
+        `declared=${declared}`,
+      )
+    }
+  })
+
+  it('rejects a batch RANGE, because it names no single cohort', () => {
+    for (const batch of ['2024-2027', '2024-27', '2024/2027']) {
+      const error = validateStudentCohortRow({ ...complete, batch }, config, { declared: true }) ?? ''
+      assert.match(error, /on its own|range/i, batch)
+    }
+  })
+
+  it('accepts a PAST pass-out year — re-importing a live batch is legitimate', () => {
+    // Whether a cohort has graduated is a policy question, not a data-entry
+    // one. Rejecting past years would break re-imports.
+    assert.equal(validateStudentCohortRow({ ...complete, batch: '2023' }, config, { declared: true }), null)
+    assert.equal(validateStudentCohortRow({ ...complete, batch: '2019' }, config, { declared: true }), null)
+  })
+})

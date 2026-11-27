@@ -17,6 +17,15 @@ import {
 } from './identityShared'
 import { buildMentorDirectory, resolveMentorAssignment } from './mentorAssignment'
 import { buildAccessFields, loadActiveProduct, todayInIst, type AccessFields } from './accessProducts'
+import {
+  DEFAULT_COHORT_CONFIG,
+  cohortConfigFromDoc,
+  isCohortConfigDeclared,
+  sectionIsDeclared,
+  validatePassOutYearShape,
+  type CohortConfig,
+} from './cohortConfigCore.js'
+import { cohortKey } from './cohortKey.js'
 
 /** A throttle is transient and recoverable, so it gets a log line rather than a
  * row failure the operator has to interpret. The retry policy itself lives in
@@ -35,6 +44,12 @@ interface StudentImportRow {
   department: string
   batch: string
   division: string
+  /**
+   * The section letter. Import files split this across `division` and
+   * `section` (some carry both), so either may hold the letter the student
+   * actually sits in — the cohort key unions them.
+   */
+  section?: string
   semester?: number | string
   dob?: string
   gender?: string
@@ -154,20 +169,68 @@ function normalizeSemester(val: number | string | undefined): number {
  * Returns the human-readable reason, or null when the row is complete.
  * Pure: exported for unit tests.
  */
-export function validateStudentCohortRow(row: {
-  department?: unknown
-  batch?: unknown
-  division?: unknown
-  semester?: unknown
-}): string | null {
+export function validateStudentCohortRow(
+  row: {
+    department?: unknown
+    batch?: unknown
+    division?: unknown
+    section?: unknown
+    semester?: unknown
+  },
+  config: CohortConfig = DEFAULT_COHORT_CONFIG,
+  options: {
+    /** True only when the college has saved its own vocabulary (see below). */
+    declared?: boolean
+    /** Hard ceiling when the college has not declared a semester count. */
+    fallbackSemesterCount?: number
+  } = {},
+): string | null {
   if (!String(row.department ?? '').trim()) return 'Missing department/branch'
-  if (!String(row.batch ?? '').trim()) return 'Missing batch (admission year, e.g. 2027)'
-  if (!String(row.division ?? '').trim()) return 'Missing division'
+
+  // Batch: a row must name the cohort, and the value must identify ONE class.
+  // Shape only — whether the cohort has already graduated is a policy question,
+  // and re-importing an existing batch legitimately names a past year.
+  const rawBatch = String(row.batch ?? '').trim()
+  if (!rawBatch) return 'Missing batch (the pass-out year, e.g. 2027)'
+  const batchCheck = validatePassOutYearShape(rawBatch)
+  if (!batchCheck.ok) return `Invalid batch "${rawBatch}": ${batchCheck.error}`
+
+  // Division / section: the letter the student sits in. Either field may carry
+  // it — records split the letter across the two, and the cohort key unions
+  // them.
+  //
+  // A MISSING letter is always an error, configured or not: a student with no
+  // division matches no class, which is the failure that once let 343 students
+  // import successfully and stay invisible to every roster. Only the set of
+  // ACCEPTED LETTERS depends on configuration — an unconfigured college takes
+  // any letter (today's behaviour), a configured one takes only the letters it
+  // declared. Enforcing the platform default on an unconfigured college would
+  // reject live imports: a college running A–F would have E and F rows refused
+  // because of a default it never chose.
+  const divisionField = String(row.division ?? '').trim()
+  const sectionField = String(row.section ?? '').trim()
+  if (!divisionField && !sectionField) {
+    return 'Missing division'
+  }
+  if (options.declared) {
+    for (const field of [divisionField, sectionField]) {
+      if (!field) continue
+      if (!sectionIsDeclared(field, config)) {
+        const declaredList = config.sections.length > 0 ? config.sections.join(', ') : 'none declared'
+        return `Section "${field}" is not one of this college's sections (${declaredList})`
+      }
+    }
+  }
+
+  // Semester: the upper bound is the college's own count when it has declared
+  // one, otherwise the platform ceiling that validateStudentCohortRow has
+  // always applied.
+  const maxSemester = options.declared ? config.semesterCount : (options.fallbackSemesterCount ?? 12)
   const rawSemester = String(row.semester ?? '').trim()
-  if (!rawSemester) return 'Missing semester (1-12)'
+  if (!rawSemester) return `Missing semester (1-${maxSemester})`
   const semester = Number(rawSemester)
-  if (!Number.isInteger(semester) || semester < 1 || semester > 12) {
-    return `Invalid semester "${rawSemester}" (1-12)`
+  if (!Number.isInteger(semester) || semester < 1 || semester > maxSemester) {
+    return `Invalid semester "${rawSemester}" (1-${maxSemester})`
   }
   return null
 }
@@ -246,6 +309,21 @@ export const bulkCreateStudentAccounts = onCall(
     // ── Load college data and mentor aliases ──
     const college = await getCollegeData(collegeId)
     const db = admin.firestore()
+
+    // ── The college's declared cohort vocabulary ──
+    // Sections and semester count are validated against this, so a row that
+    // names a section the college does not run is rejected here with the
+    // declared list, instead of importing and then matching no class. One read
+    // per import, not per row.
+    const cohortConfigSnap = await db
+      .collection('colleges')
+      .doc(collegeId)
+      .collection('config')
+      .doc('cohort')
+      .get()
+    const cohortConfigData = cohortConfigSnap.exists ? cohortConfigSnap.data() : undefined
+    const cohortConfig: CohortConfig = cohortConfigFromDoc(cohortConfigData)
+    const cohortConfigDeclared = isCohortConfigDeclared(cohortConfigData)
     const auth = admin.auth()
 
     // ── Platform-access product (optional) ──
@@ -365,18 +443,20 @@ export const bulkCreateStudentAccounts = onCall(
         results.push({ regNo, name, email, success: false, error: 'Invalid email address' })
         continue
       }
-      const cohortError = validateStudentCohortRow(row)
+      const cohortError = validateStudentCohortRow(row, cohortConfig, { declared: cohortConfigDeclared })
       if (cohortError) {
         failedCount++
         errors.push({ row: rowNum, regNo, message: cohortError })
         results.push({ regNo, name, email, success: false, error: cohortError })
         continue
       }
+      const maxSemester = cohortConfigDeclared ? cohortConfig.semesterCount : 12
       const semester = normalizeSemester(row.semester)
-      if (semester < 1 || semester > 12) {
+      if (semester < 1 || semester > maxSemester) {
+        const message = `Invalid semester "${String(row.semester ?? '')}" (1-${maxSemester})`
         failedCount++
-        errors.push({ row: rowNum, regNo, message: 'Invalid semester' })
-        results.push({ regNo, name, email, success: false, error: 'Invalid semester' })
+        errors.push({ row: rowNum, regNo, message })
+        results.push({ regNo, name, email, success: false, error: message })
         continue
       }
       // APAAR/ABC ID is optional at admission, but a supplied value that is
@@ -542,6 +622,17 @@ export const bulkCreateStudentAccounts = onCall(
           if (!warnings.includes(warning)) warnings.push(warning)
         }
         const studentRef = db.collection('students').doc()
+        // Derived cohort identity, stored so matchers can compare one value
+        // instead of five loosely-typed fields (see cohortKey.ts). Computed
+        // from the same normalisers the matchers use, so an existing row and a
+        // re-imported row produce the same key for the same class.
+        const cohortKeyValue = cohortKey({
+          collegeId,
+          branch: row.department,
+          batch: row.batch,
+          semester,
+          section: String(row.division || row.section || '').trim(),
+        })
         const studentData = {
           id: studentRef.id,
           regNo,
@@ -554,6 +645,7 @@ export const bulkCreateStudentAccounts = onCall(
           batch: String(row.batch || '').trim(),
           division: String(row.division || '').trim(),
           semester: normalizeSemester(row.semester),
+          cohortKey: cohortKeyValue,
           mentorId: resolvedMentor?.mentorId || rawMentor,
           mentorFacultyId: resolvedMentor?.mentorFacultyId || rawMentor,
           mentor: resolvedMentor?.mentor || rawMentor,
@@ -593,6 +685,7 @@ export const bulkCreateStudentAccounts = onCall(
           department: String(row.department || '').trim(),
           batch: String(row.batch || '').trim(),
           division: String(row.division || '').trim(),
+          cohortKey: cohortKeyValue,
           regNo,
           studentDocId: studentRef.id,
           avatar: '',
