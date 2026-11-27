@@ -245,8 +245,27 @@ describe('validatePassOutYearShape — clock-free', () => {
     assert.deepEqual(validatePassOutYearShape(2027), { ok: true, year: 2027, error: null })
   })
 
-  it('still rejects a range and a non-year', () => {
-    assert.match(validatePassOutYearShape('2024-2027').error ?? '', /on its own|range/i)
+  it('ACCEPTS a consecutive academic-year range as its pass-out year', () => {
+    // This is the convention the real data uses: batches are stored as
+    // "2026-2027". The canonicaliser already reads that as the class of 2027,
+    // so rejecting it at import would refuse every one of those rows.
+    for (const [value, year] of [['2026-2027', 2027], ['2026-27', 2027], ['2026/2027', 2027], ['1999-00', 2000]]) {
+      assert.deepEqual(validatePassOutYearShape(value), { ok: true, year, error: null }, value)
+    }
+  })
+
+  it('rejects a multi-year SPAN, which names no single cohort', () => {
+    // "2024-2027" survives normalizeBatchKey as a literal, so it can never
+    // match a pass-out year. Only this case is a range error.
+    for (const value of ['2024-2027', '2025-2028', '2026-2028']) {
+      const result = validatePassOutYearShape(value)
+      assert.equal(result.ok, false, value)
+      assert.match(result.error ?? '', /spans several years|one academic year/i, value)
+      assert.match(result.error ?? '', /on its own/i, 'must say what to do instead')
+    }
+  })
+
+  it('still rejects a non-year', () => {
     assert.match(validatePassOutYearShape('27').error ?? '', /four digits/i)
     assert.match(validatePassOutYearShape('').error ?? '', /required/i)
     assert.match(validatePassOutYearShape(null).error ?? '', /required/i)
@@ -343,7 +362,7 @@ describe('server copy ≡ browser copy', () => {
     for (const doc of [undefined, null, {}, { sections: [] }, { semesterCount: 8 }, { requireSection: false }]) {
       assert.equal(isCohortConfigDeclared(doc), browserIsCohortConfigDeclared(doc), JSON.stringify(doc))
     }
-    for (const value of ['2019', '2027', '2024-2027', '27', '', null, 2027]) {
+    for (const value of ['2019', '2027', '2026-2027', '2026-27', '2024-2027', '2026-2028', '27', '', null, 2027]) {
       assert.deepEqual(validatePassOutYearShape(value), browserValidatePassOutYearShape(value), String(value))
     }
   })

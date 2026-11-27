@@ -29,6 +29,8 @@
 // KEEP IN SYNC with src/shared/utils/cohortConfigCore.ts — functions/test/cohortConfigCore.test.ts
 // imports both and fails if they drift.
 
+import { normalizeBatchKey } from './cohortBatch.js'
+
 /**
  * A section/division letter: ONE alphabetic character.
  *
@@ -328,13 +330,29 @@ export function validatePassOutYearShape(value: unknown): {
 } {
   const text = String(value ?? '').trim()
   if (!text) return { ok: false, year: null, error: 'Pass-out year is required.' }
+
   if (/\d\s*[-–—/]\s*\d/.test(text)) {
+    // A CONSECUTIVE academic-year range names exactly one cohort: "2026-2027"
+    // and "2026-27" are the class of 2027, which is the canonicalisation
+    // normalizeBatchKey already applies everywhere else. Rejecting it would
+    // break every college that records batches that way — which is the
+    // convention the real data actually uses.
+    //
+    // A NON-CONSECUTIVE range ("2024-2027", a three/four-year programme span)
+    // is genuinely ambiguous: it survives normalizeBatchKey as a literal, so it
+    // matches no single pass-out year. That is the case to reject, and it is
+    // rejected with the fix in the message rather than a generic "not a range".
+    const keyed = normalizeBatchKey(text)
+    if (/^\d{4}$/.test(keyed)) return { ok: true, year: Number(keyed), error: null }
     return {
       ok: false,
       year: null,
-      error: 'Enter the pass-out year on its own (2027), not a range (2024-2027).',
+      error:
+        `A range must cover ONE academic year (e.g. 2026-2027). "${text}" spans several years, ` +
+        'so it identifies no single cohort — enter the pass-out year on its own (e.g. 2027).',
     }
   }
+
   if (!/^\d{4}$/.test(text)) {
     return { ok: false, year: null, error: 'Pass-out year must be four digits, e.g. 2027.' }
   }

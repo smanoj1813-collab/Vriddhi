@@ -138,10 +138,26 @@ describe('validateStudentCohortRow — declared vocabulary', () => {
     }
   })
 
-  it('rejects a batch RANGE, because it names no single cohort', () => {
-    for (const batch of ['2024-2027', '2024-27', '2024/2027']) {
+  it('ACCEPTS the academic-year range this college actually stores', () => {
+    // Real data uses "2026-2027" (see the dry run: every sampled row). The
+    // canonicaliser reads it as the class of 2027, and imports must not refuse
+    // it — that would reject the college's own convention.
+    for (const batch of ['2026-2027', '2026-27', '2026/2027']) {
+      assert.equal(
+        validateStudentCohortRow({ ...complete, batch }, config, { declared: true }),
+        null,
+        batch,
+      )
+    }
+  })
+
+  it('rejects a multi-year SPAN, which names no single cohort', () => {
+    // A three/four-year programme span survives canonicalisation as a literal,
+    // so it matches no pass-out year and would import a student into a class
+    // that does not exist.
+    for (const batch of ['2024-2027', '2025-2028']) {
       const error = validateStudentCohortRow({ ...complete, batch }, config, { declared: true }) ?? ''
-      assert.match(error, /on its own|range/i, batch)
+      assert.match(error, /spans several years/i, batch)
     }
   })
 
