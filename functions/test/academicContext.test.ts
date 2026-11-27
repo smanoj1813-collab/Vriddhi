@@ -7,6 +7,7 @@ import {
   facultyCoursesFromCurriculum,
 } from '../src/academic/context'
 import { academicFeaturesEnabled, DEFAULT_ACADEMIC_FEATURE_FLAGS } from '../src/academic/featureFlags'
+import { assignmentTargetsStudent } from '../src/academic/contextCallables'
 
 describe('phase 1 deterministic student context', () => {
   it('scopes cohort data, excludes submitted work, and computes attendance', () => {
@@ -273,5 +274,152 @@ describe('academic feature safety defaults', () => {
   it('keeps all Phase 1 and Phase 2 flags disabled by default', () => {
     assert.deepEqual(academicFeaturesEnabled(), DEFAULT_ACADEMIC_FEATURE_FLAGS)
     assert.equal(academicFeaturesEnabled({ academicIntelligenceEnabled: true }).studentDailySummaryEnabled, false)
+  })
+})
+
+// ─── Assignment targeting and curriculum semester ────────────────────────────
+//
+// The class list was fixed to delegate to sessionMatchesCohort, but the SAME
+// callable still compared assignment and curriculum cohort fields with raw
+// string equality. A student whose timetable showed three classes therefore
+// still saw "Assignments 0" — the zeros on the dashboard came from here.
+//
+// These cases pin the three ways that comparison silently dropped a real
+// assignment, and the prefix-normalisation bug found alongside it.
+
+describe('assignmentTargetsStudent — cohort matching', () => {
+  const student = {
+    id: 'stu-1',
+    uid: 'uid-1',
+    collegeId: 'vriddhi',
+    branch: 'BBA',
+    batch: '2027',
+    semester: 3,
+    section: 'A',
+  }
+  const base = { title: 'Banking and Financial Services', status: 'published' }
+
+  it('matches a plain assignment with no cohort restriction', () => {
+    assert.equal(assignmentTargetsStudent({ ...base }, student), true)
+  })
+
+  it('matches an assignment whose batch is an academic-year range', () => {
+    // "2026-2027" and "2027" are the same class; strict equality dropped it.
+    assert.equal(assignmentTargetsStudent({ ...base, batch: '2026-2027' }, student), true)
+    assert.equal(assignmentTargetsStudent({ ...base, batch: '2026-27' }, student), true)
+  })
+
+  it('matches a numeric batch and a string semester', () => {
+    assert.equal(assignmentTargetsStudent({ ...base, batch: 2027 }, student), true)
+    assert.equal(assignmentTargetsStudent({ ...base, semester: '3' }, student), true)
+  })
+
+  it('matches a section written with its prefix', () => {
+    assert.equal(assignmentTargetsStudent({ ...base, section: 'Section A' }, student), true)
+    assert.equal(assignmentTargetsStudent({ ...base, section: 'A' }, student), true)
+  })
+
+  it('matches when the student’s letter is in `division` rather than `section`', () => {
+    const divisionOnly = { ...student, section: undefined, division: 'A' }
+    assert.equal(assignmentTargetsStudent({ ...base, section: 'A' }, divisionOnly), true)
+    assert.equal(assignmentTargetsStudent({ ...base, section: 'Section A' }, divisionOnly), true)
+  })
+
+  it('matches an assignment covering several sections', () => {
+    assert.equal(assignmentTargetsStudent({ ...base, section: 'A,B,C,D' }, student), true)
+  })
+
+  it('still rejects a genuinely different cohort', () => {
+    assert.equal(assignmentTargetsStudent({ ...base, branch: 'BCA' }, student), false)
+    assert.equal(assignmentTargetsStudent({ ...base, batch: '2026' }, student), false, 'different intake')
+    assert.equal(assignmentTargetsStudent({ ...base, semester: 4 }, student), false)
+    assert.equal(assignmentTargetsStudent({ ...base, section: 'E' }, student), false)
+  })
+
+  it('honours targetStudents', () => {
+    assert.equal(assignmentTargetsStudent({ ...base, targetStudents: ['stu-1'] }, student), true)
+    assert.equal(assignmentTargetsStudent({ ...base, targetStudents: ['uid-1'] }, student), true)
+    assert.equal(assignmentTargetsStudent({ ...base, targetStudents: ['someone-else'] }, student), false)
+  })
+
+  it('honours targetSections, matching section/division/name/id shapes', () => {
+    for (const target of [
+      { section: 'A' },
+      { division: 'A' },
+      { sectionName: 'Section A' },
+      { sectionId: 'a' },
+    ]) {
+      assert.equal(assignmentTargetsStudent({ ...base, targetSections: [target] }, student), true, JSON.stringify(target))
+    }
+  })
+
+  it('rejects targetSections that name a different cohort', () => {
+    assert.equal(assignmentTargetsStudent({ ...base, targetSections: [{ section: 'E' }] }, student), false)
+    assert.equal(
+      assignmentTargetsStudent({ ...base, targetSections: [{ section: 'A', batch: '2026' }] }, student),
+      false,
+      'same section, different intake',
+    )
+    assert.equal(
+      assignmentTargetsStudent({ ...base, targetSections: [{ section: 'A', branch: 'BCA' }] }, student),
+      false,
+      'same section, different programme',
+    )
+  })
+
+  it('admits when ANY target section matches', () => {
+    assert.equal(
+      assignmentTargetsStudent({ ...base, targetSections: [{ section: 'E' }, { section: 'A' }] }, student),
+      true,
+    )
+  })
+})
+
+describe('student curriculum filtering — semester', () => {
+  const student = { id: 'stu-1', collegeId: 'vriddhi', branch: 'BBA', batch: '2027', semester: 3, section: 'A' }
+  const course = (semester: unknown) => ({
+    id: `c-${String(semester)}`,
+    collegeId: 'vriddhi',
+    status: 'active',
+    courseCode: 'BBA 3.2',
+    courseName: 'Banking',
+    semester,
+    modules: [],
+  })
+  const build = (semesters: unknown[]) =>
+    buildStudentAcademicContext({
+      student: { ...student },
+      date: '2026-11-27',
+      classes: [],
+      assignments: [],
+      tests: [],
+      curriculum: semesters.map(course) as never,
+      attendance: [],
+      now: '2026-11-27T10:00:00.000Z',
+    })
+
+  it('keeps a curriculum row whose semester is a STRING', () => {
+    // The number-vs-string split: student.semester is the number 3.
+    const result = build(['3'])
+    assert.equal(result.curriculum.length, 1, 'a string semester must not drop the subject')
+  })
+
+  it('keeps a numeric semester', () => {
+    assert.equal(build([3]).curriculum.length, 1)
+  })
+
+  it('keeps a row with NO semester (no constraint)', () => {
+    assert.equal(build([undefined]).curriculum.length, 1)
+    assert.equal(build(['']).curriculum.length, 1)
+  })
+
+  it('drops a row for a different semester', () => {
+    assert.equal(build([4]).curriculum.length, 0)
+    assert.equal(build(['5']).curriculum.length, 0)
+  })
+
+  it('keeps rows across mixed spellings and drops only the mismatches', () => {
+    const result = build(['3', 3, 4, '3'])
+    assert.equal(result.curriculum.length, 3)
   })
 })

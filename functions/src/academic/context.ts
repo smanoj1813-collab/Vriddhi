@@ -331,6 +331,20 @@ const dateMs = (value: unknown): number => {
   const parsed = Date.parse(text(value))
   return Number.isFinite(parsed) ? parsed : Number.MAX_SAFE_INTEGER
 }
+/**
+ * Semester as a number, 0 meaning "not recorded".
+ *
+ * The twin of the rule studentCurriculum applies (`Number(x) || 0`). Kept
+ * local because that module does not export it; the two must agree, and both
+ * exist only to stop a number/string split from silently matching nothing.
+ */
+const semesterNumber = (value: unknown): number => {
+  if (value === null || value === undefined || value === '') return 0
+  const parsed = typeof value === 'number' ? value : Number(String(value).trim())
+  if (!Number.isFinite(parsed)) return 0
+  const int = Math.trunc(parsed)
+  return int > 0 ? int : 0
+}
 const sameCollege = (collegeId: string, value: { collegeId?: string }): boolean =>
   !value.collegeId || value.collegeId === collegeId
 const sortByDate = <T extends { dueDate?: string; startDateTime?: string; date?: string }>(items: T[]): T[] =>
@@ -404,7 +418,24 @@ export function buildStudentAcademicContext(input: {
   const curriculum = input.curriculum
     .filter((item) => sameCollege(student.collegeId, item))
     .filter((item) => !item.status || ['approved', 'published', 'active'].includes(lower(item.status)))
-    .filter((item) => !item.semester || item.semester === student.semester)
+    // Semester is compared NUMERICALLY, not strictly.
+    //
+    // `item.semester === student.semester` failed whenever one side was a
+    // number and the other a string — the same number-vs-string split that
+    // emptied the class list. A curriculum row whose semester was "3" and a
+    // student whose semester was 3 dropped the student's own curriculum, and
+    // the dashboard reported no subjects.
+    //
+    // semesterNumber is the server-side twin of the canonical rule in
+    // studentCurriculum (`Number(x) || 0`): an unusable value reads as 0,
+    // which means "not recorded" and imposes NO constraint — the same wildcard
+    // the matcher applies, so a row missing a semester is never dropped.
+    .filter((item) => {
+      const itemSemester = semesterNumber(item.semester)
+      const studentSemester = semesterNumber(student.semester)
+      if (!itemSemester || !studentSemester) return true
+      return itemSemester === studentSemester
+    })
     .sort((a, b) => a.courseCode.localeCompare(b.courseCode) || a.id.localeCompare(b.id))
   const records = [...input.attendance].sort((a, b) => a.date.localeCompare(b.date))
   const present = records.filter((item) => ['present', 'late'].includes(lower(item.status))).length
