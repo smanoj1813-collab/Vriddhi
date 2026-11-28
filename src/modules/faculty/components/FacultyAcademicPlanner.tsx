@@ -30,6 +30,40 @@ import {
 
 const MAX_PER_PANEL = 5;
 
+/**
+ * What to call a row's course.
+ *
+ * These items come from three different collections and none of them agree on
+ * where the course lives: a session is scheduled by `subject`, an assignment
+ * stores `courseName` as well, and a scheduled test may carry the legacy
+ * `subjectName`. Falling back to a bare "Session" / "Course pending" told the
+ * reader nothing — a faculty member opening this before a class needs to know
+ * what they are about to teach, not that a row exists.
+ *
+ * Ordered most-specific first, and the last resort is a neutral phrase rather
+ * than an empty string so the row never looks broken.
+ */
+const courseLabel = (
+  item: { courseCode?: string; courseName?: string; subjectCode?: string; subjectName?: string; subject?: string; courseId?: string },
+  fallback: string
+): string =>
+  item.courseCode
+  || item.subjectCode
+  || item.courseName
+  || item.subjectName
+  || item.subject
+  || item.courseId
+  || fallback;
+
+/** A second line for a session: time and room when the schedule knows them. */
+const sessionDetail = (session: { startTime?: string; endTime?: string; room?: string }): string | null => {
+  const time = session.startTime
+    ? session.endTime ? `${session.startTime}–${session.endTime}` : session.startTime
+    : '';
+  const parts = [time, session.room].filter(Boolean);
+  return parts.length ? parts.join(' · ') : null;
+};
+
 function formatDate(value: string | undefined, fallback = 'Date pending'): string {
   if (!value) return fallback;
   const date = new Date(value);
@@ -224,8 +258,8 @@ export default function FacultyAcademicPlanner() {
             context.upcomingSessions.slice(0, MAX_PER_PANEL).map((session) => (
               <ContextRow
                 key={session.id}
-                primary={session.courseCode || session.courseId || 'Session'}
-                secondary={formatDate(session.date)}
+                primary={courseLabel(session, 'Class')}
+                secondary={[formatDate(session.date), sessionDetail(session)].filter(Boolean).join(' · ')}
                 chip={session.topicNames?.length ? { label: `${session.topicNames.length} topic${session.topicNames.length === 1 ? '' : 's'}`, color: 'primary' } : undefined}
               />
             ))
@@ -242,7 +276,7 @@ export default function FacultyAcademicPlanner() {
               <ContextRow
                 key={assignment.id}
                 primary={assignment.title}
-                secondary={`${assignment.courseCode || 'Course pending'}${assignment.dueDate ? ` · due ${formatDate(assignment.dueDate)}` : ''}`}
+                secondary={`${courseLabel(assignment, 'No course linked')}${assignment.dueDate ? ` · due ${formatDate(assignment.dueDate)}` : ''}`}
               />
             ))
           )}
@@ -258,7 +292,7 @@ export default function FacultyAcademicPlanner() {
               <ContextRow
                 key={assessment.id}
                 primary={assessment.title}
-                secondary={`${assessment.courseCode || 'Course pending'}${assessment.scheduledAt ? ` · ${formatDate(assessment.scheduledAt)}` : ''}`}
+                secondary={`${courseLabel(assessment, 'No course linked')}${assessment.scheduledAt ? ` · ${formatDate(assessment.scheduledAt)}` : ''}`}
                 chip={assessment.status ? { label: assessment.status, color: 'default' } : undefined}
               />
             ))

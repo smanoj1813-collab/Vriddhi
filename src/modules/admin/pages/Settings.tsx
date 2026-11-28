@@ -25,6 +25,7 @@ import CourseAssignmentPanel from '@/shared/components/courses/CourseAssignmentP
 import ResumeAddonPanel from '@/shared/components/resume/ResumeAddonPanel'
 import CollegeBrandingUpload from '@/shared/components/CollegeBrandingUpload'
 import EmailSettingsCard from '../components/EmailSettingsCard'
+import CohortConfigPanel from '../components/CohortConfigPanel'
 
 // Toggle Switch Component
 function ToggleSwitch({ checked, onChange, label, disabled }: { checked: boolean; onChange: (v: boolean) => void; label: string; disabled?: boolean }) {
@@ -569,6 +570,20 @@ function AccountSettings({ user }: { user: AppUser | null }) {
                   </button>
                 </div>
               </div>
+
+              {/* Cohort vocabulary — the sections and semesters this college
+                  runs. Academic setup belongs to the college, so principal /
+                  admin can edit it; the server-side validators and every
+                  onboarding screen read from this one document. */}
+              {user?.collegeId && ['principal', 'admin', 'superadmin'].includes(String(user?.role)) && (
+                <div className="mt-8 pt-6 border-t border-slate-200 dark:border-slate-700/50">
+                  <CohortConfigPanel
+                    collegeId={user.collegeId}
+                    canEdit={['principal', 'admin', 'superadmin'].includes(String(user?.role))}
+                    embedded
+                  />
+                </div>
+              )}
 
               {/* Placement prep visibility and course assignments are PLATFORM
                   controls. The Vriddhi superadmin decides which company guides

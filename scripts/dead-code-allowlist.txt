@@ -2,3 +2,9 @@
 # Each entry is deliberate: either standalone tooling or a component that is
 # compiled and typechecked but not yet mounted on a route.
 # Regenerate with: node scripts/check-dead-code.cjs --write
+# Derived cohort identity (college|programme|batch|semester|sections).
+# Pure normaliser + unit-tested by functions/test/cohortKey.test.ts (which
+# imports BOTH this copy and functions/src/cohortKey.ts to pin them together).
+# Not yet mounted: writers move onto it in the next step (student import,
+# session creation), at which point this entry must be removed.
+src/shared/utils/cohortKey.ts

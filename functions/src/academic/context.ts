@@ -8,6 +8,8 @@
  * test and prevents routine academic answers from becoming agent prompts.
  */
 
+import { sessionMatchesCohort } from '../studentCurriculum'
+
 export interface AcademicStudent {
   id: string
   uid?: string
@@ -236,15 +238,34 @@ export interface FacultySession {
   date: string
   courseId?: string
   courseCode?: string
+  /**
+   * Sessions are written from a weekly schedule slot, which carries a subject
+   * and a subject code but never a curriculum course id. Without these two
+   * fields every session was unattributable, and an unattributable session was
+   * dropped by the course filter — which is how a faculty member with classes
+   * today saw "Upcoming sessions: 0".
+   */
+  subject?: string
+  subjectCode?: string
+  /** Who teaches it. The field the dashboard already filters on. */
+  facultyId?: string
+  startTime?: string
+  endTime?: string
+  room?: string
   topicIds?: string[]
   topicNames?: string[]
   status?: string
+  attendanceMarked?: boolean
 }
 
 export interface FacultyAssignment {
   id: string
   courseId?: string
   courseCode?: string
+  /** Stored by sanitizeAssignmentAuthoringInput. The panel used to ignore it. */
+  courseName?: string
+  subject?: string
+  subjectCode?: string
   title: string
   dueDate?: string
   status?: string
@@ -254,6 +275,10 @@ export interface FacultyAssessment {
   id: string
   courseId?: string
   courseCode?: string
+  /** scheduledTests stores `subject` (or the legacy `subjectName`). */
+  subject?: string
+  subjectName?: string
+  courseName?: string
   title: string
   scheduledAt?: string
   status?: string
@@ -306,18 +331,61 @@ const dateMs = (value: unknown): number => {
   const parsed = Date.parse(text(value))
   return Number.isFinite(parsed) ? parsed : Number.MAX_SAFE_INTEGER
 }
+/**
+ * Semester as a number, 0 meaning "not recorded".
+ *
+ * The twin of the rule studentCurriculum applies (`Number(x) || 0`). Kept
+ * local because that module does not export it; the two must agree, and both
+ * exist only to stop a number/string split from silently matching nothing.
+ */
+const semesterNumber = (value: unknown): number => {
+  if (value === null || value === undefined || value === '') return 0
+  const parsed = typeof value === 'number' ? value : Number(String(value).trim())
+  if (!Number.isFinite(parsed)) return 0
+  const int = Math.trunc(parsed)
+  return int > 0 ? int : 0
+}
 const sameCollege = (collegeId: string, value: { collegeId?: string }): boolean =>
   !value.collegeId || value.collegeId === collegeId
 const sortByDate = <T extends { dueDate?: string; startDateTime?: string; date?: string }>(items: T[]): T[] =>
   [...items].sort((a, b) => dateMs(a.dueDate || a.startDateTime || a.date) - dateMs(b.dueDate || b.startDateTime || b.date))
 
+/**
+ * Does this session belong to the student's cohort?
+ *
+ * This used to be a hand-rolled strict comparison, and strict comparison is
+ * wrong for this data in ways that are invisible until they bite:
+ *
+ *   schedule "2026-2027" vs student "2027"   → an academic-year range and its
+ *                                              end year are the same class
+ *   schedule batch 2026  vs student "2026"   → number vs string
+ *   schedule "Section A" vs student "A"      → the prefix is noise
+ *   schedule "A,B,C,D"   vs student "A"      → division is a letter SET
+ *   schedule semester 3  vs student "3"      → number vs string
+ *
+ * Every one of those produced "No classes scheduled today" for a student whose
+ * timetable showed three classes — because the timetable page uses the shared
+ * canonical matcher and this did not. `sessionMatchesCohort` in
+ * ../studentCurriculum is that matcher, already used by curriculum progress;
+ * delegate to it so the two screens cannot disagree again.
+ */
 function isStudentClassFor(classItem: ContextClass, student: AcademicStudent): boolean {
-  if (classItem.branch && classItem.branch !== student.branch) return false
-  if (classItem.batch && classItem.batch !== student.batch) return false
-  if (classItem.semester && classItem.semester !== student.semester) return false
-  const division = lower(classItem.division || classItem.section)
-  const studentDivision = lower(student.division || student.section)
-  return !division || !studentDivision || division === studentDivision
+  return sessionMatchesCohort(
+    {
+      branch: classItem.branch,
+      batch: classItem.batch,
+      semester: classItem.semester,
+      division: classItem.division,
+      section: classItem.section,
+    },
+    {
+      branch: student.branch,
+      batch: student.batch,
+      semester: student.semester,
+      division: student.division,
+      section: student.section,
+    }
+  )
 }
 
 export function buildStudentAcademicContext(input: {
@@ -350,7 +418,24 @@ export function buildStudentAcademicContext(input: {
   const curriculum = input.curriculum
     .filter((item) => sameCollege(student.collegeId, item))
     .filter((item) => !item.status || ['approved', 'published', 'active'].includes(lower(item.status)))
-    .filter((item) => !item.semester || item.semester === student.semester)
+    // Semester is compared NUMERICALLY, not strictly.
+    //
+    // `item.semester === student.semester` failed whenever one side was a
+    // number and the other a string — the same number-vs-string split that
+    // emptied the class list. A curriculum row whose semester was "3" and a
+    // student whose semester was 3 dropped the student's own curriculum, and
+    // the dashboard reported no subjects.
+    //
+    // semesterNumber is the server-side twin of the canonical rule in
+    // studentCurriculum (`Number(x) || 0`): an unusable value reads as 0,
+    // which means "not recorded" and imposes NO constraint — the same wildcard
+    // the matcher applies, so a row missing a semester is never dropped.
+    .filter((item) => {
+      const itemSemester = semesterNumber(item.semester)
+      const studentSemester = semesterNumber(student.semester)
+      if (!itemSemester || !studentSemester) return true
+      return itemSemester === studentSemester
+    })
     .sort((a, b) => a.courseCode.localeCompare(b.courseCode) || a.id.localeCompare(b.id))
   const records = [...input.attendance].sort((a, b) => a.date.localeCompare(b.date))
   const present = records.filter((item) => ['present', 'late'].includes(lower(item.status))).length
@@ -382,20 +467,47 @@ export function buildFacultyAcademicContext(input: {
   const shouldScope = Boolean(input.courseId || input.scopeToCourses)
   const courseIds = new Set(courses.map((course) => course.id).filter(Boolean))
   const courseCodes = new Set(courses.map((course) => lower(course.courseCode)).filter(Boolean))
-  const matchesCourse = (item: { courseId?: string; courseCode?: string }) =>
-    !shouldScope
-    || Boolean(
-      (item.courseId && courseIds.has(item.courseId))
-      || (item.courseCode && courseCodes.has(lower(item.courseCode)))
-    )
+
+  // A session links to its course through the scheduling fields it actually
+  // stores — subject / subjectCode — not through a curriculum course id. Both
+  // spellings are compared because the two writers disagree: the weekly-schedule
+  // path stores "CS301", the ad-hoc path stores a human subject name.
+  const matchesCourse = (item: { courseId?: string; courseCode?: string; subject?: string; subjectCode?: string }) => {
+    if (!shouldScope) return true
+    // An explicit curriculum link always wins.
+    if (item.courseId && courseIds.has(item.courseId)) return true
+    if (item.courseCode && courseCodes.has(lower(item.courseCode))) return true
+    const key = lower(item.subjectCode || item.subject)
+    if (!key) return false
+    if (courseCodes.has(key)) return true
+    // Give back the code-shaped prefix of a subject name ("Language-I" ->
+    // "lang.3.1" style codes are compared whole, but a name stored as
+    // "CS301 - Databases" must still match the code "CS301").
+    const head = lower(String(item.subject || '').split(/[-–—]/)[0])
+    return Boolean(head) && courseCodes.has(head)
+  }
+
+  // Hiding a class a teacher is about to walk into is a worse failure than
+  // showing one extra, so an explicit courseId filter stays strict (the caller
+  // asked for that course) while the implicit "my courses" scope only drops a
+  // session when it can be attributed to a DIFFERENT course. Unattributable
+  // sessions are kept.
+  const belongsToAnotherCourse = (item: { courseId?: string; courseCode?: string; subject?: string; subjectCode?: string }) => {
+    const explicit = item.courseId || item.courseCode
+    if (!explicit) return false
+    return !matchesCourse(item)
+  }
+
   const upcomingSessions = input.sessions
-    .filter(matchesCourse)
+    .filter((item) => (input.courseId ? matchesCourse(item) : !belongsToAnotherCourse(item)))
     .filter((item) => !input.today || item.date >= input.today)
     .sort((a, b) => a.date.localeCompare(b.date) || a.id.localeCompare(b.id))
   return {
     kind: 'faculty', generatedFor: input.today || '', collegeId: input.collegeId, facultyId: input.facultyId,
     courses, completedTopics: [...new Set(input.completedTopics.map(text).filter(Boolean))].sort(),
-    upcomingSessions, assignmentHistory: input.assignments.filter(matchesCourse), assessmentHistory: input.assessments.filter(matchesCourse),
+    upcomingSessions,
+    assignmentHistory: input.assignments.filter((item) => (input.courseId ? matchesCourse(item) : !belongsToAnotherCourse(item))),
+    assessmentHistory: input.assessments.filter((item) => (input.courseId ? matchesCourse(item) : !belongsToAnotherCourse(item))),
   }
 }
 

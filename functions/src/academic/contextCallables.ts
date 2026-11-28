@@ -1,5 +1,6 @@
 import admin from 'firebase-admin'
 import { HttpsError, onCall, type CallableRequest } from 'firebase-functions/v2/https'
+import { sessionMatchesCohort } from '../studentCurriculum.js'
 import {
   buildFacultyAcademicContext,
   buildPaperAcademicContext,
@@ -62,26 +63,83 @@ async function studentIdentity(uid: string, token: Record<string, unknown>): Pro
 function asClass(id: string, value: admin.firestore.DocumentData): ContextClass {
   return { id, ...value, date: String(value.date || value.sessionDate || '').slice(0, 10), topics: Array.isArray(value.topicsCovered) ? value.topicsCovered.map(String) : [] }
 }
-function assignmentTargetsStudent(value: admin.firestore.DocumentData, student: AcademicStudent): boolean {
+/**
+ * Does this assignment address the student's cohort?
+ *
+ * This was raw string equality on every cohort field, which is wrong for this
+ * data in the same ways the class matcher was:
+ *
+ *   assignment "2026-2027" vs student "2027"    → same class, dropped
+ *   assignment batch 2026  vs student "2026"    → number vs string, dropped
+ *   assignment "Section A" vs student "A"       → prefix is noise, dropped
+ *   assignment "A,B,C,D"   vs student "A"       → section is a SET, dropped
+ *
+ * Those drops are why a student whose timetable showed three classes still saw
+ * "Assignments 0" on the dashboard. The class matcher was fixed to delegate to
+ * sessionMatchesCohort; this one has to use the same rule or the two disagree
+ * again.
+ *
+ * A blank field on EITHER side is "no constraint", matching the matcher's own
+ * wildcard rule — an assignment with no batch addresses every intake.
+ */
+export function assignmentTargetsStudent(value: admin.firestore.DocumentData, student: AcademicStudent): boolean {
   const targetStudents = Array.isArray(value.targetStudents) ? value.targetStudents.map(String) : []
-  if (targetStudents.length > 0 && ![student.id, student.uid || '', String(value.regNo || '')].some((id) => id && targetStudents.includes(id))) return false
+  if (
+    targetStudents.length > 0
+    && ![student.id, student.uid || '', String(value.regNo || '')].some(
+      (id) => id && targetStudents.includes(id),
+    )
+  ) {
+    return false
+  }
+
+  // A student's section may be recorded in either `section` or `division`
+  // (records split one letter across the two fields). Keep both so the set
+  // rule can see the letter whichever field holds it.
+  const studentCohort = {
+    branch: student.branch,
+    batch: student.batch,
+    semester: student.semester,
+    section: student.section,
+    division: student.division,
+  }
+
   const targetSections = Array.isArray(value.targetSections) ? value.targetSections : []
   if (targetSections.length > 0) {
-    const section = String(student.section || student.division || '').toLowerCase().replace(/^section\\s+/, '')
+    // Any ONE matching target admits the assignment.
+    //
+    // NOTE: the previous implementation also ran an inline
+    // `.replace(/^section\\s+/, '')` on both sides. That regex matches a
+    // literal backslash followed by "s", never a space, so it never stripped
+    // the "Section " prefix at all — the intended normalisation silently did
+    // nothing. cohortLetters drops the prefix properly, so the local hack is
+    // gone rather than repaired.
     const matched = targetSections.some((target: unknown) => {
       const item = (target || {}) as Record<string, unknown>
-      const expected = String(item.section || item.division || item.sectionName || item.sectionId || '').toLowerCase().replace(/^section\\s+/, '')
-      return expected && expected === section
-        && (!item.branch || String(item.branch) === String(student.branch || ''))
-        && (!item.batch || String(item.batch) === String(student.batch || ''))
-        && (!item.semester || Number(item.semester) === Number(student.semester || 0))
+      return sessionMatchesCohort(
+        {
+          branch: item.branch,
+          batch: item.batch,
+          semester: item.semester,
+          section: item.section ?? item.division ?? item.sectionName ?? item.sectionId,
+        },
+        studentCohort,
+      )
     })
     if (!matched) return false
   }
-  if (value.branch && String(value.branch) !== String(student.branch || '')) return false
-  if (value.batch && String(value.batch) !== String(student.batch || '')) return false
-  if (value.semester && Number(value.semester) !== Number(student.semester || 0)) return false
-  return true
+
+  // The assignment's own cohort fields, when it carries them.
+  return sessionMatchesCohort(
+    {
+      branch: value.branch,
+      batch: value.batch,
+      semester: value.semester,
+      section: value.section,
+      division: value.division,
+    },
+    studentCohort,
+  )
 }
 
 function asAssignment(id: string, value: admin.firestore.DocumentData): ContextAssignment {
@@ -169,10 +227,24 @@ export const getFacultyAcademicContext = onCall(
     if (!collegeId) throw new HttpsError('failed-precondition', 'College scope is required')
     const today = dateKey(request.data?.date || new Date().toISOString())
     const db = admin.firestore()
+    // Sessions used to be read with a bare `limit(200)` and no order. Firestore
+    // returns documents in id order, and session ids begin with the date, so a
+    // college past its 200th session only ever read the OLDEST ones — every
+    // upcoming class fell outside the window and the panel said "0 upcoming"
+    // while the dashboard, which queries by date, correctly showed today's
+    // classes. Bounding by date asks for the rows the panel actually needs and
+    // reads fewer of them than before.
     const [courseDocs, mappingDocs, sessionDocs, assignmentDocs, assessmentDocs, aliases] = await Promise.all([
       db.collection('curriculum').where('collegeId', '==', collegeId).limit(MAX_CONTEXT_DOCS).get(),
       db.collection('curriculumFacultyMappings').where('collegeId', '==', collegeId).limit(MAX_CONTEXT_DOCS).get(),
-      db.collection('classSessions').where('collegeId', '==', collegeId).limit(MAX_CONTEXT_DOCS).get(),
+      // collegeId + date ASC is an existing composite index, so this needs no
+      // index deploy. `today` is inclusive: a class earlier today still shows.
+      db.collection('classSessions')
+        .where('collegeId', '==', collegeId)
+        .where('date', '>=', today)
+        .orderBy('date', 'asc')
+        .limit(MAX_CONTEXT_DOCS)
+        .get(),
       db.collection('assignments').where('collegeId', '==', collegeId).limit(MAX_CONTEXT_DOCS).get(),
       db.collection('scheduledTests').where('collegeId', '==', collegeId).limit(MAX_CONTEXT_DOCS).get(),
       facultyIdentityAliases(uid, token),

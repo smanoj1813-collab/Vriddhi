@@ -103,6 +103,16 @@ export interface AcademicContextSession {
   date: string
   courseId?: string
   courseCode?: string
+  /**
+   * What the class actually is. Sessions are scheduled by subject, so this is
+   * the only human field most of them carry — without it every row in the
+   * planner read a bare "Session".
+   */
+  subject?: string
+  subjectCode?: string
+  room?: string
+  startTime?: string
+  endTime?: string
   topicNames?: string[]
   status?: string
 }
@@ -111,6 +121,9 @@ export interface AcademicContextFacultyAssignment {
   id: string
   courseId?: string
   courseCode?: string
+  courseName?: string
+  subject?: string
+  subjectCode?: string
   title: string
   dueDate?: string
   status?: string
@@ -120,6 +133,9 @@ export interface AcademicContextFacultyAssessment {
   id: string
   courseId?: string
   courseCode?: string
+  courseName?: string
+  subject?: string
+  subjectName?: string
   title: string
   scheduledAt?: string
   status?: string
@@ -374,6 +390,11 @@ function normaliseFacultyContext(raw: UnknownRecord): FacultyAcademicContext {
         date: String(session.date ?? '').slice(0, 10),
         courseId: asText(session.courseId),
         courseCode: asText(session.courseCode),
+        subject: asText(session.subject),
+        subjectCode: asText(session.subjectCode),
+        room: asText(session.room),
+        startTime: asText(session.startTime),
+        endTime: asText(session.endTime),
         topicNames: asStringArray(session.topicNames ?? session.topics),
         status: asText(session.status),
       }
@@ -384,6 +405,9 @@ function normaliseFacultyContext(raw: UnknownRecord): FacultyAcademicContext {
         id: String(assignment.id ?? index),
         courseId: asText(assignment.courseId),
         courseCode: asText(assignment.courseCode),
+        courseName: asText(assignment.courseName),
+        subject: asText(assignment.subject),
+        subjectCode: asText(assignment.subjectCode),
         title: asText(assignment.title) || 'Assignment',
         dueDate: asText(assignment.dueDate),
         status: asText(assignment.status),
@@ -395,6 +419,9 @@ function normaliseFacultyContext(raw: UnknownRecord): FacultyAcademicContext {
         id: String(assessment.id ?? index),
         courseId: asText(assessment.courseId),
         courseCode: asText(assessment.courseCode),
+        courseName: asText(assessment.courseName),
+        subject: asText(assessment.subject),
+        subjectName: asText(assessment.subjectName),
         title: asText(assessment.title) || 'Assessment',
         scheduledAt: asText(assessment.scheduledAt ?? assessment.startDateTime),
         status: asText(assessment.status),
