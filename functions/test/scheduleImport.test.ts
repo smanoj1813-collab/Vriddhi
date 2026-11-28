@@ -136,6 +136,7 @@ describe('planScheduleImport — validation', () => {
           courseName: 'Business Law',
           branch: 'B.Com',
           semester: 4,
+          batch: '2026',
           facultyId: 'uid-1',
           facultyName: 'Dr. Rao',
         },
@@ -302,6 +303,7 @@ describe('planScheduleImport — mapping & faculty cross-references', () => {
           courseName: 'Business Law',
           branch: 'B.Com',
           semester: 4,
+          batch: '2026',
           facultyId: 'uid-1',
           facultyName: 'Dr. Rao',
         },
@@ -346,5 +348,46 @@ describe('validateScheduleImportPayload', () => {
       () => validateScheduleImportPayload({ rows }, 'admin', 'c1'),
       (e: any) => e.code === 'invalid-argument',
     )
+  })
+})
+
+// ─── Batch scope of the curriculum mapping ───────────────────────────────────
+//
+// A mapping row records the intake it belongs to ("2026-2027"), and an import
+// row records the class ("2027"). These two name one class. Comparing them as
+// strings made the row look unmapped — a warning in the preview, and a hard
+// failure in the apply gate.
+
+describe('planScheduleImport — mapping batch scope', () => {
+  const mapping = (over: Partial<ImportMappingRef> = {}): ImportMappingRef => ({
+    courseCode: 'BL01',
+    courseName: 'Business Law',
+    branch: 'B.Com',
+    semester: 4,
+    batch: '2026-2027',
+    facultyId: 'uid-1',
+    facultyName: 'Dr. Rao',
+    ...over,
+  })
+  const mapped = (row: Record<string, string>, m: ImportMappingRef = mapping()) =>
+    !planFor([row], { byId: new Map([['uid-1', 'Dr. Rao']]), mappings: [m] }).rows[0].warnings.some(w => w.includes('not in the college'))
+
+  it('accepts an academic-year range mapping for the end-year class', () => {
+    assert.ok(mapped({ ...VALID_ROW, batch: '2027' }))
+  })
+  it('accepts a plain-year mapping for a row recorded as a range', () => {
+    assert.ok(mapped({ ...VALID_ROW, batch: '2026-2027' }, mapping({ batch: '2027' })))
+  })
+  it('still rejects a different intake', () => {
+    assert.ok(!mapped({ ...VALID_ROW, batch: '2029' }))
+  })
+  it('covers every intake of a multi-intake mapping', () => {
+    const m = mapping({ batch: '2027,2028' })
+    assert.ok(mapped({ ...VALID_ROW, batch: '2027' }, m))
+    assert.ok(mapped({ ...VALID_ROW, batch: '2028' }, m))
+    assert.ok(!mapped({ ...VALID_ROW, batch: '2029' }, m))
+  })
+  it('treats a mapping with no batch as covering every intake', () => {
+    assert.ok(mapped({ ...VALID_ROW, batch: '2031' }, mapping({ batch: '' })))
   })
 })

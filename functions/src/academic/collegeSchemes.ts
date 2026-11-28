@@ -1,5 +1,6 @@
 import { SCHEME_PACK_PRESETS, type AcademicContext, type UniversitySchemePack } from './schemePack'
 import { academicKey, normalizeSchemePack, SchemeConfigurationError } from './schemeValidation'
+import { batchKeysMatch, normalizeBatchKey } from '../cohortBatch.js'
 
 export interface SchemePackChoice { schemePackId: string; revision: number }
 export interface CollegeSchemeRoute extends AcademicContext { schemePackId: string }
@@ -51,14 +52,16 @@ export function normalizeCollegeSchemeSelection(value: unknown): CollegeSchemeSe
     if (!result.programme && !result.batch && !result.semester) return fail('A route needs a programme, batch or semester; use Primary for the college-wide default')
     return result
   })
-  const scope = (r: CollegeSchemeRoute) => `${academicKey(r.programme)}|${academicKey(r.batch)}|${r.semester ?? ''}`
+  // Batch by KEY: routes for "2026-2027" and "2027" address one class and must
+  // be seen as competing, not as two distinct scopes.
+  const scope = (r: CollegeSchemeRoute) => `${academicKey(r.programme)}|${normalizeBatchKey(r.batch)}|${r.semester ?? ''}`
   if (new Set(routes.map(scope)).size !== routes.length) return fail('Duplicate/competing scheme routes for the same scope')
   // Intersecting equal-specificity routes must not silently pick a pack by order.
   for (let i = 0; i < routes.length; i++) for (let j = i + 1; j < routes.length; j++) {
     const a = routes[i], b = routes[j]
     if (a.schemePackId !== b.schemePackId && specificity(a) === specificity(b) &&
       (!a.programme || !b.programme || academicKey(a.programme) === academicKey(b.programme)) &&
-      (!a.batch || !b.batch || academicKey(a.batch) === academicKey(b.batch)) &&
+      (!a.batch || !b.batch || batchKeysMatch(a.batch, b.batch)) &&
       (!a.semester || !b.semester || a.semester === b.semester)) return fail('Equally specific scheme routes overlap; narrow their programme/cohort scope')
   }
   return { assignments, primarySchemePackId: primarySchemePackId as string | null, routes }
@@ -73,9 +76,13 @@ export function selectCollegeScheme(configuration: CollegeSchemeConfiguration, c
   let id = configuration.primarySchemePackId
   let selection: 'primary' | 'route' = 'primary'
   if (context) {
+    // A route scoped by a field the student record does not carry still enters
+    // `possible` (the blank side is a wildcard), and the guard below refuses to
+    // guess. That is deliberate: falling back to the primary pack in silence is
+    // how a semester-specific scheme gets lost without any error.
     const possible = configuration.routes.filter(r =>
       (!r.programme || !context.programme || academicKey(r.programme) === academicKey(context.programme)) &&
-      (!r.batch || !context.batch || academicKey(r.batch) === academicKey(context.batch)) &&
+      (!r.batch || !context.batch || batchKeysMatch(r.batch, context.batch)) &&
       (!r.semester || !context.semester || r.semester === context.semester))
     if (possible.some(r => (r.programme && !context.programme) || (r.batch && !context.batch) || (r.semester && !context.semester))) return fail('Student programme, batch or semester is missing; the assigned scheme route cannot be determined safely')
     possible.sort((a, b) => specificity(b) - specificity(a))

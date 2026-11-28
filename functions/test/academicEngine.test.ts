@@ -420,3 +420,41 @@ describe('explicit programme-specific course grade point methods', () => {
     }
   })
 })
+
+describe('scheme scope compares the class, not the spelling of the batch', () => {
+  // The fixture context is the class of 2027 written as "2026-27". A mapping or
+  // credit requirement that writes the same class as "2027" — which is what the
+  // student import stores — must resolve, not be silently skipped.
+  it('resolves a course scoped to the end year of the context batch', () => {
+    const p = academicFixture()
+    p.courses!.forEach((c) => { c.batch = undefined })
+    p.courses![0] = { ...p.courses![0], batch: '2027', credits: 3 }
+    assert.equal(resolveSchemeCourse(p, 'CS101', context).course.credits, 3)
+  })
+  it('resolves a course scoped to a range when the context states the end year', () => {
+    const p = academicFixture()
+    p.courses!.forEach((c) => { c.batch = undefined })
+    p.courses![0] = { ...p.courses![0], batch: '2026-2027', credits: 3 }
+    assert.equal(resolveSchemeCourse(p, 'CS101', { ...context, batch: '2027' }).course.credits, 3)
+  })
+  it('still refuses a course scoped to a different intake', () => {
+    const p = academicFixture()
+    p.courses!.forEach((c) => { c.batch = undefined })
+    p.courses![0] = { ...p.courses![0], batch: '2028' }
+    assert.throws(() => resolveSchemeCourse(p, 'CS101', context), /no approved credits/)
+  })
+  it('resolves the batch-scoped credit requirement by class key', () => {
+    const scoped = () => {
+      const p = academicFixture()
+      // A requirement for one intake must not be applied to another.
+      p.creditRequirements![0] = { ...p.creditRequirements![0], batch: '2027' } as any
+      return normalizeSchemePack(p)
+    }
+    assert.equal(auditProgrammeCredits(rows, scoped(), context).configured, true)
+    assert.equal(auditProgrammeCredits(rows, scoped(), { ...context, batch: '2030' }).configured, false)
+    // The same requirement written as a range still addresses the class of 2027.
+    const ranged = academicFixture()
+    ranged.creditRequirements![0] = { ...ranged.creditRequirements![0], batch: '2026-2027' } as any
+    assert.equal(auditProgrammeCredits(rows, normalizeSchemePack(ranged), { ...context, batch: '2027' }).configured, true)
+  })
+})

@@ -1,3 +1,5 @@
+import { batchKeyTokens, cohortLetters } from './cohortBatch.js'
+
 /** Academic early-warning decisions. No Firebase/browser I/O: all evidence and
  * completeness markers are supplied by the server. Missing evidence is NEVER
  * equivalent to a zero, absence, non-submission or completed check. */
@@ -116,6 +118,56 @@ function studentValues(student: RiskRow, uid = '') {
     branch: text(student.branch || student.department), batch: text(student.batch || student.academicYear),
     division: text(student.division || student.section), section: text(student.section || student.division), semester: Number(student.semester) || 0 }
 }
+/**
+ * Audience matching uses the same canonical rules as the student portal, for the
+ * same reason: staff record one class in several legitimate ways and an exact
+ * string comparison silently drops real students.
+ *
+ *   batch    "2026-2027" is the class of "2027", and a multi-intake audience
+ *            ("2027,2028") addresses both. Keyed tokens, so a range agrees with
+ *            its end year.
+ *   division "A,B,C,D" is a class that CONTAINS "A"; the student's own letter may
+ *            sit in either the division or the section field.
+ *
+ * A blank field on either side stays "no constraint", exactly as before.
+ */
+const riskBranchKey = (v: unknown) => String(v ?? '').trim().toLowerCase().replace(/[.,;:'’"·]+/g, '').replace(/\s+/g, ' ').trim()
+const riskSemester = (v: unknown) => Number(v) || 0
+
+function riskBranchMatches(scopeBranch: unknown, studentBranch: string): boolean {
+  const scope = riskBranchKey(scopeBranch)
+  const student = riskBranchKey(studentBranch)
+  return !scope || !student || scope === student
+}
+
+function riskBatchMatches(scopeBatch: unknown, studentBatch: string): boolean {
+  const tokens = batchKeyTokens(scopeBatch)
+  const studentTokens = batchKeyTokens(studentBatch)
+  if (!tokens.length || !studentTokens.length) return true
+  return tokens.some(token => studentTokens.includes(token))
+}
+
+/** The student's division letter(s); `studentValues` fills both fields from either. */
+function riskStudentLetters(s: { division: string; section: string }): string[] {
+  const out: string[] = []
+  for (const letter of [...cohortLetters(s.division), ...cohortLetters(s.section)]) if (!out.includes(letter)) out.push(letter)
+  return out
+}
+
+function riskDivisionMatches(scopeDivision: unknown, s: { division: string; section: string }): boolean {
+  const scopeLetters = cohortLetters(scopeDivision)
+  if (!scopeLetters.length) return true
+  const studentLetters = riskStudentLetters(s)
+  if (!studentLetters.length) return true
+  return scopeLetters.some(letter => studentLetters.includes(letter))
+}
+
+function riskSemesterMatches(scopeSemester: unknown, s: { semester: number }): boolean {
+  const scope = riskSemester(scopeSemester)
+  if (!scope || !s.semester) return true
+  return scope === s.semester
+}
+
 /** Same explicit audience semantics as studentPortal; an empty cohort isn't a broadcast. */
 export function riskAssignmentTargets(assignment: RiskRow, student: RiskRow, uid = ''): boolean {
   if (assignment.collegeId !== student.collegeId) return false
@@ -124,8 +176,8 @@ export function riskAssignmentTargets(assignment: RiskRow, student: RiskRow, uid
   const cohort = assignment.cohort
   if (!cohort || typeof cohort !== 'object') return false
   if (![cohort.branch, cohort.batch, cohort.division].some(v => text(v)) && !(Number(cohort.semester) > 0)) return false
-  return (!cohort.branch || String(cohort.branch) === s.branch) && (!cohort.batch || String(cohort.batch) === s.batch)
-    && (!cohort.division || String(cohort.division) === s.division) && (!cohort.semester || Number(cohort.semester) === s.semester)
+  return riskBranchMatches(cohort.branch, s.branch) && riskBatchMatches(cohort.batch, s.batch)
+    && riskDivisionMatches(cohort.division, s) && riskSemesterMatches(cohort.semester, s)
 }
 /** Mirror the production scheduledTests visibility/audience, including regNo targets. */
 export function riskTestTargets(test: RiskRow, student: RiskRow, uid = ''): boolean {
@@ -139,11 +191,12 @@ export function riskTestTargets(test: RiskRow, student: RiskRow, uid = ''): bool
     if (!t || typeof t !== 'object') return false
     const section = normalizeSection(t.section || t.division || t.sectionName || t.sectionId)
     return !!section && [s.section, s.division].map(normalizeSection).includes(section)
-      && (!t.branch || String(t.branch) === s.branch) && (!t.batch || String(t.batch) === s.batch) && (!t.semester || Number(t.semester) === s.semester)
+      && riskBranchMatches(t.branch, s.branch) && riskBatchMatches(t.batch, s.batch) && riskSemesterMatches(t.semester, s)
   })) return true
   const fields = ['branch', 'batch', 'division', 'section'] as const
   if (!fields.some(k => text(test[k])) && !(Number(test.semester) > 0)) return false
-  return fields.every(k => !test[k] || String(test[k]) === s[k]) && (!test.semester || Number(test.semester) === s.semester)
+  return riskBranchMatches(test.branch, s.branch) && riskBatchMatches(test.batch, s.batch)
+    && riskDivisionMatches(test.division || test.section, s) && riskSemesterMatches(test.semester, s)
 }
 /** Payload identity is never used to select escalation recipients. */
 export function riskRecipients(subject: RiskPerson, candidates: RiskPerson[]): RiskPerson[] {

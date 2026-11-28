@@ -7,6 +7,7 @@ import {
   type UniversitySchemePack,
 } from './schemePack'
 import { academicKey, courseCodeKey, SchemeConfigurationError } from './schemeValidation'
+import { batchKeysMatch } from '../cohortBatch.js'
 export { normalizeSchemePack, SchemeConfigurationError } from './schemeValidation'
 export type { UniversitySchemePack } from './schemePack'
 export { BCU_SEP_2024 } from './schemePack'
@@ -306,7 +307,7 @@ export function resolveSchemeCourse(
     (c) =>
       courseCodeKey(c.code) === courseCodeKey(code) &&
       (!c.programme || academicKey(c.programme) === academicKey(context.programme)) &&
-      (!c.batch || academicKey(c.batch) === academicKey(context.batch)) &&
+      (!c.batch || !context.batch || batchKeysMatch(c.batch, context.batch)) &&
       (!c.semester || c.semester === context.semester),
   )
   const rank = (c: SchemeCourse) => Number(!!c.programme) + Number(!!c.batch) + Number(!!c.semester)

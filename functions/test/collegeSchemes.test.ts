@@ -173,3 +173,30 @@ describe('assigned programme credit plans', () => {
     assert.equal(auditAssignedProgrammeCredits(published, scoped, { programme: 'MCA' }).configured, false)
   })
 })
+
+describe('scheme routes address a class, not a spelling of a batch', () => {
+  it('routes a 2026-27 batch to the route written as 2027', () => {
+    const c = configuration()
+    const routed = c.assignments[1].schemePackId
+    c.routes = [{ batch: '2027', semester: 2, schemePackId: routed }]
+    assert.equal(selectCollegeScheme(c, { programme: 'BCA', batch: '2026-27', semester: 2 }).schemePackId, routed)
+    assert.equal(selectCollegeScheme(c, { programme: 'BCA', batch: '2026-27', semester: 2 }).selection, 'route')
+  })
+  it('routes a 2027 batch to the route written as 2026-2027', () => {
+    const c = configuration()
+    const routed = c.assignments[1].schemePackId
+    c.routes = [{ batch: '2026-2027', schemePackId: routed }]
+    assert.equal(selectCollegeScheme(c, { batch: '2027' }).schemePackId, routed)
+  })
+  it('keeps a genuinely different intake on the primary pack', () => {
+    const c = configuration()
+    c.routes = [{ batch: '2027', semester: 2, schemePackId: c.assignments[1].schemePackId }]
+    assert.equal(selectCollegeScheme(c, { programme: 'BCA', batch: '2029', semester: 2 }).selection, 'primary')
+  })
+  it('treats routes for one class written two ways as overlapping, not distinct', () => {
+    const c = configuration()
+    c.routes = [{ batch: '2026-2027', schemePackId: c.assignments[0].schemePackId }, { batch: '2027', schemePackId: c.assignments[1].schemePackId }]
+    // Same scope, two packs: normalization must refuse rather than let order decide.
+    assert.throws(() => normalizeCollegeSchemeSelection({ ...selection(), routes: c.routes }), /Duplicate|overlap/)
+  })
+})

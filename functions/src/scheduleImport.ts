@@ -38,6 +38,7 @@ import {
 } from './utils/timetableConflicts'
 import { resolveSchedulingStaff } from './classSchedule'
 import { createScheduleProposals } from './scheduleProposalService'
+import { batchKeyTokens } from './cohortBatch.js'
 
 // ═════════════════════════════════════════════════════════════════════════════
 // CSV parsing (quote-aware)
@@ -199,6 +200,9 @@ export interface ImportMappingRef {
   courseName: string
   branch: string
   semester: number
+  /** The intake the mapping covers. Dropping this made a mapping for "2026-2027"
+   *  miss a class stored as "2027". */
+  batch: string
   facultyId: string
   facultyName: string
 }
@@ -238,6 +242,23 @@ export interface ImportFacultyIndex {
 
 function norm(s: unknown): string {
   return String(s ?? '').trim().toLowerCase()
+}
+
+/**
+ * Does a mapping's batch scope cover this row's batch?
+ *
+ * Compared as canonical keys, not strings: a mapping for "2026-2027" is the
+ * class of "2027", and a mapping for "2027,2028" covers both intakes. A blank on
+ * either side stays "no constraint".
+ *
+ * ONE definition, because the dry run and the apply gate must agree — the
+ * preview would otherwise promise rows the apply then rejects.
+ */
+function batchScopeCovers(mappingBatch: unknown, rowBatch: unknown): boolean {
+  const mappingTokens = batchKeyTokens(mappingBatch)
+  const rowTokens = batchKeyTokens(rowBatch)
+  if (!mappingTokens.length || !rowTokens.length) return true
+  return rowTokens.some((token) => mappingTokens.includes(token))
 }
 
 /**
@@ -405,7 +426,8 @@ export function planScheduleImport(input: PlanInput): ImportPlan {
       const nameMatch = subject && m.courseName && norm(subject) === norm(m.courseName)
       const branchOk = !branch || !m.branch || norm(branch) === norm(m.branch)
       const semOk = !semester || !m.semester || semester === m.semester
-      return (codeMatch || nameMatch) && branchOk && semOk
+      const batchOk = batchScopeCovers(m.batch, row.batch)
+      return (codeMatch || nameMatch) && branchOk && semOk && batchOk
     })
     if (!mapped) {
       report.warnings.push('subject is not in the college’s assigned curriculum mappings')
@@ -573,6 +595,7 @@ function toMappingRef(snap: admin.firestore.QueryDocumentSnapshot): ImportMappin
     courseName: String(d.courseName ?? ''),
     branch: String(d.branch ?? ''),
     semester: Number(d.semester ?? 0) || 0,
+    batch: String(d.batch ?? ''),
     facultyId: String(d.facultyId ?? ''),
     facultyName: String(d.facultyName ?? ''),
   }
@@ -657,7 +680,8 @@ export const bulkImportWeeklySchedules = onCall(
       const nameMatch = Boolean(row.subject && mapping.courseName && norm(row.subject) === norm(mapping.courseName))
       const branchOk = !row.branch || !mapping.branch || norm(row.branch) === norm(mapping.branch)
       const semesterOk = !row.semester || !mapping.semester || row.semester === mapping.semester
-      return (codeMatch || nameMatch) && branchOk && semesterOk
+      const batchOk = batchScopeCovers(mapping.batch, row.batch)
+      return (codeMatch || nameMatch) && branchOk && semesterOk && batchOk
     }))
     if (rowMappings.some((matches) => matches.length === 0)) {
       throw new HttpsError('failed-precondition', 'Every imported schedule row must match an assigned curriculum course before it can be submitted for HOD approval. Review the mapping warnings and Principal-approved curriculum.')
