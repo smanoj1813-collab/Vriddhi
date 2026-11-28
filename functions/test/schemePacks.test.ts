@@ -6,6 +6,8 @@
 import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
 import { validateSchemePackDoc, PRESET_SCHEME_CODES } from '../src/schemePacks'
+import { normalizeSchemePack } from '../src/academic/schemeValidation'
+import { academicFixture } from './helpers/academicFixture'
 
 function validPack(): Record<string, unknown> {
   return {
@@ -105,5 +107,48 @@ describe('validateSchemePackDoc', () => {
     const pack = validateSchemePackDoc(raw)
     assert.equal(pack.status, 'active')
     assert.equal(pack.sourceNote, 'verified 2026')
+  })
+})
+
+describe('scheme validation agrees with the runtime on batch identity', () => {
+  // The runtime (creditEngine/schemeEngine) reads "2026-2027" and "2027" as one
+  // class. Validation compared the literal spelling, so it accepted a
+  // configuration the runtime then rejected as ambiguous — and that failure
+  // surfaced to a student instead of the admin who saved it.
+  const packWith = (mutate: (p: any) => void) => {
+    const pack: any = academicFixture()
+    mutate(pack)
+    return pack
+  }
+
+  it('collapses two spellings of one class into a single course scope', () => {
+    const pack = packWith((p) => {
+      p.courses = [
+        { ...p.courses[0], batch: '2026-2027' },
+        { ...p.courses[0], batch: '2027' },
+      ]
+    })
+    assert.throws(() => normalizeSchemePack(pack), /duplicate|courses/i)
+  })
+
+  it('collapses two spellings of one class into a single credit requirement', () => {
+    const pack = packWith((p) => {
+      p.creditRequirements = [
+        { ...p.creditRequirements[0], batch: '2026-2027' },
+        { ...p.creditRequirements[0], batch: '2027' },
+      ]
+    })
+    assert.throws(() => normalizeSchemePack(pack), /duplicate|creditRequirements/i)
+  })
+
+  it('still accepts genuinely distinct intakes', () => {
+    // Duplicate the first course and space it a year apart. Every other course
+    // is left alone so the required-course checks stay satisfied — this test is
+    // only about the batch scope key.
+    const pack = packWith((p) => {
+      p.courses = [...p.courses, { ...p.courses[0], batch: '2028' }]
+      p.courses[0] = { ...p.courses[0], batch: '2027' }
+    })
+    assert.doesNotThrow(() => normalizeSchemePack(pack))
   })
 })

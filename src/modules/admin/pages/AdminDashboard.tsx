@@ -8,9 +8,21 @@ import FacultyAttendancePanel from '../components/FacultyAttendancePanel'
 import FacultyAttendanceTodayCard from '../components/FacultyAttendanceTodayCard'
 import AcademicInsightsCard from '../components/AcademicInsightsCard'
 import { db } from '@/Firebase/data'
-import {
-  collection, query, where, getDocs
-} from 'firebase/firestore'
+import { collection, query, where, getDocs, getCountFromServer, limit } from 'firebase/firestore'
+
+/**
+ * AdminDashboard used to download every student, faculty and admin document on
+ * mount with no limit and no participation in the read budget that guards every
+ * other dashboard query. At 5,000 students that is thousands of billed reads on
+ * every admin login.
+ *
+ * Headline figures are now aggregations (billed per 1,000 index entries, not per
+ * document) and the directory rows are capped. The cap is VISIBLE: if a college
+ * has more rows than the cap, the directory says so rather than quietly showing
+ * a partial roster as if it were complete.
+ */
+const DIRECTORY_ROW_CAP = 2000
+
 import {
   Shield, Users, Building2, Settings, Activity, CheckCircle,
   Clock, Search, Filter, Plus, BarChart3, Bell,
@@ -81,6 +93,8 @@ interface DashboardData {
   avgAttendance: number
   departments: Department[]
   users: User[]
+  /** True when the roster slab hit the cap, so the directory is partial. */
+  directoryTruncated: boolean
   auditLogs: AuditLog[]
   approvals: ApprovalItem[]
   loading: boolean
@@ -178,6 +192,7 @@ function useCollegeDashboardData(
 ) {
   const [data, setData] = useState<DashboardData>({
     totalUsers: 0, totalStudents: 0, totalFaculty: 0, totalMentors: 0, totalHODs: 0,
+    directoryTruncated: false,
     avgAttendance: 0, departments: [], users: [], auditLogs: [], approvals: [], loading: true
   })
 
@@ -191,10 +206,25 @@ function useCollegeDashboardData(
 
     async function fetchData() {
       try {
+        // Aggregations give the exact college-wide totals without downloading a
+        // row per person. All three run concurrently and are cheap.
+        const [studentCountSnap, facultyCountSnap, adminCountSnap] = await Promise.all([
+          getCountFromServer(query(collection(db, 'students'), where('collegeId', '==', collegeId))),
+          getCountFromServer(query(collection(db, 'faculty'), where('collegeId', '==', collegeId))),
+          getCountFromServer(query(collection(db, 'admins'), where('collegeId', '==', collegeId))),
+        ])
+        const exactCounts = {
+          students: studentCountSnap.data().count,
+          faculty: facultyCountSnap.data().count,
+          admins: adminCountSnap.data().count,
+        }
+
+        // The directory needs real rows, but a bounded slab of them. A college
+        // under the cap sees its complete roster exactly as before.
         const [studentsSnap, facultySnap, adminsSnap] = await Promise.all([
-          getDocs(query(collection(db, 'students'), where('collegeId', '==', collegeId))),
-          getDocs(query(collection(db, 'faculty'), where('collegeId', '==', collegeId))),
-          getDocs(query(collection(db, 'admins'), where('collegeId', '==', collegeId))),
+          getDocs(query(collection(db, 'students'), where('collegeId', '==', collegeId), limit(DIRECTORY_ROW_CAP))),
+          getDocs(query(collection(db, 'faculty'), where('collegeId', '==', collegeId), limit(DIRECTORY_ROW_CAP))),
+          getDocs(query(collection(db, 'admins'), where('collegeId', '==', collegeId), limit(DIRECTORY_ROW_CAP))),
         ])
 
         if (cancelled) return
@@ -215,9 +245,13 @@ function useCollegeDashboardData(
           admins = admins.filter(a => docInDepartment(a, deptScope))
         }
 
-        const totalStudents = students.length
-        const totalFaculty = faculty.length
-        const totalAdmins = admins.length
+        // Exact college-wide totals from the aggregations. The row arrays are a
+        // bounded slab, so their .length stops being the truth once a college
+        // passes the cap. Department-scoped viewers still see their own slice,
+        // which is smaller than the cap in any realistic college.
+        const totalStudents = deptScope ? students.length : exactCounts.students
+        const totalFaculty = deptScope ? faculty.length : exactCounts.faculty
+        const totalAdmins = deptScope ? admins.length : exactCounts.admins
         const totalHODs = admins.filter((a: any) => a.role === 'hod').length
         const totalMentors = admins.filter((a: any) => a.role === 'mentor').length
 
@@ -284,6 +318,13 @@ function useCollegeDashboardData(
           })),
         ]
 
+        // A slab that came back exactly at the cap is probably truncated. Say so
+        // rather than presenting a partial roster as the whole college.
+        const directoryTruncated =
+          exactCounts.students > studentsSnap.size ||
+          exactCounts.faculty > facultySnap.size ||
+          exactCounts.admins > adminsSnap.size
+
         if (!cancelled) {
           setData({
             totalUsers: totalStudents + totalFaculty + totalAdmins,
@@ -294,6 +335,7 @@ function useCollegeDashboardData(
             avgAttendance: 0,
             departments,
             users,
+            directoryTruncated,
             auditLogs: [],
             approvals: [],
             loading: false,
@@ -314,7 +356,7 @@ function useCollegeDashboardData(
 
 // ─── Tab Content Components ───────────────────────────────────────────────────
 
-function UserManagement({ users, collegeId }: { users: User[]; collegeId?: string }) {
+function UserManagement({ users, collegeId, truncated }: { users: User[]; collegeId?: string; truncated?: boolean }) {
   const [search, setSearch] = useState('')
   const [roleFilter, setRoleFilter] = useState('all')
   const [statusFilter, setStatusFilter] = useState('all')
@@ -448,6 +490,12 @@ function UserManagement({ users, collegeId }: { users: User[]; collegeId?: strin
           <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
           <input type="text" placeholder="Search users..." value={search} onChange={e => setSearch(e.target.value)} className="input-field w-full pl-10" />
         </div>
+        {truncated && (
+          <p className="text-xs rounded-lg border border-amber-300/60 bg-amber-50 dark:bg-amber-900/20 dark:border-amber-700/60 text-amber-800 dark:text-amber-200 px-3 py-2">
+            This directory is showing the first {users.length.toLocaleString()} accounts. Your college has more —
+            the headline totals above are exact, but search and filters only cover the rows loaded here.
+          </p>
+        )}
         <select value={roleFilter} onChange={e => setRoleFilter(e.target.value)} className="input-field">
           <option value="all">All Roles</option>
           <option value="admin">Principal</option>
@@ -987,7 +1035,7 @@ export default function AdminDashboard() {
             )}
           </div>
         )
-      case 'users': return <UserManagement users={dashboardData.users} collegeId={collegeId} />
+      case 'users': return <UserManagement users={dashboardData.users} collegeId={collegeId} truncated={dashboardData.directoryTruncated} />
       case 'departments': return <DepartmentOverview departments={dashboardData.departments} />
       case 'faculty-attendance': return <FacultyAttendancePanel collegeId={collegeId} compact />
       case 'reports': return <ReportsAnalytics totalStudents={dashboardData.totalStudents} totalFaculty={dashboardData.totalFaculty} />

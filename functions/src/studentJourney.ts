@@ -18,6 +18,7 @@ import { createReadThroughCache } from './readThroughCache'
 import { HttpsError, onCall } from 'firebase-functions/v2/https'
 import { latestCreditRows, summarizeCredits, auditAssignedProgrammeCredits, type CreditRow } from './academic/creditEngine'
 import { resolveCollegeSchemesOnServer } from './schemePacks'
+import { batchKeyTokens } from './cohortBatch.js'
 
 // Only shared rank evidence is coalesced. Personal transcripts/attendance,
 // identity checks and policy resolution are always read normally. No paid
@@ -97,6 +98,34 @@ function round(value: number, places = 2): number {
 }
 
 /** Credit-weighted mean of real grade points. Returns null when unpublished. */
+/**
+ * Is a roster row a peer of this student for standing purposes?
+ *
+ * Standing compares a student against their own class, so the batch comparison
+ * has to agree with how the rest of the platform reads a batch: "2026-2027" is
+ * the class of "2027". A plain string comparison silently dropped every peer
+ * whose intake was recorded in the other spelling, which changed the student's
+ * percentile without any error — the worst kind of wrong number.
+ *
+ * A blank side stays a wildcard, matching the previous behaviour.
+ */
+export function isStandingPeer(
+  student: { studentId?: string; branch?: string; batch?: string },
+  row: { id?: string; branch?: unknown; department?: unknown; batch?: unknown; academicYear?: unknown },
+): boolean {
+  if (student.studentId && row.id === student.studentId) return true
+  const studentBranch = String(student.branch || '').trim().toLowerCase()
+  const rowBranch = String(row.branch || row.department || '').trim().toLowerCase()
+  if (studentBranch && rowBranch && studentBranch !== rowBranch) return false
+  const studentBatch = String(student.batch || '').trim()
+  const rowBatch = String(row.batch || row.academicYear || '').trim()
+  if (!studentBatch || !rowBatch) return true
+  const studentTokens = batchKeyTokens(studentBatch)
+  const rowTokens = batchKeyTokens(rowBatch)
+  if (!studentTokens.length || !rowTokens.length) return true
+  return rowTokens.some(token => studentTokens.includes(token))
+}
+
 export function weightedCgpa(rows: CreditRow[]): number | null {
   return summarizeCredits(rows).gpa
 }
@@ -275,16 +304,7 @@ export const getMyAcademicJourney = onCall(
     //    rather than counted as zero, which would flatter everyone.
     const cohortIds = new Set(
       rosterSnap.docs
-        .filter((doc) => {
-          const row = doc.data()
-          if (doc.id === student.studentId) return true
-          const sameBranch =
-            !student.branch ||
-            String(row.branch || row.department || '').toLowerCase() === student.branch.toLowerCase()
-          const sameBatch =
-            !student.batch || String(row.batch || row.academicYear || '') === student.batch
-          return sameBranch && sameBatch
-        })
+        .filter((doc) => isStandingPeer(student, { id: doc.id, ...doc.data() }))
         .map((doc) => doc.id)
     )
 

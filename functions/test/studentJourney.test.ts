@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
-import { READINESS_BANDS, bandFor, weightedCgpa } from '../src/studentJourney'
+import { READINESS_BANDS, bandFor, isStandingPeer, weightedCgpa } from '../src/studentJourney'
 
 // The journey used to show every student `rank: 1` and a GPA computed as
 // `(average test percentage / 100) * 10` — a number that appeared on no
@@ -100,5 +100,37 @@ describe('placement readiness band', () => {
       // A band is guidance about eligibility, never a named recruiter or offer.
       assert.ok(!/guarantee|offer letter|placed at/i.test(band.outlook), `${band.id} over-promises`)
     })
+  })
+})
+
+describe('standing peer cohort', () => {
+  const student = { studentId: 'me', branch: 'BCA', batch: '2027' }
+
+  it('treats an academic-year range as the class it ends in', () => {
+    // Roster rows are written either way; a strict comparison dropped every peer
+    // recorded in the other spelling and silently changed the percentile.
+    assert.equal(isStandingPeer(student, { id: 'p1', branch: 'BCA', batch: '2026-2027' }), true)
+    assert.equal(isStandingPeer(student, { id: 'p1', branch: 'BCA', academicYear: '2026-27' }), true)
+  })
+
+  it('excludes a genuinely different intake', () => {
+    assert.equal(isStandingPeer(student, { id: 'p1', branch: 'BCA', batch: '2028' }), false)
+  })
+
+  it('always includes the student themselves', () => {
+    assert.equal(isStandingPeer(student, { id: 'me', branch: 'MCA', batch: '2030' }), true)
+  })
+
+  it('excludes another branch', () => {
+    assert.equal(isStandingPeer(student, { id: 'p1', branch: 'BBA', batch: '2027' }), false)
+  })
+
+  it('keeps a blank dimension as a wildcard', () => {
+    assert.equal(isStandingPeer({ studentId: 'me', branch: 'BCA' }, { id: 'p1', branch: 'BCA', batch: '2019' }), true)
+    assert.equal(isStandingPeer(student, { id: 'p1' }), true)
+  })
+
+  it('compares branch case-insensitively', () => {
+    assert.equal(isStandingPeer(student, { id: 'p1', branch: 'bca', batch: '2027' }), true)
   })
 })

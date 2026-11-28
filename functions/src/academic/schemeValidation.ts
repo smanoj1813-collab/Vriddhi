@@ -6,6 +6,7 @@ import type {
   SchemeGrade,
   UniversitySchemePack,
 } from './schemePack'
+import { batchKeysMatch, normalizeBatchKey } from '../cohortBatch.js'
 
 export class SchemeConfigurationError extends Error {
   constructor(message: string) {
@@ -263,7 +264,7 @@ export function normalizeSchemePack(value: unknown): UniversitySchemePack {
       fail(`GPA course ${course.code} requires a positive-point passing grade band`)
   }
   unique(
-    courses.map((c) => `${c.code}|${academicKey(c.programme)}|${academicKey(c.batch)}|${c.semester ?? ''}`),
+    courses.map((c) => `${c.code}|${academicKey(c.programme)}|${normalizeBatchKey(c.batch)}|${c.semester ?? ''}`),
     'courses',
   )
   const requirements = list(r.creditRequirements, 'creditRequirements', 40, true).map(
@@ -304,13 +305,13 @@ export function normalizeSchemePack(value: unknown): UniversitySchemePack {
           (c) =>
             c.code === code &&
             (!c.programme || academicKey(c.programme) === academicKey(plan.programme)) &&
-            (!c.batch || academicKey(c.batch) === academicKey(plan.batch)),
+            (!c.batch || !plan.batch || batchKeysMatch(c.batch, plan.batch)),
         )
       )
         fail(`Required course ${code} is missing from the approved programme/cohort mappings`)
   }
   unique(
-    requirements.map((c) => `${academicKey(c.programme)}|${academicKey(c.batch)}`),
+    requirements.map((c) => `${academicKey(c.programme)}|${normalizeBatchKey(c.batch)}`),
     'creditRequirements',
   )
   return {
