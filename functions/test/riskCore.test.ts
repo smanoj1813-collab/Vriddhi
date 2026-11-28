@@ -150,3 +150,46 @@ describe('scoped escalation, read authorization, deduplication and resolution', 
   it('time-bounded old observations are archived, never presented as fixed', () => assert.equal(riskReconciliationState({ key: 'class-register:c', evidenceDate: '2026-09-01', dependencies: ['sessions'] }, new Set(), { sessions: true }, true, NOW), 'archived'))
   it('paused checks do not create any risks or assume data is complete', () => { const e = evidence('student'); e.settings.enabled = false; e.assignments = [assignment()]; const r = buildRiskFindings(e); assert.equal(r.findings.length, 0); assert.match(r.coverage.join(' '), /paused/) })
 })
+
+describe('cohort audience matching tolerates how staff actually record a class', () => {
+  it('accepts an academic-year range as the class it ends in', () => {
+    // Staff write "2026-2027" for the class of 2027; the student record is
+    // stored either way. Strict equality dropped every such student.
+    assert.ok(riskAssignmentTargets(assignment({ cohort: { branch: 'BCA', batch: '2026-2027', semester: 3, division: 'A' } }), student({ batch: '2027' })))
+    assert.ok(riskAssignmentTargets(assignment({ cohort: { branch: 'BCA', batch: '2027', semester: 3, division: 'A' } }), student({ batch: '2026-2027' })))
+  })
+  it('keeps a genuinely different intake out', () => {
+    assert.ok(!riskAssignmentTargets(assignment({ cohort: { branch: 'BCA', batch: '2026-2027', semester: 3, division: 'A' } }), student({ batch: '2028' })))
+  })
+  it('addresses every intake in a multi-intake audience', () => {
+    const cohort = { branch: 'BCA', batch: '2027,2028', semester: 3, division: 'A' }
+    assert.ok(riskAssignmentTargets(assignment({ cohort }), student({ batch: '2027' })))
+    assert.ok(riskAssignmentTargets(assignment({ cohort }), student({ batch: '2028' })))
+    assert.ok(!riskAssignmentTargets(assignment({ cohort }), student({ batch: '2029' })))
+  })
+  it('covers a student in a division the class lists alongside others', () => {
+    // "A,B,C,D" is one class taught across four divisions, not a fifth division.
+    const cohort = { branch: 'BCA', batch: '2026', semester: 3, division: 'A,B,C,D' }
+    for (const division of ['A', 'B', 'C', 'D']) assert.ok(riskAssignmentTargets(assignment({ cohort }), student({ division })))
+    assert.ok(!riskAssignmentTargets(assignment({ cohort }), student({ division: 'E' })))
+  })
+  it('finds the letter in the section field when division is empty', () => {
+    // The recording UI lets either field carry the letter; "Section A" folds to "a".
+    assert.ok(riskAssignmentTargets(assignment({ cohort: { branch: 'BCA', batch: '2026', semester: 3, division: 'A' } }), student({ division: '', section: 'Section A' })))
+  })
+  it('compares branch case-insensitively', () => {
+    assert.ok(riskAssignmentTargets(assignment({ cohort: { branch: 'bca', batch: '2026', semester: 3, division: 'A' } }), student({ branch: 'BCA' })))
+  })
+  it('still treats a blank dimension as no constraint', () => {
+    assert.ok(riskAssignmentTargets(assignment({ cohort: { branch: 'BCA', batch: '2026', semester: 3 } }), student({ division: 'Z' })))
+    assert.ok(riskAssignmentTargets(assignment({ cohort: { branch: 'BCA', batch: '2026', division: 'A' } }), student({ semester: 7 })))
+  })
+  it('applies the same rules to the flat test audience fields', () => {
+    const flat = (extra: Record<string, any>) => test({ targetStudents: [], targetSections: [], ...extra })
+    assert.ok(riskTestTargets(flat({ branch: 'BCA', batch: '2026-2027', division: 'A,B', semester: 3 }), student({ batch: '2027' })))
+    assert.ok(!riskTestTargets(flat({ branch: 'BCA', batch: '2026-2027', division: 'C', semester: 3 }), student({ batch: '2027' })))
+  })
+  it('keeps a different semester out of a semester-scoped audience', () => {
+    assert.ok(!riskTestTargets(test({ targetStudents: [], targetSections: [{ section: 'A', semester: 5 }] }), student({ semester: 3 })))
+  })
+})

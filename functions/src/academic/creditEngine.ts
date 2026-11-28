@@ -1,5 +1,6 @@
 import type { AcademicContext, UniversitySchemePack } from './schemePack'
 import { academicKey, courseCodeKey } from './schemeValidation'
+import { batchKeysMatch } from '../cohortBatch.js'
 import { selectCollegeScheme, type CollegeSchemeConfiguration } from './collegeSchemes'
 
 export interface CreditRow {
@@ -152,7 +153,7 @@ export function auditProgrammeCredits(
     .filter(
       (p) =>
         academicKey(p.programme) === academicKey(context.programme) &&
-        (!p.batch || academicKey(p.batch) === academicKey(context.batch)),
+        (!p.batch || !context.batch || batchKeysMatch(p.batch, context.batch)),
     )
     .sort((a, b) => Number(!!b.batch) - Number(!!a.batch))
   const requirement = matches[0]
@@ -177,7 +178,7 @@ export function auditProgrammeCredits(
     if (
       course.requiredForAward &&
       (!course.programme || academicKey(course.programme) === academicKey(context.programme)) &&
-      (!course.batch || academicKey(course.batch) === academicKey(context.batch))
+      (!course.batch || !context.batch || batchKeysMatch(course.batch, context.batch))
     )
       mandatory.add(courseCodeKey(course.code))
   }
